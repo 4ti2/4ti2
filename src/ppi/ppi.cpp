@@ -55,7 +55,7 @@ public:
     Dimension(dimension), 
     root(new InnerNode(2*dimension+1)) {}
   ~DigitalTree() { if (root) Destroy(root); }
-  bool Insert(Leaf leaf, bool CheckDup);
+  bool Insert(Leaf leaf);
   bool OrthogonalRangeSearch(Leaf min, Leaf max, 
 			     Report report)
     { return DoSearch(min, max, report, Dimension-1, root); }
@@ -115,7 +115,7 @@ bool DigitalTree::DoSearch(Leaf min, Leaf max,
   }
 }
 
-bool DigitalTree::Insert(Leaf leaf, bool CheckDup)
+bool DigitalTree::Insert(Leaf leaf)
 {
   InnerNode *n = root;
   int level;
@@ -124,19 +124,6 @@ bool DigitalTree::Insert(Leaf leaf, bool CheckDup)
     if (n->Children[pos]) {
       if (n->Children[pos]->isleaf) {
 	LeafNode *ol = (LeafNode*) n->Children[pos];
-	if (CheckDup) {
-	  // Check if equal
-	  int i;
-	  for (i = level-1; 
-	       i>=0 && ((Vector&)(ol->leaf))[i] == ((Vector&)leaf)[i];
-	       i--);
-	  if (i<0) {
-#if (TALKATIVE >= 3)
-	    cerr << "$";
-#endif
-	    return false;
-	  }
-	}
 	// Build a chain of inners up to tie 
 	// FIXME: What about a compressed structure...?
 	do {
@@ -177,10 +164,10 @@ class VectorSet {
 public:
   VectorSet(int level) : tree(new DigitalTree(level+1)) {}
   ~VectorSet() { delete tree; }
-  bool insert(Vector v, bool CheckDup = false) { 
+  bool insert(Vector v) { 
     Vector *vv = new Vector(v);
     VectorRepository.push_back(vv);
-    return tree->Insert(Leaf(vv), CheckDup); 
+    return tree->Insert(Leaf(vv)); 
   }
   bool OrthogonalRangeSearch(Leaf min, Leaf max, 
 			     Report report)
@@ -272,15 +259,9 @@ static int ppicount;
 /* rangereport parameters */
 static Vector rangemin, rangemax;
 static int LastNonzeroPos;
-#ifdef POSTCHECK
-static Vector *RangeException;
-#endif
 
 static bool False(const Leaf &y)
 {
-#ifdef POSTCHECK
-  if (&(Vector&)(y) == RangeException) return true;
-#endif
   return false;
 }
 
@@ -475,6 +456,10 @@ int main(int argc, char *argv[])
 }
 
 /* $Log$
+ * Revision 1.26  1999/03/09 20:33:37  mkoeppe
+ * Only maintains P0 range-searchable, which saves memory. n=18 now takes
+ * user 6m20.4s.
+ *
  * Revision 1.25  1999/03/09 20:10:44  mkoeppe
  * n=18 took user 9m34.410s, but was at very memory edge.
  *
