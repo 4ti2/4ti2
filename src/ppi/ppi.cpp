@@ -18,6 +18,7 @@
 #define HASH
 #undef WITH_STATS
 #undef ERASE_SOURCES_OF_IRREDUCIBLES
+#define ERASE_ONLY_GUARANTEED
 #define WITH_ADVANCE
 #undef BACKWARD_LEVEL
 
@@ -358,7 +359,7 @@ void writeppi(ostream &c, Vector z, int n)
 }
 
 static int ppicount;
-static int dupcount, redcount, hitcount[2], failcount[2];
+static int dupcount, simplecount, goodcount, redcount, hitcount[2], failcount[2];
 
 /* rangereport parameters */
 static Vector rangemin, rangemax;
@@ -421,63 +422,138 @@ inline void SetupAttribute(Vector &v, int n, bool WithNegative)
   v.Attribute = attrib;
 }
 
+// Erase u as a source, i.e. find it in Pold and erase its i'th flag.
+inline void DoErase(Vector &u, int i, int n, SimpleVectorSet &Pold,
+		    bool irreducible, bool negative)
+{
+  SimpleVectorSet::iterator ui = Pold.find(u);
+  if (ui != Pold.end()) {
+#if defined(WITH_STATS)
+    hitcount[irreducible]++;
+#endif
+    const_cast<Vector&>(*ui).Attribute 
+      &= ~((negative ? (1<<16) : 1)<<(i-1));
+  }
+#if defined(WITH_STATS)
+  else {
+    failcount[irreducible]++;
+    //    cerr << "Failed: " << u << endl;
+  }
+#endif
+}
+
+// Increase u at i and its complement if this leads to a valid source,
+// and erase this source.
+inline void DoIncAndErase(Vector &u, int i, int n, SimpleVectorSet &Pold,
+			  bool irreducible)
+{
+#if defined(ERASE_ONLY_GUARANTEED)
+  if (u(i) < 0 || u(n+1-i) < 0) // i in supp(u-)
+#endif
+    { 
+      u(i)++, u(n+1-i)++;
+      DoErase(u, i, n, Pold, irreducible, false);
+      u(i)--, u(n+1-i)--;
+    } 
+}
+
+inline void DoDecAndErase(Vector &u, int i, int n, SimpleVectorSet &Pold,
+			  bool irreducible)
+{
+#if defined(ERASE_ONLY_GUARANTEED)
+  if (u(i) > 0 || u(n+1-i) > 0)
+#endif
+    {
+      u(i)--, u(n+1-i)--;
+      DoErase(u, i, n, Pold, irreducible, true);
+      u(i)++, u(n+1-i)++;
+    } 
+}
+
 inline void EraseSource(const Vector &w, int n, SimpleVectorSet &Pold,
 			bool irreducible, bool WithNegative)
 {
 #if !defined(ERASE_SOURCES_OF_IRREDUCIBLES)
   if (!irreducible) return; // they often fail, which is expensive
 #endif
+  //  cerr << "EraseSource " << w << endl; 
   Vector u = w;
   u(n+1)--;
-  for (int i = 1; i<=n/2; i++) {
-    if (u(i) < 0 || u(n+1-i) < 0) {
-      u(i)++, u(n+1-i)++;
-      SimpleVectorSet::iterator ui = Pold.find(u);
-      if (ui != Pold.end()) {
-#if defined(WITH_STATS)
-	hitcount[irreducible]++;
-#endif
-	const_cast<Vector&>(*ui).Attribute &= ~(1<<(i-1));
+  int LastNonzeroPos;
+  if (WithNegative) { 
+    // find out last nonzero pos
+    // asserted is w(n+1)==1, i.e. u(n+1)==0
+    for (LastNonzeroPos = n; !u(LastNonzeroPos); LastNonzeroPos--);
+    if (u(LastNonzeroPos)<0 && LastNonzeroPos>n/2) { 
+      // This is a complicated case.
+      int i;
+      for (i = 1; i<n+1-LastNonzeroPos; i++) {
+	// We will put a positive value to the right of
+	// LastNonzeroPos, so perform positive search.
+	DoIncAndErase(u, i, n, Pold, irreducible);
       }
-#if defined(WITH_STATS)
-      else failcount[irreducible]++;
-#endif
-      u(i)--, u(n+1-i)--;
-    } 
-  }
-  if (WithNegative) {
-    u = -u;
-    for (int i = 1; i<=n/2; i++) {
-      if (u(i) > 0 || u(n+1-i) > 0) {
-	u(i)--, u(n+1-i)--;
-	SimpleVectorSet::iterator ui = Pold.find(u); 
-	if (ui != Pold.end()) {
-#if defined(WITH_STATS)
-	  hitcount[irreducible]++;
-#endif
-	  const_cast<Vector&>(*ui).Attribute &= ~((1<<16)<<(i-1));
+      Vector mu;
+      if (2*LastNonzeroPos == n+1) { // Very special case:
+	// Need not erase sources because this case is left out
+	// anyway. (The code below doesn't grok this case.)
+	mu = -u;
+      }
+      else {
+	// Handle LastNonzeroPos:
+	u(i)++, u(LastNonzeroPos)++; // This might zero it, so:
+	mu = -u;
+	for (; LastNonzeroPos && !u(LastNonzeroPos); LastNonzeroPos--);
+	if (LastNonzeroPos) {
+	  if (u(LastNonzeroPos) > 0) {
+	    // Perform positive search
+	    DoErase(u, i, n, Pold, irreducible, false);
+	  }
+	  else {
+	    // Perform negative search
+	    DoErase(mu, i, n, Pold, irreducible, true);
+	  }
 	}
-#if defined(WITH_STATS)
-	else failcount[irreducible]++;
-#endif
-	u(i)++, u(n+1-i)++;
-      } 
-    }    
+	mu(i)++, mu(n+1-i)++; 
+      }
+      // (We have mu == -original_u here.)
+      // Now for the rest:
+      for (i++; i<=n/2; i++) {
+	// LastNonzeroPos is left invariant here, so perform negative
+	// search. 
+	DoDecAndErase(mu, i, n, Pold, irreducible);
+      }
+      return;
+    }
   }
+  // we only have to do positive search!
+  for (int i = 1; i<=n/2; i++) 
+    DoIncAndErase(u, i, n, Pold, irreducible);
 }
 
 inline void RaisePPI(const Vector &v, int j, int k, int n, 
 		     VectorSet &P, SimpleVectorSet &Pold,
-		     SimpleVectorSet &Pnew, bool WithNegative)
+		     SimpleVectorSet &Pnew, bool WithNegative,
+		     bool KnownIrreducible = false)
 {
   // assert(j<k);
+  //  cerr << "RaisePPI " << v << " with " << j << " and " << k << endl;
   Vector w = v;
   w(n+1)++, w(j)--, w(k)--;
   // reducibility check
-  if (w(j) >= 0 && w(k) >= 0) { // w is irreducible 
-    EraseSource(w, n, Pold, true, WithNegative);
+  if (KnownIrreducible || (w(j) >= 0 && w(k) >= 0)) { // w is irreducible 
+#if defined(WITH_STATS)
+    simplecount++;
+#endif
     SetupAttribute(w, n, false);
-    if (Pnew.insert(w).second) reportx(w);
+    if (Pnew.insert(w).second) {
+      EraseSource(w, n, Pold, true, WithNegative);
+      reportx(w); 
+    }
+    else {
+#if defined(WITH_STATS)
+      dupcount++;
+#endif
+    }
   }
   else { // may be reducible, must try to reduce 
     int i;
@@ -510,6 +586,9 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
 	// didn't find reducer, but vector may already be known
 	SetupAttribute(w, n, false);
 	if (Pnew.insert(w).second) {
+#if defined(WITH_STATS)
+	  goodcount++;
+#endif
 	  EraseSource(w, n, Pold, true, WithNegative);
 	  reportx(w);
 	}
@@ -571,6 +650,25 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
   // (3) Build all other primitive identities with exactly one
   // component of (n+1).
   cerr << "# Vectors of P" << 1 << "(" << n+1 << "):" << endl;
+
+  // first a pass for the simple cases
+  for (SimpleVectorSet::iterator i = Pold->begin(); i!=Pold->end(); ++i) {
+    Vector v = *i;
+    if (v.Attribute) {
+#if (TALKATIVE>=2)
+      cerr << "Raising " << v << endl;
+#endif
+      for (int j = 1; j<=n/2; j++) { // yes n/2 is enough
+	int k = (n+1) - j;
+	if (v(j) > 0 && v(k) > 0)
+	  RaisePPI(v, j, k, n, P, *Pold, *Pnew, true, true);
+	if (v(j) < 0 && v(k) < 0)
+	  RaisePPI(-v, j, k, n, P, *Pold, *Pnew, true, true);
+      }
+    }
+  }
+
+  // then a pass for the complicated cases
   for (SimpleVectorSet::iterator i = Pold->begin(); i!=Pold->end(); ++i) {
     Vector v = *i;
     if (v.Attribute) {
@@ -594,8 +692,25 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
 
   // (4) Build all other primitive identities with exactly (t+1)
   // components of (n+1).
+
   for (int t = 1; t<n; t++) {
     cerr << "# Vectors of P" << t+1 << "(" << n+1 << "):" << endl;
+    // simple cases
+    for (SimpleVectorSet::iterator i = Pold->begin(); i!=Pold->end(); ++i) {
+      Vector v = *i;
+      if (v.Attribute) {
+#if (TALKATIVE>=2)
+	cerr << "Raising " << v << endl;
+#endif
+	for (int j = 1; j<=n/2; j++) {
+	  int k = (n+1) - j;
+	  if (v(j) > 0 && v(k) > 0) { // source erasing
+	    RaisePPI(v, j, k, n, P, *Pold, *Pnew, false, true);
+	  }
+	}
+      }
+    }
+    // complicated cases
     for (SimpleVectorSet::iterator i = Pold->begin(); i!=Pold->end(); ++i) {
       Vector v = *i;
       if (v.Attribute) {
@@ -610,6 +725,7 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
 	}
       }
     }
+
     Pn.insert(Pold->begin(), Pold->end());
     delete Pold;
     Pold = Pnew;
@@ -636,7 +752,7 @@ int main(int argc, char *argv[])
   for (int i = 2; i<n; i++) {
 #if defined(WITH_STATS)
     hitcount[0] = failcount[0] = hitcount[1] = failcount[1] 
-      = redcount = dupcount = 0;
+      = simplecount = goodcount = redcount = dupcount = 0;
 #endif
     ppicount = 0;
     cerr << "### Extending to n = " << i+1 << endl;
@@ -644,7 +760,9 @@ int main(int argc, char *argv[])
     cerr << "### This makes " << ppicount 
 	 << " PPI up to sign" 
 #if defined(WITH_STATS)
-	 << ", with " << redcount << " reduce ops, "
+	 << ", with " << redcount << " reduce ops, leading to "
+	 << goodcount << " new vectors, "
+	 << simplecount << " simple raises, "
 	 << hitcount[0] << " red-erase hits, "
 	 << failcount[0] << " red-erase fails, "
 	 << hitcount[1] << " irr-erase hits, "
@@ -659,7 +777,12 @@ int main(int argc, char *argv[])
 
 }
 
-/* $Log$
+/*
+ * $Log$
+ * Revision 1.28.1.5  1999/03/12 13:55:19  mkoeppe
+ * Some clean-up with the vectors. BACKWARD_LEVEL option, but no impact
+ * on performance.
+ *
  * Revision 1.28.1.4  1999/03/12 11:57:09  mkoeppe
  * InnerNodes take less memory (no longer using STL vectors). n=19 takes
  * 57M to 61M, 7m43s user time.
