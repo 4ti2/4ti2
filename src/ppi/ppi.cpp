@@ -61,7 +61,7 @@ VectorSet::operator SimpleVectorSet()
 ostream &operator<<(ostream &s, const Vector &z)
 {
   for (int i = 0; i<z.size(); i++)
-    s << setw(4) << z[i];
+    s << setw(4) << (int) z[i];
   return s;
 }
 
@@ -283,7 +283,7 @@ int main(int argc, char *argv[])
   int n = argc - 1;
   Vector a(n);
   for (int i = 1; i<argc; i++) 
-    sscanf(argv[1], "%d", &a[i-1]);
+    sscanf(argv[i], "%d", &a[i-1]);
 
   VectorSet H0(n);
   for (int i = 0; i<n; i++) {
