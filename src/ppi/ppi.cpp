@@ -13,7 +13,7 @@
 #include <iostream.h>
 #include <iomanip.h>
 
-#define TALKATIVE 0
+#define TALKATIVE 2
 #define HASH
 #undef WITH_STATS
 #undef ERASE_SOURCES_OF_IRREDUCIBLES
@@ -34,9 +34,9 @@ struct VectorAux {
   VectorAux(const VectorAux &aux) {
     memcpy(this, &aux, sizeof(VectorAux) + aux.Length() + 1);
   }
-  unsigned char &Length() { return (unsigned char &) Stuff[0]; }
-  unsigned char Length() const { return (unsigned char &) Stuff[0]; }
-  signed char *Data() { return Stuff+1; }
+  inline unsigned char &Length() { return (unsigned char &) Stuff[0]; }
+  inline int Length() const { return (unsigned char) Stuff[0]; }
+  inline signed char *Data() { return Stuff+1; }
 };
 
 class Vector {
@@ -825,6 +825,12 @@ int main(int argc, char *argv[])
 
 /*
  * $Log$
+ * Revision 1.28.1.5.1.1.1.4  1999/03/23 12:03:41  mkoeppe
+ * Digital trees no longer store the vectors but point to the Vectors
+ * stored in the hash table. Reduces memory use to 64MB for n=20. Maybe
+ * one should combine VectorAux and LeafNode to reduce memory even
+ * more...
+ *
  * Revision 1.28.1.5.1.1.1.3  1999/03/22 22:46:54  mkoeppe
  * Clean-up.
  *
