@@ -1,7 +1,28 @@
-// Bestimmung der Primitiven Partitionsidentit"aten (PPI) nach [Urbaniak];
-// Verwaltung der Testvektoren mit `Digital trees'.
-
+// Computation of the primitive partition identities (PPI)
+// Copyright 1998, 1999, 2002, 2003 Matthias Koeppe <mkoeppe@mail.math.uni-magdeburg.de>
 // $Id$
+
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2, or (at your option)
+// any later version.
+//
+// This program is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+// or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public
+// License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with GLPK; see the file COPYING. If not, write to the Free
+// Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
+
+// For an introduction to PPIs and for the algorithm used in this
+// program, see Haus, Koeppe, Weismantel: A Primal All-Integer
+// Algorithm Based on Irreducible Solutions, Math. Programming, Series
+// B, 96 (2003), no. 2, pp. 205-246
+//
+// See also http://www.math.uni-magdeburg.de/~mkoeppe/art/ppi/
 
 #define _NOTHREADS
 // STL would use slow mutexes 
@@ -321,7 +342,7 @@ public:
 struct hash<Vector> 
 {
   size_t operator()(const Vector &v) const {
-    // FIXME: Is this a good hash function? Ask Knuth.
+    // FIXME: Is this a good enough hash function? 
     signed long h = 0;
     for (Vector::const_iterator i = v.begin(); i!=v.end(); ++i)
       h = 5*h + *i;
@@ -611,29 +632,6 @@ ostream &operator<<(ostream &s, const Vector &z)
   for (int i = 0; i<z.size(); i++)
     s << setw(4) << (int)(z[i]);
   return s;
-}
-
-int HilbertDivide(Vector z, Vector y)
-{
-  // Find maximal integer f with f*y<=z in Hilbert-base sense.
-  int maxfactor = INT_MAX;
-  for (int i = 0; i<z.size(); i++) {
-    if (y[i] > 0) {
-      if (y[i] > z[i]) return 0;
-      // here is z[i]>=y[i]>0.
-      int f = (z[i] / y[i]);
-      if (f < maxfactor)
-	maxfactor = f;
-    }
-    else if (y[i] < 0) {
-      if (y[i] < z[i]) return 0;
-      // here is z[i]<=y[i]<0.
-      int f = (z[i] / y[i]);
-      if (f < maxfactor)
-	maxfactor = f;
-    }
-  }
-  return maxfactor;
 }
 
 void writeppi(ostream &c, Vector z, int n)
@@ -1114,128 +1112,3 @@ int main(int argc, char *argv[])
   delete V;
 }
 
-/*
- * $Log$
- * Revision 1.34  2002/08/07 16:28:02  mkoeppe
- * better memory reuse, less copying
- *
- * Revision 1.33  2002/08/06 16:51:38  mkoeppe
- * chaining, rather than linear probing
- *
- * Revision 1.32  2002/08/06 16:25:23  mkoeppe
- * Better memory mgmt
- *
- * Revision 1.31  2002/08/06 14:31:45  mkoeppe
- * Seems to work, but is slower
- *
- * Revision 1.30  2002/08/06 14:00:16  mkoeppe
- * OUR_OWN_HASH implementation. rudimentary.
- *
- * Revision 1.28.1.5.1.1.1.5.1.1  1999/10/14 14:31:30  mkoeppe
- * Added output to data file and time report.
- *
- * Revision 1.28.1.5.1.1.1.5  1999/03/23 16:05:51  mkoeppe
- * Clean-up.
- *
- * Revision 1.28.1.5.1.1.1.4  1999/03/23 12:03:41  mkoeppe
- * Digital trees no longer store the vectors but point to the Vectors
- * stored in the hash table. Reduces memory use to 64MB for n=20. Maybe
- * one should combine VectorAux and LeafNode to reduce memory even
- * more...
- *
- * Revision 1.28.1.5.1.1.1.3  1999/03/22 22:46:54  mkoeppe
- * Clean-up.
- *
- * Revision 1.28.1.5.1.1.1.2  1999/03/22 21:07:19  mkoeppe
- * New `compact' vectors. n=20 takes less than 70MB.
- *
- * Revision 1.28.1.5.1.1.1.1  1999/03/22 15:13:17  mkoeppe
- * Leaves of digital trees store the vectors directly, and only the coordinates
- * not known from the structure. n=19 now takes 47MB and 6m45s user
- * (everything measured on my Linux box with 47 Bogomips). n=20 seems to
- * take 74MB.
- *
- * Revision 1.28.1.5.1.1  1999/03/18 20:28:13  mkoeppe
- * Source erasing now `correct' (but not faster).
- *
- * Revision 1.28.1.5  1999/03/12 13:55:19  mkoeppe
- * Some clean-up with the vectors. BACKWARD_LEVEL option, but no impact
- * on performance.
- *
- * Revision 1.28.1.4  1999/03/12 11:57:09  mkoeppe
- * InnerNodes take less memory (no longer using STL vectors). n=19 takes
- * 57M to 61M, 7m43s user time.
- *
- * Revision 1.28.1.3  1999/03/11 18:59:54  mkoeppe
- * Uses a hash table for SimpleVectorSet (strong). Uses advance pointers
- * with digital trees (weak). Defines _NOTHREADS (strong). n=19 takes 8m36s.
- *
- * Revision 1.28.1.2  1999/03/11 16:27:28  mkoeppe
- * Avoids duplicates by `erasing sources'. Only slightly faster because
- * the lexicographical set<Vector> operations take lotsa time.
- *
- * Revision 1.28.1.1  1999/03/11 11:27:55  mkoeppe
- * Case `j=k=\frac{n+1}2' taken out because proven obsolete. Taraaa code
- * taken out because proven obsolete. Counts duplicates.
- *
- * Revision 1.28  1999/03/10 17:44:15  mkoeppe
- * The vectors in inner node of digital trees now grow on
- * demand. Insertion takes a bit longer, but the whole thing is much
- * cooler to memory, and lookups are also faster. n=18 takes 5m33s, n=19
- * takes 11m8s user time at 61MB memory use.
- *
- * Revision 1.27  1999/03/09 20:54:59  mkoeppe
- * Clean up.
- *
- * Revision 1.26  1999/03/09 20:33:37  mkoeppe
- * Only maintains P0 range-searchable, which saves memory. n=18 now takes
- * user 6m20.4s.
- *
- * Revision 1.25  1999/03/09 20:10:44  mkoeppe
- * n=18 took user 9m34.410s, but was at very memory edge.
- *
- * Revision 1.24  1999/03/09 17:36:01  mkoeppe
- * Clean up.
- *
- * Revision 1.23  1999/03/09 16:46:07  mkoeppe
- * Too cool to be true. Up to n=17 everything is computed in `zero
- * time'. From n=18 the memory load is too high.
- *
- * Revision 1.22  1999/03/09 15:12:56  mkoeppe
- * *** empty log message ***
- *
- * Revision 1.21  1999/03/09 00:53:49  mkoeppe
- * Using a simple `digital tree' instead. n=11 takes 3sec.
- *
- * Revision 1.20  1999/03/08 20:58:23  mkoeppe
- * Ok, 11 takes 53sec.
- *
- * Revision 1.19  1999/03/08 16:59:16  mkoeppe
- * Some optimization.
- *
- * Revision 1.18  1999/03/07 18:59:41  mkoeppe
- * Added some special-purpose reduction code, for use in iterative
- * computation (4.3.11) and post-check for reducibility.
- *
- * Revision 1.17  1999/03/07 16:02:19  mkoeppe
- * n=14 still need POST_CHECK, but everything else quite ok now.
- *
- * Revision 1.16  1999/03/06 16:59:20  mkoeppe
- * Added reducibility checks.
- *
- * Revision 1.15  1999/03/05 17:39:27  mkoeppe
- * Remove obsolete check. Gives back memory.
- *
- * Revision 1.14  1999/03/05 17:09:51  mkoeppe
- * Now the last nonzero component is always positive. Took some more care
- * in the positive/negative reduction code. Hopefully this will fix n=14.
- *
- * Revision 1.13  1999/03/05 14:36:17  mkoeppe
- * Minor changes.
- *
- * Revision 1.12  1999/03/05 12:33:27  mkoeppe
- * Unified the search modes; they perform about equally.
- *
- * Revision 1.11  1999/03/04 23:53:02  mkoeppe
- * Initial implementation of R. Urbaniak's PPI algorithms.
- * */
