@@ -14,7 +14,7 @@
 #include <iomanip.h>
 #include "vec.h"
 
-#define TALKATIVE 0
+#define TALKATIVE 1
 #define HASH
 #undef WITH_STATS
 #undef ERASE_SOURCES_OF_IRREDUCIBLES
@@ -55,8 +55,8 @@ Vector Vector::operator-() const
 
 class Node {
 public:
-  unsigned char advance;
   signed char isleaf;
+  unsigned char advance;
   Node(char leaf, unsigned char adv = 1) : 
     isleaf(leaf), advance(adv) {}
 };
@@ -77,12 +77,14 @@ public:
 };  
 
 class DigitalTree {
+public:
+  int Dimension;
+private:
   InnerNode *root;
   InnerNode *AdvanceNodes;
-  bool DoSearch(const Vector &min, const Vector &max, int level, 
+  bool DoSearch(const Vector &Min, const Vector &Max, int level, 
 		Node *node);
   void Destroy(Node *node);
-  void DestructiveStore(Node *node, SimpleVectorSet &S);
   void DoFinish(InnerNode *node);
   Node *&Put(InnerNode *&inner, int where, Node* n);
   Node *&Get(InnerNode *inner, int where) const { 
@@ -92,7 +94,6 @@ class DigitalTree {
     return inner->Children[i];
   }
 public:
-  int Dimension;
   DigitalTree(int dimension) : 
     Dimension(dimension), 
     root(new InnerNode(0)),
@@ -108,8 +109,6 @@ public:
 #else
     { return DoSearch(min, max, Dimension-1, root); }
 #endif
-  void DestructiveCopy(SimpleVectorSet &S)
-    { DestructiveStore(root, S); root = 0; }
 };
 
 Node *&DigitalTree::Put(InnerNode *&inner, int where, Node* n)
@@ -153,13 +152,13 @@ void DigitalTree::Destroy(Node *node)
   }
 }
 
-bool DigitalTree::DoSearch(const Vector & min, const Vector & max, 
+bool DigitalTree::DoSearch(const Vector & Min, const Vector & Max, 
 			   int level, Node *node)
 {
   vector<Node*>::pointer ci;
-  int mi = (min[level] + ((InnerNode*)node)->Delta) >? 0;
-  int ma = (max[level] + ((InnerNode*)node)->Delta)
-    <? ((int)((InnerNode*)node)->Size - 1);
+  int mi = max(Min[level] + ((InnerNode*)node)->Delta, 0);
+  int ma = min(Max[level] + ((InnerNode*)node)->Delta,
+	       (int)((InnerNode*)node)->Size - 1);
   int count = ma - mi + 1;
   int advance;
   if (count<=0) return true;
@@ -174,16 +173,16 @@ bool DigitalTree::DoSearch(const Vector & min, const Vector & max,
 	int pos = level + 1;
 	int count = Dimension - level - 1;
 	for (vi = &((LeafNode*)(*ci))->vec[pos],
-	       mini = &min[pos],
-	       maxi = &max[pos];
+	       mini = &Min[pos],
+	       maxi = &Max[pos];
 	     count; vi++, mini++, maxi++, count--)
 	  if ((*vi)<(*mini) || (*vi)>(*maxi)) goto next;
 #else
 	int pos = level - 1;
 	int count = level;
 	for (vi = &((LeafNode*)(*ci))->vec[pos],
-	       mini = &min[pos],
-	       maxi = &max[pos];
+	       mini = &Min[pos],
+	       maxi = &Max[pos];
 	     count; vi--, mini--, maxi--, count--)
 	  if ((*vi)<(*mini) || (*vi)>(*maxi)) goto next;
 #endif
@@ -193,10 +192,10 @@ bool DigitalTree::DoSearch(const Vector & min, const Vector & max,
       }
       else if ((*ci)->isleaf == false) {
 #if defined(BACKWARD_LEVEL)
-	if (!DoSearch(min, max, level+1, *ci)) 
+	if (!DoSearch(Min, Max, level+1, *ci)) 
 	  return false;
 #else
-	if (!DoSearch(min, max, level-1, *ci)) 
+	if (!DoSearch(Min, Max, level-1, *ci)) 
 	  return false;
 #endif
       }
@@ -241,66 +240,100 @@ bool DigitalTree::Insert(const Vector &v)
   InnerNode **n = &root;
   int level;
 #if defined(BACKWARD_LEVEL)
-  for (level = 0; level<Dimension; level++) {
+  for (level = 0; level<Dimension; level++) 
 #else
-  for (level = Dimension-1; level>=0; level--) {
+  for (level = Dimension-1; level>=0; level--) 
 #endif
-    int pos = v[level];
-    if (Get(*n, pos)) {
-      if (Get(*n, pos)->isleaf) {
-	LeafNode *ol = (LeafNode*) Get(*n, pos);
-	// Build a chain of inners up to tie 
-	do {
+    {
+      int pos = v[level];
+      if (Get(*n, pos)) {
+	if (Get(*n, pos)->isleaf) {
+	  LeafNode *ol = (LeafNode*) Get(*n, pos);
+	  // Build a chain of inners up to tie 
+	  do {
 #if defined(BACKWARD_LEVEL)
-	  level++;
+	    level++;
 #else
-	  level--;
+	    level--;
 #endif
-	  int newpos = v[level];
-	  InnerNode *i = new InnerNode(newpos);
-	  n = (InnerNode **) &Put(*n, pos, i);
-	  pos = newpos;
-	} while (level > 0 
-		 && (ol->vec[level] == v[level]));
-	// Put the old and new leaves at the end
+	    int newpos = v[level];
+	    InnerNode *i = new InnerNode(newpos);
+	    n = (InnerNode **) &Put(*n, pos, i);
+	    pos = newpos;
+	  } while (level > 0 
+		   && (ol->vec[level] == v[level]));
+	  // Put the old and new leaves at the end
+	  LeafNode *l = new LeafNode;
+	  l->vec = v;
+	  Put(*n, v[level], l);
+	  Put(*n, ol->vec[level], ol);
+	  // we are done
+	  return true;
+	}
+	else { // Is inner node
+	  n = (InnerNode**) &Get(*n, pos);
+	  // go on
+	}
+      }
+      else { // Is empty slot
 	LeafNode *l = new LeafNode;
 	l->vec = v;
-	Put(*n, v[level], l);
-	Put(*n, ol->vec[level], ol);
+	Put(*n, pos, l);
 	// we are done
-	return true;
-      }
-      else { // Is inner node
-	n = (InnerNode**) &Get(*n, pos);
-	// go on
+	return true; 
       }
     }
-    else { // Is empty slot
-      LeafNode *l = new LeafNode;
-      l->vec = v;
-      Put(*n, pos, l);
-      // we are done
-      return true; 
-    }
-  }
+  return false;
+}
+
+bool isHoppi(const Vector &z)
+{
+  int cnt = 0;
+  for (int i = 1; i<=z.size(); i++)
+    cnt += z(i);
+  return (!cnt);
 }
 
 class VectorSet {
   DigitalTree *tree;
+  DigitalTree *hoppitree;
   VectorSet(const VectorSet &);
-  operator=(const VectorSet &);
+  VectorSet &operator=(const VectorSet &);
   
 public:
-  VectorSet(int level) : tree(new DigitalTree(level+1)) {}
-  ~VectorSet() { delete tree; }
-  void Finish() { tree->Finish(); }
-  bool insert(const Vector &v) { 
-    return tree->Insert(v); 
+  VectorSet(int level) : tree(new DigitalTree(level+1)),
+    hoppitree(new DigitalTree(level+1)) {}
+  ~VectorSet() { delete tree; delete hoppitree; }
+  void Finish() { tree->Finish(); hoppitree->Finish(); }
+  bool insert(const Vector &v) {
+    if (isHoppi(v)) {
+      Vector w = v;
+      Vector::iterator i;
+      // normalize hoppi
+      for (i = w.begin(); i!=w.end() && !*i; ++i);
+      int cnt = i - w.begin();
+      if (cnt) {
+	w.erase(w.begin(), i);
+	w.insert(w.end(), cnt, Vector::value_type(0));
+      }	
+      return hoppitree->Insert(w);
+    }
+    else return tree->Insert(v); 
   }
   bool OrthogonalRangeSearch(const Vector & min, const Vector & max)
-    { return tree->OrthogonalRangeSearch(min, max); }
-  void DestructiveCopy(SimpleVectorSet &S)
-    { tree->DestructiveCopy(S); }
+    { 
+      if (!tree->OrthogonalRangeSearch(min, max)) return false;
+      Vector minn = min;
+      Vector maxx = max;
+      int i;
+      for (i = minn.size(); !minn(i) && !maxx(i); i--);
+      for (; i; i--) { 
+	if (!hoppitree->OrthogonalRangeSearch(minn, maxx)) return false;
+	minn.erase(minn.begin()); minn.push_back(0);
+	maxx.erase(maxx.begin()); maxx.push_back(0);
+      }
+      return true;
+    }
 };
 
 ostream &operator<<(ostream &s, const Vector &z)
@@ -322,12 +355,12 @@ int HilbertDivide(Vector z, Vector y)
     if (y[i] > 0) {
       if (y[i] > z[i]) return 0;
       // here is z[i]>=y[i]>0.
-      maxfactor = maxfactor <? (z[i] / y[i]);
+      maxfactor = min(maxfactor, z[i] / y[i]);
     }
     else if (y[i] < 0) {
       if (y[i] < z[i]) return 0;
       // here is z[i]<=y[i]<0.
-      maxfactor = maxfactor <? (z[i] / y[i]);
+      maxfactor = min(maxfactor, z[i] / y[i]);
     }
   }
   return maxfactor;
@@ -357,7 +390,7 @@ void writeppi(ostream &c, Vector z, int n)
   c << endl;
 }
 
-static int ppicount;
+static int ppicount, hoppicount;
 static int dupcount, redcount, hitcount[2], failcount[2];
 
 /* rangereport parameters */
@@ -366,27 +399,6 @@ static int LastNonzeroPos;
 
 /////////////////
 
-bool IsReducible(Vector &z, VectorSet &S)
-{
-  int i;
-  rangemin = Vector(z.size()), rangemax = Vector(z.size());
-
-  for (i = z.size(); i && !z(i); i--) rangemin(i) = rangemax(i) = 0;
-  LastNonzeroPos = i;
-
-  // Let x = z(LastNonzeroPos).
-
-  // positive search is enough because there must be one summand that
-  // is positive at LastNonzeroPos.
-  for (i--; i; i--)
-    if (z(i) >= 0) rangemin(i) = 0, rangemax(i) = z(i);
-    else rangemin(i) = z(i), rangemax(i) = 0;
-
-  rangemin(LastNonzeroPos) = 1, 
-    rangemax(LastNonzeroPos) = z(LastNonzeroPos);
-  return (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax)));
-}
-
 //
 // Specialized code for generating all primitive partition identities
 //
@@ -394,6 +406,7 @@ bool IsReducible(Vector &z, VectorSet &S)
 void reportx(Vector z)
 {
   ppicount++;
+  if (isHoppi(z)) hoppicount++;
 #if (TALKATIVE>=1)
   cout << z << "\t"; writeppi(cout, z, z.size()); 
 #endif
@@ -498,7 +511,7 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
     if (w(k) < 0) rangemin(k) = w(k), rangemax(k) = w(k);
     else rangemin(j) = w(j), rangemax(j) = w(j);
     // search!
-    if (P.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax))) {
+    if (P.OrthogonalRangeSearch(rangemin, rangemax)) {
       // try negative search
       for (i = n; i; i--) {
 	if (w(i) <= 0) rangemin(i) = 0, rangemax(i) = -w(i);
@@ -506,7 +519,7 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
       }
       if (w(k) < 0) rangemin(k) = -w(k), rangemax(k) = -w(k);
       else rangemin(j) = -w(j), rangemax(j) = -w(j);
-      if (P.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax))) {
+      if (P.OrthogonalRangeSearch(rangemin, rangemax)) {
 	// didn't find reducer, but vector may already be known
 	SetupAttribute(w, n, false);
 	if (Pnew.insert(w).second) {
@@ -545,7 +558,19 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
     v(n+1) = 0;
     SetupAttribute(v, n, true); 
     P.insert(v); Pold->insert(v); reportx(v);
+    if (isHoppi(v) && v(n)!=0) {
+      // perform hoppi shift
+      cerr << "H";
+      v.pop_back();
+      v.insert(v.begin(), 0);
+      SetupAttribute(v, n, false);
+      Pnew->insert(v); reportx(v);
+    }
   }
+  cerr << "Erasing sources of shifted hoppis..." << endl;
+  for (SimpleVectorSet::iterator i = Pnew->begin(); 
+       i!=Pnew->end(); ++i) 
+    EraseSource(*i, n, *Pold, true, false);
   // destroy Pn to save memory
   Pn = SimpleVectorSet();
   // finish P to make search faster
@@ -638,11 +663,12 @@ int main(int argc, char *argv[])
     hitcount[0] = failcount[0] = hitcount[1] = failcount[1] 
       = redcount = dupcount = 0;
 #endif
-    ppicount = 0;
+    hoppicount = ppicount = 0;
     cerr << "### Extending to n = " << i+1 << endl;
     ExtendPPI(V, i);
     cerr << "### This makes " << ppicount 
-	 << " PPI up to sign" 
+	 << " PPIs up to sign, including " 
+	 << hoppicount << " HoPPIs"
 #if defined(WITH_STATS)
 	 << ", with " << redcount << " reduce ops, "
 	 << hitcount[0] << " red-erase hits, "
@@ -660,6 +686,10 @@ int main(int argc, char *argv[])
 }
 
 /* $Log$
+ * Revision 1.28.1.5  1999/03/12 13:55:19  mkoeppe
+ * Some clean-up with the vectors. BACKWARD_LEVEL option, but no impact
+ * on performance.
+ *
  * Revision 1.28.1.4  1999/03/12 11:57:09  mkoeppe
  * InnerNodes take less memory (no longer using STL vectors). n=19 takes
  * 57M to 61M, 7m43s user time.
