@@ -104,7 +104,7 @@ public:    /* for use in SimpleVectorSet */
 
 class SimpleVectorSet;
 
-/* a simple hash table with linear probing */
+/* a simple hash table with chaining */
 
 size_t vector_hash_fun (const Vector &v)
 {
@@ -118,7 +118,9 @@ class SimpleVectorSetIterator {
 public:
   size_t index;
   SimpleVectorSet *the_set;
-  SimpleVectorSetIterator(SimpleVectorSet *theset, size_t ndex) : the_set(theset), index(ndex) {}
+  Vector *node;
+  SimpleVectorSetIterator(SimpleVectorSet *theset, size_t ndex, Vector *ode) :
+    the_set(theset), index(ndex), node(ode) {}
   Vector &operator*();
   friend bool operator == (const SimpleVectorSetIterator &a, const SimpleVectorSetIterator &b);
   friend bool operator != (const SimpleVectorSetIterator &a, const SimpleVectorSetIterator &b);
@@ -127,12 +129,12 @@ public:
 
 inline bool operator == (const SimpleVectorSetIterator &a, const SimpleVectorSetIterator &b)
 {
-  return a.index == b.index;
+  return a.index == b.index && a.node == b.node;
 }
   
 inline bool operator != (const SimpleVectorSetIterator &a, const SimpleVectorSetIterator &b)
 {
-  return a.index != b.index;
+  return a.index != b.index || a.node != b.node;
 }
 
 class SimpleVectorSet {
@@ -145,7 +147,7 @@ public:
   size_t count;
   SimpleVectorSet(size_t size) {
     count = 0;
-    num_buckets = size; //21089; /*13845163;*/
+    num_buckets = size; 
     buckets = (Vector**) malloc(sizeof(Vector *) * num_buckets);
     size_t i;
     for (i = 0; i<num_buckets; i++)
@@ -158,37 +160,30 @@ public:
     size_t bucket;
     for (bucket = 0; bucket < num_buckets; bucket++) {
       if (buckets[bucket] != NULL)
-	return SimpleVectorSetIterator(this, bucket);
+	return SimpleVectorSetIterator(this, bucket, buckets[bucket]);
     }
     return end();
   }
-  SimpleVectorSetIterator end() { return SimpleVectorSetIterator(this, num_buckets); }
+  SimpleVectorSetIterator end() { return SimpleVectorSetIterator(this, num_buckets, NULL); }
   pair<iterator, bool> insert(const Vector& obj)
   {
     size_t h = vector_hash_fun(obj);
     size_t hm = h % num_buckets;
-    size_t bucket;
-    for (bucket = hm; bucket < num_buckets; bucket++) {
-      if (buckets[bucket] == NULL) {
-	buckets[bucket] = new Vector(obj); count++;
-	return pair<iterator, bool>(SimpleVectorSetIterator(this, bucket), true);
-      }
-      if (*buckets[bucket] == obj) {
-	return pair<iterator, bool>(SimpleVectorSetIterator(this, bucket), false);
-      }
-    }
-    for (bucket = 0; bucket < hm; bucket++) {
-      if (buckets[bucket] == NULL) {
-	buckets[bucket] = new Vector(obj); count++;
-	return pair<iterator, bool>(SimpleVectorSetIterator(this, bucket), true);
-      }
-      if (*buckets[bucket] == obj) {
-	return pair<iterator, bool>(SimpleVectorSetIterator(this, bucket), false);
+    /* See if it's there */
+    Vector *v;
+    for (v = buckets[hm]; v!=NULL; v=v->next) {
+      if (v->hash == h) {
+	if (*v == obj) {
+	  return pair<iterator, bool>(SimpleVectorSetIterator(this, hm, v), false);
+	}
       }
     }
-    /* buckets are full, shall not happen */
-    cerr << "Buckets are full (count " << count << ", num_buckets " << num_buckets << ")" << endl;
-    exit(1);
+    /* Insert it at the front of the list */
+    v = new Vector(obj);
+    v->next = buckets[hm];
+    v->hash = h;
+    buckets[hm] = v; count++;
+    return pair<iterator, bool>(SimpleVectorSetIterator(this, hm, v), true);
   }
   void insert(const SimpleVectorSetIterator &a, const SimpleVectorSetIterator &b)
   {
@@ -201,21 +196,12 @@ public:
   {
     size_t h = vector_hash_fun(obj);
     size_t hm = h % num_buckets;
-    size_t bucket;
-    for (bucket = hm; bucket < num_buckets; bucket++) {
-      if (buckets[bucket] == NULL) {
-	return end();
-      }
-      if (*buckets[bucket] == obj) {
-	return SimpleVectorSetIterator(this, bucket);
-      }
-    }
-    for (bucket = 0; bucket < hm; bucket++) {
-      if (buckets[bucket] == NULL) {
-	return end();
-      }
-      if (*buckets[bucket] == obj) {
-	return SimpleVectorSetIterator(this, bucket);
+    Vector *v;
+    for (v = buckets[hm]; v!=NULL; v=v->next) {
+      if (v->hash == h) {
+	if (*v == obj) {
+	  return SimpleVectorSetIterator(this, hm, v);
+	}
       }
     }
     return end();
@@ -223,16 +209,26 @@ public:
 };
 
 inline Vector &SimpleVectorSetIterator::operator*() {
-  return *(the_set->buckets[index]);
+  return *node;
 }
 
 inline SimpleVectorSetIterator &SimpleVectorSetIterator::operator ++()
 {
-  do {
-    index++;
-  } while (index < the_set->num_buckets && the_set->buckets[index] == NULL);
+  node = node->next;
+  if (node == NULL) {
+    /* end of list, next bucket */
+    do {
+      index++;
+    } while (index < the_set->num_buckets && the_set->buckets[index] == NULL);
+    if (index < the_set->num_buckets)
+      node = the_set->buckets[index];
+  }    
   return *this;
 }
+
+////// FIXME:
+
+class VerySimpleVectorSet;
 
 #else
 #if defined(HASH) // Use a hash table for SimpleVectorSet
@@ -998,6 +994,9 @@ int main(int argc, char *argv[])
 
 /*
  * $Log$
+ * Revision 1.32  2002/08/06 16:25:23  mkoeppe
+ * Better memory mgmt
+ *
  * Revision 1.31  2002/08/06 14:31:45  mkoeppe
  * Seems to work, but is slower
  *
