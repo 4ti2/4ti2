@@ -12,7 +12,6 @@
 #include <vector>
 #include <iostream.h>
 #include <iomanip.h>
-#include "vec.h"
 
 #define TALKATIVE 0
 #define HASH
@@ -21,6 +20,63 @@
 #define ERASE_ONLY_GUARANTEED
 #define WITH_ADVANCE
 #undef BACKWARD_LEVEL
+#define COMPACT_VECTORS
+
+#if defined(COMPACT_VECTORS)
+struct VectorAux {
+  /* order important */
+  unsigned long Attribute;
+  unsigned char Length;
+  signed char Data[0];
+  void *operator new(size_t s, int length) {
+    return malloc(s+length);
+  }
+  VectorAux(int length) : Length(length) {}
+  VectorAux(const VectorAux &aux) {
+    memcpy(this, &aux, sizeof(VectorAux) + aux.Length);
+  }    
+};
+
+class Vector {
+public:
+  typedef const signed char *const_pointer;
+  typedef signed char *pointer;
+  typedef const signed char *const_iterator;
+  typedef signed char *iterator;
+private:
+  VectorAux *aux;
+public:
+  Vector() { aux = 0; }
+  Vector(int length) { aux = new(length) VectorAux(length); }
+  Vector(const Vector &v) { aux = new(v.aux->Length) VectorAux(*v.aux); }
+  ~Vector() { delete aux; }
+  Vector &operator=(const Vector &v) {
+    if (this!=&v) { 
+      delete aux; 
+      aux = new(v.aux->Length) VectorAux(*v.aux);
+    }
+    return *this;
+  }
+  signed char &operator [](size_t i) { return aux->Data[i]; }
+  signed char &operator ()(int i) { return aux->Data[i-1]; }
+  const signed char &operator [](size_t i) const { return aux->Data[i]; }
+  const signed char &operator ()(int i) const { return aux->Data[i-1];
+  }
+  const_iterator begin() const { return aux->Data; }
+  const_iterator end() const { return aux->Data + aux->Length; }
+  size_t size() const { return aux->Length; }
+public:
+  Vector operator-() const;
+  unsigned long &Attribute() { return aux->Attribute; }
+  friend bool operator==(const Vector &a, const Vector &b) {
+    if (a.size() != b.size()) return false;
+    for (int i = 0; i<a.size(); i++) if (a[i] != b[i]) return false;
+    return true;
+  }
+};  
+#else
+#  include "vec.h"
+#endif
 
 #if defined(HASH) // Use a hash table for SimpleVectorSet
 
@@ -46,10 +102,10 @@ typedef set<Vector, less<Vector> > SimpleVectorSet;
 #endif
 
 Vector Vector::operator-() const 
-  return v; 
 {
-  v = Vector(size());
+  Vector v(size());
   for (int i = 0; i<size(); i++) v[i] = -(*this)[i];
+  return v;
 }
 
 // Implementation with digital trees (FIXME: name?)
@@ -371,27 +427,6 @@ static int LastNonzeroPos;
 
 /////////////////
 
-bool IsReducible(Vector &z, VectorSet &S)
-{
-  int i;
-  rangemin = Vector(z.size()), rangemax = Vector(z.size());
-
-  for (i = z.size(); i && !z(i); i--) rangemin(i) = rangemax(i) = 0;
-  LastNonzeroPos = i;
-
-  // Let x = z(LastNonzeroPos).
-
-  // positive search is enough because there must be one summand that
-  // is positive at LastNonzeroPos.
-  for (i--; i; i--)
-    if (z(i) >= 0) rangemin(i) = 0, rangemax(i) = z(i);
-    else rangemin(i) = z(i), rangemax(i) = 0;
-
-  rangemin(LastNonzeroPos) = 1, 
-    rangemax(LastNonzeroPos) = z(LastNonzeroPos);
-  return (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax)));
-}
-
 //
 // Specialized code for generating all primitive partition identities
 //
@@ -423,7 +458,7 @@ inline void SetupAttribute(Vector &v, int n, bool WithNegative)
     for (int j = 1; j<=n/2; j++, mask<<=1)
       if (v(j) > 0 || v(n+1-j) > 0) attrib |= mask;
   }
-  v.Attribute = attrib;
+  v.Attribute() = attrib;
 }
 
 // Erase u as a source, i.e. find it in Pold and erase its i'th flag.
@@ -435,7 +470,7 @@ inline void DoErase(Vector &u, int i, int n, SimpleVectorSet &Pold,
 #if defined(WITH_STATS)
     hitcount[irreducible]++;
 #endif
-    const_cast<Vector&>(*ui).Attribute 
+    const_cast<Vector&>(*ui).Attribute() 
       &= ~((negative ? (1<<16) : 1)<<(i-1));
   }
 #if defined(WITH_STATS)
@@ -578,7 +613,7 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
     if (w(k) < 0) rangemin(k) = w(k), rangemax(k) = w(k);
     else rangemin(j) = w(j), rangemax(j) = w(j);
     // search!
-    if (P.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax))) {
+    if (P.OrthogonalRangeSearch(rangemin, rangemax)) {
       // try negative search
       for (i = n; i; i--) {
 	if (w(i) <= 0) rangemin(i) = 0, rangemax(i) = -w(i);
@@ -586,7 +621,7 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
       }
       if (w(k) < 0) rangemin(k) = -w(k), rangemax(k) = -w(k);
       else rangemin(j) = -w(j), rangemax(j) = -w(j);
-      if (P.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax))) {
+      if (P.OrthogonalRangeSearch(rangemin, rangemax)) {
 	// didn't find reducer, but vector may already be known
 	SetupAttribute(w, n, false);
 	if (Pnew.insert(w).second) {
@@ -658,7 +693,7 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
   // first a pass for the simple cases
   for (SimpleVectorSet::iterator i = Pold->begin(); i!=Pold->end(); ++i) {
     Vector v = *i;
-    if (v.Attribute) {
+    if (v.Attribute()) {
 #if (TALKATIVE>=2)
       cerr << "Raising " << v << endl;
 #endif
@@ -675,15 +710,15 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
   // then a pass for the complicated cases
   for (SimpleVectorSet::iterator i = Pold->begin(); i!=Pold->end(); ++i) {
     Vector v = *i;
-    if (v.Attribute) {
+    if (v.Attribute()) {
 #if (TALKATIVE>=2)
       cerr << "Raising " << v << endl;
 #endif
       for (int j = 1; j<=n/2; j++) { // yes n/2 is enough
 	int k = (n+1) - j;
-	if (v.Attribute & (1<<(j-1)))
+	if (v.Attribute() & (1<<(j-1)))
 	  RaisePPI(v, j, k, n, P, *Pold, *Pnew, true);
-	if (v.Attribute & ((1<<16)<<(j-1)))
+	if (v.Attribute() & ((1<<16)<<(j-1)))
 	  RaisePPI(-v, j, k, n, P, *Pold, *Pnew, true);
       }
     }
@@ -702,7 +737,7 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
     // simple cases
     for (SimpleVectorSet::iterator i = Pold->begin(); i!=Pold->end(); ++i) {
       Vector v = *i;
-      if (v.Attribute) {
+      if (v.Attribute()) {
 #if (TALKATIVE>=2)
 	cerr << "Raising " << v << endl;
 #endif
@@ -717,12 +752,12 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
     // complicated cases
     for (SimpleVectorSet::iterator i = Pold->begin(); i!=Pold->end(); ++i) {
       Vector v = *i;
-      if (v.Attribute) {
+      if (v.Attribute()) {
 #if (TALKATIVE>=2)
 	cerr << "Raising " << v << endl;
 #endif
 	for (int j = 1; j<=n/2; j++) {
-	  if (v.Attribute & (1<<(j-1))) { // source erasing
+	  if (v.Attribute() & (1<<(j-1))) { // source erasing
 	    int k = (n+1) - j;
 	    RaisePPI(v, j, k, n, P, *Pold, *Pnew, false);
 	  }
@@ -783,6 +818,12 @@ int main(int argc, char *argv[])
 
 /*
  * $Log$
+ * Revision 1.28.1.5.1.1.1.1  1999/03/22 15:13:17  mkoeppe
+ * Leaves of digital trees store the vectors directly, and only the coordinates
+ * not known from the structure. n=19 now takes 47MB and 6m45s user
+ * (everything measured on my Linux box with 47 Bogomips). n=20 seems to
+ * take 74MB.
+ *
  * Revision 1.28.1.5.1.1  1999/03/18 20:28:13  mkoeppe
  * Source erasing now `correct' (but not faster).
  *
