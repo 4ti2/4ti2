@@ -68,9 +68,15 @@ public:
   Vector(const Vector &v) { aux = new(v.aux->Length()) VectorAux(*v.aux); }
   ~Vector() { delete aux; }
   Vector &operator=(const Vector &v) {
-    if (this!=&v) { 
-      delete aux; 
-      aux = new(v.aux->Length()) VectorAux(*v.aux);
+    if (this!=&v) {
+      if (aux == NULL) 
+	aux = new(v.aux->Length()) VectorAux(*v.aux);
+      else if (aux->Length() == v.aux->Length())
+	memcpy(aux, v.aux, sizeof(VectorAux) -4 + 1 + v.aux->Length());
+      else {
+	delete aux;
+	aux = new(v.aux->Length()) VectorAux(*v.aux);
+      }
     }
     return *this;
   }
@@ -185,6 +191,26 @@ public:
     buckets[hm] = v; count++;
     return pair<iterator, bool>(SimpleVectorSetIterator(this, hm, v), true);
   }
+  pair<iterator, bool> insert(Vector *obj)  /* owns obj afterwards */
+  {
+    size_t h = vector_hash_fun(*obj);
+    size_t hm = h % num_buckets;
+    /* See if it's there */
+    Vector *v;
+    for (v = buckets[hm]; v!=NULL; v=v->next) {
+      if (v->hash == h) {
+	if (*v == *obj) {
+	  return pair<iterator, bool>(SimpleVectorSetIterator(this, hm, v), false);
+	}
+      }
+    }
+    /* Insert it at the front of the list */
+    v = obj;
+    v->next = buckets[hm];
+    v->hash = h;
+    buckets[hm] = v; count++;
+    return pair<iterator, bool>(SimpleVectorSetIterator(this, hm, v), true);
+  }
   void insert(const SimpleVectorSetIterator &a, const SimpleVectorSetIterator &b)
   {
     iterator i = a;
@@ -228,7 +254,57 @@ inline SimpleVectorSetIterator &SimpleVectorSetIterator::operator ++()
 
 ////// FIXME:
 
-class VerySimpleVectorSet;
+class VerySimpleVectorSetIterator {
+  Vector *p;
+public:
+  VerySimpleVectorSetIterator(Vector *pp) : p(pp) {}
+  Vector &operator*() { return *p; }
+  friend bool operator == (const VerySimpleVectorSetIterator &a, const VerySimpleVectorSetIterator &b)
+  { return a.p == b.p; }
+  friend bool operator != (const VerySimpleVectorSetIterator &a, const VerySimpleVectorSetIterator &b)
+  { return a.p != b.p; }
+  VerySimpleVectorSetIterator &operator ++() { p = p->next; return *this; }
+};
+
+class VerySimpleVectorSet { /* a linked list */
+  Vector *head;
+public:
+  size_t count;
+  typedef VerySimpleVectorSetIterator iterator;
+  VerySimpleVectorSet() : head(NULL) {}
+  ~VerySimpleVectorSet() {
+    Vector *v, *n;
+    for (v = head; v!=NULL; ) {
+      n = v->next;
+      delete v;
+      v = n;
+    }    
+  }
+  iterator begin() const { return VerySimpleVectorSetIterator(head); }
+  iterator end() const { return NULL; }
+  void insert_destructively(SimpleVectorSet &s) {
+    /* Move all entries from s.  After that, s is empty. */
+    size_t i;
+    for (i = 0; i<s.num_buckets; i++) {
+      Vector *p = s.buckets[i];
+      if (p != NULL) {
+	while (p->next != NULL) p = p->next;
+	p->next = head;
+	head = s.buckets[i];
+	s.buckets[i] = NULL;
+      }
+    }
+    count += s.count;
+    s.count = 0;
+  }
+  void insert(const Vector &s)
+  {
+    Vector *v = new Vector(s);
+    v->next = head;
+    head = v;
+    count++;
+  }
+};
 
 #else
 #if defined(HASH) // Use a hash table for SimpleVectorSet
@@ -722,6 +798,8 @@ inline void EraseSource(const Vector &w, int n, SimpleVectorSet &Pold,
     DoIncAndErase(u, i, n, Pold, irreducible);
 }
 
+Vector *temp = NULL;
+
 inline void RaisePPI(const Vector &v, int j, int k, int n, 
 		     VectorSet &P, SimpleVectorSet &Pold,
 		     SimpleVectorSet &Pnew, bool WithNegative,
@@ -729,7 +807,13 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
 {
   // assert(j<k);
   //  cerr << "RaisePPI " << v << " with " << j << " and " << k << endl;
-  Vector w = v;
+  /* Vector *ww = new Vector(v); */
+  if (temp == NULL)
+    temp = new Vector(v);
+  else 
+    *temp = v;
+  Vector &w = *temp;
+  
   w(n+1)++, w(j)--, w(k)--;
   // reducibility check
   if (KnownIrreducible || (w(j) >= 0 && w(k) >= 0)) { // w is irreducible 
@@ -737,9 +821,10 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
     simplecount++;
 #endif
     SetupAttribute(w, n, false);
-    if (Pnew.insert(w).second) {
+    if (Pnew.insert(temp).second) {
       EraseSource(w, n, Pold, true, WithNegative);
-      reportx(w); 
+      reportx(w);
+      temp = NULL;
     }
     else {
 #if defined(WITH_STATS)
@@ -752,7 +837,6 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
 #if defined(WITH_STATS)
     redcount++;
 #endif
-    rangemin = Vector(n+1), rangemax = Vector(n+1);
     rangemin(n+1) = rangemax(n+1) = 0;
     // use full range at the remaining positions
     for (i = n; i; i--) {
@@ -777,12 +861,13 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
       if (P.OrthogonalRangeSearch(rangemin, rangemax)) {
 	// didn't find reducer, but vector may already be known
 	SetupAttribute(w, n, false);
-	if (Pnew.insert(w).second) {
+	if (Pnew.insert(temp).second) {
 #if defined(WITH_STATS)
 	  goodcount++;
 #endif
 	  EraseSource(w, n, Pold, true, WithNegative);
 	  reportx(w);
+	  temp = NULL;
 	}
 	else {
 #if defined(WITH_STATS)
@@ -799,9 +884,7 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
   }
 }
 
-/* FIXME: Pn kann einfach ein Array werden, da darin nie gesucht
-   werden mu"s. */
-SimpleVectorSet *ExtendPPI(SimpleVectorSet *Pn, int n)
+VerySimpleVectorSet *ExtendPPI(VerySimpleVectorSet *Pn, int n)
 {
   SimpleVectorSet *Pold;
   int expected_count = 2 * Pn->count;
@@ -813,11 +896,14 @@ SimpleVectorSet *ExtendPPI(SimpleVectorSet *Pn, int n)
   
   {
     VectorSet P(n);
+    /* initialize special vectors */
+    delete temp; temp = NULL;
+    rangemin = Vector(n+1), rangemax = Vector(n+1);
 
     // (1) Create the range-searchable set P of (n+1)-vectors from the
     // set Pn of n-vectors.
     cerr << "# Vectors copied from n = " << n << ": " << endl;
-    for (SimpleVectorSet::iterator i = Pn->begin(); i!=Pn->end(); ++i) {
+    for (VerySimpleVectorSet::iterator i = Pn->begin(); i!=Pn->end(); ++i) {
       Vector v(n+1);
       for (int j = 1; j <= n; j++) v(j) = (*i)(j);
       v(n+1) = 0;
@@ -826,7 +912,7 @@ SimpleVectorSet *ExtendPPI(SimpleVectorSet *Pn, int n)
     }
     // destroy Pn to save memory
     delete Pn;
-    Pn = new SimpleVectorSet(expected_count);
+    Pn = new VerySimpleVectorSet();
     // finish P to make search faster
     cerr << "Finishing..." << endl;
     P.Finish();
@@ -853,34 +939,36 @@ SimpleVectorSet *ExtendPPI(SimpleVectorSet *Pn, int n)
 
     // first a pass for the simple cases
     for (SimpleVectorSet::iterator i = Pbase->begin(); i!=Pbase->end(); ++i) {
-      Vector v = *i;
+      Vector &v = *i;
       if (v.Attribute()) {
 #if (TALKATIVE>=2)
 	cerr << "Raising " << v << endl;
 #endif
+	Vector minus_v = -v;
 	for (int j = 1; j<=n/2; j++) { // yes n/2 is enough
 	  int k = (n+1) - j;
 	  if (v(j) > 0 && v(k) > 0)
 	    RaisePPI(v, j, k, n, P, *Pbase, *Pnew, true, true);
 	  if (v(j) < 0 && v(k) < 0)
-	    RaisePPI(-v, j, k, n, P, *Pbase, *Pnew, true, true);
+	    RaisePPI(minus_v, j, k, n, P, *Pbase, *Pnew, true, true);
 	}
       }
     }
 
     // then a pass for the complicated cases
     for (SimpleVectorSet::iterator i = Pbase->begin(); i!=Pbase->end(); ++i) {
-      Vector v = *i;
+      Vector &v = *i;
       if (v.Attribute()) {
 #if (TALKATIVE>=2)
 	cerr << "Raising " << v << endl;
 #endif
+	Vector minus_v = -v;
 	for (int j = 1; j<=n/2; j++) { // yes n/2 is enough
 	  int k = (n+1) - j;
 	  if (v.Attribute() & (1<<(j-1)))
 	    RaisePPI(v, j, k, n, P, *Pbase, *Pnew, true);
 	  if (v.Attribute() & ((1<<16)<<(j-1)))
-	    RaisePPI(-v, j, k, n, P, *Pbase, *Pnew, true);
+	    RaisePPI(minus_v, j, k, n, P, *Pbase, *Pnew, true);
 	}
       }
     }
@@ -895,7 +983,7 @@ SimpleVectorSet *ExtendPPI(SimpleVectorSet *Pn, int n)
       cerr << "# Vectors of P" << t+1 << "(" << n+1 << "):" << endl;
       // simple cases
       for (SimpleVectorSet::iterator i = Pold->begin(); i!=Pold->end(); ++i) {
-	Vector v = *i;
+	Vector &v = *i;
 	if (v.Attribute()) {
 #if (TALKATIVE>=2)
 	  cerr << "Raising " << v << endl;
@@ -910,7 +998,7 @@ SimpleVectorSet *ExtendPPI(SimpleVectorSet *Pn, int n)
       }
       // complicated cases
       for (SimpleVectorSet::iterator i = Pold->begin(); i!=Pold->end(); ++i) {
-	Vector v = *i;
+	Vector &v = *i;
 	if (v.Attribute()) {
 #if (TALKATIVE>=2)
 	  cerr << "Raising " << v << endl;
@@ -924,18 +1012,18 @@ SimpleVectorSet *ExtendPPI(SimpleVectorSet *Pn, int n)
 	}
       }
 
-      Pn->insert(Pold->begin(), Pold->end());
-      delete Pold;
+      Pn->insert_destructively(*Pold);
+      SimpleVectorSet *tmp = Pold; /* an empty set */
       Pold = Pnew;
-      Pnew = new SimpleVectorSet(expected_count);
+      Pnew = tmp;
     }
   } // P is dead now
-  Pn->insert(Pold->begin(), Pold->end());
+  Pn->insert_destructively(*Pold);
   delete Pold;
   delete Pnew;
 
   // Finally, add the base and destroy it
-  Pn->insert(Pbase->begin(), Pbase->end());
+  Pn->insert_destructively(*Pbase);
   delete Pbase;
   return Pn;
 }
@@ -950,8 +1038,8 @@ int main(int argc, char *argv[])
   if (!n) n = 5;
 
   // Setup PPI set for n=2
-  SimpleVectorSet *V;
-  V = new SimpleVectorSet(1);
+  VerySimpleVectorSet *V;
+  V = new VerySimpleVectorSet();
   Vector v(2); v(1) = -2, v(2) = +1; V->insert(v);
   for (int i = 2; i<n; i++) {
 #if defined(WITH_STATS)
@@ -981,7 +1069,7 @@ int main(int argc, char *argv[])
       FILE *f = fopen(fname, "wb");
       char cn = n;
       fwrite(&cn, 1, 1, f);
-      SimpleVectorSet::iterator j = V->begin();
+      VerySimpleVectorSet::iterator j = V->begin();
       for (; j!=V->end(); ++j) {
 	fwrite(&(*j)[0], 1, n, f);
       }
@@ -994,6 +1082,9 @@ int main(int argc, char *argv[])
 
 /*
  * $Log$
+ * Revision 1.33  2002/08/06 16:51:38  mkoeppe
+ * chaining, rather than linear probing
+ *
  * Revision 1.32  2002/08/06 16:25:23  mkoeppe
  * Better memory mgmt
  *
