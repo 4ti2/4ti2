@@ -58,6 +58,15 @@ ostream &operator<<(ostream &s, const Vector &z)
   return s;
 }
 
+void ClearVectorRepository()
+{
+  for (vector<Vector *>::iterator i = VectorRepository.begin();
+       i!=VectorRepository.end();
+       ++i)
+    delete *i;
+  VectorRepository = vector<Vector *>();
+}
+
 int HilbertDivide(Vector z, Vector y)
 {
   // Find maximal integer f with f*y<=z in Hilbert-base sense.
@@ -208,13 +217,6 @@ void reportx(Vector z)
 // both P and Q.
 bool ReduceAndInsert(Vector &v, VectorSet &P, SimpleVectorSet &Q)
 {
-  // check sign
-  int i;
-  for (i = v.size(); i && !v(i); i--);
-  if (!i) return false;
-  if (v(i) < 0) {
-    for (; i; i--) v(i) = -v(i);
-  }
   // reduce 
   if (HilbertReduce(v, P)) {
     P.insert(v);
@@ -272,6 +274,8 @@ SimpleVectorSet ExtendPPI(const SimpleVectorSet &Pn, int n)
 	    ReduceAndInsert(w, P, Pnew);
 	  }
 	  if (!v(n+1)) {
+	    // if there is no (n+1) component yet, 
+	    // we can invert the identity.
 	    if (v(j) <= 0 || v(k) <= 0) { // otherwise, w reducible by v
 	      Vector w = -v;
 	      w(n+1)++, w(j)--, w(k)--;
@@ -307,6 +311,7 @@ int main(int argc, char *argv[])
     ppicount = 0;
     cerr << "### Extending to n = " << i+1 << endl;
     V = ExtendPPI(V, i);
+    ClearVectorRepository();
     cerr << "### This makes " << ppicount 
 	 << " PPI up to sign." << endl;
   }
@@ -314,6 +319,10 @@ int main(int argc, char *argv[])
 }
 
 /* $Log$
+ * Revision 1.14  1999/03/05 17:09:51  mkoeppe
+ * Now the last nonzero component is always positive. Took some more care
+ * in the positive/negative reduction code. Hopefully this will fix n=14.
+ *
  * Revision 1.13  1999/03/05 14:36:17  mkoeppe
  * Minor changes.
  *
