@@ -104,20 +104,7 @@ void writeppi(ostream &c, Vector z, int n)
 static int count;
 static int ppicount;
 
-void report(Vector z)
-{
-  count++;
-  if (z[z.size()-1]) cout << z << endl;
-  else { ppicount++; cout << z << "\t"; writeppi(cout, z, z.size()-1); }
-}    
-
-void reportx(Vector z)
-{
-  count++, ppicount++;
-  cout << z << "\t"; writeppi(cout, z, z.size()); 
-}
-
-/* rangereport parameter */
+/* rangereport parameters */
 /* FIXME: Use a class instead */
 static Vector rangez;
 static bool nonzeroz;
@@ -188,6 +175,14 @@ bool HilbertReduce(Vector &z, VectorSet &S)
 // General code to build a hilbert base from scratch
 //
 
+void report(Vector z)
+{
+  count++;
+  if (z[z.size()-1]) cout << z << endl;
+  else { ppicount++; cout << z << "\t"; writeppi(cout, z, z.size()-1);
+  }
+}    
+
 void /*VectorSet*/ HilbertBase(VectorSet &T, SimpleVectorSet freshT)
 {
   SimpleVectorSet oldT;
@@ -250,6 +245,18 @@ void /*VectorSet*/ HilbertBase(VectorSet &T)
   /*return*/ HilbertBase(T, T);
 }
 
+//
+// Specialized code for generating all primitive partition identities
+//
+
+void reportx(Vector z)
+{
+  count++, ppicount++;
+#ifdef TALKATIVE
+  cout << z << "\t"; writeppi(cout, z, z.size()); 
+#endif
+}
+
 // Reduces v with repect to P and inserts a nonzero remainder into
 // both P and Q.
 bool ReduceAndInsert(Vector &v, VectorSet &P, SimpleVectorSet &Q)
@@ -270,10 +277,6 @@ bool ReduceAndInsert(Vector &v, VectorSet &P, SimpleVectorSet &Q)
   }
   return false;
 }
-
-//
-// Specialized code for generating all primitive partition identities
-//
 
 SimpleVectorSet ExtendPPI(const SimpleVectorSet &Pn, int n)
 {
@@ -343,7 +346,8 @@ int main(int argc, char *argv[])
   if (argc >= 2) {
     sscanf(argv[1], "%d", &n);
     if (argc == 3)       
-      sscanf(argv[2], "%f", &alpha);
+      //sscanf(argv[2], "%f", &alpha);
+      sscanf(argv[2], "%d", &BBTree::FewLeavesBound);
   }
   if (!n) n = 5;
 
@@ -380,6 +384,9 @@ int main(int argc, char *argv[])
 }
 
 /* $Log$
+ * Revision 1.12  1999/03/05 12:33:27  mkoeppe
+ * Unified the search modes; they perform about equally.
+ *
  * Revision 1.11  1999/03/04 23:53:02  mkoeppe
  * Initial implementation of R. Urbaniak's PPI algorithms.
  * */
