@@ -151,8 +151,10 @@ static bool rangereport(const Leaf &y)
 {
   rangeresult = y;
   maxfactor = HilbertDivide(rangez, rangeresult);
-  if (!maxfactor) { /* FIXME: This check should should be superfluous, but 
-		       RangeSearch does not work properly */
+  if (!maxfactor) { 
+    /* This check is superfluous, but it doesn't cost much, and
+       RangeSearch used to work badly; so rather keep this just in
+       case it gets broken again. */
     cerr << "Bad reducer: " << rangeresult 
 	 << " min " << rangemin << " max " << rangemax << endl;
     return true;
