@@ -12,7 +12,7 @@
 #include "bbalpha.h"
 
 #define VVVV 1
-#undef TALKATIVE
+#define TALKATIVE 0
 
 typedef set<Vector, less<Vector> > SimpleVectorSet;
 static vector<Vector *> VectorRepository;
@@ -75,18 +75,32 @@ public:
 
 class DigitalTree {
   InnerNode *root;
-  bool DoSearch(Leaf min, Leaf max, Report report, int level, Node *node);
+  bool DoSearch(Leaf min, Leaf max, Report report, int level, 
+		Node *node);
+  void Destroy(Node *node);
 public:
   int Dimension;
   DigitalTree(int dimension) : 
     Dimension(dimension), 
     root(new InnerNode(2*dimension+1)) {}
-  ~DigitalTree() { /* FIXME: */ }
+  ~DigitalTree() { Destroy(root); }
   bool Insert(Leaf leaf, bool CheckDup);
   bool OrthogonalRangeSearch(Leaf min, Leaf max, 
 			     Report report)
     { return DoSearch(min, max, report, Dimension-1, root); }
 };
+
+void DigitalTree::Destroy(Node *node)
+{
+  if (node->isleaf) delete (LeafNode*)node;
+  else {
+    for (vector<Node*>::iterator i = ((InnerNode*)node)->Children.begin();
+	 i!=((InnerNode*)node)->Children.end();
+	 ++i)
+      if (*i) Destroy(*i);
+    delete (InnerNode*)node;
+  }
+}
 
 bool DigitalTree::DoSearch(Leaf min, Leaf max, 
 			   Report report, int level, Node *node)
@@ -137,11 +151,14 @@ bool DigitalTree::Insert(Leaf leaf, bool CheckDup)
 	       i>=0 && ((Vector&)(ol->leaf))[i] == ((Vector&)leaf)[i];
 	       i--);
 	  if (i<0) {
+#if (TALKATIVE >= 3)
 	    cerr << "$";
+#endif
 	    return false;
 	  }
 	}
 	// Build a chain of inners up to tie 
+	// FIXME: What about a compressed structure...?
 	do {
 	  InnerNode *i = new InnerNode(2 * Dimension + 1);
 	  n->Children[pos] = i;
@@ -449,65 +466,6 @@ bool HilbertReduce(Vector &z, VectorSet &S)
 
 /////////////////
 
-// This reduce procedure bails out when value at LastNonzeroPos
-// reduced. 
-bool HilbertReduceVariant(Vector &z, VectorSet &S)
-{
-  int i;
-  rangemin = Vector(z.size()), rangemax = Vector(z.size());
-
-  for (i = z.size(); i && !z(i); i--);
-  LastNonzeroPos = i;
-  rangez = z;
-
-  //
-  // Step 1:  Try to reduce the value at LastNonzeroPos.
-  //
-
-  for (i = rangez.size(); i!=LastNonzeroPos; i--)
-    rangemin(i) = rangemax(i) = 0;
-  // at LastNonzeroPos, ensure that we strictly reduce
-  rangemin(LastNonzeroPos) = 1, 
-    rangemax(LastNonzeroPos) = rangez(LastNonzeroPos);
-  // use full range at the remaining positions
-  for (i = LastNonzeroPos - 1; i; i--) {
-    if (rangez(i) >= 0) rangemin(i) = 0, rangemax(i) = rangez(i);
-    else rangemin(i) = rangez(i), rangemax(i) = 0;
-  }
-  if (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax), &False))
-    return false;
-
-  // 
-  // Step 2:  Reduce the vector as far as possible. No inversion
-  // needed beyond this point.
-  //
-
-  // zero bounds of trailing zeros and last nonzero pos
-  for (i = rangez.size(); i >= LastNonzeroPos; i--) 
-    rangemin(i) = rangemax(i) = 0;
-
-  // positive search
-  do {
-    for (i = LastNonzeroPos - 1; i; i--)
-      if (rangez(i) >= 0) rangemin(i) = 0, rangemax(i) = rangez(i);
-      else rangemin(i) = rangez(i), rangemax(i) = 0;
-  } while (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax),
-				    &RangeReport));
-
-  // negative search
-  rangez = -rangez;
-  do {
-    for (i = LastNonzeroPos - 1; i; i--)
-      if (rangez(i) >= 0) rangemin(i) = 0, rangemax(i) = rangez(i);
-      else rangemin(i) = rangez(i), rangemax(i) = 0;
-  } while (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax),
-				    &RangeReport));
-
-  // we have found a new irreducible vector
-  z = -rangez;
-  return true;
-}
-
 bool IsReducible(Vector &z, VectorSet &S)
 {
   int i;
@@ -554,26 +512,12 @@ bool IsReducible(Vector &z, VectorSet &S)
 void reportx(Vector z)
 {
   count++, ppicount++;
-#ifdef TALKATIVE
+#if (TALKATIVE>=1)
   cout << z << "\t"; writeppi(cout, z, z.size()); 
 #endif
 }
 
-// Reduces v with repect to P and inserts a nonzero remainder into
-// both P and Q.
-bool ReduceAndInsert(Vector &v, VectorSet &P, SimpleVectorSet &Q)
-{
-  // reduce 
-  if (HilbertReduceVariant(v, P)) {
-    P.insert(v);
-    Q.insert(v);
-    reportx(v);
-    return true;
-  }
-  return false;
-}
-
-inline void RaisePPI(const vector &v, int j, int k, int n, 
+inline void RaisePPI(const Vector &v, int j, int k, int n, 
 		     VectorSet &P, SimpleVectorSet &Pnew)
 {
   Vector w = v;
@@ -582,7 +526,36 @@ inline void RaisePPI(const vector &v, int j, int k, int n,
     if (P.insert(w, true)) Pnew.insert(w), reportx(w);
   }
   else { // may be reducible, must try to reduce 
-    ReduceAndInsert(w, P, Pnew);
+    int i;
+    rangemin = Vector(n+1), rangemax = Vector(n+1);
+    rangemin(n+1) = rangemax(n+1) = 0;
+    // use full range at the remaining positions
+    for (i = n; i; i--) {
+      if (w(i) >= 0) rangemin(i) = 0, rangemax(i) = w(i);
+      else rangemin(i) = w(i), rangemax(i) = 0;
+    }
+    // FIXME: maybe special-case k or j = n (only one sign is possible
+    // in this case.)
+    
+    // at the position that increased (abs value), demand this value
+    if (w(k) < 0) rangemin(k) = w(k), rangemax(k) = w(k);
+    else rangemin(j) = w(j), rangemax(j) = w(j);
+    // search!
+    if (P.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax),
+				&False)) {
+      // try negative search
+      for (i = n; i; i--) {
+	if (w(i) <= 0) rangemin(i) = 0, rangemax(i) = -w(i);
+	else rangemin(i) = -w(i), rangemax(i) = 0;
+      }
+      if (w(k) < 0) rangemin(k) = -w(k), rangemax(k) = -w(k);
+      else rangemin(j) = -w(j), rangemax(j) = -w(j);
+      if (P.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax),
+				  &False)) {
+	// didn't find reducer, but vector may already be known
+	if (P.insert(w, true)) Pnew.insert(w), reportx(w);
+      }
+    }
   }
 }
 
@@ -624,6 +597,9 @@ SimpleVectorSet ExtendPPI(const SimpleVectorSet &Pn, int n)
   cerr << "# Vectors of P" << 1 << "(" << n+1 << "):" << endl;
   for (SimpleVectorSet::iterator i = Pold.begin(); i!=Pold.end(); ++i) {
     Vector v = *i;
+#if (TALKATIVE>=2)
+    cerr << "Raising " << v << endl;
+#endif
     for (int j = 1; j<=(n+1)/2; j++) {
       int k = (n+1) - j;
       if (v(j) > 0 || v(k) > 0) { // otherwise, w reducible by v
@@ -644,6 +620,9 @@ SimpleVectorSet ExtendPPI(const SimpleVectorSet &Pn, int n)
     cerr << "# Vectors of P" << t+1 << "(" << n+1 << "):" << endl;
     for (SimpleVectorSet::iterator i = Pold.begin(); i!=Pold.end(); ++i) {
       Vector v = *i;
+#if (TALKATIVE>=2)
+      cerr << "Raising " << v << endl;
+#endif
       for (int j = 1; j<=(n+1)/2; j++) {
 	int k = (n+1) - j;
 	if (v(j) > 0 || v(k) > 0) { // otherwise, w reducible by v
@@ -707,6 +686,9 @@ int main(int argc, char *argv[])
 }
 
 /* $Log$
+ * Revision 1.22  1999/03/09 15:12:56  mkoeppe
+ * *** empty log message ***
+ *
  * Revision 1.21  1999/03/09 00:53:49  mkoeppe
  * Using a simple `digital tree' instead. n=11 takes 3sec.
  *
