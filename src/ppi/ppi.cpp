@@ -3,6 +3,9 @@
 
 // $Id$
 
+#define _NOTHREADS
+// STL would use slow mutexes 
+
 #include <stdio.h>
 #include <bool.h>
 #include <set>
@@ -12,8 +15,33 @@
 #include "vec.h"
 
 #define TALKATIVE 0
+#define HASH
+#undef WITH_STATS
+#undef ERASE_SOURCES_OF_IRREDUCIBLES
+
+#if defined(HASH) // Use a hash table for SimpleVectorSet
+
+#include <hash_set>
+
+struct hash<Vector> 
+{
+  size_t operator()(const Vector &v) const {
+    // FIXME: Is this a good hash function? Ask Knuth.
+    signed long h = 0;
+    for (Vector::const_iterator i = v.begin(); i!=v.end(); ++i)
+      h = 5*h + *i;
+    return size_t(h);
+  }
+};
+
+typedef hash_set<Vector> SimpleVectorSet;
+
+#else // Use a lexicographical balanced binary tree for SimpleVectorSet
 
 typedef set<Vector, less<Vector> > SimpleVectorSet;
+
+#endif
+
 static vector<Vector *> VectorRepository;
 
 Vector Vector::operator-() const 
@@ -27,8 +55,10 @@ Vector Vector::operator-() const
 
 class Node {
 public:
-  bool isleaf;
-  Node(bool leaf) : isleaf(leaf) {}
+  unsigned char advance;
+  signed char isleaf;
+  Node(char leaf, unsigned char adv = 1) : 
+    isleaf(leaf), advance(adv) {}
 };
 
 class InnerNode : public Node {
@@ -70,16 +100,22 @@ public:
 
 class DigitalTree {
   InnerNode *root;
+  InnerNode *AdvanceNodes;
   bool DoSearch(Leaf min, Leaf max, Report report, int level, 
 		Node *node);
   void Destroy(Node *node);
   void DestructiveStore(Node *node, SimpleVectorSet &S);
+  void DoFinish(InnerNode *node);
 public:
   int Dimension;
   DigitalTree(int dimension) : 
     Dimension(dimension), 
-    root(new InnerNode(0, 0)) {}
-  ~DigitalTree() { if (root) Destroy(root); }
+    root(new InnerNode(0, 0)),
+    AdvanceNodes(0) {}
+  ~DigitalTree() { 
+    if (root) Destroy(root);
+    if (AdvanceNodes) delete AdvanceNodes; /* FIXME: really kill 'em */}
+  void Finish();
   bool Insert(Leaf leaf);
   bool OrthogonalRangeSearch(Leaf min, Leaf max, 
 			     Report report)
@@ -90,8 +126,8 @@ public:
 
 void DigitalTree::Destroy(Node *node)
 {
-  if (node->isleaf) delete (LeafNode*)node;
-  else {
+  if (node->isleaf == true) delete (LeafNode*)node;
+  else if (node->isleaf == false) {
     for (vector<Node*>::iterator i = ((InnerNode*)node)->Children.begin();
 	 i!=((InnerNode*)node)->Children.end();
 	 ++i)
@@ -102,11 +138,11 @@ void DigitalTree::Destroy(Node *node)
 
 void DigitalTree::DestructiveStore(Node *node, SimpleVectorSet &S)
 {
-  if (node->isleaf) {
+  if (node->isleaf == true) {
     S.insert(((Vector&)((LeafNode*)node)->leaf));
     delete (LeafNode*)node;
   }
-  else {
+  else if (node->isleaf == false) {
     for (vector<Node*>::iterator i = ((InnerNode*)node)->Children.begin();
 	 i!=((InnerNode*)node)->Children.end();
 	 ++i)
@@ -118,30 +154,63 @@ void DigitalTree::DestructiveStore(Node *node, SimpleVectorSet &S)
 bool DigitalTree::DoSearch(Leaf min, Leaf max, 
 			   Report report, int level, Node *node)
 {
-  if (node->isleaf) {
-    Vector::pointer vi, mini, maxi;
-    int pos = level;
-    int count = level+1;
-    for (vi = &(((Vector&)(((LeafNode*)node)->leaf))[pos]),
-	   mini = &(((Vector&)(min))[pos]),
-	   maxi = &(((Vector&)(max))[pos]);
-	 count; vi--, mini--, maxi--, count--)
-      if ((*vi)<(*mini) || (*vi)>(*maxi)) return true;
-    return report(((LeafNode*)node)->leaf);
+  vector<Node*>::pointer ci;
+  int mi = (((Vector&)min)[level] + ((InnerNode*)node)->Delta) >? 0;
+  int ma = (((Vector&)max)[level] + ((InnerNode*)node)->Delta)
+    <? ((int)((InnerNode*)node)->Children.size() - 1);
+  int count = ma - mi + 1;
+  int advance;
+  if (count<=0) return true;
+  for (ci = &(((InnerNode*)node)->Children[mi]);
+       count>0; ci+=advance, count-=advance) {
+    //    if (*ci) {
+      if ((*ci)->isleaf == true) {
+	Vector::pointer vi, mini, maxi;
+	int pos = level - 1;
+	int count = level;
+	for (vi = &(((Vector&)(((LeafNode*)(*ci))->leaf))[pos]),
+	       mini = &(((Vector&)(min))[pos]),
+	       maxi = &(((Vector&)(max))[pos]);
+	     count; vi--, mini--, maxi--, count--)
+	  if ((*vi)<(*mini) || (*vi)>(*maxi)) goto next;
+	return report(((LeafNode*)node)->leaf);
+      next:
+	void(0);
+      }
+      else if ((*ci)->isleaf == false) {
+	if (!DoSearch(min, max, report, level-1, *ci)) 
+	  return false;
+      }
+      advance = (*ci)->advance;
+      //}
+      //else advance = 1;
   }
-  else {
-    vector<Node*>::pointer ci;
-    int mi = (((Vector&)min)[level] + ((InnerNode*)node)->Delta) >? 0;
-    int ma = (((Vector&)max)[level] + ((InnerNode*)node)->Delta)
-      <? ((int)((InnerNode*)node)->Children.size() - 1);
-    int count = ma - mi + 1;
-    if (count<=0) return true;
-    for (ci = &(((InnerNode*)node)->Children[mi]);
-	 count; ci++, count--)
-      if (*ci && !DoSearch(min, max, report, level-1, *ci)) 
-	return false;
-    return true;
+  return true;
+}
+
+// Calculates the `advance' values
+void DigitalTree::DoFinish(InnerNode *node)
+{
+  vector<Node*>::reverse_iterator i, j;
+  i = node->Children.rbegin() - 1;
+  for (j = node->Children.rbegin(); j!=node->Children.rend(); j++) {
+    if (*j) {
+      if ((*j)->isleaf == false) DoFinish((InnerNode*)(*j));
+      (*j)->advance = j - i;
+      i = j;
+    }
+    else (*j) = AdvanceNodes->Get(j - i);
   }
+}
+
+void DigitalTree::Finish()
+{ 
+  // Allocate shared `advance nodes' to put where nulls live
+  AdvanceNodes = new InnerNode(1, 2*Dimension+1);
+  for (int i = 1; i<=2*Dimension+1; i++)
+    AdvanceNodes->Put(i, new Node(-1, i));
+  // Do the actual computation
+  DoFinish(root); 
 }
 
 bool DigitalTree::Insert(Leaf leaf)
@@ -194,6 +263,7 @@ class VectorSet {
 public:
   VectorSet(int level) : tree(new DigitalTree(level+1)) {}
   ~VectorSet() { delete tree; }
+  void Finish() { tree->Finish(); }
   bool insert(Vector v) { 
     Vector *vv = new Vector(v);
     VectorRepository.push_back(vv);
@@ -284,7 +354,8 @@ void writeppi(ostream &c, Vector z, int n)
   c << endl;
 }
 
-static int ppicount, dupcount, redcount, hitcount[2], failcount[2];
+static int ppicount;
+static int dupcount, redcount, hitcount[2], failcount[2];
 
 /* rangereport parameters */
 static Vector rangemin, rangemax;
@@ -357,7 +428,9 @@ inline void SetupAttribute(Vector &v, int n, bool WithNegative)
 inline void EraseSource(const Vector &w, int n, SimpleVectorSet &Pold,
 			bool irreducible, bool WithNegative)
 {
+#if !defined(ERASE_SOURCES_OF_IRREDUCIBLES)
   if (!irreducible) return; // they often fail, which is expensive
+#endif
   Vector u = w;
   u(n+1)--;
   for (int i = 1; i<=n/2; i++) {
@@ -365,10 +438,14 @@ inline void EraseSource(const Vector &w, int n, SimpleVectorSet &Pold,
       u(i)++, u(n+1-i)++;
       SimpleVectorSet::iterator ui = Pold.find(u);
       if (ui != Pold.end()) {
+#if defined(WITH_STATS)
 	hitcount[irreducible]++;
+#endif
 	const_cast<Vector&>(*ui).Attribute &= ~(1<<(i-1));
       }
+#if defined(WITH_STATS)
       else failcount[irreducible]++;
+#endif
       u(i)--, u(n+1-i)--;
     } 
   }
@@ -379,10 +456,14 @@ inline void EraseSource(const Vector &w, int n, SimpleVectorSet &Pold,
 	u(i)--, u(n+1-i)--;
 	SimpleVectorSet::iterator ui = Pold.find(u); 
 	if (ui != Pold.end()) {
+#if defined(WITH_STATS)
 	  hitcount[irreducible]++;
+#endif
 	  const_cast<Vector&>(*ui).Attribute &= ~((1<<16)<<(i-1));
 	}
+#if defined(WITH_STATS)
 	else failcount[irreducible]++;
+#endif
 	u(i)++, u(n+1-i)++;
       } 
     }    
@@ -404,7 +485,9 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
   }
   else { // may be reducible, must try to reduce 
     int i;
+#if defined(WITH_STATS)
     redcount++;
+#endif
     rangemin = Vector(n+1), rangemax = Vector(n+1);
     rangemin(n+1) = rangemax(n+1) = 0;
     // use full range at the remaining positions
@@ -437,7 +520,9 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
 	  reportx(w);
 	}
 	else {
+#if defined(WITH_STATS)
 	  dupcount++;
+#endif
 #if (TALKATIVE>=2)
 	  cerr << "Duplicate: " << w << endl;
 #endif
@@ -469,6 +554,9 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
   }
   // destroy Pn to save memory
   Pn = SimpleVectorSet();
+  // finish P to make search faster
+  cerr << "Finishing..." << endl;
+  P.Finish();
 
   // (2) Add `(n+1) = a + b' identities.
   cerr << "# Vectors of type " << n+1 << " = a + b:" << endl;
@@ -520,7 +608,7 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
 #if (TALKATIVE>=2)
 	cerr << "Raising " << v << endl;
 #endif
-	for (int j = 1; j<=(n+1)/2; j++) {
+	for (int j = 1; j<=n/2; j++) {
 	  if (v.Attribute & (1<<(j-1))) { // source erasing
 	    int k = (n+1) - j;
 	    RaisePPI(v, j, k, n, P, *Pold, *Pnew, false);
@@ -552,18 +640,24 @@ int main(int argc, char *argv[])
   SimpleVectorSet V;
   Vector v(2); v(1) = -2, v(2) = +1; V.insert(v);
   for (int i = 2; i<n; i++) {
+#if defined(WITH_STATS)
     hitcount[0] = failcount[0] = hitcount[1] = failcount[1] 
-      = redcount = dupcount = ppicount = 0;
+      = redcount = dupcount = 0;
+#endif
+    ppicount = 0;
     cerr << "### Extending to n = " << i+1 << endl;
     ExtendPPI(V, i);
     cerr << "### This makes " << ppicount 
-	 << " PPI up to sign, " << V.size() 
-	 << " with " << redcount << " reduce ops, "
+	 << " PPI up to sign" 
+#if defined(WITH_STATS)
+	 << ", with " << redcount << " reduce ops, "
 	 << hitcount[0] << " red-erase hits, "
 	 << failcount[0] << " red-erase fails, "
 	 << hitcount[1] << " irr-erase hits, "
 	 << failcount[1] << " irr-erase fails, and "
-	 << dupcount << " duplicates. " << endl;
+	 << dupcount << " duplicates. " 
+#endif
+	 << endl;
     cerr << "### Clearing vector repository..." << flush;
     ClearVectorRepository();
     cerr << "done." << endl;
@@ -572,6 +666,10 @@ int main(int argc, char *argv[])
 }
 
 /* $Log$
+ * Revision 1.28.1.2  1999/03/11 16:27:28  mkoeppe
+ * Avoids duplicates by `erasing sources'. Only slightly faster because
+ * the lexicographical set<Vector> operations take lotsa time.
+ *
  * Revision 1.28.1.1  1999/03/11 11:27:55  mkoeppe
  * Case `j=k=\frac{n+1}2' taken out because proven obsolete. Taraaa code
  * taken out because proven obsolete. Counts duplicates.
