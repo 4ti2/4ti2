@@ -284,7 +284,7 @@ void writeppi(ostream &c, Vector z, int n)
   c << endl;
 }
 
-static int ppicount, dupcount;
+static int ppicount, dupcount, redcount, hitcount[2], failcount[2];
 
 /* rangereport parameters */
 static Vector rangemin, rangemax;
@@ -332,17 +332,79 @@ void reportx(Vector z)
 #endif
 }
 
-inline void RaisePPI(const Vector &v, int j, int k, int n, 
-		     VectorSet &P, SimpleVectorSet &Pnew)
+inline void SetupAttribute(Vector &v, int n, bool WithNegative)
 {
-  // assert(j<=k);
+  // Vector::Attribute is used here as follows: A bit is clear if
+  // the corresponding position does not need to be touched any more
+  // (Source Erasing). We take two bits per position because of
+  // positive/negative stuff.
+  // NOTE: This imposes the arbitrary limit n <= 33.
+  unsigned long attrib = 0;
+  unsigned long mask = 1;
+  if (WithNegative) {
+    for (int j = 1; j<=n/2; j++, mask<<=1) {
+      if (v(j) > 0 || v(n+1-j) > 0) attrib |= mask;
+      if (v(j) < 0 || v(n+1-j) < 0) attrib |= (mask<<16);
+    }
+  }
+  else {
+    for (int j = 1; j<=n/2; j++, mask<<=1)
+      if (v(j) > 0 || v(n+1-j) > 0) attrib |= mask;
+  }
+  v.Attribute = attrib;
+}
+
+inline void EraseSource(const Vector &w, int n, SimpleVectorSet &Pold,
+			bool irreducible, bool WithNegative)
+{
+  if (!irreducible) return; // they often fail, which is expensive
+  Vector u = w;
+  u(n+1)--;
+  for (int i = 1; i<=n/2; i++) {
+    if (u(i) < 0 || u(n+1-i) < 0) {
+      u(i)++, u(n+1-i)++;
+      SimpleVectorSet::iterator ui = Pold.find(u);
+      if (ui != Pold.end()) {
+	hitcount[irreducible]++;
+	const_cast<Vector&>(*ui).Attribute &= ~(1<<(i-1));
+      }
+      else failcount[irreducible]++;
+      u(i)--, u(n+1-i)--;
+    } 
+  }
+  if (WithNegative) {
+    u = -u;
+    for (int i = 1; i<=n/2; i++) {
+      if (u(i) > 0 || u(n+1-i) > 0) {
+	u(i)--, u(n+1-i)--;
+	SimpleVectorSet::iterator ui = Pold.find(u); 
+	if (ui != Pold.end()) {
+	  hitcount[irreducible]++;
+	  const_cast<Vector&>(*ui).Attribute &= ~((1<<16)<<(i-1));
+	}
+	else failcount[irreducible]++;
+	u(i)++, u(n+1-i)++;
+      } 
+    }    
+  }
+}
+
+inline void RaisePPI(const Vector &v, int j, int k, int n, 
+		     VectorSet &P, SimpleVectorSet &Pold,
+		     SimpleVectorSet &Pnew, bool WithNegative)
+{
+  // assert(j<k);
   Vector w = v;
   w(n+1)++, w(j)--, w(k)--;
+  // reducibility check
   if (w(j) >= 0 && w(k) >= 0) { // w is irreducible 
+    EraseSource(w, n, Pold, true, WithNegative);
+    SetupAttribute(w, n, false);
     if (Pnew.insert(w).second) reportx(w);
   }
   else { // may be reducible, must try to reduce 
     int i;
+    redcount++;
     rangemin = Vector(n+1), rangemax = Vector(n+1);
     rangemin(n+1) = rangemax(n+1) = 0;
     // use full range at the remaining positions
@@ -369,15 +431,21 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
       if (P.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax),
 				  &False)) {
 	// didn't find reducer, but vector may already be known
-	if (Pnew.insert(w).second) reportx(w);
+	SetupAttribute(w, n, false);
+	if (Pnew.insert(w).second) {
+	  EraseSource(w, n, Pold, true, WithNegative);
+	  reportx(w);
+	}
 	else {
 	  dupcount++;
 #if (TALKATIVE>=2)
 	  cerr << "Duplicate: " << w << endl;
 #endif
 	}
+	return;
       }
     }
+    EraseSource(w, n, Pold, false, WithNegative);
   }
 }
 
@@ -396,6 +464,7 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
     Vector v(n+1);
     for (int j = 1; j <= n; j++) v(j) = (*i)(j);
     v(n+1) = 0;
+    SetupAttribute(v, n, true); 
     P.insert(v); Pold->insert(v); reportx(v);
   }
   // destroy Pn to save memory
@@ -410,6 +479,7 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
     for (int p = 1; p<=(n+1)/2; p++) {
       // takes care of case: p = n+1-p.
       v(p)--, v(n+1-p)--;
+      SetupAttribute(v, n, false);
       Pnew->insert(v); 
       reportx(v);
       v(p)++, v(n+1-p)++;
@@ -421,16 +491,16 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
   cerr << "# Vectors of P" << 1 << "(" << n+1 << "):" << endl;
   for (SimpleVectorSet::iterator i = Pold->begin(); i!=Pold->end(); ++i) {
     Vector v = *i;
+    if (v.Attribute) {
 #if (TALKATIVE>=2)
-    cerr << "Raising " << v << endl;
+      cerr << "Raising " << v << endl;
 #endif
-    for (int j = 1; j<=n/2; j++) { // yes n/2 is enough
-      int k = (n+1) - j;
-      if (v(j) > 0 || v(k) > 0) { // otherwise, w reducible by v
-	RaisePPI(v, j, k, n, P, *Pnew);
-      }
-      if (v(j) < 0 || v(k) < 0) { // otherwise, w reducible by v
-	RaisePPI(-v, j, k, n, P, *Pnew);
+      for (int j = 1; j<=n/2; j++) { // yes n/2 is enough
+	int k = (n+1) - j;
+	if (v.Attribute & (1<<(j-1)))
+	  RaisePPI(v, j, k, n, P, *Pold, *Pnew, true);
+	if (v.Attribute & ((1<<16)<<(j-1)))
+	  RaisePPI(-v, j, k, n, P, *Pold, *Pnew, true);
       }
     }
   }
@@ -446,13 +516,15 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
     cerr << "# Vectors of P" << t+1 << "(" << n+1 << "):" << endl;
     for (SimpleVectorSet::iterator i = Pold->begin(); i!=Pold->end(); ++i) {
       Vector v = *i;
+      if (v.Attribute) {
 #if (TALKATIVE>=2)
-      cerr << "Raising " << v << endl;
+	cerr << "Raising " << v << endl;
 #endif
-      for (int j = 1; j<=(n+1)/2; j++) {
-	int k = (n+1) - j;
-	if (v(j) > 0 || v(k) > 0) { // otherwise, w reducible by v
-	  RaisePPI(v, j, k, n, P, *Pnew);
+	for (int j = 1; j<=(n+1)/2; j++) {
+	  if (v.Attribute & (1<<(j-1))) { // source erasing
+	    int k = (n+1) - j;
+	    RaisePPI(v, j, k, n, P, *Pold, *Pnew, false);
+	  }
 	}
       }
     }
@@ -480,12 +552,18 @@ int main(int argc, char *argv[])
   SimpleVectorSet V;
   Vector v(2); v(1) = -2, v(2) = +1; V.insert(v);
   for (int i = 2; i<n; i++) {
-    dupcount = ppicount = 0;
+    hitcount[0] = failcount[0] = hitcount[1] = failcount[1] 
+      = redcount = dupcount = ppicount = 0;
     cerr << "### Extending to n = " << i+1 << endl;
     ExtendPPI(V, i);
     cerr << "### This makes " << ppicount 
 	 << " PPI up to sign, " << V.size() 
-	 << " with " << dupcount << " duplicates. " << endl;
+	 << " with " << redcount << " reduce ops, "
+	 << hitcount[0] << " red-erase hits, "
+	 << failcount[0] << " red-erase fails, "
+	 << hitcount[1] << " irr-erase hits, "
+	 << failcount[1] << " irr-erase fails, and "
+	 << dupcount << " duplicates. " << endl;
     cerr << "### Clearing vector repository..." << flush;
     ClearVectorRepository();
     cerr << "done." << endl;
@@ -494,6 +572,10 @@ int main(int argc, char *argv[])
 }
 
 /* $Log$
+ * Revision 1.28.1.1  1999/03/11 11:27:55  mkoeppe
+ * Case `j=k=\frac{n+1}2' taken out because proven obsolete. Taraaa code
+ * taken out because proven obsolete. Counts duplicates.
+ *
  * Revision 1.28  1999/03/10 17:44:15  mkoeppe
  * The vectors in inner node of digital trees now grow on
  * demand. Insertion takes a bit longer, but the whole thing is much
