@@ -13,9 +13,9 @@
 #include <iostream.h>
 #include <iomanip.h>
 
-#define TALKATIVE 2
+#define TALKATIVE 0
 #define HASH
-#undef WITH_STATS
+#define WITH_STATS
 #undef ERASE_SOURCES_OF_IRREDUCIBLES
 #define ERASE_ONLY_GUARANTEED
 #define WITH_ADVANCE
@@ -420,7 +420,7 @@ void writeppi(ostream &c, Vector z, int n)
   c << endl;
 }
 
-static int ppicount;
+static int hoppicount, ppicount;
 static int dupcount, simplecount, goodcount, redcount, hitcount[2], failcount[2];
 
 /* rangereport parameters */
@@ -433,9 +433,18 @@ static int LastNonzeroPos;
 // Specialized code for generating all primitive partition identities
 //
 
+bool isHoppi(const Vector &z)
+{
+  int cnt = 0;
+  for (int i = 1; i<=z.size(); i++)
+    cnt += z(i);
+  return (!cnt);
+}
+
 void reportx(Vector z)
 {
   ppicount++;
+  if (isHoppi(z)) hoppicount++;
 #if (TALKATIVE>=1)
   cout << z << "\t"; writeppi(cout, z, z.size()); 
 #endif
@@ -800,12 +809,14 @@ int main(int argc, char *argv[])
     hitcount[0] = failcount[0] = hitcount[1] = failcount[1] 
       = simplecount = goodcount = redcount = dupcount = 0;
 #endif
-    ppicount = 0;
+    hoppicount = ppicount = 0;
     cerr << "### Extending to n = " << i+1 << endl;
     ExtendPPI(V, i);
     cerr << "### This makes " << ppicount 
 	 << " PPI up to sign" 
 #if defined(WITH_STATS)
+	 << ", including " 
+	 << hoppicount << " HoPPIs"
 	 << ", with " << redcount << " reduce ops, leading to "
 	 << goodcount << " new vectors, "
 	 << simplecount << " simple raises, "
@@ -825,6 +836,9 @@ int main(int argc, char *argv[])
 
 /*
  * $Log$
+ * Revision 1.28.1.5.1.1.1.5  1999/03/23 16:05:51  mkoeppe
+ * Clean-up.
+ *
  * Revision 1.28.1.5.1.1.1.4  1999/03/23 12:03:41  mkoeppe
  * Digital trees no longer store the vectors but point to the Vectors
  * stored in the hash table. Reduces memory use to 64MB for n=20. Maybe
