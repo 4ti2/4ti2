@@ -4,7 +4,7 @@
 // allgemein implementiert. "
 
 // Verwaltung der Testvektoren mit Range-Trees (BB-alpha based). 
-// Laufzeiten: n=5 3.5s, n=6 26s, n=7 4m43s, n=8 36m, n=9 308m
+// Laufzeiten: n=5 3.5s, n=6 26s, n=7 4m43s, n=8 36m, n=9 308m, n=10 1900m
 
 #include <stdio.h>
 #include <bool.h>
@@ -208,7 +208,7 @@ void /*VectorSet*/ HilbertBase(VectorSet &T, SimpleVectorSet freshT)
 	bool nonzeroz = false;
 	for (int i = 0; i < z.size(); i++)
 	  nonzeroz |= !!(z[i] = (*iv)[i] + (*iw)[i]);
-	if (nonzeroz) {
+	if (nonzeroz && !HilbertDivide(z, *iv)) {
 	  if (HilbertReduce(z, T)) {
 	    T.insert(z);
 	    freshT.insert(z);
