@@ -138,8 +138,10 @@ public:
   typedef SimpleVectorSetIterator iterator;
   Vector **buckets;
   size_t num_buckets;
-  SimpleVectorSet() {
-    num_buckets = 21089; /*13845163;*/
+  size_t count;
+  SimpleVectorSet(size_t size) {
+    count = 0;
+    num_buckets = size; //21089; /*13845163;*/
     buckets = (Vector**) malloc(sizeof(Vector *) * num_buckets);
     size_t i;
     for (i = 0; i<num_buckets; i++)
@@ -161,7 +163,7 @@ public:
     size_t bucket;
     for (bucket = hm; bucket < num_buckets; bucket++) {
       if (buckets[bucket] == NULL) {
-	buckets[bucket] = new Vector(obj);
+	buckets[bucket] = new Vector(obj); count++;
 	return pair<iterator, bool>(SimpleVectorSetIterator(this, bucket), true);
       }
       if (*buckets[bucket] == obj) {
@@ -170,7 +172,7 @@ public:
     }
     for (bucket = 0; bucket < hm; bucket++) {
       if (buckets[bucket] == NULL) {
-	buckets[bucket] = new Vector(obj);
+	buckets[bucket] = new Vector(obj); count++;
 	return pair<iterator, bool>(SimpleVectorSetIterator(this, bucket), true);
       }
       if (*buckets[bucket] == obj) {
@@ -178,7 +180,7 @@ public:
       }
     }
     /* buckets are full, shall not happen */
-    cerr << "Buckets are full" << endl;
+    cerr << "Buckets are full (count " << count << ", num_buckets " << num_buckets << ")" << endl;
     exit(1);
   }
   void insert(const SimpleVectorSetIterator &a, const SimpleVectorSetIterator &b)
@@ -801,8 +803,10 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
 void ExtendPPI(SimpleVectorSet &Pn, int n)
 {
   SimpleVectorSet *Pold;
-  SimpleVectorSet *Pnew = new SimpleVectorSet;
-  SimpleVectorSet *Pbase = new SimpleVectorSet;
+  int expected_count = 2 * Pn.count;
+  if (expected_count < 20000) expected_count = 20000;
+  SimpleVectorSet *Pnew = new SimpleVectorSet(expected_count);
+  SimpleVectorSet *Pbase = new SimpleVectorSet(Pn.count);
 
   // Implementation of Algorithms 4.3.8, 4.3.11 from [Urbaniak] 
   
@@ -820,7 +824,7 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
       P.insert(*Pbase->insert(v).first); reportx(v);
     }
     // destroy Pn to save memory
-    Pn = SimpleVectorSet();
+    Pn = SimpleVectorSet(expected_count);
     // finish P to make search faster
     cerr << "Finishing..." << endl;
     P.Finish();
@@ -880,7 +884,7 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
     }
     //
     Pold = Pnew;
-    Pnew = new SimpleVectorSet;
+    Pnew = new SimpleVectorSet(expected_count);
 
     // (4) Build all other primitive identities with exactly (t+1)
     // components of (n+1).
@@ -921,7 +925,7 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
       Pn.insert(Pold->begin(), Pold->end());
       delete Pold;
       Pold = Pnew;
-      Pnew = new SimpleVectorSet;
+      Pnew = new SimpleVectorSet(expected_count);
     }
   } // P is dead now
   Pn.insert(Pold->begin(), Pold->end());
@@ -943,7 +947,7 @@ int main(int argc, char *argv[])
   if (!n) n = 5;
 
   // Setup PPI set for n=2
-  SimpleVectorSet V;
+  SimpleVectorSet V(1);
   Vector v(2); v(1) = -2, v(2) = +1; V.insert(v);
   for (int i = 2; i<n; i++) {
 #if defined(WITH_STATS)
@@ -989,6 +993,9 @@ int main(int argc, char *argv[])
 
 /*
  * $Log$
+ * Revision 1.30  2002/08/06 14:00:16  mkoeppe
+ * OUR_OWN_HASH implementation. rudimentary.
+ *
  * Revision 1.28.1.5.1.1.1.5.1.1  1999/10/14 14:31:30  mkoeppe
  * Added output to data file and time report.
  *
