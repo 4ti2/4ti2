@@ -2,8 +2,9 @@
 // der Vorlesung Optimierung II (Weismantel). Hier angewendet auf
 // Primitive Partitionsidentit"aten (PPI); das Verfahren ist aber
 // allgemein implementiert. "
-//
-// Laufzeit: n=5: 19s, n=6: 3m45s, n=7: 1h, n=8: 12h20m
+
+// Verwaltung der Testvektoren mit Range-Trees (BB-alpha based). 
+// Sehr viel Speicher wird verwendet!
 
 #include <stdio.h>
 #include <bool.h>
@@ -11,9 +12,44 @@
 #include <vector>
 #include <iostream.h>
 #include <iomanip.h>
+#include "bbalpha.h"
 
 typedef vector<int> Vector;
-typedef set<Vector, less<Vector> > VectorSet;
+typedef set<Vector, less<Vector> > SimpleVectorSet;
+static vector<Vector *> VectorRepository;
+
+float alpha = 0.15;
+
+class VectorSet {
+  BBTree *tree;
+  VectorSet(const VectorSet &);
+  operator=(const VectorSet &);
+public:
+  VectorSet(int level) : tree(new BBTree(level, alpha)) {}
+  ~VectorSet() { delete tree; }
+  typedef BBTree::iterator iterator;
+  iterator begin() { return tree->begin(); }
+  iterator end() { return tree->end(); }
+  int size() const { return tree->root ? tree->root->numLeaves : 0; }
+  void insert(Vector v) { 
+    Vector *vv = new Vector(v);
+    VectorRepository.push_back(vv);
+    tree->Insert(Leaf(vv)); 
+  }
+  bool OrthogonalRangeSearch(Leaf min, Leaf max, 
+			     bool (*report)(const Leaf &)) 
+  { return tree->OrthogonalRangeSearch(min, max, report); }
+  operator SimpleVectorSet();
+};
+
+VectorSet::operator SimpleVectorSet() 
+{
+  SimpleVectorSet S;
+  iterator i;
+  for (i = begin(); i!=end(); ++i)
+    if (!S.insert(*i).second) cerr << "duplicate" << endl;
+  return S;
+}
 
 ostream &operator<<(ostream &s, const Vector &z)
 {
@@ -22,14 +58,11 @@ ostream &operator<<(ostream &s, const Vector &z)
   return cout;
 }
 
-int HilbertDivide(Vector z, Vector y, Vector a)
+int HilbertDivide(Vector z, Vector y)
 {
   // Find maximal integer f with f*y<=z in Hilbert-base sense.
-  int az = 0;
-  for (int i = 0; i<a.size(); i++) az += a[i] * z[i];
-  int ay = 0;
   int maxfactor = INT_MAX;
-  for (int i = 0; i<a.size(); i++) {
+  for (int i = 0; i<z.size(); i++) {
     if (y[i] > 0) {
       if (y[i] > z[i]) return 0;
       // here is z[i]>=y[i]>0.
@@ -40,17 +73,6 @@ int HilbertDivide(Vector z, Vector y, Vector a)
       // here is z[i]<=y[i]<0.
       maxfactor = maxfactor <? (z[i] / y[i]);
     }
-    ay += a[i] * y[i];
-  }
-  if (ay > 0) {
-    if (ay > az) return 0;
-    // here is az>=ay>0.
-    maxfactor = maxfactor <? (az / ay);
-  }
-  else if (ay < 0) {
-    if (ay < az) return 0;
-    // here is az<=ay<0.
-    maxfactor = maxfactor <? (az / ay);
   }
   return maxfactor;
 }
@@ -58,7 +80,7 @@ int HilbertDivide(Vector z, Vector y, Vector a)
 void writeppi(ostream &c, Vector z)
 {
   bool first = true;
-  for (int i = 0; i<z.size(); i++) 
+  for (int i = 0; i<z.size()-1; i++) 
     if (z[i] > 0) {
       if (first) first = false;
       else c << " + ";
@@ -68,7 +90,7 @@ void writeppi(ostream &c, Vector z)
     }
   c << "\t= ";
   first = true;
-  for (int i = 0; i<z.size(); i++) 
+  for (int i = 0; i<z.size()-1; i++) 
     if (z[i] < 0) {
       if (first) first = false;
       else c << " + ";
@@ -79,95 +101,101 @@ void writeppi(ostream &c, Vector z)
   c << endl;
 }
 
-void report(Vector z, Vector a)
+static int count;
+static int ppicount;
+
+void report(Vector z)
 {
-  int az = 0;
-  for (int i = 0; i<a.size(); i++) az += z[i]*a[i];
-  if (az) cout << z << "\t" << az << endl;
-  else { cout << z << "\t\t"; writeppi(cout, z); }
+  count++;
+  if (z[z.size()-1]) cout << z << endl;
+  else { ppicount++; cout << z << "\t"; writeppi(cout, z); }
 }    
 
-void ReductionRange(const VectorSet &T, const Vector &z, 
-		    /* returns */ VectorSet::iterator &begin, 
-		    /* returns */ VectorSet::iterator &end)
-{
-  // T ist lexikographisch sortiert. Betrachte ich die erste
-  // Nichtnull-Koordinate von z, so kann ich den Bereich der
-  // zul"assigen y in T eingrenzen. "
-  /* FIXME: Eine bessere Datenstruktur k"onnte den Suchbereich enger
-     eingrenzen; haben wir zum Beispiel Nullen in den hinteren
-     Komponenten, w"urde man in einem *lexikographisch anders*
-     sortierten Baum die lower und upper bound bestimmen wollen. */
-  int firstnonzero;
-  for (firstnonzero = 0; !z[firstnonzero]; firstnonzero++);
-  if (z[firstnonzero] > 0) {
-    Vector v(z.size());
-    int i;
-    for (i = 0; i<=firstnonzero; i++) v[i] = 0;
-    if (firstnonzero+1 < z.size()) {
-      if (z[firstnonzero+1] >= 0) v[firstnonzero+1] = 0;
-      else v[firstnonzero+1] = z[firstnonzero+1];
-      for (i = firstnonzero+2; i<z.size(); i++) 
-	v[i] = -INT_MAX;
-    }
-    begin = T.lower_bound(v);
-    v[firstnonzero] = z[firstnonzero];
-    if (firstnonzero+1 < z.size()) {
-      if (z[firstnonzero+1] < 0) v[firstnonzero+1] = 0;
-      else v[firstnonzero+1] = z[firstnonzero+1];
-      for (i = firstnonzero+2; i<z.size(); i++) 
-	v[i] = INT_MAX;
-    }
-    end = T.upper_bound(v);
-  }
-  else {
-    Vector v(z.size());
-    int i;
-    for (i = 0; i<=firstnonzero; i++) v[i] = 0;
-    if (firstnonzero+1 < z.size()) {
-      if (z[firstnonzero+1] < 0) v[firstnonzero+1] = 0;
-      else v[firstnonzero+1] = z[firstnonzero+1];
-      for (i = firstnonzero+2; i<z.size(); i++) 
-	v[i] = INT_MAX;
-    }
-    end = T.upper_bound(v);
-    v[firstnonzero] = z[firstnonzero];
-    if (firstnonzero+1 < z.size()) {
-      if (z[firstnonzero+1] >= 0) v[firstnonzero+1] = 0;
-      else v[firstnonzero+1] = z[firstnonzero+1];
-      for (i = firstnonzero+2; i<z.size(); i++) 
-	v[i] = -INT_MAX;
-    }
-    begin = T.lower_bound(v);
-  }
-}
+#ifdef SINGLE_RANGE
 
-bool HilbertReduce(Vector &z, const Vector &a, 
-		   VectorSet::iterator begin, VectorSet::iterator end)
+/* rangereport parameter */
+static Vector rangez;
+
+static bool rangereport(const Leaf &y)
 {
-  bool nonzeroz;
-  VectorSet::iterator iy;
-  for (iy = begin; iy != end; ++iy) {
-    Vector y = *iy;
-    int maxfactor = HilbertDivide(z, y, a);
-    if (maxfactor) {
-      nonzeroz = false;
-      for (int i = 0; i<a.size(); i++) 
-	nonzeroz |= !!(z[i] -= maxfactor * y[i]);
-      if (!nonzeroz) break;
-    }
-  }
+  bool nonzeroz = false;
+  int maxfactor = HilbertDivide(rangez, y);
+//   if (!maxfactor) cerr << "Bad reducer" << endl;
+  for (int i = 0; i<rangez.size(); i++) 
+    nonzeroz |= !!(rangez[i] -= maxfactor * Vector(y)[i]);
   return nonzeroz;
 }
 
-VectorSet HilbertBase(VectorSet T, Vector a, VectorSet freshT)
+bool HilbertReduce(Vector &z, VectorSet &S)
 {
-  VectorSet oldT, oldFreshT;
-  while (oldT.size() != T.size()) {
+  int i;
+  Vector min(z.size()), max(z.size());
+  for (i = 0; i<z.size(); i++)
+    if (z[i] >= 0) min[i] = 0, max[i] = z[i];
+    else min[i] = z[i], max[i] = 0;
+  rangez = z;
+  bool nonzeroz = (S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max),
+					   &rangereport));
+  z = rangez;
+  return nonzeroz;
+}
+
+#else
+
+static Vector rangeresult;
+static Vector rangez;
+static int maxfactor;
+static Vector rangemax, rangemin;
+
+static bool rangereport(const Leaf &y)
+{
+  rangeresult = y;
+  maxfactor = HilbertDivide(rangez, rangeresult);
+  if (!maxfactor) { /* FIXME: This check should should be superfluous, but 
+		       RangeSearch does not work properly */
+    cerr << "Bad reducer: " << rangeresult 
+	 << " min " << rangemin << " max " << rangemax << endl;
+    return true;
+  }
+  return false; /* no further */
+}
+
+bool HilbertReduce(Vector &z, VectorSet &S)
+{
+  bool nonzeroz;
+  do {
+    int i;
+    Vector min(z.size()), max(z.size());
+    for (i = 0; i<z.size(); i++)
+      if (z[i] >= 0) min[i] = 0, max[i] = z[i];
+      else min[i] = z[i], max[i] = 0;
+    rangez = z, rangemin = min, rangemax = max;
+    if (S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max),
+				&rangereport)) {
+      /* no reducer found */
+      return true;
+    }
+    else {
+      nonzeroz = false;
+      for (i = 0; i<z.size(); i++) 
+	nonzeroz |= !!(z[i] -= maxfactor * Vector(rangeresult)[i]);
+    }
+  } while (nonzeroz);
+  return false;
+}
+
+#endif
+
+void /*VectorSet*/ HilbertBase(VectorSet &T, SimpleVectorSet freshT)
+{
+  SimpleVectorSet oldT;
+  SimpleVectorSet oldFreshT;
+  while (freshT.size()) {
+    cerr << "New cycle: " << oldT.size() << " " << T.size() << endl;
     oldT = T;
     swap(oldFreshT, freshT);
-    freshT = VectorSet();
-    VectorSet::iterator iv, iw;
+    freshT = SimpleVectorSet();
+    SimpleVectorSet::iterator iv, iw;
     bool vFresh;
     for (iv = oldT.begin(); iv != oldT.end(); ++iv) 
       for (iw = (((vFresh = oldFreshT.find(*iv) != oldFreshT.end())) 
@@ -176,80 +204,54 @@ VectorSet HilbertBase(VectorSet T, Vector a, VectorSet freshT)
 	   // if v is fresh, take only fresh w lexi-greater than v.
 	   // otherwise, take all fresh w.
 	   iw != oldFreshT.end(); ++iw) {
-	Vector z(a.size());
-	for (int i = 0; i<a.size(); i++)
-	  z[i] = (*iv)[i] + (*iw)[i];
+	Vector z((*iv).size());
 	bool nonzeroz = false;
-	for (int i = 0; i<a.size(); i++)
-	  if (nonzeroz |= !!z[i]) break;
+	for (int i = 0; i < z.size(); i++)
+	  nonzeroz |= !!(z[i] = (*iv)[i] + (*iw)[i]);
 	if (nonzeroz) {
-	  VectorSet::iterator begin, end;
-	  // Reduktion von z durch y aus T
-	  ReductionRange(T, z, begin, end);
-	  nonzeroz = HilbertReduce(z, a, begin, end);
-	  if (nonzeroz) {
+	  if (HilbertReduce(z, T)) {
 	    T.insert(z);
 	    freshT.insert(z);
-	    report(z, a);
+	    report(z);
 	  }
 	}
       }
   }
-  return T;
+  return /*T*/;
 }
 
-VectorSet HilbertBase(VectorSet T, Vector a)
+void /*VectorSet*/ HilbertBase(VectorSet &T)
 {
-  return HilbertBase(T, a, T);
+  /*return*/ HilbertBase(T, T);
 }
-
-#if 0
-int main(int argc, char *argv[])
-{
-  /* inductive version; might be used for a cacheing solution. */
-  /* this takes approx the same time as the normal version */
-  int n = 0;
-  if (argc == 2) sscanf(argv[1], "%d", &n);
-  if (!n) n = 5;
-  Vector a(n);
-  for (int i = 0; i<n; i++) a[i] = i + 1;
-  VectorSet H;
-  for (int i = 0; i<n; i++) {
-    cerr << "Inductive step " << i << endl;
-    VectorSet Hfresh;
-    Vector e(n);
-    for (int j = 0; j<n; j++) e[j] = 0;
-    e[i] = 1;
-    H.insert(e), Hfresh.insert(e);
-    report(e, a);
-    e[i] = -1;
-    H.insert(e), Hfresh.insert(e);
-    report(e, a);
-    H = HilbertBase(H, a, Hfresh);
-  }
-}
-#endif
 
 #if 1
 int main(int argc, char *argv[])
 {
   // PPI n = 5.
   int n = 0;
-  if (argc == 2) sscanf(argv[1], "%d", &n);
+  if (argc >= 2) {
+    sscanf(argv[1], "%d", &n);
+    if (argc == 3)       
+      sscanf(argv[2], "%f", &alpha);
+  }
   if (!n) n = 5;
   Vector a(n);
   for (int i = 0; i<n; i++) a[i] = i + 1;
-  VectorSet H0;
+
+  VectorSet H0(n);
   for (int i = 0; i<n; i++) {
-    Vector e(n);
+    Vector e(n + 1);
     for (int j = 0; j<n; j++) e[j] = 0;
-    e[i] = 1;
+    e[i] = 1; e[n] = a[i];
     H0.insert(e);
-    report(e, a);
-    e[i] = -1;
+    report(e);
+    e[i] = -1; e[n] = -a[i];
     H0.insert(e);
-    report(e, a);
+    report(e);
   }
-  VectorSet H = HilbertBase(H0, a);
+  /*VectorSet H =*/ HilbertBase(H0);
+  cerr << "This makes " << ppicount << " PPI of " 
+       << count << " test vectors." << endl;
 }
 #endif
