@@ -1,11 +1,7 @@
-// Berechnung einer Hilbertbasis; Modifikation eines Verfahrens aus
-// der Vorlesung Optimierung II (Weismantel). Hier angewendet auf
-// Primitive Partitionsidentit"aten (PPI); das Verfahren ist aber
-// allgemein implementiert. "
+// Bestimmung der Primitiven Partitionsidentit"aten (PPI) nach [Urbaniak];
+// Verwaltung der Testvektoren mit Range-Trees (BB-alpha based). 
 
 // $Id$
-
-// Verwaltung der Testvektoren mit Range-Trees (BB-alpha based). 
 
 #include <stdio.h>
 #include <bool.h>
@@ -37,7 +33,7 @@ public:
     tree->Insert(Leaf(vv)); 
   }
   bool OrthogonalRangeSearch(Leaf min, Leaf max, 
-			     bool (*report)(const Leaf &)) 
+			     Report report)
   { return tree->OrthogonalRangeSearch(min, max, report); }
   operator SimpleVectorSet();
 };
@@ -117,14 +113,17 @@ static int ppicount;
 /* FIXME: Use a class instead */
 static Vector rangez;
 static int LastNonzeroPos;
-static bool DidInvert;
+#ifdef POSTCHECK
 static Vector *RangeException;
+#endif
 
 // returns false iff reduced to zero or new range shall be set up.
-static bool rangereport(const Leaf &y)
+static bool RangeReportWithInversion(const Leaf &y)
 {
   static int count = 0;
+#ifdef POSTCHECK
   if (&(Vector&)(y) == RangeException) return true;
+#endif
   int maxfactor = HilbertDivide(rangez, y);
   if (maxfactor) {
     //    cerr << "Vector: " << rangez << "Reducer: " << Vector(y) << endl;
@@ -138,11 +137,15 @@ static bool rangereport(const Leaf &y)
       LastNonzeroPos = i;
       if (!i) return false; // reduced to zero
       if (rangez(i)<0) { // we must take the negative
-	DidInvert = true;
 	rangez(i) = -rangez(i);
 	for (i--; i; i--) 
 	  rangez(i) = maxfactor * Vector(y)(i) - rangez(i);
 	return false; // we need a new range
+      }
+      else {
+	for (i--; i; i--) 
+	  rangez(i) -= maxfactor * Vector(y)(i);
+	return false; // we want a new range
       }
     }
     for (i--; i; i--) 
@@ -161,6 +164,35 @@ static bool rangereport(const Leaf &y)
   }
 }
 
+static bool RangeReport(const Leaf &y)
+{
+#ifdef POSTCHECK
+  if (&(Vector&)(y) == RangeException) return true;
+#endif
+  int maxfactor = HilbertDivide(rangez, y);
+  if (maxfactor) {
+    int i;
+    for (i = LastNonzeroPos; 
+	 i && !(rangez(i) -= maxfactor * Vector(y)(i)); i--);
+    LastNonzeroPos = i;
+    if (i) {
+      for (i--; i; i--) 
+	rangez(i) -= maxfactor * Vector(y)(i);
+    }
+    return LastNonzeroPos;
+  }
+  else 
+    return true;
+}
+
+static bool False(const Leaf &y)
+{
+#ifdef POSTCHECK
+  if (&(Vector&)(y) == RangeException) return true;
+#endif
+  return false;
+}
+
 bool HilbertReduce(Vector &z, VectorSet &S)
 {
   int i;
@@ -168,40 +200,72 @@ bool HilbertReduce(Vector &z, VectorSet &S)
 
   for (i = z.size(); i && !z(i); i--);
   LastNonzeroPos = i;
+  rangez = z;
 
+  //
+  // Step 1:  Try to reduce the vector to zero, beginning from the
+  // last positions, taking care of inversions.
+  //
+
+#if 0
+  // first look if we find the vector itself in S
+  min = max = rangez;
+  if (!S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max), &False))
+    return false;
+#endif
+  // positive search
   do {
-    // positive search
-    rangez = z;
-    do {
-      for (i = rangez.size(); i; i--)
-	if (rangez(i) >= 0) min(i) = 0, max(i) = rangez(i);
+    for (i = rangez.size(); i!=LastNonzeroPos; i--)
+      min(i) = max(i) = 0;
+    // at LastNonzeroPos, ensure that we strictly reduce
+    min(LastNonzeroPos) = 1, 
+      max(LastNonzeroPos) = rangez(LastNonzeroPos);
+    // use full range at the remaining positions
+    for (i = LastNonzeroPos - 1; i; i--) {
+      if (rangez(i) >= 0) min(i) = 0, max(i) = rangez(i);
       else min(i) = rangez(i), max(i) = 0;
-    } while (!S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max),
-				      &rangereport) 
-	     && LastNonzeroPos);
-    z = rangez;
-
-    DidInvert = false; // if we inverted while in negative search, we
-    // must visit positive search again. FIXME: If so, we need not go
-    // to negative search again unless another inversion while in
-    // positive search takes place.
-    if (LastNonzeroPos) { // negative search
-      rangez = -z;
-      do {
-	for (i = rangez.size(); i && rangez(i) == 0; i--) // zero trailing zeros
-	  min(i) = max(i) = 0;
-	min(i) = max(i) = 0; // zero last positive component
-	for (i--; i; i--) // handle all other components
-	  if (rangez(i) >= 0) min(i) = 0, max(i) = rangez(i);
-	  else min(i) = rangez(i), max(i) = 0;
-      } while (!S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max),
-					&rangereport)
-	       && LastNonzeroPos);
-      z = -rangez;
     }
-  } while (DidInvert);
+  } while (!S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max),
+				    &RangeReportWithInversion) 
+	   && LastNonzeroPos);
+  if (!LastNonzeroPos) return false;
 
-  return LastNonzeroPos;
+#if 0
+  // look if we find the vector itself in S
+  min = max = rangez;
+  if (!S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max), &False))
+    return false;
+#endif
+  
+  // 
+  // Step 2:  Reduce the vector as far as possible. No inversion
+  // needed beyond this point.
+  //
+
+  // zero bounds of trailing zeros and last nonzero pos
+  for (i = rangez.size(); i >= LastNonzeroPos; i--) 
+    min(i) = max(i) = 0;
+
+  // positive search
+  do {
+    for (i = LastNonzeroPos - 1; i; i--)
+      if (rangez(i) >= 0) min(i) = 0, max(i) = rangez(i);
+      else min(i) = rangez(i), max(i) = 0;
+  } while (!S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max),
+				    &RangeReport));
+
+  // negative search
+  rangez = -rangez;
+  do {
+    for (i = LastNonzeroPos - 1; i; i--)
+      if (rangez(i) >= 0) min(i) = 0, max(i) = rangez(i);
+      else min(i) = rangez(i), max(i) = 0;
+  } while (!S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max),
+				    &RangeReport));
+
+  // we have found a new irreducible vector
+  z = -rangez;
+  return true;
 }
 
 //
@@ -292,17 +356,28 @@ SimpleVectorSet ExtendPPI(const SimpleVectorSet &Pn, int n)
     Pnew = SimpleVectorSet();
   }
 
-  // This check should be obsolete but.
-
-  for (VectorSet::iterator i = P.begin(); i!=P.end(); ++i) {
+#ifdef POSTCHECK
+  SimpleVectorSet S;
+  VectorSet::iterator i;
+  for (i = P.begin(); i!=P.end(); ++i) {
     RangeException = &((Vector&)(*i));
     Vector v = *i;
-    if (!HilbertReduce(v, P)) 
-      cerr << "Haha... a reducible vector: " << *i << " -> " << v << endl;
-  }    
+    if (!HilbertReduce(v, P)) {
+      cerr << "Haha... a reducible vector: " << *i << endl;
+      ppicount--;
+    }
+    else {
+      if (!S.insert(*i).second) {
+	cerr << "Hoho... a duplicate: " << *i << endl;
+      }
+    }
+  }
   RangeException = 0;
+  return S;
+#else
+  return P; 
+#endif
 
-  return P;
 }
 
 int main(int argc, char *argv[])
@@ -332,6 +407,9 @@ int main(int argc, char *argv[])
 }
 
 /* $Log$
+ * Revision 1.16  1999/03/06 16:59:20  mkoeppe
+ * Added reducibility checks.
+ *
  * Revision 1.15  1999/03/05 17:39:27  mkoeppe
  * Remove obsolete check. Gives back memory.
  *
