@@ -82,7 +82,7 @@ public:
     Dimension(dimension), 
     root(new InnerNode(2*dimension+1)) {}
   ~DigitalTree() { /* FIXME: */ }
-  void Insert(Leaf leaf);
+  bool Insert(Leaf leaf, bool CheckDup);
   bool OrthogonalRangeSearch(Leaf min, Leaf max, 
 			     Report report)
     { return DoSearch(min, max, report, Dimension-1, root); }
@@ -103,17 +103,25 @@ bool DigitalTree::DoSearch(Leaf min, Leaf max,
     return report(((LeafNode*)node)->leaf);
   }
   else {
+#if 0
     vector<Node*>::pointer ci;
     int count = ((Vector&)max)[level] - ((Vector&)min)[level] + 1;
     for (ci = &(((InnerNode*)node)->Children[Dimension + ((Vector&)min)[level]]); 
 	 count; ci++, count--)
       if (*ci && !DoSearch(min, max, report, level-1, *ci)) 
 	return false;
+#else
+    for (int i = ((Vector&)min)[level]; i<=((Vector&)max)[level]; i++)
+      if (((InnerNode*)node)->Children[Dimension+i] 
+	  && !DoSearch(min, max, report, level-1,
+		       ((InnerNode*)node)->Children[Dimension+i]))
+	return false;
+#endif
     return true;
   }
 }
 
-void DigitalTree::Insert(Leaf leaf)
+bool DigitalTree::Insert(Leaf leaf, bool CheckDup)
 {
   InnerNode *n = root;
   int level;
@@ -121,8 +129,19 @@ void DigitalTree::Insert(Leaf leaf)
     int pos = Dimension + ((Vector&)leaf)[level];
     if (n->Children[pos]) {
       if (n->Children[pos]->isleaf) {
-	// Build a chain of inners up to tie 
 	LeafNode *ol = (LeafNode*) n->Children[pos];
+	if (CheckDup) {
+	  // Check if equal
+	  int i;
+	  for (i = level-1; 
+	       i>=0 && ((Vector&)(ol->leaf))[i] == ((Vector&)leaf)[i];
+	       i--);
+	  if (i<0) {
+	    cerr << "$";
+	    return false;
+	  }
+	}
+	// Build a chain of inners up to tie 
 	do {
 	  InnerNode *i = new InnerNode(2 * Dimension + 1);
 	  n->Children[pos] = i;
@@ -136,7 +155,7 @@ void DigitalTree::Insert(Leaf leaf)
 	n->Children[Dimension + ((Vector&)leaf)[level]] = l;
 	n->Children[Dimension + ((Vector&)(ol->leaf))[level]] = ol;
 	// we are done
-	return;
+	return true;
       }
       else { // Is inner node
 	n = (InnerNode*) n->Children[pos];
@@ -148,7 +167,7 @@ void DigitalTree::Insert(Leaf leaf)
       l->leaf = leaf;
       n->Children[pos] = l;
       // we are done
-      return; 
+      return true; 
     }
   }
 }
@@ -162,10 +181,10 @@ public:
   VectorSet(int level) : tree(new DigitalTree(level+1)) {}
   ~VectorSet() { delete tree; }
   typedef BBTree::iterator iterator;
-  void insert(Vector v) { 
+  bool insert(Vector v, bool CheckDup = false) { 
     Vector *vv = new Vector(v);
     VectorRepository.push_back(vv);
-    tree->Insert(Leaf(vv)); 
+    return tree->Insert(Leaf(vv), CheckDup); 
   }
   bool OrthogonalRangeSearch(Leaf min, Leaf max, 
 			     Report report)
@@ -554,6 +573,19 @@ bool ReduceAndInsert(Vector &v, VectorSet &P, SimpleVectorSet &Q)
   return false;
 }
 
+inline void RaisePPI(const vector &v, int j, int k, int n, 
+		     VectorSet &P, SimpleVectorSet &Pnew)
+{
+  Vector w = v;
+  w(n+1)++, w(j)--, w(k)--;
+  if (w(j) >= 0 && w(k) >= 0) { // w is irreducible 
+    if (P.insert(w, true)) Pnew.insert(w), reportx(w);
+  }
+  else { // may be reducible, must try to reduce 
+    ReduceAndInsert(w, P, Pnew);
+  }
+}
+
 SimpleVectorSet ExtendPPI(const SimpleVectorSet &Pn, int n)
 {
   VectorSet P(n);
@@ -582,9 +614,7 @@ SimpleVectorSet ExtendPPI(const SimpleVectorSet &Pn, int n)
       // takes care of case: p = n+1-p.
       v(p)--, v(n+1-p)--;
       Pnew.insert(v); 
-#if defined(VVVV)
       P.insert(v); reportx(v);
-#endif
       v(p)++, v(n+1-p)++;
     }
   }
@@ -596,35 +626,14 @@ SimpleVectorSet ExtendPPI(const SimpleVectorSet &Pn, int n)
     Vector v = *i;
     for (int j = 1; j<=(n+1)/2; j++) {
       int k = (n+1) - j;
-      if (v(j) != 0 || v(k) != 0) { // otherwise, w reducible by v
-	if (v(j) >= 0 || v(k) >= 0) { // otherwise, w reducible by v
-	  Vector w = v;
-	  w(n+1)++, w(j)--, w(k)--;
-#if defined(VVVV)
-	  ReduceAndInsert(w, P, Pnew);
-#else
-	  if (HilbertReduce(w, P)) Pnew.insert(w);
-#endif
-	}
-	if (v(j) <= 0 || v(k) <= 0) { // otherwise, w reducible by v
-	  Vector w = -v;
-	  w(n+1)++, w(j)--, w(k)--;
-#if defined(VVVV)
-	  ReduceAndInsert(w, P, Pnew);
-#else
-	  if (HilbertReduce(w, P)) Pnew.insert(w);
-#endif
-	}
+      if (v(j) > 0 || v(k) > 0) { // otherwise, w reducible by v
+	RaisePPI(v, j, k, n, P, Pnew);
+      }
+      if (v(j) < 0 || v(k) < 0) { // otherwise, w reducible by v
+	RaisePPI(-v, j, k, n, P, Pnew);
       }
     }
   }
-#if !defined(VVVV)
-  // insert them into the searchable vector set
-  for (SimpleVectorSet::iterator i = Pnew.begin(); i!=Pnew.end(); ++i) {
-    P.insert(*i);
-    reportx(*i);
-  }
-#endif
   //
   Pold = Pnew;
   Pnew = SimpleVectorSet();
@@ -637,12 +646,8 @@ SimpleVectorSet ExtendPPI(const SimpleVectorSet &Pn, int n)
       Vector v = *i;
       for (int j = 1; j<=(n+1)/2; j++) {
 	int k = (n+1) - j;
-	if (v(j) != 0 || v(k) != 0) { // otherwise, w reducible by v
-	  if (v(j) >= 0 || v(k) >= 0) { // otherwise, w reducible by v
-	    Vector w = v;
-	    w(n+1)++, w(j)--, w(k)--;
-	    ReduceAndInsert(w, P, Pnew);
-	  }
+	if (v(j) > 0 || v(k) > 0) { // otherwise, w reducible by v
+	  RaisePPI(v, j, k, n, P, Pnew);
 	}
       }
     }
@@ -702,6 +707,9 @@ int main(int argc, char *argv[])
 }
 
 /* $Log$
+ * Revision 1.21  1999/03/09 00:53:49  mkoeppe
+ * Using a simple `digital tree' instead. n=11 takes 3sec.
+ *
  * Revision 1.20  1999/03/08 20:58:23  mkoeppe
  * Ok, 11 takes 53sec.
  *
