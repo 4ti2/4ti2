@@ -13,7 +13,7 @@
 #include <iostream.h>
 #include <iomanip.h>
 
-#define TALKATIVE 0
+#define TALKATIVE 2
 #define HASH
 #define WITH_STATS
 #undef ERASE_SOURCES_OF_IRREDUCIBLES
@@ -602,6 +602,7 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
     simplecount++;
 #endif
     SetupAttribute(w, n, false);
+    w.Attribute() |= 1<<31; // indicate simple raise
     if (Pnew.insert(w).second) {
       EraseSource(w, n, Pold, true, WithNegative);
       reportx(w); 
@@ -670,7 +671,8 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
     }
     // w is now the complementary irreducible reducer, so try to
     // insert it
-    if (Pnew.insert(w).second) {
+    pair<SimpleVectorSet::iterator, bool> r = Pnew.insert(w);
+    if (r.second) {
 #if defined(WITH_STATS)
       compgoodcount++;
 #endif
@@ -678,7 +680,24 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
       EraseSource(w, n, Pold, true, WithNegative); // irr-erase
       reportx(w);
     }
-    else {
+    else { // already there...
+      // check some assertions::
+      if (!((*r.first).Attribute() & 1<<31)) {
+	cerr << "w~~ neither simple-raised nor basic " 
+	     << " v = " << v << " j = " << j 
+	     << " w~~ = " << w << endl;
+      }
+      for (i = 1; i<=n; i++) {
+	if (i != j && i != k) {
+	  if (w(i) >= 0 && w(n+1-i) < 0) {
+	    if (w(i) != v(i)) 
+	      cerr << "FAIL:" 
+		   << " v = " << v << " j = " << j 
+		   << " w~~ = " << w << endl;
+	  }
+	}
+      }
+
 #if defined(WITH_STATS)
       compdupcount++;
 #endif
@@ -723,6 +742,7 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
 	// takes care of case: p = n+1-p.
 	v(p)--, v(n+1-p)--;
 	SetupAttribute(v, n, false);
+	v.Attribute()|=1<<31;
 	Pnew->insert(v); 
 	reportx(v);
 	v(p)++, v(n+1-p)++;
@@ -868,6 +888,9 @@ int main(int argc, char *argv[])
 
 /*
  * $Log$
+ * Revision 1.28.1.5.1.1.1.7  1999/03/24 12:21:58  mkoeppe
+ * Complementary reducers.
+ *
  * Revision 1.28.1.5.1.1.1.6  1999/03/24 11:34:09  mkoeppe
  * HoPPI stats.
  *
