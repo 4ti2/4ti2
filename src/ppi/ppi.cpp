@@ -20,7 +20,8 @@
 #include <iomanip.h>
 #include "bbalpha.h"
 
-typedef vector<int> Vector;
+#define SINGLE_RANGE
+
 typedef set<Vector, less<Vector> > SimpleVectorSet;
 static vector<Vector *> VectorRepository;
 
@@ -279,16 +280,10 @@ void /*VectorSet*/ HilbertBase(VectorSet &T)
 #if 1
 int main(int argc, char *argv[])
 {
-  // PPI n = 5.
-  int n = 0;
-  if (argc >= 2) {
-    sscanf(argv[1], "%d", &n);
-    if (argc == 3)       
-      sscanf(argv[2], "%f", &alpha);
-  }
-  if (!n) n = 5;
+  int n = argc - 1;
   Vector a(n);
-  for (int i = 0; i<n; i++) a[i] = i + 1;
+  for (int i = 1; i<argc; i++) 
+    sscanf(argv[1], "%d", &a[i-1]);
 
   VectorSet H0(n);
   for (int i = 0; i<n; i++) {
