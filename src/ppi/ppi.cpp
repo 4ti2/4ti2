@@ -323,10 +323,11 @@ void reportx(Vector z)
 inline void RaisePPI(const Vector &v, int j, int k, int n, 
 		     VectorSet &P, SimpleVectorSet &Pnew)
 {
+  // assert(j<=k);
   Vector w = v;
   w(n+1)++, w(j)--, w(k)--;
   if (w(j) >= 0 && w(k) >= 0) { // w is irreducible 
-    if (P.insert(w, true)) Pnew.insert(w), reportx(w);
+    if (Pnew.insert(w).second) reportx(w);
   }
   else { // may be reducible, must try to reduce 
     int i;
@@ -356,7 +357,7 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
       if (P.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax),
 				  &False)) {
 	// didn't find reducer, but vector may already be known
-	if (P.insert(w, true)) Pnew.insert(w), reportx(w);
+	if (Pnew.insert(w).second) reportx(w);
       }
     }
   }
@@ -392,7 +393,7 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
       // takes care of case: p = n+1-p.
       v(p)--, v(n+1-p)--;
       Pnew->insert(v); 
-      P.insert(v); reportx(v);
+      reportx(v);
       v(p)++, v(n+1-p)++;
     }
   }
@@ -416,6 +417,7 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
     }
   }
   //
+  Pn.insert(Pold->begin(), Pold->end());
   delete Pold;
   Pold = Pnew;
   Pnew = new SimpleVectorSet;
@@ -436,34 +438,15 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
 	}
       }
     }
+    Pn.insert(Pold->begin(), Pold->end());
     delete Pold;
     Pold = Pnew;
     Pnew = new SimpleVectorSet;
   }
 
-#ifdef POSTCHECK
-  cerr << "# Postcheck..." << endl;
-  SimpleVectorSet S;
-  VectorSet::iterator i;
-  for (i = P.begin(); i!=P.end(); ++i) {
-    RangeException = &((Vector&)(*i));
-    Vector v = *i;
-    if (IsReducible(v, P)) {
-      cerr << "Haha... a reducible vector: " << *i << endl;
-      ppicount--;
-    }
-    else {
-      if (!S.insert(*i).second) {
-	cerr << "Hoho... a duplicate: " << *i << endl;
-      }
-    }
-  }
-  RangeException = 0;
-  return S;
-#else
-  P.DestructiveCopy(Pn);
-#endif
-
+  Pn.insert(Pold->begin(), Pold->end());
+  delete Pold;
+  delete Pnew;
 }
 
 int main(int argc, char *argv[])
@@ -482,14 +465,19 @@ int main(int argc, char *argv[])
     ppicount = 0;
     cerr << "### Extending to n = " << i+1 << endl;
     ExtendPPI(V, i);
-    ClearVectorRepository();
     cerr << "### This makes " << ppicount 
 	 << " PPI up to sign, " << V.size() << endl;
+    cerr << "### Clearing vector repository..." << flush;
+    ClearVectorRepository();
+    cerr << "done." << endl;
   }
 
 }
 
 /* $Log$
+ * Revision 1.25  1999/03/09 20:10:44  mkoeppe
+ * n=18 took user 9m34.410s, but was at very memory edge.
+ *
  * Revision 1.24  1999/03/09 17:36:01  mkoeppe
  * Clean up.
  *
