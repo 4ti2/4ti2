@@ -12,7 +12,6 @@
 #include "bbalpha.h"
 
 #define VVVV 1
-#define TALKATIVE 1
 
 typedef set<Vector, less<Vector> > SimpleVectorSet;
 static vector<Vector *> VectorRepository;
@@ -114,7 +113,7 @@ static int ppicount;
 
 /* rangereport parameters */
 /* FIXME: Use a class instead */
-static Vector rangez;
+static Vector rangez, rangemin, rangemax;
 static int LastNonzeroPos;
 #ifdef POSTCHECK
 static Vector *RangeException;
@@ -176,11 +175,25 @@ static bool RangeReport(const Leaf &y)
   if (maxfactor) {
     int i;
     for (i = LastNonzeroPos; 
-	 i && !(rangez(i) -= maxfactor * Vector(y)(i)); i--);
+	 i && !(rangez(i) -= maxfactor * Vector(y)(i)); i--)
+#if defined(DYNAMIC_BOUND)
+      rangemax(i) = rangemin(i) = 0;
+#else
+      ;
+#endif
     LastNonzeroPos = i;
+#if defined(DYNAMIC_BOUND)
+    if (rangez(i)<0) rangemin(i) = rangez(i);
+    else rangemax(i) = rangez(i);
+#endif
     if (i) {
-      for (i--; i; i--) 
+      for (i--; i; i--) {
 	rangez(i) -= maxfactor * Vector(y)(i);
+#if defined(DYNAMIC_BOUND)
+	if (rangez(i)<0) rangemin(i) = rangez(i);
+	else rangemax(i) = rangez(i);
+#endif
+      }
     }
     return LastNonzeroPos;
   }
@@ -199,7 +212,7 @@ static bool False(const Leaf &y)
 bool HilbertReduce(Vector &z, VectorSet &S)
 {
   int i;
-  Vector min(z.size()), max(z.size());
+  rangemin = Vector(z.size()), rangemax = Vector(z.size());
 
   for (i = z.size(); i && !z(i); i--);
   LastNonzeroPos = i;
@@ -212,31 +225,31 @@ bool HilbertReduce(Vector &z, VectorSet &S)
 
 #if 0
   // first look if we find the vector itself in S
-  min = max = rangez;
-  if (!S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max), &False))
+  rangemin = rangemax = rangez;
+  if (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax), &False))
     return false;
 #endif
   // positive search
   do {
     for (i = rangez.size(); i!=LastNonzeroPos; i--)
-      min(i) = max(i) = 0;
+      rangemin(i) = rangemax(i) = 0;
     // at LastNonzeroPos, ensure that we strictly reduce
-    min(LastNonzeroPos) = 1, 
-      max(LastNonzeroPos) = rangez(LastNonzeroPos);
+    rangemin(LastNonzeroPos) = 1, 
+      rangemax(LastNonzeroPos) = rangez(LastNonzeroPos);
     // use full range at the remaining positions
     for (i = LastNonzeroPos - 1; i; i--) {
-      if (rangez(i) >= 0) min(i) = 0, max(i) = rangez(i);
-      else min(i) = rangez(i), max(i) = 0;
+      if (rangez(i) >= 0) rangemin(i) = 0, rangemax(i) = rangez(i);
+      else rangemin(i) = rangez(i), rangemax(i) = 0;
     }
-  } while (!S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max),
+  } while (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax),
 				    &RangeReportWithInversion) 
 	   && LastNonzeroPos);
   if (!LastNonzeroPos) return false;
 
 #if 0
   // look if we find the vector itself in S
-  min = max = rangez;
-  if (!S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max), &False))
+  rangemin = rangemax = rangez;
+  if (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax), &False))
     return false;
 #endif
   
@@ -247,23 +260,23 @@ bool HilbertReduce(Vector &z, VectorSet &S)
 
   // zero bounds of trailing zeros and last nonzero pos
   for (i = rangez.size(); i >= LastNonzeroPos; i--) 
-    min(i) = max(i) = 0;
+    rangemin(i) = rangemax(i) = 0;
 
   // positive search
   do {
     for (i = LastNonzeroPos - 1; i; i--)
-      if (rangez(i) >= 0) min(i) = 0, max(i) = rangez(i);
-      else min(i) = rangez(i), max(i) = 0;
-  } while (!S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max),
+      if (rangez(i) >= 0) rangemin(i) = 0, rangemax(i) = rangez(i);
+      else rangemin(i) = rangez(i), rangemax(i) = 0;
+  } while (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax),
 				    &RangeReport));
 
   // negative search
   rangez = -rangez;
   do {
     for (i = LastNonzeroPos - 1; i; i--)
-      if (rangez(i) >= 0) min(i) = 0, max(i) = rangez(i);
-      else min(i) = rangez(i), max(i) = 0;
-  } while (!S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max),
+      if (rangez(i) >= 0) rangemin(i) = 0, rangemax(i) = rangez(i);
+      else rangemin(i) = rangez(i), rangemax(i) = 0;
+  } while (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax),
 				    &RangeReport));
 
   // we have found a new irreducible vector
@@ -278,7 +291,7 @@ bool HilbertReduce(Vector &z, VectorSet &S)
 bool HilbertReduceVariant(Vector &z, VectorSet &S)
 {
   int i;
-  Vector min(z.size()), max(z.size());
+  rangemin = Vector(z.size()), rangemax = Vector(z.size());
 
   for (i = z.size(); i && !z(i); i--);
   LastNonzeroPos = i;
@@ -289,16 +302,16 @@ bool HilbertReduceVariant(Vector &z, VectorSet &S)
   //
 
   for (i = rangez.size(); i!=LastNonzeroPos; i--)
-    min(i) = max(i) = 0;
+    rangemin(i) = rangemax(i) = 0;
   // at LastNonzeroPos, ensure that we strictly reduce
-  min(LastNonzeroPos) = 1, 
-    max(LastNonzeroPos) = rangez(LastNonzeroPos);
+  rangemin(LastNonzeroPos) = 1, 
+    rangemax(LastNonzeroPos) = rangez(LastNonzeroPos);
   // use full range at the remaining positions
   for (i = LastNonzeroPos - 1; i; i--) {
-    if (rangez(i) >= 0) min(i) = 0, max(i) = rangez(i);
-    else min(i) = rangez(i), max(i) = 0;
+    if (rangez(i) >= 0) rangemin(i) = 0, rangemax(i) = rangez(i);
+    else rangemin(i) = rangez(i), rangemax(i) = 0;
   }
-  if (!S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max), &False))
+  if (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax), &False))
     return false;
 
   // 
@@ -308,23 +321,23 @@ bool HilbertReduceVariant(Vector &z, VectorSet &S)
 
   // zero bounds of trailing zeros and last nonzero pos
   for (i = rangez.size(); i >= LastNonzeroPos; i--) 
-    min(i) = max(i) = 0;
+    rangemin(i) = rangemax(i) = 0;
 
   // positive search
   do {
     for (i = LastNonzeroPos - 1; i; i--)
-      if (rangez(i) >= 0) min(i) = 0, max(i) = rangez(i);
-      else min(i) = rangez(i), max(i) = 0;
-  } while (!S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max),
+      if (rangez(i) >= 0) rangemin(i) = 0, rangemax(i) = rangez(i);
+      else rangemin(i) = rangez(i), rangemax(i) = 0;
+  } while (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax),
 				    &RangeReport));
 
   // negative search
   rangez = -rangez;
   do {
     for (i = LastNonzeroPos - 1; i; i--)
-      if (rangez(i) >= 0) min(i) = 0, max(i) = rangez(i);
-      else min(i) = rangez(i), max(i) = 0;
-  } while (!S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max),
+      if (rangez(i) >= 0) rangemin(i) = 0, rangemax(i) = rangez(i);
+      else rangemin(i) = rangez(i), rangemax(i) = 0;
+  } while (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax),
 				    &RangeReport));
 
   // we have found a new irreducible vector
@@ -335,15 +348,40 @@ bool HilbertReduceVariant(Vector &z, VectorSet &S)
 bool IsReducible(Vector &z, VectorSet &S)
 {
   int i;
-  Vector min(z.size()), max(z.size());
+  rangemin = Vector(z.size()), rangemax = Vector(z.size());
   rangez = z;
+
+  for (i = z.size(); i && !z(i); i--) rangemin(i) = rangemax(i) = 0;
+  LastNonzeroPos = i;
+
+  // Let x = z(LastNonzeroPos).
+
   // positive search is enough because there must be one summand that
   // is positive at LastNonzeroPos.
-  for (i = rangez.size(); i; i--)
-    if (rangez(i) >= 0) min(i) = 0, max(i) = rangez(i);
-    else min(i) = rangez(i), max(i) = 0;
-  return (!S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max),
-			       &False));
+  for (i--; i; i--)
+    if (rangez(i) >= 0) rangemin(i) = 0, rangemax(i) = rangez(i);
+    else rangemin(i) = rangez(i), rangemax(i) = 0;
+
+#if 0
+  // first check for decomposition `x = 0 + x'
+  
+  rangemin(LastNonzeroPos) = rangemax(LastNonzeroPos) = z(LastNonzeroPos);
+  if (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax),
+			       &False)) return true;
+
+  // then check for proper decomposition
+
+  rangemin(LastNonzeroPos) = 1, 
+    rangemax(LastNonzeroPos) = z(LastNonzeroPos) / 2;
+  return (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax),
+				   &False));
+
+#else
+  rangemin(LastNonzeroPos) = 1, 
+    rangemax(LastNonzeroPos) = z(LastNonzeroPos);
+  return (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax),
+				   &False));
+#endif
 }
 
 //
@@ -520,6 +558,9 @@ int main(int argc, char *argv[])
 }
 
 /* $Log$
+ * Revision 1.19  1999/03/08 16:59:16  mkoeppe
+ * Some optimization.
+ *
  * Revision 1.18  1999/03/07 18:59:41  mkoeppe
  * Added some special-purpose reduction code, for use in iterative
  * computation (4.3.11) and post-check for reducibility.
