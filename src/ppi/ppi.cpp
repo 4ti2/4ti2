@@ -71,6 +71,9 @@ public:
 
 class DigitalTree {
   InnerNode *root;
+  // DoSearch's explicit stacks:
+  vector<Node*>::pointer *cis;
+  unsigned char *counts;
   bool DoSearch(Leaf min, Leaf max, Report report, int level, 
 		Node *node);
   void Destroy(Node *node);
@@ -79,8 +82,14 @@ public:
   int Dimension;
   DigitalTree(int dimension) : 
     Dimension(dimension), 
-    root(new InnerNode(0, 0)) {}
-  ~DigitalTree() { if (root) Destroy(root); }
+    root(new InnerNode(0, 0)),
+    cis(new vector<Node*>::pointer[dimension+1]),
+    counts(new unsigned char[dimension+1]) {}
+  ~DigitalTree() { 
+    if (root) Destroy(root); 
+    delete cis;
+    delete counts;
+  }
   bool Insert(Leaf leaf);
   bool OrthogonalRangeSearch(Leaf min, Leaf max, 
 			     Report report)
@@ -119,30 +128,61 @@ void DigitalTree::DestructiveStore(Node *node, SimpleVectorSet &S)
 bool DigitalTree::DoSearch(Leaf min, Leaf max, 
 			   Report report, int level, Node *node)
 {
-  if (node->isleaf) {
-    Vector::pointer vi, mini, maxi;
-    int pos = level;
-    int count = level+1;
-    for (vi = &(((Vector&)(((LeafNode*)node)->leaf))[pos]),
-	   mini = &(((Vector&)(min))[pos]),
-	   maxi = &(((Vector&)(max))[pos]);
-	 count; vi--, mini--, maxi--, count--)
-      if ((*vi)<(*mini) || (*vi)>(*maxi)) return true;
-    return report(((LeafNode*)node)->leaf);
+  vector<Node*>::pointer *ci = cis + level;
+  unsigned char *count = counts+level;
+  Vector::pointer mini, maxi;
+  int mi, ma, cnt;
+  ci[1] = &node;
+  count[1] = 0; // sentinel
+  /* goto-purists beware! This is a streamlined version with
+     an explicit stack instead of recursion, for most of the
+     running time is spent in this function; for a clean 
+     version, see revision 1.28 */
+  mini = &(((Vector&)min)[level]);
+  maxi = &(((Vector&)max)[level]);
+  mi = (*mini + ((InnerNode*)(*(ci[1])))->Delta) >? 0;
+  ma = (*maxi + ((InnerNode*)(*(ci[1])))->Delta)
+    <? ((int)((InnerNode*)(*(ci[1])))->Children.size() - 1);
+  cnt = ma - mi + 1;
+  if (cnt > 0) {
+    *count = cnt;
+    *ci = &(((InnerNode*)(*(ci[1])))->Children[mi]);
+    do {
+      if (**ci) { // nonempty slot
+	if (!(**ci)->isleaf) { // inner slot
+	  mi = (((Vector&)min)[level-1] + ((InnerNode*)(**ci))->Delta) >? 0;
+	  ma = (((Vector&)max)[level-1] + ((InnerNode*)(**ci))->Delta)
+	    <? ((int)((InnerNode*)(**ci))->Children.size() - 1);
+	  cnt = ma - mi + 1;
+	  if (cnt > 0) {
+	    // take next level
+	    level--, ci--, count--;
+	    *count = cnt;
+	    *ci = &(((InnerNode*)(*(ci[1])))->Children[mi]);
+	    continue;
+	  }
+	}
+	else { // leaf slot
+	  Vector::pointer vi, minii, maxii;
+	  int c = level+1;
+	  for (vi = &(((Vector&)(((LeafNode*)(**ci))->leaf))[level]),
+		 minii = &(((Vector&)min)[level]), 
+		 maxii = &(((Vector&)max)[level]);
+	       c; vi--, minii--, maxii--, c--)
+	    if ((*vi)<(*minii) || (*vi)>(*maxii)) goto next;
+	  return false; /* report(((LeafNode*)node)->leaf); */
+	next:
+	  (void)0;
+	}
+      }
+      while (!(--(*count))) {
+	// go up until unfinished level found
+	ci++, count++, level++;
+      }
+      (*ci)++; // next slot
+    } while (*count != 255); // until sentinel reached
   }
-  else {
-    vector<Node*>::pointer ci;
-    int mi = (((Vector&)min)[level] + ((InnerNode*)node)->Delta) >? 0;
-    int ma = (((Vector&)max)[level] + ((InnerNode*)node)->Delta)
-      <? ((int)((InnerNode*)node)->Children.size() - 1);
-    int count = ma - mi + 1;
-    if (count<=0) return true;
-    for (ci = &(((InnerNode*)node)->Children[mi]);
-	 count; ci++, count--)
-      if (*ci && !DoSearch(min, max, report, level-1, *ci)) 
-	return false;
-    return true;
-  }
+  return true; // nothing found
 }
 
 bool DigitalTree::Insert(Leaf leaf)
@@ -521,6 +561,12 @@ int main(int argc, char *argv[])
 }
 
 /* $Log$
+ * Revision 1.28  1999/03/10 17:44:15  mkoeppe
+ * The vectors in inner node of digital trees now grow on
+ * demand. Insertion takes a bit longer, but the whole thing is much
+ * cooler to memory, and lookups are also faster. n=18 takes 5m33s, n=19
+ * takes 11m8s user time at 61MB memory use.
+ *
  * Revision 1.27  1999/03/09 20:54:59  mkoeppe
  * Clean up.
  *
