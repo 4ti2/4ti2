@@ -1,7 +1,7 @@
 // Berechnung einer Hilbertbasis; Modifikation eines Verfahrens aus
 // der Vorlesung Optimierung II (Weismantel). Hier angewendet auf
 // Primitive Partitionsidentit"aten (PPI); das Verfahren ist aber
-// allgemein implementiert. 
+// allgemein implementiert. "
 //
 // Laufzeit: n=5: 19s, n=6: 3m45s, n=7: 1h, n=8: 12h20m
 
