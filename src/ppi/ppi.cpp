@@ -12,6 +12,7 @@
 #include "vec.h"
 
 #define TALKATIVE 0
+#undef WITH_TARAAA
 
 typedef set<Vector, less<Vector> > SimpleVectorSet;
 static vector<Vector *> VectorRepository;
@@ -33,9 +34,34 @@ public:
 
 class InnerNode : public Node {
 public:
+  signed char Delta;
   vector<Node*> Children;
-  InnerNode(int size) : Node(false), Children(size) {}
+  InnerNode(int from, int to) : Node(false), Delta(-from), Children(to - from + 1) {}
+  void Put(int where, Node* n);
+  Node *Get(int where) const { 
+    int i = where + Delta;
+    if (i < 0 || i>=Children.size()) return 0;
+    return Children[i];
+  }
 };
+
+void InnerNode::Put(int where, Node* n)
+{
+  int i = where + Delta;
+  if (i < 0) {
+    // Must extend the vector to the left
+    Children.insert(Children.begin(), -i, (Node*)0);
+    Delta -= i;
+    Children[0] = n;
+    return;
+  }
+  else if (i >= Children.size()) {
+    // Must extend the vector to the right
+    Children.insert(Children.end(), i - Children.size() + 1, (Node*)0);
+    /* FALLTHRU */
+  }
+  Children[i] = n;
+}
 
 class LeafNode : public Node {
 public:
@@ -53,7 +79,7 @@ public:
   int Dimension;
   DigitalTree(int dimension) : 
     Dimension(dimension), 
-    root(new InnerNode(2*dimension+1)) {}
+    root(new InnerNode(0, 0)) {}
   ~DigitalTree() { if (root) Destroy(root); }
   bool Insert(Leaf leaf);
   bool OrthogonalRangeSearch(Leaf min, Leaf max, 
@@ -106,8 +132,12 @@ bool DigitalTree::DoSearch(Leaf min, Leaf max,
   }
   else {
     vector<Node*>::pointer ci;
-    int count = ((Vector&)max)[level] - ((Vector&)min)[level] + 1;
-    for (ci = &(((InnerNode*)node)->Children[Dimension + ((Vector&)min)[level]]); 
+    int mi = (((Vector&)min)[level] + ((InnerNode*)node)->Delta) >? 0;
+    int ma = (((Vector&)max)[level] + ((InnerNode*)node)->Delta)
+      <? ((int)((InnerNode*)node)->Children.size() - 1);
+    int count = ma - mi + 1;
+    if (count<=0) return true;
+    for (ci = &(((InnerNode*)node)->Children[mi]);
 	 count; ci++, count--)
       if (*ci && !DoSearch(min, max, report, level-1, *ci)) 
 	return false;
@@ -120,36 +150,37 @@ bool DigitalTree::Insert(Leaf leaf)
   InnerNode *n = root;
   int level;
   for (level = Dimension-1; level>=0; level--) {
-    int pos = Dimension + ((Vector&)leaf)[level];
-    if (n->Children[pos]) {
-      if (n->Children[pos]->isleaf) {
-	LeafNode *ol = (LeafNode*) n->Children[pos];
+    int pos = ((Vector&)leaf)[level];
+    if (n->Get(pos)) {
+      if (n->Get(pos)->isleaf) {
+	LeafNode *ol = (LeafNode*) n->Get(pos);
 	// Build a chain of inners up to tie 
-	// FIXME: What about a compressed structure...?
 	do {
-	  InnerNode *i = new InnerNode(2 * Dimension + 1);
-	  n->Children[pos] = i;
-	  n = i, level--, pos = Dimension + ((Vector&)leaf)[level];
+	  level--;
+	  int newpos = ((Vector&)leaf)[level];
+	  InnerNode *i = new InnerNode(newpos, newpos);
+	  n->Put(pos, i);
+	  n = i, pos = newpos;
 	} while (level > 0 
 		 && (((Vector&)(ol->leaf))[level] 
 		     == ((Vector&)leaf)[level]));
 	// Put the old and new leaves at the end
 	LeafNode *l = new LeafNode;
 	l->leaf = leaf;
-	n->Children[Dimension + ((Vector&)leaf)[level]] = l;
-	n->Children[Dimension + ((Vector&)(ol->leaf))[level]] = ol;
+	n->Put(((Vector&)leaf)[level], l);
+	n->Put(((Vector&)(ol->leaf))[level], ol);
 	// we are done
 	return true;
       }
       else { // Is inner node
-	n = (InnerNode*) n->Children[pos];
+	n = (InnerNode*) n->Get(pos);
 	// go on
       }
     }
     else { // Is empty slot
       LeafNode *l = new LeafNode;
       l->leaf = leaf;
-      n->Children[pos] = l;
+      n->Put(pos, l);
       // we are done
       return true; 
     }
@@ -259,9 +290,13 @@ static int ppicount;
 /* rangereport parameters */
 static Vector rangemin, rangemax;
 static int LastNonzeroPos;
+static Leaf ReportedLeaf;
 
 static bool False(const Leaf &y)
 {
+#ifdef WITH_TARAAA
+  ReportedLeaf = y;
+#endif
   return false;
 }
 
@@ -300,6 +335,12 @@ void reportx(Vector z)
   cout << z << "\t"; writeppi(cout, z, z.size()); 
 #endif
 }
+
+// FIXME: The Taraaa! cases happen but seem to be obsolete, as they are
+// generated the other way round anyway... But it is not clear whether
+// this really is the case or whether it is just the (FIXME:)
+// redundancy in generation that makes everything go cool for the
+// checked values.
 
 inline void RaisePPI(const Vector &v, int j, int k, int n, 
 		     VectorSet &P, SimpleVectorSet &Pnew)
@@ -340,7 +381,31 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
 	// didn't find reducer, but vector may already be known
 	if (Pnew.insert(w).second) reportx(w);
       }
+#ifdef WITH_TARAAA
+      else {
+	// found reducer, so insert the reduced
+	for (i = 1; i<=n+1; i++) w(i) += ((Vector&)ReportedLeaf)(i);
+	if (Pnew.insert(w).second) {
+#if (TALKATIVE>=2)
+	  cerr << "Taraaa";
+#endif
+	  reportx(w);
+	}
+      }
+#endif
     }
+#ifdef WITH_TARAAA
+    else {
+      // found reducer, so insert the reduced
+      for (i = 1; i<=n+1; i++) w(i) -= ((Vector&)ReportedLeaf)(i);
+      if (Pnew.insert(w).second) {
+#if (TALKATIVE>=2)
+	cerr << "Taraaa'";
+#endif
+	reportx(w);
+      }
+    }
+#endif
   }
 }
 
@@ -456,6 +521,9 @@ int main(int argc, char *argv[])
 }
 
 /* $Log$
+ * Revision 1.27  1999/03/09 20:54:59  mkoeppe
+ * Clean up.
+ *
  * Revision 1.26  1999/03/09 20:33:37  mkoeppe
  * Only maintains P0 range-searchable, which saves memory. n=18 now takes
  * user 6m20.4s.
