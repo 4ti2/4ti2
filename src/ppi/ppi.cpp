@@ -26,15 +26,17 @@
 struct VectorAux {
   /* order important */
   unsigned long Attribute;
-  unsigned char Length;
-  signed char Data[0];
+  signed char Stuff[0];
   void *operator new(size_t s, int length) {
-    return malloc(s+length);
+    return malloc(s+length+1);
   }
-  VectorAux(int length) : Length(length) {}
+  VectorAux(int length) { Length() = length; }
   VectorAux(const VectorAux &aux) {
-    memcpy(this, &aux, sizeof(VectorAux) + aux.Length);
-  }    
+    memcpy(this, &aux, sizeof(VectorAux) + aux.Length() + 1);
+  }
+  unsigned char &Length() { return (unsigned char &) Stuff[0]; }
+  unsigned char Length() const { return (unsigned char &) Stuff[0]; }
+  signed char *Data() { return Stuff+1; }
 };
 
 class Vector {
@@ -48,29 +50,31 @@ private:
 public:
   Vector() { aux = 0; }
   Vector(int length) { aux = new(length) VectorAux(length); }
-  Vector(const Vector &v) { aux = new(v.aux->Length) VectorAux(*v.aux); }
+  Vector(const Vector &v) { aux = new(v.aux->Length()) VectorAux(*v.aux); }
   ~Vector() { delete aux; }
   Vector &operator=(const Vector &v) {
     if (this!=&v) { 
       delete aux; 
-      aux = new(v.aux->Length) VectorAux(*v.aux);
+      aux = new(v.aux->Length()) VectorAux(*v.aux);
     }
     return *this;
   }
-  signed char &operator [](size_t i) { return aux->Data[i]; }
-  signed char &operator ()(int i) { return aux->Data[i-1]; }
-  const signed char &operator [](size_t i) const { return aux->Data[i]; }
-  const signed char &operator ()(int i) const { return aux->Data[i-1];
+  signed char &operator [](size_t i) { return aux->Data()[i]; }
+  signed char &operator ()(int i) { return aux->Data()[i-1]; }
+  const signed char &operator [](size_t i) const { return aux->Data()[i]; }
+  const signed char &operator ()(int i) const { return aux->Data()[i-1];
   }
-  const_iterator begin() const { return aux->Data; }
-  const_iterator end() const { return aux->Data + aux->Length; }
-  size_t size() const { return aux->Length; }
+  const_iterator begin() const { return aux->Data(); }
+  const_iterator end() const { return aux->Data() + aux->Length(); }
+  size_t size() const { return aux->Length(); }
 public:
   Vector operator-() const;
   unsigned long &Attribute() { return aux->Attribute; }
   friend bool operator==(const Vector &a, const Vector &b) {
     if (a.size() != b.size()) return false;
-    for (int i = 0; i<a.size(); i++) if (a[i] != b[i]) return false;
+    Vector::const_iterator ai, bi;
+    for (ai = a.begin(), bi = b.begin(); 
+	 ai!=a.end(); ++ai, ++bi) if (*ai != *bi) return false;
     return true;
   }
 };  
@@ -818,6 +822,9 @@ int main(int argc, char *argv[])
 
 /*
  * $Log$
+ * Revision 1.28.1.5.1.1.1.2  1999/03/22 21:07:19  mkoeppe
+ * New `compact' vectors. n=20 takes less than 70MB.
+ *
  * Revision 1.28.1.5.1.1.1.1  1999/03/22 15:13:17  mkoeppe
  * Leaves of digital trees store the vectors directly, and only the coordinates
  * not known from the structure. n=19 now takes 47MB and 6m45s user
