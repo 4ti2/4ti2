@@ -80,12 +80,73 @@ void report(Vector z, Vector a)
   else { cout << z << "\t\t"; writeppi(cout, z); }
 }    
 
-void ReductionRange(VectorSet T, 
+void ReductionRange(const VectorSet &T, const Vector &z, 
 		    /* returns */ VectorSet::iterator &begin, 
 		    /* returns */ VectorSet::iterator &end)
 {
-  
+  // T ist lexikographisch sortiert. Betrachte ich die erste
+  // Nichtnull-Koordinate von z, so kann ich den Bereich der
+  // zul"assigen y in T eingrenzen. "
+  int firstnonzero;
+  for (firstnonzero = 0; !z[firstnonzero]; firstnonzero++);
+  if (z[firstnonzero] > 0) {
+    Vector v(z.size());
+    int i;
+    for (i = 0; i<=firstnonzero; i++) v[i] = 0;
+    if (firstnonzero+1 < z.size()) {
+      if (z[firstnonzero+1] >= 0) v[firstnonzero+1] = 0;
+      else v[firstnonzero+1] = z[firstnonzero+1];
+      for (i = firstnonzero+2; i<z.size(); i++) 
+	v[i] = -INT_MAX;
+    }
+    begin = T.lower_bound(v);
+    v[firstnonzero] = z[firstnonzero];
+    if (firstnonzero+1 < z.size()) {
+      if (z[firstnonzero+1] < 0) v[firstnonzero+1] = 0;
+      else v[firstnonzero+1] = z[firstnonzero+1];
+      for (i = firstnonzero+2; i<z.size(); i++) 
+	v[i] = INT_MAX;
+    }
+    end = T.upper_bound(v);
+  }
+  else {
+    Vector v(z.size());
+    int i;
+    for (i = 0; i<=firstnonzero; i++) v[i] = 0;
+    if (firstnonzero+1 < z.size()) {
+      if (z[firstnonzero+1] < 0) v[firstnonzero+1] = 0;
+      else v[firstnonzero+1] = z[firstnonzero+1];
+      for (i = firstnonzero+2; i<z.size(); i++) 
+	v[i] = INT_MAX;
+    }
+    end = T.upper_bound(v);
+    v[firstnonzero] = z[firstnonzero];
+    if (firstnonzero+1 < z.size()) {
+      if (z[firstnonzero+1] >= 0) v[firstnonzero+1] = 0;
+      else v[firstnonzero+1] = z[firstnonzero+1];
+      for (i = firstnonzero+2; i<z.size(); i++) 
+	v[i] = -INT_MAX;
+    }
+    begin = T.lower_bound(v);
+  }
+}
 
+bool HilbertReduce(Vector &z, const Vector &a, 
+		   VectorSet::iterator begin, VectorSet::iterator end)
+{
+  bool nonzeroz;
+  VectorSet::iterator iy;
+  for (iy = begin; iy != end; ++iy) {
+    Vector y = *iy;
+    int maxfactor = HilbertDivide(z, y, a);
+    if (maxfactor) {
+      nonzeroz = false;
+      for (int i = 0; i<a.size(); i++) 
+	nonzeroz |= !!(z[i] -= maxfactor * y[i]);
+      if (!nonzeroz) break;
+    }
+  }
+  return nonzeroz;
 }
 
 VectorSet HilbertBase(VectorSet T, Vector a, VectorSet freshT)
@@ -107,84 +168,14 @@ VectorSet HilbertBase(VectorSet T, Vector a, VectorSet freshT)
 	Vector z(a.size());
 	for (int i = 0; i<a.size(); i++)
 	  z[i] = (*iv)[i] + (*iw)[i];
-	VectorSet::iterator iy;
 	bool nonzeroz = false;
 	for (int i = 0; i<a.size(); i++)
 	  if (nonzeroz |= !!z[i]) break;
 	if (nonzeroz) {
-	  int good = 0;
-	  int tried = 0;
-	  // T ist lexikographisch sortiert. Betrachte ich die erste
-	  // Nichtnull-Koordinate von z, so kann ich den Bereich der
-	  // zul"assigen y in T eingrenzen. "
-	  int firstnonzero;
-	  for (firstnonzero = 0; !z[firstnonzero]; firstnonzero++);
 	  VectorSet::iterator begin, end;
-	  if (z[firstnonzero] > 0) {
-	    Vector v(a.size());
-	    int i;
-	    for (i = 0; i<=firstnonzero; i++) v[i] = 0;
-	    if (firstnonzero+1 < a.size()) {
-	      if (z[firstnonzero+1] >= 0) v[firstnonzero+1] = 0;
-	      else v[firstnonzero+1] = z[firstnonzero+1];
-	      for (i = firstnonzero+2; i<a.size(); i++) 
-		v[i] = -INT_MAX;
-	    }
-	    begin = T.lower_bound(v);
-	    v[firstnonzero] = z[firstnonzero];
-	    if (firstnonzero+1 < a.size()) {
-	      if (z[firstnonzero+1] < 0) v[firstnonzero+1] = 0;
-	      else v[firstnonzero+1] = z[firstnonzero+1];
-	      for (i = firstnonzero+2; i<a.size(); i++) 
-		v[i] = INT_MAX;
-	    }
-	    end = T.upper_bound(v);
-	  }
-	  else {
-	    Vector v(a.size());
-	    int i;
-	    for (i = 0; i<=firstnonzero; i++) v[i] = 0;
-	    if (firstnonzero+1 < a.size()) {
-	      if (z[firstnonzero+1] < 0) v[firstnonzero+1] = 0;
-	      else v[firstnonzero+1] = z[firstnonzero+1];
-	      for (i = firstnonzero+2; i<a.size(); i++) 
-		v[i] = INT_MAX;
-	    }
-	    end = T.upper_bound(v);
-	    v[firstnonzero] = z[firstnonzero];
-	    if (firstnonzero+1 < a.size()) {
-	      if (z[firstnonzero+1] >= 0) v[firstnonzero+1] = 0;
-	      else v[firstnonzero+1] = z[firstnonzero+1];
-	      for (i = firstnonzero+2; i<a.size(); i++) 
-		v[i] = -INT_MAX;
-	    }
-	    begin = T.lower_bound(v);
-	  }
 	  // Reduktion von z durch y aus T
-	  for (iy = begin; iy != end; ++iy) {
-	    Vector y = *iy;
-#if 0
-	    // EXPERIMENTELL: Diese Einschr"ankung hei"st: Teste Summe
-	    // `old minus oldfresh' + `oldfresh' nur mit Vektoren aus
-	    // `oldfresh' oder `fresh'. Das mu"s aber anders
-	    // implementiert werden; in dieser inneren Schleife macht
-	    // es alles langsam.
-	    if (vFresh && oldT.find(y) != oldT.end() &&
-		oldFreshT.find(y) == oldT.end())
-	      continue;
-#endif
-	    tried++;
-	    int maxfactor = HilbertDivide(z, y, a);
-	    if (maxfactor) {
-	      good++;
-	      nonzeroz = false;
-	      for (int i = 0; i<a.size(); i++) 
-		nonzeroz |= !!(z[i] -= maxfactor * y[i]);
-	      if (!nonzeroz) break;
-	    }
-	  }
-// 	  cout << "Good " << good << " of " << tried << " size " <<
-// 	    T.size() << endl;
+	  ReductionRange(T, z, begin, end);
+	  nonzeroz = HilbertReduce(z, a, begin, end);
 	  if (nonzeroz) {
 	    T.insert(z);
 	    freshT.insert(z);
