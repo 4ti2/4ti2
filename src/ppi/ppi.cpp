@@ -12,6 +12,7 @@
 #include "bbalpha.h"
 
 #define VVVV 1
+#define TALKATIVE 1
 
 typedef set<Vector, less<Vector> > SimpleVectorSet;
 static vector<Vector *> VectorRepository;
@@ -52,7 +53,7 @@ VectorSet::operator SimpleVectorSet()
 ostream &operator<<(ostream &s, const Vector &z)
 {
   for (int i = 0; i<z.size(); i++)
-    s << setw(4) << z[i];
+    s << setw(4) << (int)(z[i]);
   return s;
 }
 
@@ -499,8 +500,8 @@ int main(int argc, char *argv[])
   if (argc >= 2) {
     sscanf(argv[1], "%d", &n);
     if (argc == 3)       
-      //sscanf(argv[2], "%f", &alpha);
-      sscanf(argv[2], "%d", &BBTree::FewLeavesBound);
+      sscanf(argv[2], "%f", &alpha);
+    //sscanf(argv[2], "%d", &BBTree::FewLeavesBound);
   }
   if (!n) n = 5;
 
@@ -519,6 +520,10 @@ int main(int argc, char *argv[])
 }
 
 /* $Log$
+ * Revision 1.18  1999/03/07 18:59:41  mkoeppe
+ * Added some special-purpose reduction code, for use in iterative
+ * computation (4.3.11) and post-check for reducibility.
+ *
  * Revision 1.17  1999/03/07 16:02:19  mkoeppe
  * n=14 still need POST_CHECK, but everything else quite ok now.
  *
