@@ -92,6 +92,9 @@ public:
 	 ai!=a.end(); ++ai, ++bi) if (*ai != *bi) return false;
     return true;
   }
+public:    /* for use in SimpleVectorSet */
+  size_t hash;
+  Vector *next;
 };  
 #else
 #  include "vec.h"
@@ -134,6 +137,7 @@ inline bool operator != (const SimpleVectorSetIterator &a, const SimpleVectorSet
 
 class SimpleVectorSet {
   SimpleVectorSet (const SimpleVectorSet &);
+  SimpleVectorSet &operator=(const SimpleVectorSet &);
 public:
   typedef SimpleVectorSetIterator iterator;
   Vector **buckets;
@@ -146,6 +150,9 @@ public:
     size_t i;
     for (i = 0; i<num_buckets; i++)
       buckets[i] = NULL;
+  }
+  ~SimpleVectorSet() {
+    free(buckets);
   }
   SimpleVectorSetIterator begin() {
     size_t bucket;
@@ -521,10 +528,6 @@ ostream &operator<<(ostream &s, const Vector &z)
   return s;
 }
 
-void ClearVectorRepository()
-{
-}
-
 int HilbertDivide(Vector z, Vector y)
 {
   // Find maximal integer f with f*y<=z in Hilbert-base sense.
@@ -800,13 +803,15 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
   }
 }
 
-void ExtendPPI(SimpleVectorSet &Pn, int n)
+/* FIXME: Pn kann einfach ein Array werden, da darin nie gesucht
+   werden mu"s. */
+SimpleVectorSet *ExtendPPI(SimpleVectorSet *Pn, int n)
 {
   SimpleVectorSet *Pold;
-  int expected_count = 2 * Pn.count;
+  int expected_count = 2 * Pn->count;
   if (expected_count < 20000) expected_count = 20000;
   SimpleVectorSet *Pnew = new SimpleVectorSet(expected_count);
-  SimpleVectorSet *Pbase = new SimpleVectorSet(Pn.count);
+  SimpleVectorSet *Pbase = new SimpleVectorSet(Pn->count);
 
   // Implementation of Algorithms 4.3.8, 4.3.11 from [Urbaniak] 
   
@@ -816,7 +821,7 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
     // (1) Create the range-searchable set P of (n+1)-vectors from the
     // set Pn of n-vectors.
     cerr << "# Vectors copied from n = " << n << ": " << endl;
-    for (SimpleVectorSet::iterator i = Pn.begin(); i!=Pn.end(); ++i) {
+    for (SimpleVectorSet::iterator i = Pn->begin(); i!=Pn->end(); ++i) {
       Vector v(n+1);
       for (int j = 1; j <= n; j++) v(j) = (*i)(j);
       v(n+1) = 0;
@@ -824,7 +829,8 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
       P.insert(*Pbase->insert(v).first); reportx(v);
     }
     // destroy Pn to save memory
-    Pn = SimpleVectorSet(expected_count);
+    delete Pn;
+    Pn = new SimpleVectorSet(expected_count);
     // finish P to make search faster
     cerr << "Finishing..." << endl;
     P.Finish();
@@ -922,19 +928,20 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
 	}
       }
 
-      Pn.insert(Pold->begin(), Pold->end());
+      Pn->insert(Pold->begin(), Pold->end());
       delete Pold;
       Pold = Pnew;
       Pnew = new SimpleVectorSet(expected_count);
     }
   } // P is dead now
-  Pn.insert(Pold->begin(), Pold->end());
+  Pn->insert(Pold->begin(), Pold->end());
   delete Pold;
   delete Pnew;
 
   // Finally, add the base and destroy it
-  Pn.insert(Pbase->begin(), Pbase->end());
+  Pn->insert(Pbase->begin(), Pbase->end());
   delete Pbase;
+  return Pn;
 }
 
 int main(int argc, char *argv[])
@@ -947,8 +954,9 @@ int main(int argc, char *argv[])
   if (!n) n = 5;
 
   // Setup PPI set for n=2
-  SimpleVectorSet V(1);
-  Vector v(2); v(1) = -2, v(2) = +1; V.insert(v);
+  SimpleVectorSet *V;
+  V = new SimpleVectorSet(1);
+  Vector v(2); v(1) = -2, v(2) = +1; V->insert(v);
   for (int i = 2; i<n; i++) {
 #if defined(WITH_STATS)
     hitcount[0] = failcount[0] = hitcount[1] = failcount[1] 
@@ -956,7 +964,7 @@ int main(int argc, char *argv[])
 #endif
     ppicount = 0;
     cerr << "### Extending to n = " << i+1 << endl;
-    ExtendPPI(V, i);
+    V = ExtendPPI(V, i);
     cerr << "### This makes " << ppicount 
 	 << " PPI up to sign" 
 #if defined(WITH_STATS)
@@ -977,22 +985,22 @@ int main(int argc, char *argv[])
       FILE *f = fopen(fname, "wb");
       char cn = n;
       fwrite(&cn, 1, 1, f);
-      SimpleVectorSet::iterator j = V.begin();
-      for (; j!=V.end(); ++j) {
+      SimpleVectorSet::iterator j = V->begin();
+      for (; j!=V->end(); ++j) {
 	fwrite(&(*j)[0], 1, n, f);
       }
       fclose(f);
       cerr << "done." << endl;
     }
-    cerr << "### Clearing vector repository..." << flush;
-    ClearVectorRepository();
-    cerr << "done." << endl;
     cerr << "Elapsed time: " << user_time() << endl;
   }
 }
 
 /*
  * $Log$
+ * Revision 1.31  2002/08/06 14:31:45  mkoeppe
+ * Seems to work, but is slower
+ *
  * Revision 1.30  2002/08/06 14:00:16  mkoeppe
  * OUR_OWN_HASH implementation. rudimentary.
  *
