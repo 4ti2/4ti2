@@ -35,14 +35,19 @@ double user_time()
 #undef BACKWARD_LEVEL
 #define COMPACT_VECTORS
 
+typedef unsigned int attr_type; /* 32 bits are enough */
+
 #if defined(COMPACT_VECTORS)
 struct VectorAux {
   /* order important */
-  unsigned long Attribute;
+  attr_type Attribute;
   signed char Stuff[4];
   void *operator new(size_t s, int length) {
     if (length < 3) length=3;
     return malloc(s - 3 +length);
+  }
+  void operator delete(void *v) {
+    free(v);
   }
   VectorAux(int length) { Length() = length; }
   VectorAux(const VectorAux &aux) {
@@ -90,7 +95,7 @@ public:
   size_t size() const { return aux->Length(); }
 public:
   Vector operator-() const;
-  unsigned long &Attribute() { return aux->Attribute; }
+  attr_type &Attribute() { return aux->Attribute; }
   friend bool operator==(const Vector &a, const Vector &b) {
     if (a.size() != b.size()) return false;
     Vector::const_iterator ai, bi;
@@ -144,6 +149,7 @@ inline bool operator != (const SimpleVectorSetIterator &a, const SimpleVectorSet
 }
 
 class SimpleVectorSet {
+  SimpleVectorSet ();
   SimpleVectorSet (const SimpleVectorSet &);
   SimpleVectorSet &operator=(const SimpleVectorSet &);
 public:
@@ -153,7 +159,8 @@ public:
   size_t count;
   SimpleVectorSet(size_t size) {
     count = 0;
-    num_buckets = size; 
+    if (size == 0) size =1;
+    num_buckets = size;
     buckets = (Vector**) malloc(sizeof(Vector *) * num_buckets);
     size_t i;
     for (i = 0; i<num_buckets; i++)
@@ -271,7 +278,7 @@ class VerySimpleVectorSet { /* a linked list */
 public:
   size_t count;
   typedef VerySimpleVectorSetIterator iterator;
-  VerySimpleVectorSet() : head(NULL) {}
+  VerySimpleVectorSet() : head(NULL), count(0) {}
   ~VerySimpleVectorSet() {
     Vector *v, *n;
     for (v = head; v!=NULL; ) {
@@ -346,6 +353,12 @@ public:
   signed char isleaf;
   Node(char leaf, unsigned char adv = 1) : 
     isleaf(leaf), advance(adv) {}
+  void *operator new(size_t s) {
+    return malloc(s);
+  }
+  void operator delete(void *v) {
+    free(v);
+  }
 };
 
 class InnerNode : public Node {
@@ -675,8 +688,8 @@ inline void SetupAttribute(Vector &v, int n, bool WithNegative)
   // (Source Erasing). We take two bits per position because of
   // positive/negative stuff.
   // NOTE: This imposes the arbitrary limit n <= 33.
-  unsigned long attrib = 0;
-  unsigned long mask = 1;
+  attr_type attrib = 0;
+  attr_type mask = 1;
   if (WithNegative) {
     for (int j = 1; j<=n/2; j++, mask<<=1) {
       if (v(j) > 0 || v(n+1-j) > 0) attrib |= mask;
@@ -738,6 +751,9 @@ inline void DoDecAndErase(Vector &u, int i, int n, SimpleVectorSet &Pold,
     } 
 }
 
+Vector EraseSource_u;
+Vector EraseSource_mu;
+
 inline void EraseSource(const Vector &w, int n, SimpleVectorSet &Pold,
 			bool irreducible, bool WithNegative)
 {
@@ -745,7 +761,8 @@ inline void EraseSource(const Vector &w, int n, SimpleVectorSet &Pold,
   if (!irreducible) return; // they often fail, which is expensive
 #endif
   //  cerr << "EraseSource " << w << endl; 
-  Vector u = w;
+  EraseSource_u = w;
+  Vector &u = EraseSource_u;
   u(n+1)--;
   int LastNonzeroPos;
   if (WithNegative) { 
@@ -760,16 +777,20 @@ inline void EraseSource(const Vector &w, int n, SimpleVectorSet &Pold,
 	// LastNonzeroPos, so perform positive search.
 	DoIncAndErase(u, i, n, Pold, irreducible);
       }
-      Vector mu;
+      Vector &mu = EraseSource_mu;
       if (2*LastNonzeroPos == n+1) { // Very special case:
 	// Need not erase sources because this case is left out
 	// anyway. (The code below doesn't grok this case.)
-	mu = -u;
+	//mu = -u;
+	for (int j = 1; j<=n+1; j++)
+	  mu(j) = - u(j);
       }
       else {
 	// Handle LastNonzeroPos:
 	u(i)++, u(LastNonzeroPos)++; // This might zero it, so:
-	mu = -u;
+	//mu = -u;
+	for (int j = 1; j<=n+1; j++)
+	  mu(j) = - u(j);
 	for (; LastNonzeroPos && !u(LastNonzeroPos); LastNonzeroPos--);
 	if (LastNonzeroPos) {
 	  if (u(LastNonzeroPos) > 0) {
@@ -887,7 +908,7 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
 VerySimpleVectorSet *ExtendPPI(VerySimpleVectorSet *Pn, int n)
 {
   SimpleVectorSet *Pold;
-  int expected_count = 2 * Pn->count;
+  int expected_count = Pn->count/20; // 2 * Pn->count;
   if (expected_count < 20000) expected_count = 20000;
   SimpleVectorSet *Pnew = new SimpleVectorSet(expected_count);
   SimpleVectorSet *Pbase = new SimpleVectorSet(Pn->count);
@@ -899,16 +920,19 @@ VerySimpleVectorSet *ExtendPPI(VerySimpleVectorSet *Pn, int n)
     /* initialize special vectors */
     delete temp; temp = NULL;
     rangemin = Vector(n+1), rangemax = Vector(n+1);
+    EraseSource_u = Vector(n+1);
+    EraseSource_mu = Vector(n+1);
+    Vector minus_v(n+1);
 
     // (1) Create the range-searchable set P of (n+1)-vectors from the
     // set Pn of n-vectors.
     cerr << "# Vectors copied from n = " << n << ": " << endl;
     for (VerySimpleVectorSet::iterator i = Pn->begin(); i!=Pn->end(); ++i) {
-      Vector v(n+1);
-      for (int j = 1; j <= n; j++) v(j) = (*i)(j);
-      v(n+1) = 0;
-      SetupAttribute(v, n, true); 
-      P.insert(*Pbase->insert(v).first); reportx(v);
+      Vector *v = new Vector(n+1);
+      for (int j = 1; j <= n; j++) (*v)(j) = (*i)(j);
+      (*v)(n+1) = 0;
+      SetupAttribute(*v, n, true); 
+      P.insert(*Pbase->insert(v).first); reportx(*v);
     }
     // destroy Pn to save memory
     delete Pn;
@@ -935,7 +959,7 @@ VerySimpleVectorSet *ExtendPPI(VerySimpleVectorSet *Pn, int n)
 
     // (3) Build all other primitive identities with exactly one
     // component of (n+1).
-    cerr << "# Vectors of P" << 1 << "(" << n+1 << "):" << endl;
+    cerr << "# Vectors of P" << 1 << "(" << n+1 << "):" << flush;
 
     // first a pass for the simple cases
     for (SimpleVectorSet::iterator i = Pbase->begin(); i!=Pbase->end(); ++i) {
@@ -944,7 +968,9 @@ VerySimpleVectorSet *ExtendPPI(VerySimpleVectorSet *Pn, int n)
 #if (TALKATIVE>=2)
 	cerr << "Raising " << v << endl;
 #endif
-	Vector minus_v = -v;
+	//Vector minus_v = -v;
+	for (int j=1; j<=n+1; j++)
+	  minus_v(j) = - v(j);
 	for (int j = 1; j<=n/2; j++) { // yes n/2 is enough
 	  int k = (n+1) - j;
 	  if (v(j) > 0 && v(k) > 0)
@@ -962,7 +988,8 @@ VerySimpleVectorSet *ExtendPPI(VerySimpleVectorSet *Pn, int n)
 #if (TALKATIVE>=2)
 	cerr << "Raising " << v << endl;
 #endif
-	Vector minus_v = -v;
+	for (int j=1; j<=n+1; j++)
+	  minus_v(j) = - v(j);
 	for (int j = 1; j<=n/2; j++) { // yes n/2 is enough
 	  int k = (n+1) - j;
 	  if (v.Attribute() & (1<<(j-1)))
@@ -972,6 +999,7 @@ VerySimpleVectorSet *ExtendPPI(VerySimpleVectorSet *Pn, int n)
 	}
       }
     }
+    cerr << Pnew->count << endl;
     //
     Pold = Pnew;
     Pnew = new SimpleVectorSet(expected_count);
@@ -980,7 +1008,7 @@ VerySimpleVectorSet *ExtendPPI(VerySimpleVectorSet *Pn, int n)
     // components of (n+1).
 
     for (int t = 1; t<n; t++) {
-      cerr << "# Vectors of P" << t+1 << "(" << n+1 << "):" << endl;
+      cerr << "# Vectors of P" << t+1 << "(" << n+1 << "):" << flush;
       // simple cases
       for (SimpleVectorSet::iterator i = Pold->begin(); i!=Pold->end(); ++i) {
 	Vector &v = *i;
@@ -1011,11 +1039,16 @@ VerySimpleVectorSet *ExtendPPI(VerySimpleVectorSet *Pn, int n)
 	  }
 	}
       }
-
+      cerr << Pnew->count << endl;
       Pn->insert_destructively(*Pold);
       SimpleVectorSet *tmp = Pold; /* an empty set */
       Pold = Pnew;
+#ifdef RECYCLE_SETS
       Pnew = tmp;
+#else
+      delete tmp;
+      Pnew = new SimpleVectorSet(1 + Pold->count / 4);
+#endif
     }
   } // P is dead now
   Pn->insert_destructively(*Pold);
@@ -1078,10 +1111,14 @@ int main(int argc, char *argv[])
     }
     cerr << "Elapsed time: " << user_time() << endl;
   }
+  delete V;
 }
 
 /*
  * $Log$
+ * Revision 1.34  2002/08/07 16:28:02  mkoeppe
+ * better memory reuse, less copying
+ *
  * Revision 1.33  2002/08/06 16:51:38  mkoeppe
  * chaining, rather than linear probing
  *
