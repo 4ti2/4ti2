@@ -117,19 +117,33 @@ void reportx(Vector z)
   cout << z << "\t"; writeppi(cout, z, z.size()); 
 }
 
-#ifdef SINGLE_RANGE
-
 /* rangereport parameter */
+/* FIXME: Use a class instead */
 static Vector rangez;
+static bool nonzeroz;
 
+// returns false iff reduced to zero or new range shall be set up.
 static bool rangereport(const Leaf &y)
 {
-  bool nonzeroz = false;
+  static int count = 0;
   int maxfactor = HilbertDivide(rangez, y);
-//   if (!maxfactor) cerr << "Bad reducer" << endl;
-  for (int i = 0; i<rangez.size(); i++) 
-    nonzeroz |= !!(rangez[i] -= maxfactor * Vector(y)[i]);
-  return nonzeroz;
+  if (maxfactor) {
+    count = 0;
+    nonzeroz = false;
+    for (int i = 0; i<rangez.size(); i++) 
+      nonzeroz |= !!(rangez[i] -= maxfactor * Vector(y)[i]);
+    return nonzeroz;
+  }
+  else {
+#if 0 // a heuristic decision whether a new range shall be set up.
+    return (++count) % 20;
+#endif
+#if 1 // always use a single range
+    return true;
+#else // use a new range for every search.
+    return false;
+#endif
+  }
 }
 
 bool HilbertReduce(Vector &z, VectorSet &S)
@@ -139,80 +153,36 @@ bool HilbertReduce(Vector &z, VectorSet &S)
   
   // positive search
 
-  for (i = 0; i<z.size(); i++)
-    if (z[i] >= 0) min[i] = 0, max[i] = z[i];
-    else min[i] = z[i], max[i] = 0;
   rangez = z;
-  bool nonzeroz = (S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max),
-					   &rangereport));
-  z = rangez;
-
-  if (nonzeroz) { // negative search
-
-    for (i = 0; i<z.size(); i++) rangez[i] = -z[i];
-    for (i = 0; i<rangez.size() && rangez[i] == 0; i++) // zero leading zeros
-      min[i] = max[i] = 0;
-    min[i] = max[i] = 0; // zero first positive component
+  do {
     for (i = 0; i<rangez.size(); i++)
       if (rangez[i] >= 0) min[i] = 0, max[i] = rangez[i];
       else min[i] = rangez[i], max[i] = 0;
-    nonzeroz = (S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max),
-					&rangereport));
+    nonzeroz = true;
+  } while (!S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max),
+				    &rangereport) 
+	   && nonzeroz);
+
+  z = rangez;
+
+  if (nonzeroz) { // negative search
+    for (i = 0; i<z.size(); i++) rangez[i] = -z[i];
+    do {
+      for (i = 0; i<rangez.size() && rangez[i] == 0; i++) // zero leading zeros
+	min[i] = max[i] = 0;
+      min[i] = max[i] = 0; // zero first positive component
+      for (i = 0; i<rangez.size(); i++)
+	if (rangez[i] >= 0) min[i] = 0, max[i] = rangez[i];
+	else min[i] = rangez[i], max[i] = 0;
+      nonzeroz = true;
+    } while (!S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max),
+				      &rangereport)
+	     && nonzeroz);
     for (i = 0; i<z.size(); i++) z[i] = -rangez[i];
   }
 
   return nonzeroz;
 }
-
-#else
-
-#error This revision only supports SINGLE_RANGE
-
-static Vector rangeresult;
-static Vector rangez;
-static int maxfactor;
-static Vector rangemax, rangemin;
-
-static bool rangereport(const Leaf &y)
-{
-  rangeresult = y;
-  maxfactor = HilbertDivide(rangez, rangeresult);
-  if (!maxfactor) { 
-    /* This check is superfluous, but it doesn't cost much, and
-       RangeSearch used to work badly; so rather keep this just in
-       case it gets broken again. */
-    cerr << "Bad reducer: " << rangeresult 
-	 << " min " << rangemin << " max " << rangemax << endl;
-    return true;
-  }
-  return false; /* no further */
-}
-
-bool HilbertReduce(Vector &z, VectorSet &S)
-{
-  bool nonzeroz;
-  do {
-    int i;
-    Vector min(z.size()), max(z.size());
-    for (i = 0; i<z.size(); i++)
-      if (z[i] >= 0) min[i] = 0, max[i] = z[i];
-      else min[i] = z[i], max[i] = 0;
-    rangez = z, rangemin = min, rangemax = max;
-    if (S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max),
-				&rangereport)) {
-      /* no reducer found */
-      return true;
-    }
-    else {
-      nonzeroz = false;
-      for (i = 0; i<z.size(); i++) 
-	nonzeroz |= !!(z[i] -= maxfactor * Vector(rangeresult)[i]);
-    }
-  } while (nonzeroz);
-  return false;
-}
-
-#endif
 
 //
 // General code to build a hilbert base from scratch
@@ -339,21 +309,23 @@ SimpleVectorSet ExtendPPI(const SimpleVectorSet &Pn, int n)
 
   // (3) Build all other primitive identities with exactly (t+1)
   // components of (n+1).
-  for (int t = 0; t<=n; t++) {
+  for (int t = 0; t<n; t++) {
     cerr << "# Vectors of P" << t+1 << "(" << n+1 << "):" << endl;
     for (SimpleVectorSet::iterator i = Pold.begin(); i!=Pold.end(); ++i) {
       Vector v = *i;
       for (int j = 1; j<=(n+1)/2; j++) {
 	int k = (n+1) - j;
-	if (v(j) >= 0 || v(k) >= 0) { // otherwise, w reducible by v
-	  Vector w = v;
-	  w(n+1)++, w(j)--, w(k)--;
-	  ReduceAndInsert(w, P, Pnew);
-	}
-	if (v(j) <= 0 || v(k) <= 0) { // otherwise, w reducible by v
-	  Vector w = v;
-	  w(n+1)--, w(j)++, w(k)++;
-	  ReduceAndInsert(w, P, Pnew);
+	if (v(j) != 0 || v(k) != 0) { // otherwise, w reducible by v
+	  if (v(j) >= 0 || v(k) >= 0) { // otherwise, w reducible by v
+	    Vector w = v;
+	    w(n+1)++, w(j)--, w(k)--;
+	    ReduceAndInsert(w, P, Pnew);
+	  }
+	  if (v(j) <= 0 || v(k) <= 0) { // otherwise, w reducible by v
+	    Vector w = v;
+	    w(n+1)--, w(j)++, w(k)++;
+	    ReduceAndInsert(w, P, Pnew);
+	  }
 	}
       }
     }
@@ -407,4 +379,7 @@ int main(int argc, char *argv[])
 
 }
 
-/* $Log$ */
+/* $Log$
+ * Revision 1.11  1999/03/04 23:53:02  mkoeppe
+ * Initial implementation of R. Urbaniak's PPI algorithms.
+ * */
