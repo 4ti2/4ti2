@@ -7,11 +7,6 @@
 
 // Verwaltung der Testvektoren mit Range-Trees (BB-alpha based). 
 
-// Ich speichere jetzt (nach R. Urbaniak) nur noch `modulo
-// Vorzeichen', dh, erster Nichtnulleintrag ist immer positiv.
-// Laufzeit vorher: 7 -> user 1m50.480s, 7 SINGLE_RANGE -> user
-// 1m42.930s. Laufzeit jetzt: 7 SINGLE_RANGE -> user 0m55.900s
-
 #include <stdio.h>
 #include <bool.h>
 #include <set>
@@ -20,7 +15,6 @@
 #include <iomanip.h>
 #include "bbalpha.h"
 
-typedef vector<int> Vector;
 typedef set<Vector, less<Vector> > SimpleVectorSet;
 static vector<Vector *> VectorRepository;
 
@@ -83,10 +77,10 @@ int HilbertDivide(Vector z, Vector y)
   return maxfactor;
 }
 
-void writeppi(ostream &c, Vector z)
+void writeppi(ostream &c, Vector z, int n)
 {
   bool first = true;
-  for (int i = 0; i<z.size()-1; i++) 
+  for (int i = 0; i<n; i++) 
     if (z[i] > 0) {
       if (first) first = false;
       else c << " + ";
@@ -96,7 +90,7 @@ void writeppi(ostream &c, Vector z)
     }
   c << "\t= ";
   first = true;
-  for (int i = 0; i<z.size()-1; i++) 
+  for (int i = 0; i<n; i++) 
     if (z[i] < 0) {
       if (first) first = false;
       else c << " + ";
@@ -114,8 +108,14 @@ void report(Vector z)
 {
   count++;
   if (z[z.size()-1]) cout << z << endl;
-  else { ppicount++; cout << z << "\t"; writeppi(cout, z); }
+  else { ppicount++; cout << z << "\t"; writeppi(cout, z, z.size()-1); }
 }    
+
+void reportx(Vector z)
+{
+  count++, ppicount++;
+  cout << z << "\t"; writeppi(cout, z, z.size()); 
+}
 
 #ifdef SINGLE_RANGE
 
@@ -214,6 +214,10 @@ bool HilbertReduce(Vector &z, VectorSet &S)
 
 #endif
 
+//
+// General code to build a hilbert base from scratch
+//
+
 void /*VectorSet*/ HilbertBase(VectorSet &T, SimpleVectorSet freshT)
 {
   SimpleVectorSet oldT;
@@ -276,7 +280,90 @@ void /*VectorSet*/ HilbertBase(VectorSet &T)
   /*return*/ HilbertBase(T, T);
 }
 
-#if 1
+// Reduces v with repect to P and inserts a nonzero remainder into
+// both P and Q.
+bool ReduceAndInsert(Vector &v, VectorSet &P, SimpleVectorSet &Q)
+{
+  // check sign
+  int i;
+  for (i = 1; i<=v.size() && !v(i); i++);
+  if (i > v.size()) return false;
+  if (v(i) < 0) {
+    for (; i<=v.size(); i++) v(i) = -v(i);
+  }
+  // reduce 
+  if (HilbertReduce(v, P)) {
+    P.insert(v);
+    Q.insert(v);
+    reportx(v);
+    return true;
+  }
+  return false;
+}
+
+//
+// Specialized code for generating all primitive partition identities
+//
+
+SimpleVectorSet ExtendPPI(const SimpleVectorSet &Pn, int n)
+{
+  VectorSet P(n);
+  SimpleVectorSet Pold;
+  SimpleVectorSet Pnew;
+
+  // Implementation of Algorithms 4.3.8, 4.3.11 from [Urbaniak] 
+
+  // (1) Create the range-searchable set P of (n+1)-vectors from the
+  // set Pn of n-vectors.
+  cerr << "# Vectors copied from n = " << n << ": " << endl;
+  for (SimpleVectorSet::iterator i = Pn.begin(); i!=Pn.end(); ++i) {
+    Vector v(n+1);
+    for (int j = 1; j <= n; j++) v(j) = (*i)(j);
+    v(n+1) = 0;
+    P.insert(v); Pold.insert(v); reportx(v);
+  }
+
+  // (2) Add `(n+1) = a + b' identities.
+  cerr << "# Vectors of type " << n+1 << " = a + b:" << endl;
+  {
+    Vector v(n+1);
+    for (int j = 1; j <= n; j++) v(j) = 0;
+    v(n+1) = -1;
+    for (int p = 1; p<=(n+1)/2; p++) {
+      // takes care of case: p = n+1-p.
+      v(p)++, v(n+1-p)++;
+      P.insert(v); Pnew.insert(v); reportx(v);
+      v(p)--, v(n+1-p)--;
+    }
+  }
+
+  // (3) Build all other primitive identities with exactly (t+1)
+  // components of (n+1).
+  for (int t = 0; t<=n; t++) {
+    cerr << "# Vectors of P" << t+1 << "(" << n+1 << "):" << endl;
+    for (SimpleVectorSet::iterator i = Pold.begin(); i!=Pold.end(); ++i) {
+      Vector v = *i;
+      for (int j = 1; j<=(n+1)/2; j++) {
+	int k = (n+1) - j;
+	if (v(j) >= 0 || v(k) >= 0) { // otherwise, w reducible by v
+	  Vector w = v;
+	  w(n+1)++, w(j)--, w(k)--;
+	  ReduceAndInsert(w, P, Pnew);
+	}
+	if (v(j) <= 0 || v(k) <= 0) { // otherwise, w reducible by v
+	  Vector w = v;
+	  w(n+1)--, w(j)++, w(k)++;
+	  ReduceAndInsert(w, P, Pnew);
+	}
+      }
+    }
+    Pold = Pnew;
+    Pnew = SimpleVectorSet();
+  }
+
+  return P;
+}
+
 int main(int argc, char *argv[])
 {
   // PPI n = 5.
@@ -287,6 +374,8 @@ int main(int argc, char *argv[])
       sscanf(argv[2], "%f", &alpha);
   }
   if (!n) n = 5;
+
+#if 0
   Vector a(n);
   for (int i = 0; i<n; i++) a[i] = i + 1;
 
@@ -301,5 +390,21 @@ int main(int argc, char *argv[])
   /*VectorSet H =*/ HilbertBase(H0);
   cerr << "This makes " << 2*ppicount << " PPI of " 
        << 2*count << " test vectors." << endl;
-}
 #endif
+
+#if 1
+  // Setup PPI set for n=2
+  SimpleVectorSet V;
+  Vector v(2); v(1) = 2, v(2) = -1; V.insert(v);
+  for (int i = 2; i<n; i++) {
+    ppicount = 0;
+    cerr << "### Extending to n = " << i+1 << endl;
+    V = ExtendPPI(V, i);
+    cerr << "### This makes " << ppicount 
+	 << " PPI up to sign." << endl;
+  }
+#endif
+
+}
+
+/* $Log$ */
