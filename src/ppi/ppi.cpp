@@ -80,6 +80,14 @@ void report(Vector z, Vector a)
   else { cout << z << "\t\t"; writeppi(cout, z); }
 }    
 
+void ReductionRange(VectorSet T, 
+		    /* returns */ VectorSet::iterator &begin, 
+		    /* returns */ VectorSet::iterator &end)
+{
+  
+
+}
+
 VectorSet HilbertBase(VectorSet T, Vector a, VectorSet freshT)
 {
   VectorSet oldT, oldFreshT;
@@ -155,6 +163,16 @@ VectorSet HilbertBase(VectorSet T, Vector a, VectorSet freshT)
 	  // Reduktion von z durch y aus T
 	  for (iy = begin; iy != end; ++iy) {
 	    Vector y = *iy;
+#if 0
+	    // EXPERIMENTELL: Diese Einschr"ankung hei"st: Teste Summe
+	    // `old minus oldfresh' + `oldfresh' nur mit Vektoren aus
+	    // `oldfresh' oder `fresh'. Das mu"s aber anders
+	    // implementiert werden; in dieser inneren Schleife macht
+	    // es alles langsam.
+	    if (vFresh && oldT.find(y) != oldT.end() &&
+		oldFreshT.find(y) == oldT.end())
+	      continue;
+#endif
 	    tried++;
 	    int maxfactor = HilbertDivide(z, y, a);
 	    if (maxfactor) {
