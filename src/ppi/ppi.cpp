@@ -12,12 +12,14 @@
 #include "bbalpha.h"
 
 #define VVVV 1
+#undef TALKATIVE
 
 typedef set<Vector, less<Vector> > SimpleVectorSet;
 static vector<Vector *> VectorRepository;
 
 float alpha = 0.15;
 
+#if defined(USE_BB)
 class VectorSet {
   BBTree *tree;
   VectorSet(const VectorSet &);
@@ -48,6 +50,148 @@ VectorSet::operator SimpleVectorSet()
     if (!S.insert(*i).second) cerr << "duplicate" << endl;
   return S;
 }
+
+#else
+
+// Implementation with digital trees (FIXME: name?)
+
+class Node {
+public:
+  bool isleaf;
+  Node(bool leaf) : isleaf(leaf) {}
+};
+
+class InnerNode : public Node {
+public:
+  vector<Node*> Children;
+  InnerNode(int size) : Node(false), Children(size) {}
+};
+
+class LeafNode : public Node {
+public:
+  Leaf leaf;
+  LeafNode() : Node(true) {}
+};  
+
+class DigitalTree {
+  InnerNode *root;
+  bool DoSearch(Leaf min, Leaf max, Report report, int level, Node *node);
+public:
+  int Dimension;
+  DigitalTree(int dimension) : 
+    Dimension(dimension), 
+    root(new InnerNode(2*dimension+1)) {}
+  ~DigitalTree() { /* FIXME: */ }
+  void Insert(Leaf leaf);
+  bool OrthogonalRangeSearch(Leaf min, Leaf max, 
+			     Report report)
+    { return DoSearch(min, max, report, Dimension-1, root); }
+};
+
+bool DigitalTree::DoSearch(Leaf min, Leaf max, 
+			   Report report, int level, Node *node)
+{
+  if (node->isleaf) {
+    Vector::pointer vi, mini, maxi;
+    int pos = level;
+    int count = level+1;
+    for (vi = &(((Vector&)(((LeafNode*)node)->leaf))[pos]),
+	   mini = &(((Vector&)(min))[pos]),
+	   maxi = &(((Vector&)(max))[pos]);
+	 count; vi--, mini--, maxi--, count--)
+      if ((*vi)<(*mini) || (*vi)>(*maxi)) return true;
+    return report(((LeafNode*)node)->leaf);
+  }
+  else {
+    vector<Node*>::pointer ci;
+    int count = ((Vector&)max)[level] - ((Vector&)min)[level] + 1;
+    for (ci = &(((InnerNode*)node)->Children[Dimension + ((Vector&)min)[level]]); 
+	 count; ci++, count--)
+      if (*ci && !DoSearch(min, max, report, level-1, *ci)) 
+	return false;
+    return true;
+  }
+}
+
+void DigitalTree::Insert(Leaf leaf)
+{
+  InnerNode *n = root;
+  int level;
+  for (level = Dimension-1; level>=0; level--) {
+    int pos = Dimension + ((Vector&)leaf)[level];
+    if (n->Children[pos]) {
+      if (n->Children[pos]->isleaf) {
+	// Build a chain of inners up to tie 
+	LeafNode *ol = (LeafNode*) n->Children[pos];
+	do {
+	  InnerNode *i = new InnerNode(2 * Dimension + 1);
+	  n->Children[pos] = i;
+	  n = i, level--, pos = Dimension + ((Vector&)leaf)[level];
+	} while (level > 0 
+		 && (((Vector&)(ol->leaf))[level] 
+		     == ((Vector&)leaf)[level]));
+	// Put the old and new leaves at the end
+	LeafNode *l = new LeafNode;
+	l->leaf = leaf;
+	n->Children[Dimension + ((Vector&)leaf)[level]] = l;
+	n->Children[Dimension + ((Vector&)(ol->leaf))[level]] = ol;
+	// we are done
+	return;
+      }
+      else { // Is inner node
+	n = (InnerNode*) n->Children[pos];
+	// go on
+      }
+    }
+    else { // Is empty slot
+      LeafNode *l = new LeafNode;
+      l->leaf = leaf;
+      n->Children[pos] = l;
+      // we are done
+      return; 
+    }
+  }
+}
+
+class VectorSet {
+  DigitalTree *tree;
+  VectorSet(const VectorSet &);
+  operator=(const VectorSet &);
+  
+public:
+  VectorSet(int level) : tree(new DigitalTree(level+1)) {}
+  ~VectorSet() { delete tree; }
+  typedef BBTree::iterator iterator;
+  void insert(Vector v) { 
+    Vector *vv = new Vector(v);
+    VectorRepository.push_back(vv);
+    tree->Insert(Leaf(vv)); 
+  }
+  bool OrthogonalRangeSearch(Leaf min, Leaf max, 
+			     Report report)
+    { return tree->OrthogonalRangeSearch(min, max, report); }
+  operator SimpleVectorSet();
+};
+
+static SimpleVectorSet *inserthackset;
+
+static bool inserthack(const Leaf &y)
+{
+  inserthackset->insert((Vector&)y);
+  return true;
+}
+
+VectorSet::operator SimpleVectorSet()
+  return Set;
+{
+  inserthackset = &Set;
+  Vector min(tree->Dimension), max(tree->Dimension);
+  for (int i = 1; i<=tree->Dimension; i++)
+    min(i) = -tree->Dimension, max(i) = tree->Dimension;
+  OrthogonalRangeSearch(Leaf(&min), Leaf(&max), inserthack);
+}
+
+#endif
 
 ostream &operator<<(ostream &s, const Vector &z)
 {
@@ -552,12 +696,15 @@ int main(int argc, char *argv[])
     V = ExtendPPI(V, i);
     ClearVectorRepository();
     cerr << "### This makes " << ppicount 
-	 << " PPI up to sign." << endl;
+	 << " PPI up to sign, " << V.size() << endl;
   }
 
 }
 
 /* $Log$
+ * Revision 1.20  1999/03/08 20:58:23  mkoeppe
+ * Ok, 11 takes 53sec.
+ *
  * Revision 1.19  1999/03/08 16:59:16  mkoeppe
  * Some optimization.
  *
