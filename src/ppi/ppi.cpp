@@ -19,6 +19,7 @@
 #undef WITH_STATS
 #undef ERASE_SOURCES_OF_IRREDUCIBLES
 #define WITH_ADVANCE
+#undef BACKWARD_LEVEL
 
 #if defined(HASH) // Use a hash table for SimpleVectorSet
 
@@ -42,8 +43,6 @@ typedef hash_set<Vector> SimpleVectorSet;
 typedef set<Vector, less<Vector> > SimpleVectorSet;
 
 #endif
-
-static vector<Vector *> VectorRepository;
 
 Vector Vector::operator-() const 
   return v; 
@@ -73,14 +72,14 @@ public:
 
 class LeafNode : public Node {
 public:
-  Leaf leaf;
+  Vector vec;
   LeafNode() : Node(true) {}
 };  
 
 class DigitalTree {
   InnerNode *root;
   InnerNode *AdvanceNodes;
-  bool DoSearch(Leaf min, Leaf max, Report report, int level, 
+  bool DoSearch(const Vector &min, const Vector &max, int level, 
 		Node *node);
   void Destroy(Node *node);
   void DestructiveStore(Node *node, SimpleVectorSet &S);
@@ -102,10 +101,13 @@ public:
     if (root) Destroy(root);
     /*if (AdvanceNodes) delete AdvanceNodes;*/ /* FIXME: really kill 'em */}
   void Finish();
-  bool Insert(Leaf leaf);
-  bool OrthogonalRangeSearch(Leaf min, Leaf max, 
-			     Report report)
-    { return DoSearch(min, max, report, Dimension-1, root); }
+  bool Insert(const Vector &v);
+  bool OrthogonalRangeSearch(const Vector & min, const Vector & max)
+#if defined(BACKWARD_LEVEL)
+    { return DoSearch(min, max, 0, root); }
+#else
+    { return DoSearch(min, max, Dimension-1, root); }
+#endif
   void DestructiveCopy(SimpleVectorSet &S)
     { DestructiveStore(root, S); root = 0; }
 };
@@ -151,12 +153,12 @@ void DigitalTree::Destroy(Node *node)
   }
 }
 
-bool DigitalTree::DoSearch(Leaf min, Leaf max, 
-			   Report report, int level, Node *node)
+bool DigitalTree::DoSearch(const Vector & min, const Vector & max, 
+			   int level, Node *node)
 {
   vector<Node*>::pointer ci;
-  int mi = (((Vector&)min)[level] + ((InnerNode*)node)->Delta) >? 0;
-  int ma = (((Vector&)max)[level] + ((InnerNode*)node)->Delta)
+  int mi = (min[level] + ((InnerNode*)node)->Delta) >? 0;
+  int ma = (max[level] + ((InnerNode*)node)->Delta)
     <? ((int)((InnerNode*)node)->Size - 1);
   int count = ma - mi + 1;
   int advance;
@@ -167,21 +169,36 @@ bool DigitalTree::DoSearch(Leaf min, Leaf max,
     if (*ci) {
 #endif
       if ((*ci)->isleaf == true) {
-	Vector::pointer vi, mini, maxi;
+	Vector::const_pointer vi, mini, maxi;
+#if defined(BACKWARD_LEVEL)
+	int pos = level + 1;
+	int count = Dimension - level - 1;
+	for (vi = &((LeafNode*)(*ci))->vec[pos],
+	       mini = &min[pos],
+	       maxi = &max[pos];
+	     count; vi++, mini++, maxi++, count--)
+	  if ((*vi)<(*mini) || (*vi)>(*maxi)) goto next;
+#else
 	int pos = level - 1;
 	int count = level;
-	for (vi = &(((Vector&)(((LeafNode*)(*ci))->leaf))[pos]),
-	       mini = &(((Vector&)(min))[pos]),
-	       maxi = &(((Vector&)(max))[pos]);
+	for (vi = &((LeafNode*)(*ci))->vec[pos],
+	       mini = &min[pos],
+	       maxi = &max[pos];
 	     count; vi--, mini--, maxi--, count--)
 	  if ((*vi)<(*mini) || (*vi)>(*maxi)) goto next;
-	return report(((LeafNode*)node)->leaf);
+#endif
+	return false; /*report(((LeafNode*)node)->leaf);*/
       next:
 	void(0);
       }
       else if ((*ci)->isleaf == false) {
-	if (!DoSearch(min, max, report, level-1, *ci)) 
+#if defined(BACKWARD_LEVEL)
+	if (!DoSearch(min, max, level+1, *ci)) 
 	  return false;
+#else
+	if (!DoSearch(min, max, level-1, *ci)) 
+	  return false;
+#endif
       }
       advance = (*ci)->advance;
 #if !defined(WITH_ADVANCE)
@@ -219,30 +236,37 @@ void DigitalTree::Finish()
 #endif
 }
 
-bool DigitalTree::Insert(Leaf leaf)
+bool DigitalTree::Insert(const Vector &v)
 {
   InnerNode **n = &root;
   int level;
+#if defined(BACKWARD_LEVEL)
+  for (level = 0; level<Dimension; level++) {
+#else
   for (level = Dimension-1; level>=0; level--) {
-    int pos = ((Vector&)leaf)[level];
+#endif
+    int pos = v[level];
     if (Get(*n, pos)) {
       if (Get(*n, pos)->isleaf) {
 	LeafNode *ol = (LeafNode*) Get(*n, pos);
 	// Build a chain of inners up to tie 
 	do {
+#if defined(BACKWARD_LEVEL)
+	  level++;
+#else
 	  level--;
-	  int newpos = ((Vector&)leaf)[level];
+#endif
+	  int newpos = v[level];
 	  InnerNode *i = new InnerNode(newpos);
 	  n = (InnerNode **) &Put(*n, pos, i);
 	  pos = newpos;
 	} while (level > 0 
-		 && (((Vector&)(ol->leaf))[level] 
-		     == ((Vector&)leaf)[level]));
+		 && (ol->vec[level] == v[level]));
 	// Put the old and new leaves at the end
 	LeafNode *l = new LeafNode;
-	l->leaf = leaf;
-	Put(*n, ((Vector&)leaf)[level], l);
-	Put(*n, ((Vector&)(ol->leaf))[level], ol);
+	l->vec = v;
+	Put(*n, v[level], l);
+	Put(*n, ol->vec[level], ol);
 	// we are done
 	return true;
       }
@@ -253,7 +277,7 @@ bool DigitalTree::Insert(Leaf leaf)
     }
     else { // Is empty slot
       LeafNode *l = new LeafNode;
-      l->leaf = leaf;
+      l->vec = v;
       Put(*n, pos, l);
       // we are done
       return true; 
@@ -270,36 +294,14 @@ public:
   VectorSet(int level) : tree(new DigitalTree(level+1)) {}
   ~VectorSet() { delete tree; }
   void Finish() { tree->Finish(); }
-  bool insert(Vector v) { 
-    Vector *vv = new Vector(v);
-    VectorRepository.push_back(vv);
-    return tree->Insert(Leaf(vv)); 
+  bool insert(const Vector &v) { 
+    return tree->Insert(v); 
   }
-  bool OrthogonalRangeSearch(Leaf min, Leaf max, 
-			     Report report)
-    { return tree->OrthogonalRangeSearch(min, max, report); }
-  operator SimpleVectorSet();
+  bool OrthogonalRangeSearch(const Vector & min, const Vector & max)
+    { return tree->OrthogonalRangeSearch(min, max); }
   void DestructiveCopy(SimpleVectorSet &S)
     { tree->DestructiveCopy(S); }
 };
-
-static SimpleVectorSet *inserthackset;
-
-static bool inserthack(const Leaf &y)
-{
-  inserthackset->insert((Vector&)y);
-  return true;
-}
-
-VectorSet::operator SimpleVectorSet()
-  return Set;
-{
-  inserthackset = &Set;
-  Vector min(tree->Dimension), max(tree->Dimension);
-  for (int i = 1; i<=tree->Dimension; i++)
-    min(i) = -tree->Dimension, max(i) = tree->Dimension;
-  OrthogonalRangeSearch(Leaf(&min), Leaf(&max), inserthack);
-}
 
 ostream &operator<<(ostream &s, const Vector &z)
 {
@@ -310,11 +312,6 @@ ostream &operator<<(ostream &s, const Vector &z)
 
 void ClearVectorRepository()
 {
-  for (vector<Vector *>::iterator i = VectorRepository.begin();
-       i!=VectorRepository.end();
-       ++i)
-    delete *i;
-  VectorRepository = vector<Vector *>();
 }
 
 int HilbertDivide(Vector z, Vector y)
@@ -366,12 +363,6 @@ static int dupcount, redcount, hitcount[2], failcount[2];
 /* rangereport parameters */
 static Vector rangemin, rangemax;
 static int LastNonzeroPos;
-static Leaf ReportedLeaf;
-
-static bool False(const Leaf &y)
-{
-  return false;
-}
 
 /////////////////
 
@@ -393,8 +384,7 @@ bool IsReducible(Vector &z, VectorSet &S)
 
   rangemin(LastNonzeroPos) = 1, 
     rangemax(LastNonzeroPos) = z(LastNonzeroPos);
-  return (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax),
-				   &False));
+  return (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax)));
 }
 
 //
@@ -508,8 +498,7 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
     if (w(k) < 0) rangemin(k) = w(k), rangemax(k) = w(k);
     else rangemin(j) = w(j), rangemax(j) = w(j);
     // search!
-    if (P.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax),
-				&False)) {
+    if (P.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax))) {
       // try negative search
       for (i = n; i; i--) {
 	if (w(i) <= 0) rangemin(i) = 0, rangemax(i) = -w(i);
@@ -517,8 +506,7 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
       }
       if (w(k) < 0) rangemin(k) = -w(k), rangemax(k) = -w(k);
       else rangemin(j) = -w(j), rangemax(j) = -w(j);
-      if (P.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax),
-				  &False)) {
+      if (P.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax))) {
 	// didn't find reducer, but vector may already be known
 	SetupAttribute(w, n, false);
 	if (Pnew.insert(w).second) {
@@ -672,6 +660,10 @@ int main(int argc, char *argv[])
 }
 
 /* $Log$
+ * Revision 1.28.1.4  1999/03/12 11:57:09  mkoeppe
+ * InnerNodes take less memory (no longer using STL vectors). n=19 takes
+ * 57M to 61M, 7m43s user time.
+ *
  * Revision 1.28.1.3  1999/03/11 18:59:54  mkoeppe
  * Uses a hash table for SimpleVectorSet (strong). Uses advance pointers
  * with digital trees (weak). Defines _NOTHREADS (strong). n=19 takes 8m36s.
