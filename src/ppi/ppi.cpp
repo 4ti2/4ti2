@@ -4,7 +4,7 @@
 // allgemein implementiert. "
 
 // Verwaltung der Testvektoren mit Range-Trees (BB-alpha based). 
-// Sehr viel Speicher wird verwendet!
+// Laufzeiten: n=5 3.5s, n=6 26s, n=7 4m43s, n=8 36m, n=9 308m
 
 #include <stdio.h>
 #include <bool.h>
@@ -54,8 +54,8 @@ VectorSet::operator SimpleVectorSet()
 ostream &operator<<(ostream &s, const Vector &z)
 {
   for (int i = 0; i<z.size(); i++)
-    cout << setw(4) << z[i];
-  return cout;
+    s << setw(4) << z[i];
+  return s;
 }
 
 int HilbertDivide(Vector z, Vector y)
