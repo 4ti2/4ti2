@@ -1,3 +1,10 @@
+// Berechnung einer Hilbertbasis; Modifikation eines Verfahrens aus
+// der Vorlesung Optimierung II (Weismantel). Hier angewendet auf
+// Primitive Partitionsidentit"aten (PPI); das Verfahren ist aber
+// allgemein implementiert. 
+//
+// Laufzeit: n=5: 19s, n=6: 3m45s, n=7: 1h, n=8: 12h20m
+
 #include <stdio.h>
 #include <bool.h>
 #include <set>
@@ -87,6 +94,10 @@ void ReductionRange(const VectorSet &T, const Vector &z,
   // T ist lexikographisch sortiert. Betrachte ich die erste
   // Nichtnull-Koordinate von z, so kann ich den Bereich der
   // zul"assigen y in T eingrenzen. "
+  /* FIXME: Eine bessere Datenstruktur k"onnte den Suchbereich enger
+     eingrenzen; haben wir zum Beispiel Nullen in den hinteren
+     Komponenten, w"urde man in einem *lexikographisch anders*
+     sortierten Baum die lower und upper bound bestimmen wollen. */
   int firstnonzero;
   for (firstnonzero = 0; !z[firstnonzero]; firstnonzero++);
   if (z[firstnonzero] > 0) {
