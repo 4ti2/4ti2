@@ -22,6 +22,13 @@
 #define WITH_ADVANCE
 #undef BACKWARD_LEVEL
 
+int leveldelta = 18;
+
+int MINLEVEL(int level) 
+{
+  return level - leveldelta;
+}
+
 #if defined(HASH) // Use a hash table for SimpleVectorSet
 
 #include <hash_set>
@@ -57,9 +64,15 @@ Vector Vector::operator-() const
 class Node {
 public:
   unsigned char advance;
-  signed char isleaf;
-  Node(char leaf, unsigned char adv = 1) : 
-    isleaf(leaf), advance(adv) {}
+  enum {
+    AdvanceNode,
+    LeafNode,
+    InnerNode,
+    FruitNode
+  };
+  char nodetype;
+  Node(char type, unsigned char adv = 1) : 
+    nodetype(type), advance(adv) {}
 };
 
 class InnerNode : public Node {
@@ -67,19 +80,27 @@ public:
   signed char Delta;
   signed char Size;
   Node* Children[1];
-  InnerNode(int which) : Node(false), Delta(-which), 
+  InnerNode(int which) : Node(Node::InnerNode), Delta(-which), 
     Size(1) { Children[0] = 0; }
 };
 
 class LeafNode : public Node {
 public:
   Vector vec;
-  LeafNode() : Node(true) {}
+  LeafNode() : Node(Node::LeafNode) {}
 };  
+
+class FruitNode : public Node {
+public:
+  set<Vector> vecs;
+  FruitNode() : Node(Node::FruitNode) {}
+};
 
 class DigitalTree {
   InnerNode *root;
   InnerNode *AdvanceNodes;
+  inline bool CheckVector(const Vector &min, const Vector &max,
+			  int level, const Vector &vec);
   bool DoSearch(const Vector &min, const Vector &max, int level, 
 		Node *node);
   void Destroy(Node *node);
@@ -94,8 +115,10 @@ class DigitalTree {
   }
 public:
   int Dimension;
-  DigitalTree(int dimension) : 
+  int MinLevel;
+  DigitalTree(int dimension, int minlevel) : 
     Dimension(dimension), 
+    MinLevel(minlevel),
     root(new InnerNode(0)),
     AdvanceNodes(0) {}
   ~DigitalTree() { 
@@ -144,17 +167,48 @@ Node *&DigitalTree::Put(InnerNode *&inner, int where, Node* n)
 
 void DigitalTree::Destroy(Node *node)
 {
-  if (node->isleaf == true) delete (LeafNode*)node;
-  else if (node->isleaf == false) {
+  switch (node->nodetype) {
+  case Node::LeafNode:
+    delete (LeafNode*)node;
+    break;
+  case Node::InnerNode: {
     int count = ((InnerNode*)node)->Size;
     for (Node **i = ((InnerNode*)node)->Children;
 	 count; ++i, count--)
       if (*i) Destroy(*i);
-    delete (InnerNode*)node;
+    delete (InnerNode*)node; 
+    break;}
+  case Node::FruitNode: 
+    delete (FruitNode*)node;
+    break;
   }
 }
 
-bool DigitalTree::DoSearch(const Vector & min, const Vector & max, 
+inline bool DigitalTree::CheckVector(const Vector &min, const Vector &max,
+				     int level, const Vector &vec)
+{
+  Vector::const_pointer vi, mini, maxi;
+#if defined(BACKWARD_LEVEL)
+  int pos = level + 1;
+  int count = Dimension - level - 1;
+  for (vi = &vec[pos],
+	 mini = &min[pos],
+	 maxi = &max[pos];
+       count; vi++, mini++, maxi++, count--)
+    if ((*vi)<(*mini) || (*vi)>(*maxi)) return false;
+#else
+  int pos = level - 1;
+  int count = level;
+  for (vi = &vec[pos],
+	 mini = &min[pos],
+	 maxi = &max[pos];
+       count; vi--, mini--, maxi--, count--)
+    if ((*vi)<(*mini) || (*vi)>(*maxi)) return false;
+#endif
+  return true;
+}
+
+bool DigitalTree::DoSearch(const Vector &min, const Vector &max, 
 			   int level, Node *node)
 {
   vector<Node*>::pointer ci;
@@ -169,38 +223,31 @@ bool DigitalTree::DoSearch(const Vector & min, const Vector & max,
 #if !defined(WITH_ADVANCE)
     if (*ci) {
 #endif
-      if ((*ci)->isleaf == true) {
-	Vector::const_pointer vi, mini, maxi;
+      switch ((*ci)->nodetype) 
+	{
+	case Node::LeafNode: 
+	  if (CheckVector(min, max, level, ((LeafNode*) *ci)->vec)) 
+	    return false;
+	  break;
+	case Node::InnerNode: 
 #if defined(BACKWARD_LEVEL)
-	int pos = level + 1;
-	int count = Dimension - level - 1;
-	for (vi = &((LeafNode*)(*ci))->vec[pos],
-	       mini = &min[pos],
-	       maxi = &max[pos];
-	     count; vi++, mini++, maxi++, count--)
-	  if ((*vi)<(*mini) || (*vi)>(*maxi)) goto next;
+	  if (!DoSearch(min, max, level+1, *ci)) 
+	    return false;
 #else
-	int pos = level - 1;
-	int count = level;
-	for (vi = &((LeafNode*)(*ci))->vec[pos],
-	       mini = &min[pos],
-	       maxi = &max[pos];
-	     count; vi--, mini--, maxi--, count--)
-	  if ((*vi)<(*mini) || (*vi)>(*maxi)) goto next;
+	  if (!DoSearch(min, max, level-1, *ci)) 
+	    return false;
 #endif
-	return false; /*report(((LeafNode*)node)->leaf);*/
-      next:
-	void(0);
-      }
-      else if ((*ci)->isleaf == false) {
-#if defined(BACKWARD_LEVEL)
-	if (!DoSearch(min, max, level+1, *ci)) 
-	  return false;
-#else
-	if (!DoSearch(min, max, level-1, *ci)) 
-	  return false;
-#endif
-      }
+	  break;
+	case Node::FruitNode: {
+	  set<Vector>::iterator n;
+	  int i;
+	  for (n = ((FruitNode *)(*ci))->vecs.begin();
+	       n != ((FruitNode *)(*ci))->vecs.end(); ++n)
+	    if (CheckVector(min, max, level+1, *n))
+	      return false;
+	  break;
+	}
+	}
       advance = (*ci)->advance;
 #if !defined(WITH_ADVANCE)
     }
@@ -217,7 +264,7 @@ void DigitalTree::DoFinish(InnerNode *node)
   i = node->Children + node->Size;
   for (j = node->Children + node->Size - 1; j!=node->Children-1; j--) {
     if (*j) {
-      if ((*j)->isleaf == false) DoFinish((InnerNode*)(*j));
+      if ((*j)->nodetype == Node::InnerNode) DoFinish((InnerNode*)(*j));
       (*j)->advance = i - j;
       i = j;
     }
@@ -231,7 +278,7 @@ void DigitalTree::Finish()
   // Allocate shared `advance nodes' to put where nulls live
   AdvanceNodes = new InnerNode(2*Dimension+1);
   for (int i = 1; i<=2*Dimension+1; i++)
-    Put(AdvanceNodes, i, new Node(-1, i));
+    Put(AdvanceNodes, i, new Node(Node::AdvanceNode, i));
   // Do the actual computation
   DoFinish(root); 
 #endif
@@ -242,48 +289,67 @@ bool DigitalTree::Insert(const Vector &v)
   InnerNode **n = &root;
   int level;
 #if defined(BACKWARD_LEVEL)
-  for (level = 0; level<Dimension; level++) {
+  for (level = 0; level<Dimension; level++) 
 #else
-  for (level = Dimension-1; level>=0; level--) {
+  for (level = Dimension-1; level>=0; level--) 
 #endif
-    int pos = v[level];
-    if (Get(*n, pos)) {
-      if (Get(*n, pos)->isleaf) {
-	LeafNode *ol = (LeafNode*) Get(*n, pos);
-	// Build a chain of inners up to tie 
-	do {
+    {
+      int pos = v[level];
+      if (Get(*n, pos)) {
+	switch (Get(*n, pos)->nodetype) 
+	  {
+	  case Node::LeafNode: {
+	    LeafNode *ol = (LeafNode*) Get(*n, pos);
+	    // Build a chain of inners up to tie 
+	    do {
 #if defined(BACKWARD_LEVEL)
-	  level++;
+	      level++;
 #else
-	  level--;
+	      level--;
 #endif
-	  int newpos = v[level];
-	  InnerNode *i = new InnerNode(newpos);
-	  n = (InnerNode **) &Put(*n, pos, i);
-	  pos = newpos;
-	} while (level > 0 
-		 && (ol->vec[level] == v[level]));
-	// Put the old and new leaves at the end
+	      int newpos = v[level];
+	      InnerNode *i = new InnerNode(newpos);
+	      n = (InnerNode **) &Put(*n, pos, i);
+	      pos = newpos;
+	    } while (level > MinLevel 
+		     && (ol->vec[level] == v[level]));
+	    // Put the old and new leaves at the end
+	    if (ol->vec[level] != v[level]) {
+	      LeafNode *l = new LeafNode;
+	      l->vec = v;
+	      Put(*n, v[level], l);
+	      Put(*n, ol->vec[level], ol);
+	      // we are done
+	      return true;
+	    }
+	    else {
+	      FruitNode *f = new FruitNode();
+	      Put(*n, pos, f);
+	      f->vecs.insert(ol->vec);
+	      delete ol;
+	      // FALLTHRU
+	    }
+	  }
+	  case Node::FruitNode: {
+	    FruitNode *f = (FruitNode*) Get(*n, pos);
+	    f->vecs.insert(v);
+	    // we are done
+	    return true;
+	  }
+	  case Node::InnerNode: {
+	    n = (InnerNode**) &Get(*n, pos);
+	    // go on
+	  }
+	  }
+      }
+      else { // Is empty slot
 	LeafNode *l = new LeafNode;
 	l->vec = v;
-	Put(*n, v[level], l);
-	Put(*n, ol->vec[level], ol);
+	Put(*n, pos, l);
 	// we are done
-	return true;
-      }
-      else { // Is inner node
-	n = (InnerNode**) &Get(*n, pos);
-	// go on
+	return true; 
       }
     }
-    else { // Is empty slot
-      LeafNode *l = new LeafNode;
-      l->vec = v;
-      Put(*n, pos, l);
-      // we are done
-      return true; 
-    }
-  }
 }
 
 class VectorSet {
@@ -292,7 +358,7 @@ class VectorSet {
   operator=(const VectorSet &);
   
 public:
-  VectorSet(int level) : tree(new DigitalTree(level+1)) {}
+  VectorSet(int level) : tree(new DigitalTree(level+1, MINLEVEL(level))) {}
   ~VectorSet() { delete tree; }
   void Finish() { tree->Finish(); }
   bool insert(const Vector &v) { 
@@ -743,6 +809,7 @@ int main(int argc, char *argv[])
   int n = 0;
   if (argc >= 2) {
     sscanf(argv[1], "%d", &n);
+    if (argc >= 3) sscanf(argv[2], "%d", &leveldelta);
   }
   if (!n) n = 5;
 
@@ -779,6 +846,9 @@ int main(int argc, char *argv[])
 
 /*
  * $Log$
+ * Revision 1.28.1.5.1.1  1999/03/18 20:28:13  mkoeppe
+ * Source erasing now `correct' (but not faster).
+ *
  * Revision 1.28.1.5  1999/03/12 13:55:19  mkoeppe
  * Some clean-up with the vectors. BACKWARD_LEVEL option, but no impact
  * on performance.
