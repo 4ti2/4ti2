@@ -3,8 +3,14 @@
 // Primitive Partitionsidentit"aten (PPI); das Verfahren ist aber
 // allgemein implementiert. "
 
+// $Id$
+
 // Verwaltung der Testvektoren mit Range-Trees (BB-alpha based). 
-// Laufzeiten: n=5 3.5s, n=6 26s, n=7 4m43s, n=8 36m, n=9 308m, n=10 1900m
+
+// Ich speichere jetzt (nach R. Urbaniak) nur noch `modulo
+// Vorzeichen', dh, erster Nichtnulleintrag ist immer positiv.
+// Laufzeit vorher: 7 -> user 1m50.480s, 7 SINGLE_RANGE -> user
+// 1m42.930s. Laufzeit jetzt: 7 SINGLE_RANGE -> user 0m55.900s
 
 #include <stdio.h>
 #include <bool.h>
@@ -130,6 +136,9 @@ bool HilbertReduce(Vector &z, VectorSet &S)
 {
   int i;
   Vector min(z.size()), max(z.size());
+  
+  // positive search
+
   for (i = 0; i<z.size(); i++)
     if (z[i] >= 0) min[i] = 0, max[i] = z[i];
     else min[i] = z[i], max[i] = 0;
@@ -137,10 +146,27 @@ bool HilbertReduce(Vector &z, VectorSet &S)
   bool nonzeroz = (S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max),
 					   &rangereport));
   z = rangez;
+
+  if (nonzeroz) { // negative search
+
+    for (i = 0; i<z.size(); i++) rangez[i] = -z[i];
+    for (i = 0; i<rangez.size() && rangez[i] == 0; i++) // zero leading zeros
+      min[i] = max[i] = 0;
+    min[i] = max[i] = 0; // zero first positive component
+    for (i = 0; i<rangez.size(); i++)
+      if (rangez[i] >= 0) min[i] = 0, max[i] = rangez[i];
+      else min[i] = rangez[i], max[i] = 0;
+    nonzeroz = (S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max),
+					&rangereport));
+    for (i = 0; i<z.size(); i++) z[i] = -rangez[i];
+  }
+
   return nonzeroz;
 }
 
 #else
+
+#error This revision only supports SINGLE_RANGE
 
 static Vector rangeresult;
 static Vector rangez;
@@ -207,14 +233,37 @@ void /*VectorSet*/ HilbertBase(VectorSet &T, SimpleVectorSet freshT)
 	   // otherwise, take all fresh w.
 	   iw != oldFreshT.end(); ++iw) {
 	Vector z((*iv).size());
-	bool nonzeroz = false;
-	for (int i = 0; i < z.size(); i++)
-	  nonzeroz |= !!(z[i] = (*iv)[i] + (*iw)[i]);
-	if (nonzeroz && !HilbertDivide(z, *iv)) {
+	int i;
+	// sum of v and w: first nonzero component will be positive
+	for (i = 0; i < z.size(); i++)
+	  z[i] = (*iv)[i] + (*iw)[i];
+	if (!HilbertDivide(z, *iv)) {
 	  if (HilbertReduce(z, T)) {
 	    T.insert(z);
 	    freshT.insert(z);
 	    report(z);
+	  }
+	}
+	// difference of v an w: first nonzero component may be negative
+	for (i = 0; 
+	     i < z.size() && !(z[i] = (*iv)[i] - (*iw)[i]); i++);
+	if (i < z.size()) { // v != w 
+	  if (z[i] < 0) { // first nonzero component was negative; change
+	    z[i] = -z[i];
+	    for (i++; i < z.size(); i++) 
+	      z[i] = (*iw)[i] - (*iv)[i];
+	  }
+	  else { // first nonzero component was positive; keep
+	    for (i++; i < z.size(); i++) 
+	      z[i] = (*iv)[i] - (*iw)[i];
+	  }
+	  if (!HilbertDivide(z, *iv)) { /* FIXME: this first check can
+					   be strengthened */
+	    if (HilbertReduce(z, T)) {
+	      T.insert(z);
+	      freshT.insert(z);
+	      report(z);
+	    }
 	  }
 	}
       }
@@ -248,12 +297,9 @@ int main(int argc, char *argv[])
     e[i] = 1; e[n] = a[i];
     H0.insert(e);
     report(e);
-    e[i] = -1; e[n] = -a[i];
-    H0.insert(e);
-    report(e);
   }
   /*VectorSet H =*/ HilbertBase(H0);
-  cerr << "This makes " << ppicount << " PPI of " 
-       << count << " test vectors." << endl;
+  cerr << "This makes " << 2*ppicount << " PPI of " 
+       << 2*count << " test vectors." << endl;
 }
 #endif
