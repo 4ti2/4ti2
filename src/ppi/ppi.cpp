@@ -107,7 +107,8 @@ static int ppicount;
 /* rangereport parameters */
 /* FIXME: Use a class instead */
 static Vector rangez;
-static bool nonzeroz;
+static int LastNonzeroPos;
+static bool DidInvert;
 
 // returns false iff reduced to zero or new range shall be set up.
 static bool rangereport(const Leaf &y)
@@ -115,11 +116,26 @@ static bool rangereport(const Leaf &y)
   static int count = 0;
   int maxfactor = HilbertDivide(rangez, y);
   if (maxfactor) {
+#if 0
     count = 0;
-    nonzeroz = false;
-    for (int i = 0; i<rangez.size(); i++) 
-      nonzeroz |= !!(rangez[i] -= maxfactor * Vector(y)[i]);
-    return nonzeroz;
+#endif
+    int i;
+    for (i = LastNonzeroPos; 
+	 i && !(rangez(i) -= maxfactor * Vector(y)(i)); i--);
+    if (i < LastNonzeroPos) { // we have more trailing zeros
+      LastNonzeroPos = i;
+      if (!i) return false; // reduced to zero
+      if (rangez(i)<0) { // we must take the negative
+	DidInvert = true;
+	rangez(i) = -rangez(i);
+	for (i--; i; i--) 
+	  rangez(i) = maxfactor * Vector(y)(i) - rangez(i);
+	return false; // we need a new range
+      }
+    }
+    for (i--; i; i--) 
+      rangez(i) -= maxfactor * Vector(y)(i);
+    return LastNonzeroPos;
   }
   else {
 #if 0 // a heuristic decision whether a new range shall be set up.
@@ -137,112 +153,43 @@ bool HilbertReduce(Vector &z, VectorSet &S)
 {
   int i;
   Vector min(z.size()), max(z.size());
-  
-  // positive search
 
-  rangez = z;
+  for (i = z.size(); i && !z(i); i--);
+  LastNonzeroPos = i;
+
   do {
-    for (i = 0; i<rangez.size(); i++)
-      if (rangez[i] >= 0) min[i] = 0, max[i] = rangez[i];
-      else min[i] = rangez[i], max[i] = 0;
-    nonzeroz = true;
-  } while (!S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max),
-				    &rangereport) 
-	   && nonzeroz);
-
-  z = rangez;
-
-  if (nonzeroz) { // negative search
-    for (i = 0; i<z.size(); i++) rangez[i] = -z[i];
+    // positive search
+    rangez = z;
     do {
-      for (i = 0; i<rangez.size() && rangez[i] == 0; i++) // zero leading zeros
-	min[i] = max[i] = 0;
-      min[i] = max[i] = 0; // zero first positive component
-      for (i = 0; i<rangez.size(); i++)
-	if (rangez[i] >= 0) min[i] = 0, max[i] = rangez[i];
-	else min[i] = rangez[i], max[i] = 0;
-      nonzeroz = true;
+      for (i = rangez.size(); i; i--)
+	if (rangez(i) >= 0) min(i) = 0, max(i) = rangez(i);
+      else min(i) = rangez(i), max(i) = 0;
     } while (!S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max),
-				      &rangereport)
-	     && nonzeroz);
-    for (i = 0; i<z.size(); i++) z[i] = -rangez[i];
-  }
+				      &rangereport) 
+	     && LastNonzeroPos);
+    z = rangez;
 
-  return nonzeroz;
-}
+    DidInvert = false; // if we inverted while in negative search, we
+    // must visit positive search again. FIXME: If so, we need not go
+    // to negative search again unless another inversion while in
+    // positive search takes place.
+    if (LastNonzeroPos) { // negative search
+      rangez = -z;
+      do {
+	for (i = rangez.size(); i && rangez(i) == 0; i--) // zero trailing zeros
+	  min(i) = max(i) = 0;
+	min(i) = max(i) = 0; // zero last positive component
+	for (i--; i; i--) // handle all other components
+	  if (rangez(i) >= 0) min(i) = 0, max(i) = rangez(i);
+	  else min(i) = rangez(i), max(i) = 0;
+      } while (!S.OrthogonalRangeSearch(Leaf(&min), Leaf(&max),
+					&rangereport)
+	       && LastNonzeroPos);
+      z = -rangez;
+    }
+  } while (DidInvert);
 
-//
-// General code to build a hilbert base from scratch
-//
-
-void report(Vector z)
-{
-  count++;
-  if (z[z.size()-1]) cout << z << endl;
-  else { ppicount++; cout << z << "\t"; writeppi(cout, z, z.size()-1);
-  }
-}    
-
-void /*VectorSet*/ HilbertBase(VectorSet &T, SimpleVectorSet freshT)
-{
-  SimpleVectorSet oldT;
-  SimpleVectorSet oldFreshT;
-  while (freshT.size()) {
-    cerr << "New cycle: " << oldT.size() << " " << T.size() << endl;
-    oldT = T;
-    swap(oldFreshT, freshT);
-    freshT = SimpleVectorSet();
-    SimpleVectorSet::iterator iv, iw;
-    bool vFresh;
-    for (iv = oldT.begin(); iv != oldT.end(); ++iv) 
-      for (iw = (((vFresh = oldFreshT.find(*iv) != oldFreshT.end())) 
-		 ? oldFreshT.upper_bound(*iv) 
-		 : oldFreshT.begin()); 
-	   // if v is fresh, take only fresh w lexi-greater than v.
-	   // otherwise, take all fresh w.
-	   iw != oldFreshT.end(); ++iw) {
-	Vector z((*iv).size());
-	int i;
-	// sum of v and w: first nonzero component will be positive
-	for (i = 0; i < z.size(); i++)
-	  z[i] = (*iv)[i] + (*iw)[i];
-	if (!HilbertDivide(z, *iv)) {
-	  if (HilbertReduce(z, T)) {
-	    T.insert(z);
-	    freshT.insert(z);
-	    report(z);
-	  }
-	}
-	// difference of v an w: first nonzero component may be negative
-	for (i = 0; 
-	     i < z.size() && !(z[i] = (*iv)[i] - (*iw)[i]); i++);
-	if (i < z.size()) { // v != w 
-	  if (z[i] < 0) { // first nonzero component was negative; change
-	    z[i] = -z[i];
-	    for (i++; i < z.size(); i++) 
-	      z[i] = (*iw)[i] - (*iv)[i];
-	  }
-	  else { // first nonzero component was positive; keep
-	    for (i++; i < z.size(); i++) 
-	      z[i] = (*iv)[i] - (*iw)[i];
-	  }
-	  if (!HilbertDivide(z, *iv)) { /* FIXME: this first check can
-					   be strengthened */
-	    if (HilbertReduce(z, T)) {
-	      T.insert(z);
-	      freshT.insert(z);
-	      report(z);
-	    }
-	  }
-	}
-      }
-  }
-  return /*T*/;
-}
-
-void /*VectorSet*/ HilbertBase(VectorSet &T)
-{
-  /*return*/ HilbertBase(T, T);
+  return LastNonzeroPos;
 }
 
 //
@@ -263,10 +210,10 @@ bool ReduceAndInsert(Vector &v, VectorSet &P, SimpleVectorSet &Q)
 {
   // check sign
   int i;
-  for (i = 1; i<=v.size() && !v(i); i++);
-  if (i > v.size()) return false;
+  for (i = v.size(); i && !v(i); i--);
+  if (!i) return false;
   if (v(i) < 0) {
-    for (; i<=v.size(); i++) v(i) = -v(i);
+    for (; i; i--) v(i) = -v(i);
   }
   // reduce 
   if (HilbertReduce(v, P)) {
@@ -301,12 +248,12 @@ SimpleVectorSet ExtendPPI(const SimpleVectorSet &Pn, int n)
   {
     Vector v(n+1);
     for (int j = 1; j <= n; j++) v(j) = 0;
-    v(n+1) = -1;
+    v(n+1) = +1;
     for (int p = 1; p<=(n+1)/2; p++) {
       // takes care of case: p = n+1-p.
-      v(p)++, v(n+1-p)++;
-      P.insert(v); Pnew.insert(v); reportx(v);
       v(p)--, v(n+1-p)--;
+      P.insert(v); Pnew.insert(v); reportx(v);
+      v(p)++, v(n+1-p)++;
     }
   }
 
@@ -324,10 +271,12 @@ SimpleVectorSet ExtendPPI(const SimpleVectorSet &Pn, int n)
 	    w(n+1)++, w(j)--, w(k)--;
 	    ReduceAndInsert(w, P, Pnew);
 	  }
-	  if (v(j) <= 0 || v(k) <= 0) { // otherwise, w reducible by v
-	    Vector w = v;
-	    w(n+1)--, w(j)++, w(k)++;
-	    ReduceAndInsert(w, P, Pnew);
+	  if (!v(n+1)) {
+	    if (v(j) <= 0 || v(k) <= 0) { // otherwise, w reducible by v
+	      Vector w = -v;
+	      w(n+1)++, w(j)--, w(k)--;
+	      ReduceAndInsert(w, P, Pnew);
+	    }
 	  }
 	}
       }
@@ -351,27 +300,9 @@ int main(int argc, char *argv[])
   }
   if (!n) n = 5;
 
-#if 0
-  Vector a(n);
-  for (int i = 0; i<n; i++) a[i] = i + 1;
-
-  VectorSet H0(n);
-  for (int i = 0; i<n; i++) {
-    Vector e(n + 1);
-    for (int j = 0; j<n; j++) e[j] = 0;
-    e[i] = 1; e[n] = a[i];
-    H0.insert(e);
-    report(e);
-  }
-  /*VectorSet H =*/ HilbertBase(H0);
-  cerr << "This makes " << 2*ppicount << " PPI of " 
-       << 2*count << " test vectors." << endl;
-#endif
-
-#if 1
   // Setup PPI set for n=2
   SimpleVectorSet V;
-  Vector v(2); v(1) = 2, v(2) = -1; V.insert(v);
+  Vector v(2); v(1) = -2, v(2) = +1; V.insert(v);
   for (int i = 2; i<n; i++) {
     ppicount = 0;
     cerr << "### Extending to n = " << i+1 << endl;
@@ -379,11 +310,13 @@ int main(int argc, char *argv[])
     cerr << "### This makes " << ppicount 
 	 << " PPI up to sign." << endl;
   }
-#endif
 
 }
 
 /* $Log$
+ * Revision 1.13  1999/03/05 14:36:17  mkoeppe
+ * Minor changes.
+ *
  * Revision 1.12  1999/03/05 12:33:27  mkoeppe
  * Unified the search modes; they perform about equally.
  *
