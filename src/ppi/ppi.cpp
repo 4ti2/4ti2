@@ -218,6 +218,9 @@ void DigitalTree::Destroy(Node *node)
   }
 }
 
+// FIXME: 
+static signed char *FoundVector; 
+
 bool DigitalTree::DoSearch(const Vector & min, const Vector & max, 
 			   int level, Node *node)
 {
@@ -252,6 +255,7 @@ bool DigitalTree::DoSearch(const Vector & min, const Vector & max,
 	     count; vi--, mini--, maxi--, count--)
 	  if ((*vi)<(*mini) || (*vi)>(*maxi)) goto next;
 #endif
+	FoundVector = ((LeafNode*)(*ci))->vec;
 	return false; /*report(((LeafNode*)node)->leaf);*/
       next:
 	void(0);
@@ -421,7 +425,10 @@ void writeppi(ostream &c, Vector z, int n)
 }
 
 static int hoppicount, ppicount;
-static int dupcount, simplecount, goodcount, redcount, hitcount[2], failcount[2];
+#if defined(WITH_STATS)
+static int compdupcount, compgoodcount, dupcount, simplecount;
+static int goodcount, redcount, hitcount[2], failcount[2];
+#endif
 
 /* rangereport parameters */
 static Vector rangemin, rangemax;
@@ -652,8 +659,30 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
 	}
 	return;
       }
+      else { // found reducer in negative search
+	EraseSource(w, n, Pold, false, WithNegative); // red-erase
+	for (i = 0; i<n; i++) w[i] += FoundVector[i];
+      }
     }
-    EraseSource(w, n, Pold, false, WithNegative);
+    else { // found reducer in positive search
+      EraseSource(w, n, Pold, false, WithNegative); // red-erase
+      for (i = 0; i<n; i++) w[i] -= FoundVector[i];
+    }
+    // w is now the complementary irreducible reducer, so try to
+    // insert it
+    if (Pnew.insert(w).second) {
+#if defined(WITH_STATS)
+      compgoodcount++;
+#endif
+      // and erase its sources if not already known 
+      EraseSource(w, n, Pold, true, WithNegative); // irr-erase
+      reportx(w);
+    }
+    else {
+#if defined(WITH_STATS)
+      compdupcount++;
+#endif
+    }
   }
 }
 
@@ -807,6 +836,7 @@ int main(int argc, char *argv[])
   for (int i = 2; i<n; i++) {
 #if defined(WITH_STATS)
     hitcount[0] = failcount[0] = hitcount[1] = failcount[1] 
+      = compgoodcount = compdupcount
       = simplecount = goodcount = redcount = dupcount = 0;
 #endif
     hoppicount = ppicount = 0;
@@ -820,6 +850,8 @@ int main(int argc, char *argv[])
 	 << ", with " << redcount << " reduce ops, leading to "
 	 << goodcount << " new vectors, "
 	 << simplecount << " simple raises, "
+	 << compgoodcount << " new complems, "
+	 << compdupcount << " old complems, "
 	 << hitcount[0] << " red-erase hits, "
 	 << failcount[0] << " red-erase fails, "
 	 << hitcount[1] << " irr-erase hits, "
@@ -836,6 +868,9 @@ int main(int argc, char *argv[])
 
 /*
  * $Log$
+ * Revision 1.28.1.5.1.1.1.6  1999/03/24 11:34:09  mkoeppe
+ * HoPPI stats.
+ *
  * Revision 1.28.1.5.1.1.1.5  1999/03/23 16:05:51  mkoeppe
  * Clean-up.
  *
