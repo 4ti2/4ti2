@@ -7,13 +7,22 @@
 // STL would use slow mutexes 
 
 #include <stdio.h>
-#include <bool.h>
 #include <set>
 #include <vector>
 #include <iostream.h>
 #include <iomanip.h>
+#include <sys/times.h>
+#include <time.h>
+#include <limits.h>
 
-#define TALKATIVE 2
+double user_time()
+{
+  struct tms t;
+  times(&t);
+  return (double)t.tms_utime / CLK_TCK;
+}
+
+#define TALKATIVE 0
 #define HASH
 #undef WITH_STATS
 #undef ERASE_SOURCES_OF_IRREDUCIBLES
@@ -351,7 +360,7 @@ bool DigitalTree::Insert(const Vector &v)
 class VectorSet {
   DigitalTree *tree;
   VectorSet(const VectorSet &);
-  operator=(const VectorSet &);
+  VectorSet &operator=(const VectorSet &);
   
 public:
   VectorSet(int level) : tree(new DigitalTree(level+1)) {}
@@ -816,15 +825,32 @@ int main(int argc, char *argv[])
 	 << dupcount << " duplicates. " 
 #endif
 	 << endl;
+    if (i==n-1) { 
+      cerr << "### Writing data file..." << flush;
+      char fname[20];
+      sprintf(fname, "ppi%d.dat", n);
+      FILE *f = fopen(fname, "wb");
+      char cn = n;
+      fwrite(&cn, 1, 1, f);
+      SimpleVectorSet::iterator j;
+      for (j=V.begin(); j!=V.end(); ++j) {
+	fwrite(&(*j)[0], 1, n, f);
+      }
+      fclose(f);
+      cerr << "done." << endl;
+    }
     cerr << "### Clearing vector repository..." << flush;
     ClearVectorRepository();
     cerr << "done." << endl;
+    cerr << "Elapsed time: " << user_time() << endl;
   }
-
 }
 
 /*
  * $Log$
+ * Revision 1.28.1.5.1.1.1.5  1999/03/23 16:05:51  mkoeppe
+ * Clean-up.
+ *
  * Revision 1.28.1.5.1.1.1.4  1999/03/23 12:03:41  mkoeppe
  * Digital trees no longer store the vectors but point to the Vectors
  * stored in the hash table. Reduces memory use to 64MB for n=20. Maybe
