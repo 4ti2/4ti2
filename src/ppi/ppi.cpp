@@ -118,13 +118,16 @@ static int ppicount;
 static Vector rangez;
 static int LastNonzeroPos;
 static bool DidInvert;
+static Vector *RangeException;
 
 // returns false iff reduced to zero or new range shall be set up.
 static bool rangereport(const Leaf &y)
 {
   static int count = 0;
+  if (&(Vector&)(y) == RangeException) return true;
   int maxfactor = HilbertDivide(rangez, y);
   if (maxfactor) {
+    //    cerr << "Vector: " << rangez << "Reducer: " << Vector(y) << endl;
 #if 0
     count = 0;
 #endif
@@ -289,6 +292,16 @@ SimpleVectorSet ExtendPPI(const SimpleVectorSet &Pn, int n)
     Pnew = SimpleVectorSet();
   }
 
+  // This check should be obsolete but.
+
+  for (VectorSet::iterator i = P.begin(); i!=P.end(); ++i) {
+    RangeException = &((Vector&)(*i));
+    Vector v = *i;
+    if (!HilbertReduce(v, P)) 
+      cerr << "Haha... a reducible vector: " << *i << " -> " << v << endl;
+  }    
+  RangeException = 0;
+
   return P;
 }
 
@@ -319,6 +332,9 @@ int main(int argc, char *argv[])
 }
 
 /* $Log$
+ * Revision 1.15  1999/03/05 17:39:27  mkoeppe
+ * Remove obsolete check. Gives back memory.
+ *
  * Revision 1.14  1999/03/05 17:09:51  mkoeppe
  * Now the last nonzero component is always positive. Took some more care
  * in the positive/negative reduction code. Hopefully this will fix n=14.
