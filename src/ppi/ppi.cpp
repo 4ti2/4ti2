@@ -45,6 +45,7 @@ public:
   typedef signed char *pointer;
   typedef const signed char *const_iterator;
   typedef signed char *iterator;
+  friend class LeafNode;
 private:
   VectorAux *aux;
 public:
@@ -133,13 +134,10 @@ public:
 
 class LeafNode : public Node {
 public:
-  signed char vec[0];
+  const signed char *vec;
   LeafNode() : Node(true) {}
   LeafNode(const Vector &v, int length) : Node(true) {
-    for (int i = 0; i<length; i++) vec[i] = v[i];
-  }
-  void *operator new(size_t s, int length) {
-    return malloc(s + length);
+    vec = v.aux->Data();
   }
 };  
 
@@ -330,7 +328,7 @@ bool DigitalTree::Insert(const Vector &v)
 	} while (level > 0 
 		 && (ol->vec[level] == v[level]));
 	// Put the old and new leaves at the end
-	LeafNode *l = new(level) LeafNode(v, level);
+	LeafNode *l = new LeafNode(v, level);
 	Put(*n, v[level], l);
 	Put(*n, ol->vec[level], ol);
 	// we are done
@@ -342,7 +340,7 @@ bool DigitalTree::Insert(const Vector &v)
       }
     }
     else { // Is empty slot
-      LeafNode *l = new(level) LeafNode(v, level);
+      LeafNode *l = new LeafNode(v, level);
       Put(*n, pos, l);
       // we are done
       return true; 
@@ -652,132 +650,137 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
 
 void ExtendPPI(SimpleVectorSet &Pn, int n)
 {
-  VectorSet P(n);
-  SimpleVectorSet *Pold = new SimpleVectorSet;
+  SimpleVectorSet *Pold;
   SimpleVectorSet *Pnew = new SimpleVectorSet;
+  SimpleVectorSet *Pbase = new SimpleVectorSet;
 
   // Implementation of Algorithms 4.3.8, 4.3.11 from [Urbaniak] 
-
-  // (1) Create the range-searchable set P of (n+1)-vectors from the
-  // set Pn of n-vectors.
-  cerr << "# Vectors copied from n = " << n << ": " << endl;
-  for (SimpleVectorSet::iterator i = Pn.begin(); i!=Pn.end(); ++i) {
-    Vector v(n+1);
-    for (int j = 1; j <= n; j++) v(j) = (*i)(j);
-    v(n+1) = 0;
-    SetupAttribute(v, n, true); 
-    P.insert(v); Pold->insert(v); reportx(v);
-  }
-  // destroy Pn to save memory
-  Pn = SimpleVectorSet();
-  // finish P to make search faster
-  cerr << "Finishing..." << endl;
-  P.Finish();
-
-  // (2) Add `(n+1) = a + b' identities.
-  cerr << "# Vectors of type " << n+1 << " = a + b:" << endl;
+  
   {
-    Vector v(n+1);
-    for (int j = 1; j <= n; j++) v(j) = 0;
-    v(n+1) = +1;
-    for (int p = 1; p<=(n+1)/2; p++) {
-      // takes care of case: p = n+1-p.
-      v(p)--, v(n+1-p)--;
-      SetupAttribute(v, n, false);
-      Pnew->insert(v); 
-      reportx(v);
-      v(p)++, v(n+1-p)++;
+    VectorSet P(n);
+
+    // (1) Create the range-searchable set P of (n+1)-vectors from the
+    // set Pn of n-vectors.
+    cerr << "# Vectors copied from n = " << n << ": " << endl;
+    for (SimpleVectorSet::iterator i = Pn.begin(); i!=Pn.end(); ++i) {
+      Vector v(n+1);
+      for (int j = 1; j <= n; j++) v(j) = (*i)(j);
+      v(n+1) = 0;
+      SetupAttribute(v, n, true); 
+      P.insert(*Pbase->insert(v).first); reportx(v);
     }
-  }
+    // destroy Pn to save memory
+    Pn = SimpleVectorSet();
+    // finish P to make search faster
+    cerr << "Finishing..." << endl;
+    P.Finish();
 
-  // (3) Build all other primitive identities with exactly one
-  // component of (n+1).
-  cerr << "# Vectors of P" << 1 << "(" << n+1 << "):" << endl;
-
-  // first a pass for the simple cases
-  for (SimpleVectorSet::iterator i = Pold->begin(); i!=Pold->end(); ++i) {
-    Vector v = *i;
-    if (v.Attribute()) {
-#if (TALKATIVE>=2)
-      cerr << "Raising " << v << endl;
-#endif
-      for (int j = 1; j<=n/2; j++) { // yes n/2 is enough
-	int k = (n+1) - j;
-	if (v(j) > 0 && v(k) > 0)
-	  RaisePPI(v, j, k, n, P, *Pold, *Pnew, true, true);
-	if (v(j) < 0 && v(k) < 0)
-	  RaisePPI(-v, j, k, n, P, *Pold, *Pnew, true, true);
+    // (2) Add `(n+1) = a + b' identities.
+    cerr << "# Vectors of type " << n+1 << " = a + b:" << endl;
+    {
+      Vector v(n+1);
+      for (int j = 1; j <= n; j++) v(j) = 0;
+      v(n+1) = +1;
+      for (int p = 1; p<=(n+1)/2; p++) {
+	// takes care of case: p = n+1-p.
+	v(p)--, v(n+1-p)--;
+	SetupAttribute(v, n, false);
+	Pnew->insert(v); 
+	reportx(v);
+	v(p)++, v(n+1-p)++;
       }
     }
-  }
 
-  // then a pass for the complicated cases
-  for (SimpleVectorSet::iterator i = Pold->begin(); i!=Pold->end(); ++i) {
-    Vector v = *i;
-    if (v.Attribute()) {
-#if (TALKATIVE>=2)
-      cerr << "Raising " << v << endl;
-#endif
-      for (int j = 1; j<=n/2; j++) { // yes n/2 is enough
-	int k = (n+1) - j;
-	if (v.Attribute() & (1<<(j-1)))
-	  RaisePPI(v, j, k, n, P, *Pold, *Pnew, true);
-	if (v.Attribute() & ((1<<16)<<(j-1)))
-	  RaisePPI(-v, j, k, n, P, *Pold, *Pnew, true);
-      }
-    }
-  }
-  //
-  Pn.insert(Pold->begin(), Pold->end());
-  delete Pold;
-  Pold = Pnew;
-  Pnew = new SimpleVectorSet;
+    // (3) Build all other primitive identities with exactly one
+    // component of (n+1).
+    cerr << "# Vectors of P" << 1 << "(" << n+1 << "):" << endl;
 
-  // (4) Build all other primitive identities with exactly (t+1)
-  // components of (n+1).
-
-  for (int t = 1; t<n; t++) {
-    cerr << "# Vectors of P" << t+1 << "(" << n+1 << "):" << endl;
-    // simple cases
-    for (SimpleVectorSet::iterator i = Pold->begin(); i!=Pold->end(); ++i) {
+    // first a pass for the simple cases
+    for (SimpleVectorSet::iterator i = Pbase->begin(); i!=Pbase->end(); ++i) {
       Vector v = *i;
       if (v.Attribute()) {
 #if (TALKATIVE>=2)
 	cerr << "Raising " << v << endl;
 #endif
-	for (int j = 1; j<=n/2; j++) {
+	for (int j = 1; j<=n/2; j++) { // yes n/2 is enough
 	  int k = (n+1) - j;
-	  if (v(j) > 0 && v(k) > 0) { // source erasing
-	    RaisePPI(v, j, k, n, P, *Pold, *Pnew, false, true);
-	  }
+	  if (v(j) > 0 && v(k) > 0)
+	    RaisePPI(v, j, k, n, P, *Pbase, *Pnew, true, true);
+	  if (v(j) < 0 && v(k) < 0)
+	    RaisePPI(-v, j, k, n, P, *Pbase, *Pnew, true, true);
 	}
       }
     }
-    // complicated cases
-    for (SimpleVectorSet::iterator i = Pold->begin(); i!=Pold->end(); ++i) {
+
+    // then a pass for the complicated cases
+    for (SimpleVectorSet::iterator i = Pbase->begin(); i!=Pbase->end(); ++i) {
       Vector v = *i;
       if (v.Attribute()) {
 #if (TALKATIVE>=2)
 	cerr << "Raising " << v << endl;
 #endif
-	for (int j = 1; j<=n/2; j++) {
-	  if (v.Attribute() & (1<<(j-1))) { // source erasing
-	    int k = (n+1) - j;
-	    RaisePPI(v, j, k, n, P, *Pold, *Pnew, false);
-	  }
+	for (int j = 1; j<=n/2; j++) { // yes n/2 is enough
+	  int k = (n+1) - j;
+	  if (v.Attribute() & (1<<(j-1)))
+	    RaisePPI(v, j, k, n, P, *Pbase, *Pnew, true);
+	  if (v.Attribute() & ((1<<16)<<(j-1)))
+	    RaisePPI(-v, j, k, n, P, *Pbase, *Pnew, true);
 	}
       }
     }
-
-    Pn.insert(Pold->begin(), Pold->end());
-    delete Pold;
+    //
     Pold = Pnew;
     Pnew = new SimpleVectorSet;
-  }
 
+    // (4) Build all other primitive identities with exactly (t+1)
+    // components of (n+1).
+
+    for (int t = 1; t<n; t++) {
+      cerr << "# Vectors of P" << t+1 << "(" << n+1 << "):" << endl;
+      // simple cases
+      for (SimpleVectorSet::iterator i = Pold->begin(); i!=Pold->end(); ++i) {
+	Vector v = *i;
+	if (v.Attribute()) {
+#if (TALKATIVE>=2)
+	  cerr << "Raising " << v << endl;
+#endif
+	  for (int j = 1; j<=n/2; j++) {
+	    int k = (n+1) - j;
+	    if (v(j) > 0 && v(k) > 0) { // source erasing
+	      RaisePPI(v, j, k, n, P, *Pold, *Pnew, false, true);
+	    }
+	  }
+	}
+      }
+      // complicated cases
+      for (SimpleVectorSet::iterator i = Pold->begin(); i!=Pold->end(); ++i) {
+	Vector v = *i;
+	if (v.Attribute()) {
+#if (TALKATIVE>=2)
+	  cerr << "Raising " << v << endl;
+#endif
+	  for (int j = 1; j<=n/2; j++) {
+	    if (v.Attribute() & (1<<(j-1))) { // source erasing
+	      int k = (n+1) - j;
+	      RaisePPI(v, j, k, n, P, *Pold, *Pnew, false);
+	    }
+	  }
+	}
+      }
+
+      Pn.insert(Pold->begin(), Pold->end());
+      delete Pold;
+      Pold = Pnew;
+      Pnew = new SimpleVectorSet;
+    }
+  } // P is dead now
   Pn.insert(Pold->begin(), Pold->end());
   delete Pold;
   delete Pnew;
+
+  // Finally, add the base and destroy it
+  Pn.insert(Pbase->begin(), Pbase->end());
+  delete Pbase;
 }
 
 int main(int argc, char *argv[])
@@ -822,6 +825,9 @@ int main(int argc, char *argv[])
 
 /*
  * $Log$
+ * Revision 1.28.1.5.1.1.1.3  1999/03/22 22:46:54  mkoeppe
+ * Clean-up.
+ *
  * Revision 1.28.1.5.1.1.1.2  1999/03/22 21:07:19  mkoeppe
  * New `compact' vectors. n=20 takes less than 70MB.
  *
