@@ -17,7 +17,7 @@
 #define HASH
 #define WITH_STATS
 #undef ERASE_SOURCES_OF_IRREDUCIBLES
-#define ERASE_ONLY_GUARANTEED
+#undef ERASE_ONLY_GUARANTEED
 #define WITH_ADVANCE
 #undef BACKWARD_LEVEL
 #define COMPACT_VECTORS
@@ -713,9 +713,9 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
 #endif
 	for (int j = 1; j<=n/2; j++) { // yes n/2 is enough
 	  int k = (n+1) - j;
-	  if (v(j) > 0 && v(k) > 0)
+	  if ((v.Attribute() & (1<<(j-1))) && v(j) > 0 && v(k) > 0)
 	    RaisePPI(v, j, k, n, P, *Pbase, *Pnew, true, true);
-	  if (v(j) < 0 && v(k) < 0)
+	  if ((v.Attribute() & ((1<<16)<<(j-1))) && v(j) < 0 && v(k) < 0)
 	    RaisePPI(-v, j, k, n, P, *Pbase, *Pnew, true, true);
 	}
       }
@@ -755,9 +755,8 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
 #endif
 	  for (int j = 1; j<=n/2; j++) {
 	    int k = (n+1) - j;
-	    if (v(j) > 0 && v(k) > 0) { // source erasing
+	    if ((v.Attribute() & (1<<(j-1))) && v(j) > 0 && v(k) > 0) 
 	      RaisePPI(v, j, k, n, P, *Pold, *Pnew, false, true);
-	    }
 	  }
 	}
       }
@@ -836,6 +835,9 @@ int main(int argc, char *argv[])
 
 /*
  * $Log$
+ * Revision 1.28.1.5.1.1.1.6  1999/03/24 11:34:09  mkoeppe
+ * HoPPI stats.
+ *
  * Revision 1.28.1.5.1.1.1.5  1999/03/23 16:05:51  mkoeppe
  * Clean-up.
  *
