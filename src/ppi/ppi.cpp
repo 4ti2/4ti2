@@ -18,6 +18,7 @@
 #define HASH
 #undef WITH_STATS
 #undef ERASE_SOURCES_OF_IRREDUCIBLES
+#define WITH_ADVANCE
 
 #if defined(HASH) // Use a hash table for SimpleVectorSet
 
@@ -64,33 +65,11 @@ public:
 class InnerNode : public Node {
 public:
   signed char Delta;
-  vector<Node*> Children;
-  InnerNode(int from, int to) : Node(false), Delta(-from), Children(to - from + 1) {}
-  void Put(int where, Node* n);
-  Node *Get(int where) const { 
-    int i = where + Delta;
-    if (i < 0 || i>=Children.size()) return 0;
-    return Children[i];
-  }
+  signed char Size;
+  Node* Children[1];
+  InnerNode(int which) : Node(false), Delta(-which), 
+    Size(1) { Children[0] = 0; }
 };
-
-void InnerNode::Put(int where, Node* n)
-{
-  int i = where + Delta;
-  if (i < 0) {
-    // Must extend the vector to the left
-    Children.insert(Children.begin(), -i, (Node*)0);
-    Delta -= i;
-    Children[0] = n;
-    return;
-  }
-  else if (i >= Children.size()) {
-    // Must extend the vector to the right
-    Children.insert(Children.end(), i - Children.size() + 1, (Node*)0);
-    /* FALLTHRU */
-  }
-  Children[i] = n;
-}
 
 class LeafNode : public Node {
 public:
@@ -106,15 +85,22 @@ class DigitalTree {
   void Destroy(Node *node);
   void DestructiveStore(Node *node, SimpleVectorSet &S);
   void DoFinish(InnerNode *node);
+  Node *&Put(InnerNode *&inner, int where, Node* n);
+  Node *&Get(InnerNode *inner, int where) const { 
+    static Node *null = 0;
+    int i = where + inner->Delta;
+    if (i < 0 || i>=inner->Size) return null;
+    return inner->Children[i];
+  }
 public:
   int Dimension;
   DigitalTree(int dimension) : 
     Dimension(dimension), 
-    root(new InnerNode(0, 0)),
+    root(new InnerNode(0)),
     AdvanceNodes(0) {}
   ~DigitalTree() { 
     if (root) Destroy(root);
-    if (AdvanceNodes) delete AdvanceNodes; /* FIXME: really kill 'em */}
+    /*if (AdvanceNodes) delete AdvanceNodes;*/ /* FIXME: really kill 'em */}
   void Finish();
   bool Insert(Leaf leaf);
   bool OrthogonalRangeSearch(Leaf min, Leaf max, 
@@ -124,29 +110,43 @@ public:
     { DestructiveStore(root, S); root = 0; }
 };
 
+Node *&DigitalTree::Put(InnerNode *&inner, int where, Node* n)
+{
+  int i = where + inner->Delta;
+  int j;
+  if (i < 0) {
+    // Must extend the vector to the left
+    inner = (InnerNode *) 
+      realloc(inner, sizeof(InnerNode) 
+	      + (inner->Size - i - 1) * sizeof(Node*));
+    for (j = inner->Size-1; j>=0; j--) 
+      inner->Children[j-i] = inner->Children[j];
+    for (j = 1; j< -i; j++) inner->Children[j] = 0;
+    inner->Children[0] = n;
+    inner->Delta -= i;
+    inner->Size -= i;
+    return inner->Children[0];
+  }
+  else if (i >= inner->Size) {
+    // Must extend the vector to the right
+    inner = (InnerNode *)
+      realloc(inner, sizeof(InnerNode) + i * sizeof(Node*));
+    for (j = inner->Size; j<i; j++) inner->Children[j] = 0;
+    inner->Size = i + 1;
+    /* FALLTHRU */
+  }
+  inner->Children[i] = n;
+  return inner->Children[i];
+}
+
 void DigitalTree::Destroy(Node *node)
 {
   if (node->isleaf == true) delete (LeafNode*)node;
   else if (node->isleaf == false) {
-    for (vector<Node*>::iterator i = ((InnerNode*)node)->Children.begin();
-	 i!=((InnerNode*)node)->Children.end();
-	 ++i)
+    int count = ((InnerNode*)node)->Size;
+    for (Node **i = ((InnerNode*)node)->Children;
+	 count; ++i, count--)
       if (*i) Destroy(*i);
-    delete (InnerNode*)node;
-  }
-}
-
-void DigitalTree::DestructiveStore(Node *node, SimpleVectorSet &S)
-{
-  if (node->isleaf == true) {
-    S.insert(((Vector&)((LeafNode*)node)->leaf));
-    delete (LeafNode*)node;
-  }
-  else if (node->isleaf == false) {
-    for (vector<Node*>::iterator i = ((InnerNode*)node)->Children.begin();
-	 i!=((InnerNode*)node)->Children.end();
-	 ++i)
-      if (*i) DestructiveStore(*i, S);
     delete (InnerNode*)node;
   }
 }
@@ -157,13 +157,15 @@ bool DigitalTree::DoSearch(Leaf min, Leaf max,
   vector<Node*>::pointer ci;
   int mi = (((Vector&)min)[level] + ((InnerNode*)node)->Delta) >? 0;
   int ma = (((Vector&)max)[level] + ((InnerNode*)node)->Delta)
-    <? ((int)((InnerNode*)node)->Children.size() - 1);
+    <? ((int)((InnerNode*)node)->Size - 1);
   int count = ma - mi + 1;
   int advance;
   if (count<=0) return true;
   for (ci = &(((InnerNode*)node)->Children[mi]);
        count>0; ci+=advance, count-=advance) {
-    //    if (*ci) {
+#if !defined(WITH_ADVANCE)
+    if (*ci) {
+#endif
       if ((*ci)->isleaf == true) {
 	Vector::pointer vi, mini, maxi;
 	int pos = level - 1;
@@ -182,8 +184,10 @@ bool DigitalTree::DoSearch(Leaf min, Leaf max,
 	  return false;
       }
       advance = (*ci)->advance;
-      //}
-      //else advance = 1;
+#if !defined(WITH_ADVANCE)
+    }
+    else advance = 1;
+#endif
   }
   return true;
 }
@@ -191,64 +195,66 @@ bool DigitalTree::DoSearch(Leaf min, Leaf max,
 // Calculates the `advance' values
 void DigitalTree::DoFinish(InnerNode *node)
 {
-  vector<Node*>::reverse_iterator i, j;
-  i = node->Children.rbegin() - 1;
-  for (j = node->Children.rbegin(); j!=node->Children.rend(); j++) {
+  Node **i, **j;
+  i = node->Children + node->Size;
+  for (j = node->Children + node->Size - 1; j!=node->Children-1; j--) {
     if (*j) {
       if ((*j)->isleaf == false) DoFinish((InnerNode*)(*j));
-      (*j)->advance = j - i;
+      (*j)->advance = i - j;
       i = j;
     }
-    else (*j) = AdvanceNodes->Get(j - i);
+    else (*j) = Get(AdvanceNodes, i - j);
   }
 }
 
 void DigitalTree::Finish()
 { 
+#if defined(WITH_ADVANCE)
   // Allocate shared `advance nodes' to put where nulls live
-  AdvanceNodes = new InnerNode(1, 2*Dimension+1);
+  AdvanceNodes = new InnerNode(2*Dimension+1);
   for (int i = 1; i<=2*Dimension+1; i++)
-    AdvanceNodes->Put(i, new Node(-1, i));
+    Put(AdvanceNodes, i, new Node(-1, i));
   // Do the actual computation
   DoFinish(root); 
+#endif
 }
 
 bool DigitalTree::Insert(Leaf leaf)
 {
-  InnerNode *n = root;
+  InnerNode **n = &root;
   int level;
   for (level = Dimension-1; level>=0; level--) {
     int pos = ((Vector&)leaf)[level];
-    if (n->Get(pos)) {
-      if (n->Get(pos)->isleaf) {
-	LeafNode *ol = (LeafNode*) n->Get(pos);
+    if (Get(*n, pos)) {
+      if (Get(*n, pos)->isleaf) {
+	LeafNode *ol = (LeafNode*) Get(*n, pos);
 	// Build a chain of inners up to tie 
 	do {
 	  level--;
 	  int newpos = ((Vector&)leaf)[level];
-	  InnerNode *i = new InnerNode(newpos, newpos);
-	  n->Put(pos, i);
-	  n = i, pos = newpos;
+	  InnerNode *i = new InnerNode(newpos);
+	  n = (InnerNode **) &Put(*n, pos, i);
+	  pos = newpos;
 	} while (level > 0 
 		 && (((Vector&)(ol->leaf))[level] 
 		     == ((Vector&)leaf)[level]));
 	// Put the old and new leaves at the end
 	LeafNode *l = new LeafNode;
 	l->leaf = leaf;
-	n->Put(((Vector&)leaf)[level], l);
-	n->Put(((Vector&)(ol->leaf))[level], ol);
+	Put(*n, ((Vector&)leaf)[level], l);
+	Put(*n, ((Vector&)(ol->leaf))[level], ol);
 	// we are done
 	return true;
       }
       else { // Is inner node
-	n = (InnerNode*) n->Get(pos);
+	n = (InnerNode**) &Get(*n, pos);
 	// go on
       }
     }
     else { // Is empty slot
       LeafNode *l = new LeafNode;
       l->leaf = leaf;
-      n->Put(pos, l);
+      Put(*n, pos, l);
       // we are done
       return true; 
     }
@@ -666,6 +672,10 @@ int main(int argc, char *argv[])
 }
 
 /* $Log$
+ * Revision 1.28.1.3  1999/03/11 18:59:54  mkoeppe
+ * Uses a hash table for SimpleVectorSet (strong). Uses advance pointers
+ * with digital trees (weak). Defines _NOTHREADS (strong). n=19 takes 8m36s.
+ *
  * Revision 1.28.1.2  1999/03/11 16:27:28  mkoeppe
  * Avoids duplicates by `erasing sources'. Only slightly faster because
  * the lexicographical set<Vector> operations take lotsa time.
