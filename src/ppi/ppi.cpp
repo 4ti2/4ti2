@@ -48,16 +48,19 @@ class DigitalTree {
   bool DoSearch(Leaf min, Leaf max, Report report, int level, 
 		Node *node);
   void Destroy(Node *node);
+  void DestructiveStore(Node *node, SimpleVectorSet &S);
 public:
   int Dimension;
   DigitalTree(int dimension) : 
     Dimension(dimension), 
     root(new InnerNode(2*dimension+1)) {}
-  ~DigitalTree() { Destroy(root); }
+  ~DigitalTree() { if (root) Destroy(root); }
   bool Insert(Leaf leaf, bool CheckDup);
   bool OrthogonalRangeSearch(Leaf min, Leaf max, 
 			     Report report)
     { return DoSearch(min, max, report, Dimension-1, root); }
+  void DestructiveCopy(SimpleVectorSet &S)
+    { DestructiveStore(root, S); root = 0; }
 };
 
 void DigitalTree::Destroy(Node *node)
@@ -68,6 +71,21 @@ void DigitalTree::Destroy(Node *node)
 	 i!=((InnerNode*)node)->Children.end();
 	 ++i)
       if (*i) Destroy(*i);
+    delete (InnerNode*)node;
+  }
+}
+
+void DigitalTree::DestructiveStore(Node *node, SimpleVectorSet &S)
+{
+  if (node->isleaf) {
+    S.insert(((Vector&)((LeafNode*)node)->leaf));
+    delete (LeafNode*)node;
+  }
+  else {
+    for (vector<Node*>::iterator i = ((InnerNode*)node)->Children.begin();
+	 i!=((InnerNode*)node)->Children.end();
+	 ++i)
+      if (*i) DestructiveStore(*i, S);
     delete (InnerNode*)node;
   }
 }
@@ -168,6 +186,8 @@ public:
 			     Report report)
     { return tree->OrthogonalRangeSearch(min, max, report); }
   operator SimpleVectorSet();
+  void DestructiveCopy(SimpleVectorSet &S)
+    { tree->DestructiveCopy(S); }
 };
 
 static SimpleVectorSet *inserthackset;
@@ -342,11 +362,11 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
   }
 }
 
-SimpleVectorSet ExtendPPI(const SimpleVectorSet &Pn, int n)
+void ExtendPPI(SimpleVectorSet &Pn, int n)
 {
   VectorSet P(n);
-  SimpleVectorSet Pold;
-  SimpleVectorSet Pnew;
+  SimpleVectorSet *Pold = new SimpleVectorSet;
+  SimpleVectorSet *Pnew = new SimpleVectorSet;
 
   // Implementation of Algorithms 4.3.8, 4.3.11 from [Urbaniak] 
 
@@ -357,8 +377,10 @@ SimpleVectorSet ExtendPPI(const SimpleVectorSet &Pn, int n)
     Vector v(n+1);
     for (int j = 1; j <= n; j++) v(j) = (*i)(j);
     v(n+1) = 0;
-    P.insert(v); Pold.insert(v); reportx(v);
+    P.insert(v); Pold->insert(v); reportx(v);
   }
+  // destroy Pn to save memory
+  Pn = SimpleVectorSet();
 
   // (2) Add `(n+1) = a + b' identities.
   cerr << "# Vectors of type " << n+1 << " = a + b:" << endl;
@@ -369,7 +391,7 @@ SimpleVectorSet ExtendPPI(const SimpleVectorSet &Pn, int n)
     for (int p = 1; p<=(n+1)/2; p++) {
       // takes care of case: p = n+1-p.
       v(p)--, v(n+1-p)--;
-      Pnew.insert(v); 
+      Pnew->insert(v); 
       P.insert(v); reportx(v);
       v(p)++, v(n+1-p)++;
     }
@@ -378,7 +400,7 @@ SimpleVectorSet ExtendPPI(const SimpleVectorSet &Pn, int n)
   // (3) Build all other primitive identities with exactly one
   // component of (n+1).
   cerr << "# Vectors of P" << 1 << "(" << n+1 << "):" << endl;
-  for (SimpleVectorSet::iterator i = Pold.begin(); i!=Pold.end(); ++i) {
+  for (SimpleVectorSet::iterator i = Pold->begin(); i!=Pold->end(); ++i) {
     Vector v = *i;
 #if (TALKATIVE>=2)
     cerr << "Raising " << v << endl;
@@ -386,22 +408,23 @@ SimpleVectorSet ExtendPPI(const SimpleVectorSet &Pn, int n)
     for (int j = 1; j<=(n+1)/2; j++) {
       int k = (n+1) - j;
       if (v(j) > 0 || v(k) > 0) { // otherwise, w reducible by v
-	RaisePPI(v, j, k, n, P, Pnew);
+	RaisePPI(v, j, k, n, P, *Pnew);
       }
       if (v(j) < 0 || v(k) < 0) { // otherwise, w reducible by v
-	RaisePPI(-v, j, k, n, P, Pnew);
+	RaisePPI(-v, j, k, n, P, *Pnew);
       }
     }
   }
   //
+  delete Pold;
   Pold = Pnew;
-  Pnew = SimpleVectorSet();
+  Pnew = new SimpleVectorSet;
 
   // (4) Build all other primitive identities with exactly (t+1)
   // components of (n+1).
   for (int t = 1; t<n; t++) {
     cerr << "# Vectors of P" << t+1 << "(" << n+1 << "):" << endl;
-    for (SimpleVectorSet::iterator i = Pold.begin(); i!=Pold.end(); ++i) {
+    for (SimpleVectorSet::iterator i = Pold->begin(); i!=Pold->end(); ++i) {
       Vector v = *i;
 #if (TALKATIVE>=2)
       cerr << "Raising " << v << endl;
@@ -409,12 +432,13 @@ SimpleVectorSet ExtendPPI(const SimpleVectorSet &Pn, int n)
       for (int j = 1; j<=(n+1)/2; j++) {
 	int k = (n+1) - j;
 	if (v(j) > 0 || v(k) > 0) { // otherwise, w reducible by v
-	  RaisePPI(v, j, k, n, P, Pnew);
+	  RaisePPI(v, j, k, n, P, *Pnew);
 	}
       }
     }
+    delete Pold;
     Pold = Pnew;
-    Pnew = SimpleVectorSet();
+    Pnew = new SimpleVectorSet;
   }
 
 #ifdef POSTCHECK
@@ -437,7 +461,7 @@ SimpleVectorSet ExtendPPI(const SimpleVectorSet &Pn, int n)
   RangeException = 0;
   return S;
 #else
-  return P; 
+  P.DestructiveCopy(Pn);
 #endif
 
 }
@@ -457,7 +481,7 @@ int main(int argc, char *argv[])
   for (int i = 2; i<n; i++) {
     ppicount = 0;
     cerr << "### Extending to n = " << i+1 << endl;
-    V = ExtendPPI(V, i);
+    ExtendPPI(V, i);
     ClearVectorRepository();
     cerr << "### This makes " << ppicount 
 	 << " PPI up to sign, " << V.size() << endl;
@@ -466,6 +490,9 @@ int main(int argc, char *argv[])
 }
 
 /* $Log$
+ * Revision 1.24  1999/03/09 17:36:01  mkoeppe
+ * Clean up.
+ *
  * Revision 1.23  1999/03/09 16:46:07  mkoeppe
  * Too cool to be true. Up to n=17 everything is computed in `zero
  * time'. From n=18 the memory load is too high.
