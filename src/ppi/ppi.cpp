@@ -1,5 +1,5 @@
 // Bestimmung der Primitiven Partitionsidentit"aten (PPI) nach [Urbaniak];
-// Verwaltung der Testvektoren mit Range-Trees (BB-alpha based). 
+// Verwaltung der Testvektoren mit `Digital trees'.
 
 // $Id$
 
@@ -9,49 +9,19 @@
 #include <vector>
 #include <iostream.h>
 #include <iomanip.h>
-#include "bbalpha.h"
+#include "vec.h"
 
-#define VVVV 1
 #define TALKATIVE 0
 
 typedef set<Vector, less<Vector> > SimpleVectorSet;
 static vector<Vector *> VectorRepository;
 
-float alpha = 0.15;
-
-#if defined(USE_BB)
-class VectorSet {
-  BBTree *tree;
-  VectorSet(const VectorSet &);
-  operator=(const VectorSet &);
-public:
-  VectorSet(int level) : tree(new BBTree(level, alpha)) {}
-  ~VectorSet() { delete tree; }
-  typedef BBTree::iterator iterator;
-  iterator begin() { return tree->begin(); }
-  iterator end() { return tree->end(); }
-  int size() const { return tree->root ? tree->root->numLeaves : 0; }
-  void insert(Vector v) { 
-    Vector *vv = new Vector(v);
-    VectorRepository.push_back(vv);
-    tree->Insert(Leaf(vv)); 
-  }
-  bool OrthogonalRangeSearch(Leaf min, Leaf max, 
-			     Report report)
-  { return tree->OrthogonalRangeSearch(min, max, report); }
-  operator SimpleVectorSet();
-};
-
-VectorSet::operator SimpleVectorSet() 
+Vector Vector::operator-() const 
+  return v; 
 {
-  SimpleVectorSet S;
-  iterator i;
-  for (i = begin(); i!=end(); ++i)
-    if (!S.insert(*i).second) cerr << "duplicate" << endl;
-  return S;
+  v = Vector(size());
+  for (int i = 0; i<size(); i++) v[i] = -(*this)[i];
 }
-
-#else
 
 // Implementation with digital trees (FIXME: name?)
 
@@ -117,20 +87,12 @@ bool DigitalTree::DoSearch(Leaf min, Leaf max,
     return report(((LeafNode*)node)->leaf);
   }
   else {
-#if 0
     vector<Node*>::pointer ci;
     int count = ((Vector&)max)[level] - ((Vector&)min)[level] + 1;
     for (ci = &(((InnerNode*)node)->Children[Dimension + ((Vector&)min)[level]]); 
 	 count; ci++, count--)
       if (*ci && !DoSearch(min, max, report, level-1, *ci)) 
 	return false;
-#else
-    for (int i = ((Vector&)min)[level]; i<=((Vector&)max)[level]; i++)
-      if (((InnerNode*)node)->Children[Dimension+i] 
-	  && !DoSearch(min, max, report, level-1,
-		       ((InnerNode*)node)->Children[Dimension+i]))
-	return false;
-#endif
     return true;
   }
 }
@@ -197,7 +159,6 @@ class VectorSet {
 public:
   VectorSet(int level) : tree(new DigitalTree(level+1)) {}
   ~VectorSet() { delete tree; }
-  typedef BBTree::iterator iterator;
   bool insert(Vector v, bool CheckDup = false) { 
     Vector *vv = new Vector(v);
     VectorRepository.push_back(vv);
@@ -226,8 +187,6 @@ VectorSet::operator SimpleVectorSet()
     min(i) = -tree->Dimension, max(i) = tree->Dimension;
   OrthogonalRangeSearch(Leaf(&min), Leaf(&max), inserthack);
 }
-
-#endif
 
 ostream &operator<<(ostream &s, const Vector &z)
 {
@@ -288,98 +247,14 @@ void writeppi(ostream &c, Vector z, int n)
   c << endl;
 }
 
-static int count;
 static int ppicount;
 
 /* rangereport parameters */
-/* FIXME: Use a class instead */
-static Vector rangez, rangemin, rangemax;
+static Vector rangemin, rangemax;
 static int LastNonzeroPos;
 #ifdef POSTCHECK
 static Vector *RangeException;
 #endif
-
-// returns false iff reduced to zero or new range shall be set up.
-static bool RangeReportWithInversion(const Leaf &y)
-{
-  static int count = 0;
-#ifdef POSTCHECK
-  if (&(Vector&)(y) == RangeException) return true;
-#endif
-  int maxfactor = HilbertDivide(rangez, y);
-  if (maxfactor) {
-    //    cerr << "Vector: " << rangez << "Reducer: " << Vector(y) << endl;
-#if 0
-    count = 0;
-#endif
-    int i;
-    for (i = LastNonzeroPos; 
-	 i && !(rangez(i) -= maxfactor * Vector(y)(i)); i--);
-    if (i < LastNonzeroPos) { // we have more trailing zeros
-      LastNonzeroPos = i;
-      if (!i) return false; // reduced to zero
-      if (rangez(i)<0) { // we must take the negative
-	rangez(i) = -rangez(i);
-	for (i--; i; i--) 
-	  rangez(i) = maxfactor * Vector(y)(i) - rangez(i);
-	return false; // we need a new range
-      }
-      else {
-	for (i--; i; i--) 
-	  rangez(i) -= maxfactor * Vector(y)(i);
-	return false; // we want a new range
-      }
-    }
-    for (i--; i; i--) 
-      rangez(i) -= maxfactor * Vector(y)(i);
-    return LastNonzeroPos;
-  }
-  else {
-#if 0 // a heuristic decision whether a new range shall be set up.
-    return (++count) % 20;
-#endif
-#if 1 // always use a single range
-    return true;
-#else // use a new range for every search.
-    return false;
-#endif
-  }
-}
-
-static bool RangeReport(const Leaf &y)
-{
-#ifdef POSTCHECK
-  if (&(Vector&)(y) == RangeException) return true;
-#endif
-  int maxfactor = HilbertDivide(rangez, y);
-  if (maxfactor) {
-    int i;
-    for (i = LastNonzeroPos; 
-	 i && !(rangez(i) -= maxfactor * Vector(y)(i)); i--)
-#if defined(DYNAMIC_BOUND)
-      rangemax(i) = rangemin(i) = 0;
-#else
-      ;
-#endif
-    LastNonzeroPos = i;
-#if defined(DYNAMIC_BOUND)
-    if (rangez(i)<0) rangemin(i) = rangez(i);
-    else rangemax(i) = rangez(i);
-#endif
-    if (i) {
-      for (i--; i; i--) {
-	rangez(i) -= maxfactor * Vector(y)(i);
-#if defined(DYNAMIC_BOUND)
-	if (rangez(i)<0) rangemin(i) = rangez(i);
-	else rangemax(i) = rangez(i);
-#endif
-      }
-    }
-    return LastNonzeroPos;
-  }
-  else 
-    return true;
-}
 
 static bool False(const Leaf &y)
 {
@@ -389,88 +264,12 @@ static bool False(const Leaf &y)
   return false;
 }
 
-bool HilbertReduce(Vector &z, VectorSet &S)
-{
-  int i;
-  rangemin = Vector(z.size()), rangemax = Vector(z.size());
-
-  for (i = z.size(); i && !z(i); i--);
-  LastNonzeroPos = i;
-  rangez = z;
-
-  //
-  // Step 1:  Try to reduce the vector to zero, beginning from the
-  // last positions, taking care of inversions.
-  //
-
-#if 0
-  // first look if we find the vector itself in S
-  rangemin = rangemax = rangez;
-  if (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax), &False))
-    return false;
-#endif
-  // positive search
-  do {
-    for (i = rangez.size(); i!=LastNonzeroPos; i--)
-      rangemin(i) = rangemax(i) = 0;
-    // at LastNonzeroPos, ensure that we strictly reduce
-    rangemin(LastNonzeroPos) = 1, 
-      rangemax(LastNonzeroPos) = rangez(LastNonzeroPos);
-    // use full range at the remaining positions
-    for (i = LastNonzeroPos - 1; i; i--) {
-      if (rangez(i) >= 0) rangemin(i) = 0, rangemax(i) = rangez(i);
-      else rangemin(i) = rangez(i), rangemax(i) = 0;
-    }
-  } while (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax),
-				    &RangeReportWithInversion) 
-	   && LastNonzeroPos);
-  if (!LastNonzeroPos) return false;
-
-#if 0
-  // look if we find the vector itself in S
-  rangemin = rangemax = rangez;
-  if (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax), &False))
-    return false;
-#endif
-  
-  // 
-  // Step 2:  Reduce the vector as far as possible. No inversion
-  // needed beyond this point.
-  //
-
-  // zero bounds of trailing zeros and last nonzero pos
-  for (i = rangez.size(); i >= LastNonzeroPos; i--) 
-    rangemin(i) = rangemax(i) = 0;
-
-  // positive search
-  do {
-    for (i = LastNonzeroPos - 1; i; i--)
-      if (rangez(i) >= 0) rangemin(i) = 0, rangemax(i) = rangez(i);
-      else rangemin(i) = rangez(i), rangemax(i) = 0;
-  } while (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax),
-				    &RangeReport));
-
-  // negative search
-  rangez = -rangez;
-  do {
-    for (i = LastNonzeroPos - 1; i; i--)
-      if (rangez(i) >= 0) rangemin(i) = 0, rangemax(i) = rangez(i);
-      else rangemin(i) = rangez(i), rangemax(i) = 0;
-  } while (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax),
-				    &RangeReport));
-
-  // we have found a new irreducible vector
-  z = -rangez;
-  return true;
-}
-
 /////////////////
 
 bool IsReducible(Vector &z, VectorSet &S)
 {
   int i;
   rangemin = Vector(z.size()), rangemax = Vector(z.size());
-  rangez = z;
 
   for (i = z.size(); i && !z(i); i--) rangemin(i) = rangemax(i) = 0;
   LastNonzeroPos = i;
@@ -480,29 +279,13 @@ bool IsReducible(Vector &z, VectorSet &S)
   // positive search is enough because there must be one summand that
   // is positive at LastNonzeroPos.
   for (i--; i; i--)
-    if (rangez(i) >= 0) rangemin(i) = 0, rangemax(i) = rangez(i);
-    else rangemin(i) = rangez(i), rangemax(i) = 0;
+    if (z(i) >= 0) rangemin(i) = 0, rangemax(i) = z(i);
+    else rangemin(i) = z(i), rangemax(i) = 0;
 
-#if 0
-  // first check for decomposition `x = 0 + x'
-  
-  rangemin(LastNonzeroPos) = rangemax(LastNonzeroPos) = z(LastNonzeroPos);
-  if (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax),
-			       &False)) return true;
-
-  // then check for proper decomposition
-
-  rangemin(LastNonzeroPos) = 1, 
-    rangemax(LastNonzeroPos) = z(LastNonzeroPos) / 2;
-  return (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax),
-				   &False));
-
-#else
   rangemin(LastNonzeroPos) = 1, 
     rangemax(LastNonzeroPos) = z(LastNonzeroPos);
   return (!S.OrthogonalRangeSearch(Leaf(&rangemin), Leaf(&rangemax),
 				   &False));
-#endif
 }
 
 //
@@ -511,7 +294,7 @@ bool IsReducible(Vector &z, VectorSet &S)
 
 void reportx(Vector z)
 {
-  count++, ppicount++;
+  ppicount++;
 #if (TALKATIVE>=1)
   cout << z << "\t"; writeppi(cout, z, z.size()); 
 #endif
@@ -665,9 +448,6 @@ int main(int argc, char *argv[])
   int n = 0;
   if (argc >= 2) {
     sscanf(argv[1], "%d", &n);
-    if (argc == 3)       
-      sscanf(argv[2], "%f", &alpha);
-    //sscanf(argv[2], "%d", &BBTree::FewLeavesBound);
   }
   if (!n) n = 5;
 
@@ -686,6 +466,10 @@ int main(int argc, char *argv[])
 }
 
 /* $Log$
+ * Revision 1.23  1999/03/09 16:46:07  mkoeppe
+ * Too cool to be true. Up to n=17 everything is computed in `zero
+ * time'. From n=18 the memory load is too high.
+ *
  * Revision 1.22  1999/03/09 15:12:56  mkoeppe
  * *** empty log message ***
  *
