@@ -12,7 +12,6 @@
 #include "vec.h"
 
 #define TALKATIVE 0
-#undef WITH_TARAAA
 
 typedef set<Vector, less<Vector> > SimpleVectorSet;
 static vector<Vector *> VectorRepository;
@@ -285,7 +284,7 @@ void writeppi(ostream &c, Vector z, int n)
   c << endl;
 }
 
-static int ppicount;
+static int ppicount, dupcount;
 
 /* rangereport parameters */
 static Vector rangemin, rangemax;
@@ -294,9 +293,6 @@ static Leaf ReportedLeaf;
 
 static bool False(const Leaf &y)
 {
-#ifdef WITH_TARAAA
-  ReportedLeaf = y;
-#endif
   return false;
 }
 
@@ -336,12 +332,6 @@ void reportx(Vector z)
 #endif
 }
 
-// FIXME: The Taraaa! cases happen but seem to be obsolete, as they are
-// generated the other way round anyway... But it is not clear whether
-// this really is the case or whether it is just the (FIXME:)
-// redundancy in generation that makes everything go cool for the
-// checked values.
-
 inline void RaisePPI(const Vector &v, int j, int k, int n, 
 		     VectorSet &P, SimpleVectorSet &Pnew)
 {
@@ -380,32 +370,14 @@ inline void RaisePPI(const Vector &v, int j, int k, int n,
 				  &False)) {
 	// didn't find reducer, but vector may already be known
 	if (Pnew.insert(w).second) reportx(w);
-      }
-#ifdef WITH_TARAAA
-      else {
-	// found reducer, so insert the reduced
-	for (i = 1; i<=n+1; i++) w(i) += ((Vector&)ReportedLeaf)(i);
-	if (Pnew.insert(w).second) {
+	else {
+	  dupcount++;
 #if (TALKATIVE>=2)
-	  cerr << "Taraaa";
+	  cerr << "Duplicate: " << w << endl;
 #endif
-	  reportx(w);
 	}
       }
-#endif
     }
-#ifdef WITH_TARAAA
-    else {
-      // found reducer, so insert the reduced
-      for (i = 1; i<=n+1; i++) w(i) -= ((Vector&)ReportedLeaf)(i);
-      if (Pnew.insert(w).second) {
-#if (TALKATIVE>=2)
-	cerr << "Taraaa'";
-#endif
-	reportx(w);
-      }
-    }
-#endif
   }
 }
 
@@ -452,7 +424,7 @@ void ExtendPPI(SimpleVectorSet &Pn, int n)
 #if (TALKATIVE>=2)
     cerr << "Raising " << v << endl;
 #endif
-    for (int j = 1; j<=(n+1)/2; j++) {
+    for (int j = 1; j<=n/2; j++) { // yes n/2 is enough
       int k = (n+1) - j;
       if (v(j) > 0 || v(k) > 0) { // otherwise, w reducible by v
 	RaisePPI(v, j, k, n, P, *Pnew);
@@ -508,11 +480,12 @@ int main(int argc, char *argv[])
   SimpleVectorSet V;
   Vector v(2); v(1) = -2, v(2) = +1; V.insert(v);
   for (int i = 2; i<n; i++) {
-    ppicount = 0;
+    dupcount = ppicount = 0;
     cerr << "### Extending to n = " << i+1 << endl;
     ExtendPPI(V, i);
     cerr << "### This makes " << ppicount 
-	 << " PPI up to sign, " << V.size() << endl;
+	 << " PPI up to sign, " << V.size() 
+	 << " with " << dupcount << " duplicates. " << endl;
     cerr << "### Clearing vector repository..." << flush;
     ClearVectorRepository();
     cerr << "done." << endl;
@@ -521,6 +494,12 @@ int main(int argc, char *argv[])
 }
 
 /* $Log$
+ * Revision 1.28  1999/03/10 17:44:15  mkoeppe
+ * The vectors in inner node of digital trees now grow on
+ * demand. Insertion takes a bit longer, but the whole thing is much
+ * cooler to memory, and lookups are also faster. n=18 takes 5m33s, n=19
+ * takes 11m8s user time at 61MB memory use.
+ *
  * Revision 1.27  1999/03/09 20:54:59  mkoeppe
  * Clean up.
  *
