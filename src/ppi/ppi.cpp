@@ -73,8 +73,14 @@ public:
 
 class LeafNode : public Node {
 public:
-  Vector vec;
+  signed char vec[0];
   LeafNode() : Node(true) {}
+  LeafNode(const Vector &v, int length) : Node(true) {
+    for (int i = 0; i<length; i++) vec[i] = v[i];
+  }
+  void *operator new(size_t s, int length) {
+    return malloc(s + length);
+  }
 };  
 
 class DigitalTree {
@@ -264,8 +270,7 @@ bool DigitalTree::Insert(const Vector &v)
 	} while (level > 0 
 		 && (ol->vec[level] == v[level]));
 	// Put the old and new leaves at the end
-	LeafNode *l = new LeafNode;
-	l->vec = v;
+	LeafNode *l = new(level) LeafNode(v, level);
 	Put(*n, v[level], l);
 	Put(*n, ol->vec[level], ol);
 	// we are done
@@ -277,8 +282,7 @@ bool DigitalTree::Insert(const Vector &v)
       }
     }
     else { // Is empty slot
-      LeafNode *l = new LeafNode;
-      l->vec = v;
+      LeafNode *l = new(level) LeafNode(v, level);
       Put(*n, pos, l);
       // we are done
       return true; 
@@ -779,6 +783,9 @@ int main(int argc, char *argv[])
 
 /*
  * $Log$
+ * Revision 1.28.1.5.1.1  1999/03/18 20:28:13  mkoeppe
+ * Source erasing now `correct' (but not faster).
+ *
  * Revision 1.28.1.5  1999/03/12 13:55:19  mkoeppe
  * Some clean-up with the vectors. BACKWARD_LEVEL option, but no impact
  * on performance.
