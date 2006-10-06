@@ -93,6 +93,7 @@
 \newtheorem*{Remark}{Remark}
 \newtheorem*{Problem}{Problem}
 \newtheorem*{Call}{Call}
+\newtheorem*{Invocation}{Invocation}
 \newtheorem*{Result}{Result}
 \newtheorem*{Note}{Note}
 
@@ -112,6 +113,7 @@
 \DeclareMathOperator{\supp}{supp}
 \DeclareMathOperator{\conv}{conv}
 \DeclareMathOperator{\normalForm}{normalForm}
+\DeclareMathOperator{\Lattice}{{\cal L}}
 
 
 %-- This is the correct way of typesetting 4ti2.
@@ -184,8 +186,19 @@ The explicit invocation of each command is given below.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %\newpage
-\section{Format of Input and Output Files}
-\label{Format of Input and Output Files}
+
+\section{Input and output formats}\label{InputOutput}
+
+\subsection{General Comments}
+Currently, \FourTiTwo{} is based on transformation of files, meaning
+that it reads some input (matrix, list of vectors) from a file,
+computes the desired information (Hilbert basis, Graver basis, \ldots)
+and prints the result to another file that usually just differs from
+the input file in its extension.
+
+It is assumed that the file \File{fileName} contains a description of the
+problem matrix. The different sets of interest can then be identified
+easily by their extensions.
 
 Most input and output files of \FourTiTwo{} contain either an 
 integer matrix or a list of integer vectors. The encoding is
@@ -209,28 +222,6 @@ A=
 \end{pmatrix}.
 \]
 \end{Example}
-
-
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\newpage
-
-\section{Input and output formats}\label{InputOutput}
-
-\subsection{General Comments}
-Currently, \FourTiTwo{} is based on transformation of files, meaning
-that it reads some input (matrix, list of vectors) from a file,
-computes the desired information (Hilbert basis, Graver basis, \ldots)
-and prints the result to another file that usually just differs from
-the input file in its extension.
-
-It is assumed that the file \File{fileName} contains a description of the
-problem matrix. The different sets of interest can then be identified
-easily by their extensions.
 
 \subsection{Conventions for Filename Extensions}
 \subsubsection{Input Files}
@@ -293,95 +284,54 @@ adds new extensions to the file name with every call.
 \end{Note}
 
 
+
+
+
 \section{Invoking \FourTiTwo{}}
 Let us present the different calls to \FourTiTwo{} according to the set or
 the information one wants to compute.
 
 \subsection{Hilbert Bases}
-Let $C=\SetDef{z\in\R^n}{Az=0,\, z\geq 0}$ be the cone of interest and let
-$A$ be given in \File{fileName}. We want to compute the minimal
-Hilbert basis of $C$ or a truncation of it, that is, all vectors in
-the minimal Hilbert basis whose entries lie below the bounds given in
-\File{fileName.tru}.
+Let $\Lattice\subseteq\Z^n$ be a lattice, for example $\Lattice=\ker(A)$
+for some integer matrix $A$. We wish to compute the $\leq$-minimal 
+elements in $\Lattice\cap\Z^n_+$.
 
-\begin{Problem}
-Compute the Hilbert basis of $C$.
-\end{Problem}
+\begin{Invocation}
 \begin{myverbatim}
 ./hilbert fileName
 \end{myverbatim} 
-\begin{Result}
-\File{fileName.hil}
-\end{Result}
+\end{Invocation}
 
-\vspace{15pt}
-\begin{Problem}
-Compute the truncated Hilbert basis of $C$ with respect to bounds
-given in \File{fileName.tru}.
-\end{Problem}
-\begin{myverbatim}
-./hilbert tru fileName
-\end{myverbatim} 
 \begin{Result}
-\File{fileName.hil.tru}
+  \File{fileName.hil}
 \end{Result}
 
 \begin{Note}
   If present, lattice generators will be read automatically from
   \File{fileName.lat}.
-
-  The bounds are \important{NOT} used automatically by \Command{hilbert} if
-  \File{fileName.tru} is present!
-
-  Use $0$ in \File{fileName.tru} to specify an upper bound
-  $\infty$. If you would like to impose an upper bound $0$, you should
-  add an another equation $x_i=0$ to the problem.
 \end{Note}
 
-\subsection{Graver Bases}
-Let $A$ be the matrix of interest and let it be given in
-\File{fileName}. We want to compute the Graver basis associated with $A$
-or a truncation of it, that is, all vectors in the minimal Hilbert
-basis whose entries (in absolute value) lie below the bounds given in
-\File{fileName.tru}. 
 
-\vspace{15pt}
-\begin{Problem}
-Compute the Graver basis of $A$.
-\end{Problem}
+
+
+\subsection{Graver Bases}
+Let $\Lattice\subseteq\Z^n$ be a lattice, for example $\Lattice=\ker(A)$ 
+for some integer matrix $A$. We wish to compute the $\red$-minimal 
+elements in $\Lattice\cap\Z^n_+$. 
+
+\begin{Invocation}
 \begin{myverbatim}
 ./graver fileName
 \end{myverbatim} 
+\end{Invocation}
+
 \begin{Result}
 \File{fileName.gra}
 \end{Result}
 
-\vspace{15pt}
-\begin{Problem}
-Compute the truncated Graver basis of $A$ with respect to
-bounds given in \File{fileName.tru}.
-\end{Problem}
-\begin{myverbatim}
-./graver tru fileName
-\end{myverbatim} 
-\begin{Result}
-\File{fileName.gra.tru}
-\end{Result}
-
 \begin{Note}
   If present, lattice generators will be read automatically from
   \File{fileName.lat}.
-
-  If present, symmetry group will be read automatically from
-  \File{fileName.sym} and will be used to compute a symmetric Graver
-  basis.
-
-  The bounds are \important{NOT} used automatically by \Command{graver} if
-  \File{fileName.tru} is present!
-
-  Use $0$ in \File{fileName.tru} to specify an upper bound
-  $\infty$. If you would like to impose an upper bound $0$, you should
-  add an another equation $x_i=0$ to the problem.
 \end{Note}
 
 
@@ -1163,8 +1113,11 @@ or applications please acknowledge it by referencing it as
 
 \subsection{The \FourTiTwo{} Team}
 \begin{itemize}
-\item Raymond Hemmecke (UC Davis, USA)
-\item Ralf Hemmecke (RISC Linz, Austria)
+\item Ralf Hemmecke (RISC, University of Linz, Austria)
+\item Raymond Hemmecke (University of Magdeburg, Germany)
+\item Matthias K\"oppe (University of Magdeburg, Germany)
+\item Peter Malkin (CORE, Universit\'e catholique de Louvain, Belgium)
+\item Matthias Walter (University of Magdeburg, Germany)
 \end{itemize}
 
 
