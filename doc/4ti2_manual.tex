@@ -111,6 +111,7 @@
 \newcommand{\IP}{{({\mathrm{IP}})}}
 
 \DeclareMathOperator{\supp}{supp}
+\DeclareMathOperator{\linspan}{span}
 \DeclareMathOperator{\conv}{conv}
 \DeclareMathOperator{\normalForm}{normalForm}
 \DeclareMathOperator{\Lattice}{{\cal L}}
@@ -134,7 +135,10 @@ geometric and combinatorial\\ problems on linear spaces.}
 
 \tableofcontents
 
+\newpage
 
+
+\begin{comment}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %\newpage
@@ -166,13 +170,13 @@ solve   & explicit representation of set of real and integer solutions
 
 The explicit invocation of each command is given below.
 
-
+\end{comment}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %\newpage
-\section{Downloading and Installing \FourTiTwo{}}
+%\section{Downloading and Installing \FourTiTwo{}}
 
 
 
@@ -182,7 +186,7 @@ The explicit invocation of each command is given below.
 
 
 
-
+\begin{comment}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %\newpage
@@ -283,7 +287,7 @@ Be aware that, in contrast to calls to the main functions like
 adds new extensions to the file name with every call.
 \end{Note}
 
-
+\end{comment}
 
 
 
@@ -291,54 +295,130 @@ adds new extensions to the file name with every call.
 Let us present the different calls to \FourTiTwo{} according to the set or
 the information one wants to compute.
 
-\subsection{Hilbert Bases}
-Let $\Lattice\subseteq\Z^n$ be a lattice, for example $\Lattice=\ker(A)$
-for some integer matrix $A$. We wish to compute the $\leq$-minimal 
-elements in $\Lattice\cap\Z^n_+$.
 
-\begin{Invocation}
-\begin{myverbatim}
-./hilbert fileName
-\end{myverbatim} 
-\end{Invocation}
 
-\begin{Result}
-  \File{fileName.hil}
-\end{Result}
+\subsection{Solving homogeneous linear systems: qsolve, rays, circuits}
+Let a system $\{Ax=0, Bx\leq 0\}$ together with sign constraints be 
+given in \File{foo}, \File{foo.rel}, \File{foo.sign}. 
+The function \File{qsolve} returns two sets \File{foo.zhom} and 
+\File{foo.zfree}, such that every solution $z$ of the 
+given system can be written as a sign-compatible sum
+\[
+z=\sum \alpha_i z_{\text{hom},i}+
+\sum \beta_j z_{\text{free},j}
+\]
+with $\alpha_i\in\R_+$ and $\beta_j\in\R$. Moreover, all $z$ representable 
+in this way are solutions of the above system.
+
+Alternatively, one could solve \emph{homogeneous} problems of the type 
+$\{x\in\linspan(\Lattice)\}$ for given generators of a linear space and for 
+sign constraints on the variables encoded in \File{foo.lat} and 
+\File{foo.sign}.
+
+If you call \File{circuits} instead of \File{qsolve} changes the default sign 
+settings from $0$ to $2$ for all variables. These settings can be 
+overwritten using \File{foo.sign}. Only the lex-positive vectors are saved
+to \File{foo.cir} if $v$ and $-v$ are present.
+
+If you call \File{rays} instead of \File{qsolve} changes the default sign 
+settings from $0$ to $1$ for all variables. These settings can be overwritten 
+using \File{foo.sign}.
+
+\begin{tabular}{|l|l|l|}
+\hline
+Input files    & foo & foo.lat\\
+\hline
+Optional files & foo.rhs &  \\
+	       & foo.rel &  \\
+	       & foo.sign & foo.sign \\
+\hline
+Options        & none    & none\\
+\hline
+\hline
+Invocation     & ./qsolve foo & ./qsolve foo\\
+Output files   & foo.qhom     & foo.qhom\\
+	       & foo.qfree    & foo.qfree\\
+\hline
+Invocation     & ./circuits foo & ./circuits foo\\
+Output files   & foo.cir       & foo.cir\\
+\hline
+Invocation     & ./rays foo & ./rays foo\\
+Output files   & foo.ray   & foo.ray\\
+\hline
+\end{tabular}
 
 \begin{Note}
-  If present, lattice generators will be read automatically from
-  \File{fileName.lat}.
+  If present, \File{qsolve} will always use \File{foo}. If you wish to 
+  use \File{foo.lat} as input, you need to drop the file \File{foo}.
 \end{Note}
 
 
 
+\subsection{Solving diophantine systems: zsolve, graver, hilbert}
+Let a system $\{Ax=a, Bx\leq b\}$ together with sign constraints and lower 
+and upper bounds on the variables be given in \File{foo}, \File{foo.rhs}, 
+\File{foo.rel}, \File{foo.sign}, \File{foo.ub}, \File{foo.lb}. The 
+function \File{zsolve} returns three sets \File{foo.zinhom}, 
+\File{foo.zhom}, \File{foo.zfree}, such that every solution $z$ of the 
+given system can be written as a sign-compatible sum
+\[
+z=z_{\text{inhom}}+\sum \alpha_i z_{\text{hom},i}+
+\sum \beta_j z_{\text{free},j}
+\]
+with $\alpha_i\in\Z_+$ and $\beta_j\in\Z$. Moreover, all $z$ representable 
+in this way are solutions of the above system.
 
-\subsection{Graver Bases}
-Let $\Lattice\subseteq\Z^n$ be a lattice, for example $\Lattice=\ker(A)$ 
-for some integer matrix $A$. We wish to compute the $\red$-minimal 
-elements in $\Lattice\cap\Z^n_+$. 
+Alternatively, one could solve \emph{homogeneous} problems of the type 
+$\{x\in\Lattice: l\leq x\leq u\}$ for given lattice generators, sign 
+constraints, and lower and upper bounds on the variables encoded in 
+\File{foo.lat}, \File{foo.sign}, \File{foo.ub}, \File{foo.lb} .
 
-\begin{Invocation}
-\begin{myverbatim}
-./graver fileName
-\end{myverbatim} 
-\end{Invocation}
+If you call \File{graver} instead of \File{zsolve} changes the default sign 
+settings from $0$ to $2$ for all variables. These settings can be 
+overwritten using \File{foo.sign}. Only the lex-positive vectors are saved
+to \File{foo.gra} if $v$ and $-v$ are present.
 
-\begin{Result}
-\File{fileName.gra}
-\end{Result}
+If you call \File{hilbert} instead of \File{zsolve} changes the default sign 
+settings from $0$ to $1$ for all variables. These settings can be overwritten 
+using \File{foo.sign}.
+
+\begin{tabular}{|l|l|l|}
+\hline
+Input files    & foo & foo.lat\\
+\hline
+Optional files & foo.rhs &  \\
+	       & foo.rel &  \\
+	       & foo.sign & foo.sign \\
+               & foo.ub  & foo.ub \\
+               & foo.lb  & foo.lb \\
+\hline
+Options        & none    & none\\
+\hline
+Invocation     & ./zsolve foo & ./zsolve foo\\
+Output files   & foo.zinhom   & foo.zinhom\\
+	       & foo.zhom     & foo.zhom\\
+	       & foo.zfree    & foo.zfree\\
+\hline
+Invocation     & ./graver foo & ./graver foo\\
+Output files   & foo.gra      & foo.gra\\
+\hline
+Invocation     & ./hilbert foo & ./hilbert foo\\
+Output files   & foo.hil       & foo.hil\\
+\hline
+\end{tabular}
 
 \begin{Note}
-  If present, lattice generators will be read automatically from
-  \File{fileName.lat}.
+  If present, \File{zsolve/graver/hilbert} will always use \File{foo}. 
+  If you wish to use \File{foo.lat} as input, you need to drop the file 
+  \File{foo}.
 \end{Note}
 
 
 
+\subsection{Lattice ideals: groebner, markov}
 
 
-
+\begin{comment}
 \subsection{Gr\"obner Bases}
 Let $A$ be the matrix of interest and let it be given in
 \File{fileName}. We want to compute a Gr\"obner basis of the toric
@@ -366,11 +446,6 @@ or given ordering.
   \File{fileName.cost}. Default term ordering is changed to term
   ordering compatible with cost vector.
 \end{Note}
-
-
-
-
-
 
 
 
@@ -411,67 +486,6 @@ ordering.
 
 
 
-\subsection{Circuits}
-Let $A$ be the matrix of interest and let it be given in
-\File{fileName}. We want to compute the set of circuits associated with
-$A$. 
-
-\vspace{15pt}
-\begin{Problem}
-Compute the set of circuits of $A$.
-\end{Problem}
-\begin{myverbatim}
-./circuits fileName
-\end{myverbatim} 
-\begin{Result}
-\File{fileName.cir}
-\end{Result}
-
-\begin{Note}
-No direct algorithm has been implemented yet! This function 
-\important{NEEDS} \File{fileName.gra} to extract the circuits from it.
-\end{Note}
-
-
-
-
-
-
-
-
-
-\subsection{Extreme Rays}
-Let $C=\SetDef{z\in\R^n}{Az=0,\, z\geq 0}$ be the cone of interest and let
-$A$ be given in \File{fileName}. We want to compute the extreme rays
-of $C$.
-
-\vspace{15pt}
-\begin{Problem}
-Compute the set of extreme rays of $C$.
-\end{Problem}
-\begin{myverbatim}
-./output ray fileName.hil
-\end{myverbatim} 
-\begin{Result}
-\File{fileName.hil.ray}
-\end{Result}
-
-\begin{Note}
-  No direct algorithm has been implemented yet! This function 
-\important{NEEDS} \File{fileName.hil} to extract the extreme rays from it.
-  The file \File{fileName.hil.ray} is constructed.
-\end{Note}
-
-
-
-
-
-
-
-
-
-
-
 \subsection{Integer Programming (Normal Form)}
 Let $A$ be a matrix given in \File{fileName}, let $c$ be a cost vector
 given in \File{fileName.cost}, and let $z_0$ be an integer point given in 
@@ -502,119 +516,31 @@ Compute an optimum to $\min\{c^\intercal z:Az=Az_0,z\in\Z^n_+\}$.
   \File{fileName.gro}. Otherwise, it will be computed.
 \end{Note}
 
+\end{comment}
 
 
 
 
-
-\subsection{Additional Functionality}
+\subsection{Additional Functionality: output}
 \FourTiTwo{} provides some more functionality that helps to transform
 the output files into files readable by other programs, or to extract
 subsets that fulfill additional properties. All this can be achieved
 by the function \Command{output}.
 
-\vspace{15pt}
-\begin{Problem}
-List of vectors in Maple format
-\end{Problem}
-\begin{myverbatim}
-./output map fileName
-\end{myverbatim} 
-\begin{Result}
-\File{fileName.maple}
-\end{Result}
 
-\vspace{15pt}
-\begin{Problem}
-List of binomials in variables $x[1],...,x[n]$
-\end{Problem}
-\begin{myverbatim}
-./output bin fileName
-\end{myverbatim} 
-\begin{Result}
-\File{fileName.bin}
-\end{Result}
-
-\vspace{15pt}
-\begin{Problem}
-List of $0-\pm 1$ vectors
-\end{Problem}
-\begin{myverbatim}
-./output 0-1 fileName
-\end{myverbatim} 
-\begin{Result}
-\File{fileName.0-1}
-\end{Result}
-
-\vspace{15pt}
-\begin{Problem}
-List of vectors as $3$-way tables of sizes $(x,y,z)$
-\end{Problem}
-\begin{myverbatim}
-./output 3way x y z fileName
-\end{myverbatim} 
-\begin{Result}
-\File{fileName.3way}
-\end{Result}
-
-\begin{Note}
-Hint: Use $z=1$ for $2$-way tables.
-\end{Note}
-
-\vspace{15pt}
-\begin{Problem}
-Transpose of matrix (list of vectors)
-\end{Problem}
-\begin{myverbatim}
-./output tra fileName
-\end{myverbatim} 
-\begin{Result}
-\File{fileName.tra}
-\end{Result}
-
-\vspace{15pt}
-\begin{Problem}
-L1-norms of vectors
-\end{Problem}
-\begin{myverbatim}
-./output deg fileName
-\end{myverbatim} 
-\begin{Result}
-on screen
-\end{Result}
-
-\begin{Note}
-Hint: Vectors with max norm will be printed to screen!
-\end{Note}
-
-\vspace{15pt}
-\begin{Problem}
-Extract lex-max representative under given symmetry
-\end{Problem}
-\begin{myverbatim}
-./output sym fileName
-\end{myverbatim} 
-\begin{Result}
-\File{fileName.rep}
-\end{Result}
-
-\begin{Note}
-\important{NEEDS} file \File{fileName.***.sym}!
-\end{Note}
-
-\vspace{15pt}
-\begin{Problem}
-List of positive parts
-\end{Problem}
-\begin{myverbatim}
-./output pos fileName
-\end{myverbatim} 
-\begin{Result}
-\File{fileName.pos}
-\end{Result}
-
-
-
+\begin{tabular}{lll}
+Vectors in Maple format & maple & foo.maple\\
+Binomials in variables $x[1],...,x[n]$ & bin & foo.bin\\
+$0-\pm 1$ vectors & 0-1 & foo.0-1\\
+Vectors as $3$-way tables of sizes $(x,y,z)$ & 3way x y z & foo.3way\\ 
+	& $2$-way tables: $z=1$ &\\
+Transpose of matrix (list of vectors) & transpose & foo.tra\\
+L1-norms of vectors & degree & screen\\
+Vectors with given L1-norm & degree n & foo.deg.n\\
+Lex-max representatives under symmetry & symmetry & foo.sym\\
+	& \important{NEEDS} file \File{foo.sym}! &\\
+Positive parts of vectors & positive & foo.pos\\
+\end{tabular}
 
 
 
@@ -801,7 +727,7 @@ In order to \emph{convince} \FourTiTwo{} to create a file
 \File{A3x3.hil.3way} that contains the $5$ magic squares as neat $3\times
 3$ arrays, simply type
 \begin{myverbatim}
-./output 3way 3 3 1 A3x3.hil
+./output --3way 3 3 1 A3x3.hil
 \end{myverbatim}
 
 \begin{Remark}
@@ -947,7 +873,7 @@ Let us compute the Markov basis via the call
 We see that the Markov basis has $36$ elements. Let us arrange them
 into $4\times 4$ arrays with the call
 \begin{myverbatim}
-./output 3way 4 4 1 4x4.mar
+./output --3way 4 4 1 4x4.mar
 \end{myverbatim}
 and have a look into the file \File{4x4.mar.3way}. We are led to the
 conclusion that, up to symmetry, the Markov basis consists of the
@@ -978,7 +904,7 @@ kernel. Write the generators into the file \File{4x4.mar.sym}:
 \end{myverbatim}
 and call
 \begin{myverbatim}
-./output sym 4x4.mar
+./output --sym 4x4.mar
 \end{myverbatim}
 which creates the file \File{4x4.mar.rep}:
 \begin{myverbatim}
@@ -987,7 +913,7 @@ which creates the file \File{4x4.mar.rep}:
 \end{myverbatim}
 Another call
 \begin{myverbatim}
-./output 3way 4 4 1 4x4.mar.rep
+./output --3way 4 4 1 4x4.mar.rep
 \end{myverbatim}
 finally supports our original claim (see \File{4x4.mar.rep.3way}):
 \begin{myverbatim}
@@ -1020,16 +946,7 @@ finally supports our original claim (see \File{4x4.mar.rep.3way}):
 
 
 
-
-
-
-
-
-
-
-
-
-
+\begin{comment}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %\newpage
@@ -1090,10 +1007,6 @@ manual\_v1.1.pdf & \\
 \end{tabular}
 
 
-
-
-
-
 \subsection{How to Cite \FourTiTwo{}}
 
 Although \FourTiTwo{} is free software for non-commercial use, your
@@ -1122,10 +1035,6 @@ or applications please acknowledge it by referencing it as
 
 
 
-
-
-
-
 \subsection{Acknowledgments}
 
 We are truly grateful to several people for many suggestions and
@@ -1135,6 +1044,10 @@ following collection of names, our thanks goes to (in alphabetical
 order): Maya Ahmed, Jes\'us De Loera, Serkan Hosten, Diana Maclagan,
 Kristen Nairn, R\"udiger Schultz, Bernd Sturmfels, Seth Sullivant,
 Rekha Thomas, Ruriko Yoshida. 
+
+
+\end{comment}
+
 
 
 \begin{thebibliography}{99}
