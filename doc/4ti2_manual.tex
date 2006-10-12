@@ -292,8 +292,8 @@ adds new extensions to the file name with every call.
 
 
 \section{Invoking \FourTiTwo{}}
-Let us present the different calls to \FourTiTwo{} according to the set or
-the information one wants to compute.
+%Let us present the different calls to \FourTiTwo{} according to the set or
+%the information one wants to compute.
 
 
 
@@ -324,6 +324,7 @@ If you call \File{rays} instead of \File{qsolve} changes the default sign
 settings from $0$ to $1$ for all variables. These settings can be overwritten 
 using \File{foo.sign}.
 
+\begin{center}
 \begin{tabular}{|l|l|l|}
 \hline
 Input files    & foo & foo.lat\\
@@ -331,9 +332,6 @@ Input files    & foo & foo.lat\\
 Optional files & foo.rhs &  \\
 	       & foo.rel &  \\
 	       & foo.sign & foo.sign \\
-\hline
-Options        & none    & none\\
-\hline
 \hline
 Invocation     & ./qsolve foo & ./qsolve foo\\
 Output files   & foo.qhom     & foo.qhom\\
@@ -345,7 +343,11 @@ Output files   & foo.cir       & foo.cir\\
 Invocation     & ./rays foo & ./rays foo\\
 Output files   & foo.ray   & foo.ray\\
 \hline
+Options        & -q, - -quiet & same\\
+	       & -h, - -help & same\\
+\hline
 \end{tabular}
+\end{center}
 
 \begin{Note}
   If present, \File{qsolve} will always use \File{foo}. If you wish to 
@@ -382,6 +384,7 @@ If you call \File{hilbert} instead of \File{zsolve} changes the default sign
 settings from $0$ to $1$ for all variables. These settings can be overwritten 
 using \File{foo.sign}.
 
+\begin{center}
 \begin{tabular}{|l|l|l|}
 \hline
 Input files    & foo & foo.lat\\
@@ -391,8 +394,6 @@ Optional files & foo.rhs &  \\
 	       & foo.sign & foo.sign \\
                & foo.ub  & foo.ub \\
                & foo.lb  & foo.lb \\
-\hline
-Options        & none    & none\\
 \hline
 Invocation     & ./zsolve foo & ./zsolve foo\\
 Output files   & foo.zinhom   & foo.zinhom\\
@@ -405,7 +406,11 @@ Output files   & foo.gra      & foo.gra\\
 Invocation     & ./hilbert foo & ./hilbert foo\\
 Output files   & foo.hil       & foo.hil\\
 \hline
+Options        & -q, - -quiet & same\\
+	       & -h, - -help & same\\
+\hline
 \end{tabular}
+\end{center}
 
 \begin{Note}
   If present, \File{zsolve/graver/hilbert} will always use \File{foo}. 
@@ -415,120 +420,194 @@ Output files   & foo.hil       & foo.hil\\
 
 
 
-\subsection{Lattice ideals: groebner, markov}
+\subsection{Lattice ideals: groebner, markov, walk, normalform}
 
+Let $\Lattice\subseteq\Z^n$ be given by generators in \File{foo.lat} 
+or by an integer matrix in \File{foo}. We wish to compute (truncated) 
+generators (\File{markov}) and (truncated) Gr\"obner bases 
+(\File{groebner}) of the corresponding (truncated) lattice ideal. 
+Moreover, we wish to (\File{walk}) from one Gr\"obner basis to another 
+Gr\"obner basis with respect to a different term ordering. Then, we 
+wish to compute a normal form of a monomial with respect to a given 
+Gr\"obner basis (\File{normalform}). And finally, we wish to solve 
+integer programs via truncated Gr\"obner bases (\File{minimize}).
 
-\begin{comment}
-\subsection{Gr\"obner Bases}
-Let $A$ be the matrix of interest and let it be given in
-\File{fileName}. We want to compute a Gr\"obner basis of the toric
-ideal $I_A$ associated with $A$. If no cost vector is specified in
-\File{fileName.cost}, a degrevlex Gr\"obner basis with respect to
-$x_1<x_2<\ldots<x_n$ is computed.
-
-\vspace{15pt}
-\begin{Problem}
-Compute the Gr\"obner basis of $I_A$ with respect to default
-or given ordering.
-\end{Problem}
-\begin{myverbatim}
-./groebner fileName
-\end{myverbatim} 
-\begin{Result}
-\File{fileName.gro}
-\end{Result}
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+Input files    & foo or foo.lat\\
+\hline
+Optional files & foo.urs         \\
+	       & foo.zsol        \\
+	       & foo.weights     \\
+               & foo.weights.max \\
+\hline
+Invocation     & ./markov foo \\
+Output files   & foo.mar      \\
+\hline
+Options        & -g, - -generation=ALG \\
+               & ALG='hybrid' (default) \\
+	       & ALG='project-and-lift' \\
+	       & ALG='saturation' \\
+	       & -m, - -minimal=STATE \\
+               & STATE='on' (default) \\
+	       & STATE='off' \\
+	       & -m, - -minimal=STATE \\
+               & STATE='on' (default) \\
+	       & STATE='off' \\
+	       & -t, - -truncation=TRUNC \\
+               & TRUNC='ip' (default) \\
+	       & TRUNC='lp' \\
+	       & TRUNC='weight' \\
+	       & TRUNC='none' \\
+	       & -f, - -output-freq=n \\
+	       & -q, - -quiet \\
+	       & -h, - -help \\
+\hline
+\end{tabular}
+\end{center}
 
 \begin{Note}
-  If present, lattice generators will be read automatically from
-  \File{fileName.lat}.
+  If present, \File{markov} will always use \File{foo}. 
+  If you wish to use \File{foo.lat} as input, you need to drop the file 
+  \File{foo}.
 
-  If present, cost vector will be read automatically from
-  \File{fileName.cost}. Default term ordering is changed to term
-  ordering compatible with cost vector.
+  \File{markov} always produces output, even if target file exists.
 \end{Note}
 
 
 
 
-\subsection{Markov Bases}
-Let $A$ be the matrix of interest and let it be given in
-\File{fileName}. We want to compute a minimal generating set (Markov
-basis) of the toric ideal $I_A$ associated with $A$. If no Gr\"obner
-basis of $I_A$ is present, it is computed. Then a Markov basis of
-$I_A$ is extracted from the Gr\"obner basis using the same term ordering
-as for the Gr\"obner basis computation.
-
-\vspace{15pt}
-\begin{Problem}
-Compute a Markov basis of $I_A$ with respect to default or given
-ordering. 
-\end{Problem}
-\begin{myverbatim}
-./markov fileName
-\end{myverbatim} 
-\begin{Result}
-\File{fileName.mar}
-\end{Result}
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+Input files    & foo or foo.lat \\
+\hline
+Optional files & foo.urs         \\
+	       & foo.zsol        \\
+	       & foo.weights     \\
+               & foo.weights.max \\
+               & foo.cost        \\
+\hline
+Invocation     & ./groebner foo \\
+Output files   & foo.gro        \\
+\hline
+Options        & -a, - -algorithm=ALG \\
+               & ALG='fifo' (default) \\
+	       & ALG='weighted' \\
+	       & ALG='inhomogeneous' \\
+	       & -c, - -gebauer-moeller \\
+	       & -r, - -auto-reduce-freq=n \\
+	       & -f, - -output-freq=n \\
+	       & -q, - -quiet \\
+	       & -h, - -help \\
+\hline
+\end{tabular}
+\end{center}
 
 \begin{Note}
-  If present, the Gr\"obner basis of $I_A$ is used to extract a Markov
-  basis from it.
-
-  If present, cost vector will be read automatically from
-  \File{fileName.cost}. Default term ordering in \Command{groebner}
-  and in \Command{markov} is changed to term ordering compatible with
-  cost vector.
+  If present, \File{groebner} will always use \File{foo}. 
+  If you wish to use \File{foo.lat} as input, you need to drop the 
+  file \File{foo}. If present, \File{groebner} will use \File{foo.mar}.
+  \File{groebner} always produces output, even if target file exists.
 \end{Note}
 
 
 
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+Input files    & foo or foo.lat \\
+               & foo.cost.start \\
+               & foo.gro.start  \\
+\hline
+Optional files & foo.urs         \\
+	       & foo.zsol        \\
+	       & foo.weights     \\
+               & foo.weights.max \\
+               & foo.cost        \\
+\hline
+Invocation     & ./walk foo \\
+Output files   & foo.gro        \\
+\hline
+Options        & -a, - -algorithm=ALG \\
+               & ALG='fifo' (default) \\
+	       & ALG='weighted' \\
+	       & ALG='inhomogeneous' \\
+	       & -c, - -gebauer-moeller \\
+	       & -r, - -auto-reduce-freq=n \\
+	       & -f, - -output-freq=n \\
+	       & -q, - -quiet \\
+	       & -h, - -help \\
+\hline
+\end{tabular}
+\end{center}
 
 
 
-
-\subsection{Integer Programming (Normal Form)}
-Let $A$ be a matrix given in \File{fileName}, let $c$ be a cost vector
-given in \File{fileName.cost}, and let $z_0$ be an integer point given in 
-\File{fileName.feas}. We want to compute an optimum to
-\[
-\min\{c^\intercal z:Az=Az_0,z\in\Z^n_+\}
-\] 
-by computing the Gr\"obner basis of the toric ideal $I_A$ with respect
-to a term ordering compatible with $c$ and by computing the normal
-form of $z_0$ with respect to this Gr\"obner basis.
-
-\vspace{15pt}
-\begin{Problem}
-Compute an optimum to $\min\{c^\intercal z:Az=Az_0,z\in\Z^n_+\}$.
-\end{Problem}
-\begin{myverbatim}
-./minimize fileName
-\end{myverbatim} 
-\begin{Result}
-\File{fileName.min}
-\end{Result}
-
-\begin{Note}
-  This function \important{NEEDS} \File{fileName.cost} and
-  \File{fileName.feas}.
-
-  If present, the Gr\"obner basis will be read automatically from
-  \File{fileName.gro}. Otherwise, it will be computed.
-\end{Note}
-
-\end{comment}
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+Input files    & foo or foo.lat \\
+               & foo.feas \\
+\hline
+Optional files & foo.urs         \\
+	       & foo.gro         \\
+               & foo.cost        \\
+\hline
+Invocation     & ./normalform foo \\
+Output files   & foo.nf           \\
+\hline
+Options        & -q, - -quiet \\
+	       & -h, - -help \\
+\hline
+\end{tabular}
+\end{center}
 
 
 
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+Input files    & foo or foo.lat \\
+               & foo.feas \\
+\hline
+Optional files & foo.urs         \\
+	       & foo.rhs         \\
+               & foo.weights     \\
+               & foo.weights.max \\
+	       & foo.cost        \\
+\hline
+Invocation     & ./minimize foo \\
+Output files   & foo.min        \\
+\hline
+Options        & -a, - -algorithm=ALG \\
+               & ALG='fifo' (default) \\
+	       & ALG='weighted' \\
+	       & ALG='inhomogeneous' \\
+	       & -c, - -gebauer-moeller \\
+	       & -r, - -auto-reduce-freq=n \\
+	       & -f, - -output-freq=n \\
+	       & -q, - -quiet \\
+	       & -h, - -help \\
+\hline
+\end{tabular}
+\end{center}
 
-\subsection{Additional Functionality: output}
+
+
+\subsection{Additional Functionality: output, basis, hermite}
 \FourTiTwo{} provides some more functionality that helps to transform
 the output files into files readable by other programs, or to extract
 subsets that fulfill additional properties. All this can be achieved
-by the function \Command{output}.
+by the function \Command{output}. The standard call is
 
+\begin{myverbatim}
+./output --[option name] foo
+\end{myverbatim}
 
-\begin{tabular}{lll}
+\begin{tabular}{|l|l|l|}
+\hline
 Vectors in Maple format & maple & foo.maple\\
 Binomials in variables $x[1],...,x[n]$ & bin & foo.bin\\
 $0-\pm 1$ vectors & 0-1 & foo.0-1\\
@@ -540,11 +619,46 @@ Vectors with given L1-norm & degree n & foo.deg.n\\
 Lex-max representatives under symmetry & symmetry & foo.sym\\
 	& \important{NEEDS} file \File{foo.sym}! &\\
 Positive parts of vectors & positive & foo.pos\\
+\hline
 \end{tabular}
 
+To compute a lattice basis for $\ker(A)$ use \File{basis}.
+
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+Input files    & foo \\
+\hline
+Optional files & none \\
+\hline
+Invocation     & ./basis foo \\
+Output files   & foo.lat     \\
+\hline
+Options        & -q, - -quiet \\
+	       & -h, - -help \\
+\hline
+\end{tabular}
+\end{center}
 
 
+To compute the Hermite normal form of $A$ use \File{basis}. The result 
+is printed only to the screen.
 
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+Input files    & foo \\
+\hline
+Optional files & none \\
+\hline
+Invocation     & ./hermite foo \\
+Output files   & none     \\
+\hline
+Options        & -q, - -quiet \\
+	       & -h, - -help \\
+\hline
+\end{tabular}
+\end{center}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
