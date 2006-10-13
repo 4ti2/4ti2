@@ -1,0 +1,3 @@
+#!/bin/sh
+../../check.template qsolve -p arb -m $@
+../../check.template qsolve -p arb -s $@

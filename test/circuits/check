@@ -1,0 +1,3 @@
+#!/bin/sh
+../check.template circuits $@
+#../check.template circuits -s $@

@@ -1,0 +1,3 @@
+#!/bin/sh
+../../check.template groebner -p arb -afifo
+../../check.template groebner -p arb -aweighted

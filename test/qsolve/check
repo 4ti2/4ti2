@@ -1,0 +1,3 @@
+#!/bin/sh
+../check.template qsolve -m -o maxcutoff $@
+../check.template qsolve -s -o maxinter $@

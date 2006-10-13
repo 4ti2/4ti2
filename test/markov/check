@@ -1,0 +1,3 @@
+#!/bin/sh
+../check.template markov -ghybrid $@
+../check.template markov -gproject-and-lift $@
