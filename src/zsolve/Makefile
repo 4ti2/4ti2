@@ -16,10 +16,50 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
+CC = gcc
+LD = ld
+BINDIR = ../../bin
+BINARY_NAME = ${BINDIR}/zsolve
+LIBDIR = ../../lib
+LIBARY_NAME = ${LIBDIR}/libzsolve.so
 
-# TODO: Change this Makefile and add the zsolve source files to this directory.
-# Make sure that all executables are copied into the directory ../../bin.
+SCRIPTS = ${BINDIR}/hilbert ${BINDIR}/graver
 
-default:
+OBJDIR = ../../obj/zsolve
+OBJECTS = ${OBJDIR}/defs.o ${OBJDIR}/vector.o ${OBJDIR}/vectorarray.o ${OBJDIR}/linearsystem.o ${OBJDIR}/indexarray.o ${OBJDIR}/lattice.o ${OBJDIR}/matrix.o ${OBJDIR}/varproperties.o ${OBJDIR}/valuetrees.o ${OBJDIR}/cputime.o ${OBJDIR}/libzsolve.o
+SOLVE_OBJECTS = ${OBJDIR}/solve.o ${OBJDIR}/opts.o
+
+# release?
+#DEFINES += -DNDEBUG
+
+CFLAGS = ${DEFINES}
+ifeq (${HOSTTYPE},sun4)
+CC=cc
+CFLAGS += -fast -xarch=generic
+LDFLAGS = -G
+else
+CFLAGS += -Wall -O3 -fomit-frame-pointer -fpic
+LDFLAGS = -shared
+endif
+
+all: ${LIBARY_NAME} ${BINARY_NAME} ${SCRIPTS}
+
+${OBJDIR}/%.o : %.c
+	@mkdir -p ${OBJDIR}
+	${CC} ${CFLAGS} -c $< -o $@
+
+${LIBARY_NAME}: ${OBJECTS}
+	@mkdir -p ${LIBDIR}
+	${CC} ${LDFLAGS} -o ${LIBARY_NAME} ${OBJECTS}
+
+${BINARY_NAME}: ${OBJECTS} ${SOLVE_OBJECTS}
+	@mkdir -p ${BINDIR}
+	${CC} ${CFLAGS} -o ${BINARY_NAME} ${OBJECTS} ${SOLVE_OBJECTS}
+
+${SCRIPTS}: ${BINDIR}/% : %
+	@mkdir -p ${BINDIR}
+	cp -p $^ $@
+	@touch $@
 
 clean:
+	rm -rf ${OBJDIR} ${LIBDIR} ${BINARY_NAME}

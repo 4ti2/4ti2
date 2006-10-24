@@ -31,4 +31,4 @@ check:
 # Remove automatically generated files.
 clean:
 	cd src && $(MAKE) clean
-	rm -rf obj bin
+	rm -rf obj bin lib

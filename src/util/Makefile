@@ -87,9 +87,7 @@ $(SRC:%=$(LIB4ti2)(%.o)): $(LIB4ti2)(%.o): %.c
 #-- Generate header dependencies and include them into the Makefile.
 $(SRC:%=%.d): %.d: %.c
 	@echo Generate header dependencies for $*.c ...
-	@set -e; $(CC) -MM $(CPPFLAGS) $< \
-		| $(PERL) -ne 's|$*\.o[ :]*|$(LIB4ti2)($*.o) $@:|g;print'>$@;\
-		[ -s $@ ] || rm -f $@
+	$(CC) -MM -MT'$(LIB4ti2)($*.o) $@' $(CPPFLAGS) $< > $@
 
 
 #-- This is a dummy generation of an empty file needed as a workaround

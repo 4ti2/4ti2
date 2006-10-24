@@ -1,0 +1,51 @@
+4ti2 -- A software package for algebraic, geometric and combinatorial
+problems on linear spaces.
+
+Copyright (C) 2006 4ti2 team.
+ 
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
+
+COMPILING 4ti2
+==============
+
+Run the following commands with the 4ti2 directory:
+
+        make
+        make check
+
+You will need glpk and gmp installed first (see below).
+
+The first command, 'make', compiles all the executables which are placed in the
+4ti2/bin directory. The second command, 'make check', runs a lot of automatic
+checks. This will take a while.  If a check fails, then please notify the 4ti2
+team.
+
+You will need gcc version 3.4 or higher. If you are using an earlier version,
+then the arithmetic overflow checking will probably not work for the 64 bit
+precision version. You can turn off overflow checking by removing the
+compilation option '-ftrapv' from the makefile 'src/groebner/Makefile.inc'.
+
+You will need an installed version of glpk (linear programming software). See
+the website http://www.gnu.org/software/glpk for more information. The
+version 4.7 has been tested.
+
+You will also need an installed version of gmp, The GNU MP Bignum Library, (see
+http://www.swox.com/gmp/ for more details). Versions 4.2.1 and 4.1.4 have been
+tested. If you are compiling a version of gmp from the source, make sure that
+you enable c++ support (--enable-cxx configure option).  If you do not have a
+version of gmp installed, then running 'make' *should* compile 4ti2 but without
+arbitrary precision support (32 bit and 64 bit precision support will compile);
+the compilation will fail with an error saying that it cannot find the file
+"gmp.h".

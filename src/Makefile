@@ -20,11 +20,15 @@
 # 4ti2 Makefile
 
 # By default compile 4ti2 with 32 bit precision, 64 bit precision, and arbitrary precision.
-default:  util_target groebner_target zsolve_target
+default:  util_target zsolve_target groebner_target 
 
 # The following target compiles everything in the util directory.
 util_target:
 	cd util && $(MAKE)
+
+# The following target compiles everything in the util directory.
+zsolve_target:
+	cd zsolve && $(MAKE)
 
 # The following target compiles everything in the groebner directory.
 groebner_target: groebner_int32 groebner_int64 groebner_gmp
@@ -40,10 +44,6 @@ groebner_int64:
 # The following target compiles 4ti2 groebner with arbitrary precision.
 groebner_gmp:
 	cd groebner && $(MAKE) INT=gmp
-
-# The following target compiles everything in the util directory.
-zsolve_target:
-	cd zsolve && $(MAKE)
 
 clean:
 	cd util && $(MAKE) clean
