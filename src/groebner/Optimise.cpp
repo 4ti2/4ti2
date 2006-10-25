@@ -221,6 +221,7 @@ Optimise::compute_infeasible(
 
         delete projection;
         projection = next_projection;
+        next_projection = 0;
     }
     delete projection;
     std::cerr << "Software Error: Unexpected program execution.\n";

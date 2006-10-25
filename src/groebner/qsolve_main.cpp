@@ -194,7 +194,9 @@ _4ti2_::qsolve_main(int argc, char **argv)
     {
         subspace->sort();
         std::string subspace_filename(matrix_filename + ".qfree");
-        output(subspace_filename.c_str(), *subspace);
+        std::ofstream subspace_file(subspace_filename.c_str());
+        subspace_file << subspace->get_number() << " " << dim << "\n";
+        print(subspace_file, *subspace, 0, dim);
     }
 
     delete matrix;

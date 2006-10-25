@@ -59,8 +59,7 @@ _4ti2_::walk_main(int argc, char **argv)
     VectorArray* coststart = input_VectorArray(feasible->get_dimension(), coststart_filename.c_str());
     if (coststart == 0)
     {
-        std::cerr << "Input Error: could not find " << groold_filename << "\n";
-        exit(1);
+        coststart = new VectorArray(0,gro->get_size());
     }
 
     // Read in the file with the new cost vectors.

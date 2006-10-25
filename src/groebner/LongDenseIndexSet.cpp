@@ -80,7 +80,7 @@ LongDenseIndexSet::resize(Size s)
     {
         BlockType* bs = new BlockType[n];
         for (Index i = 0; i < n; ++i) { bs[i] = blocks[i]; }
-        delete blocks;
+        delete [] blocks;
         blocks = bs;
         size = s;
         unset_unused_bits();
@@ -90,5 +90,9 @@ LongDenseIndexSet::resize(Size s)
         BlockType* bs = new BlockType[n];
         for (Index i = 0; i < num_blocks; ++i) { bs[i] = blocks[i]; }
         for (Index i = num_blocks; i < n; ++i) { bs[i] = 0; }
+        delete [] blocks;
+        blocks = bs;
+        size = s;
+        unset_unused_bits();
     }
 }

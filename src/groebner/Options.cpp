@@ -164,11 +164,11 @@ Options:\n\
                              `32', and `arbitrary' (only `arb` is needed).\n\
   -a, --algorithm=ALG        Select ALG as the completion procedure for\n\
                              computing Groebner bases. ALG is one of\n\
-                             `fifo' (default), `weighted', or 'unbounded.'\n\
+                             `fifo', `weighted', or 'unbounded.'\n\
   -g, --generation=ALG       Select ALG as the procedure for computing \n\
                              a generating set or Markov basis. ALG is\n\
                              one of `hybrid' (default), `project-and-lift',\n\
-                             or 'saturation'. The default is hyrbid.\n\
+                             or 'saturation'. The default is hybrid.\n\
   -t, --truncation=TRUNC     Set TRUNC as the truncation method.  TRUNC is\n\
                              of the following: `ip', `lp', `weight' (default),\n\
                              or `none'.\n\
@@ -181,6 +181,8 @@ Options:\n\
   -f, --output-freq=n        Set the frequency of output (default is 1000).\n\
   -q, --quiet                Do not output anything to the screen.\n\
   -h, --help                 Display this help and exit.\n\
+\n\
+Only short options are supported on sun machines.\n\
 \n";
 }
 
