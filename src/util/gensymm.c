@@ -26,7 +26,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 /* Author   : Raymond Hemmecke                                       */
 /*                                                                   */
 /* Created    : 26-AUG-02                                            */
-/* $Id$             */
 /*                                                                   */
 /* ----------------------------------------------------------------- */
 #include <stdio.h>

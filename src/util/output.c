@@ -26,8 +26,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 /* Author   : Raymond Hemmecke   (implementation)                    */
 /* Co-Author: Ralf Hemmecke      (data structure, code optimization) */
 /*                                                                   */
-/* $Id$             */
-/*                                                                   */
 /*------------------------------------------------------------------ */
 #include "myheader.h"
 #include "orbit.h"
