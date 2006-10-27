@@ -36,7 +36,7 @@ NO. STATUS DESCRIPTION
            checked.
 3.  FIXED  The zsolve source fails to build on some macOSX machines because the
            gcc option --shared is not supported.
-4.  OPEN   The util source fails to build on some macOSX machines because the
+4.  FIXED  The util source fails to build on some macOSX machines because the
            Makefile creates an empty library which sometimes is not allowed
            on macOSX.
 5.  OPEN   graver outputs an empty foo.gra file when there are definitely
