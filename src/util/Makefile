@@ -17,25 +17,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 
-#------------------------------------------------------------------
-#--# This Makefile has only been tested with GNU make.
-#--#
-#--# This Makefile requires perl perl, v5.6.1 to be installed. See
-#--# the Makefile variable PERL which points to the executable.
-#------------------------------------------------------------------
-#--# Type
-#--# 	make
-#--# in order to see the available commands of this Makefile and a
-#--# short description.
-#------------------------------------------------------------------
+# This Makefile has only been tested with GNU make.
 
 # Convention for this file: top-level rules come before the rules that
-# are used, so that one can basically read the Makefile from begin to
+# are used, so that one can basically read the Makefile from beginning to
 # end.
-
-# Where are we? The make command should be started from the 
-# top-level 4ti2 directory.
-ROOT4ti2 := $(shell pwd)
 
 include Makefile.inc
 
@@ -46,12 +32,9 @@ CFLAGS = -O3 -Wall
 ##??CFLAGS2 = -g
 
 # Additional flags for the linker.
-LIBS = -lm -L. -l4ti2
+LIBS =
 
 COMPILER=$(CC) $(CFLAGS)
-
-# Name of the library of all .o files.
-LIB4ti2=lib4ti2.a
 
 #------------------------------------------------------------------
 #-- The commands ...
@@ -64,44 +47,37 @@ all: exe
 exe: $(EXECUTABLES) install
 
 #-- Generate executable files
-$(EXECUTABLES): %: %.d %_main.c $(LIB4ti2)
-	@echo Compiling executable $(*F) ...
-	@$(COMPILER) $@_main.c -o $@ $(LIBS)
+$(EXECUTABLES): %: $(OBJDIR)/%_main.o $(DEP) $(OBJ)
+	$(COMPILER) $< $(OBJ) $(LIBS) -o $@
 
 # Copies the executables into the bin directory.
 install: $(EXECUTABLES)
 	@mkdir -p $(BINDIR)
-	cp -r $(EXECUTABLES) $(BINDIR)
+	cp -p $(EXECUTABLES) $(BINDIR)
 
-#-- Create the library:
-$(LIB4ti2): $(SRC:%=$(LIB4ti2)(%.o))
-
-
-#-- Compile a file and put the .o file into the library.
-$(SRC:%=$(LIB4ti2)(%.o)): $(LIB4ti2)(%.o): %.c
-	@$(COMPILER) -c $<
-	@$(AR) $(ARREPLFLAGS) $(LIB4ti2) $*.o
-	@$(RM) $*.o
-
+#-- Compile a source file.
+$(OBJDIR)/%.o: %.c $(OBJDIR)/%.d
+	@mkdir -p $(OBJDIR)
+	$(COMPILER) -c $< -o $@
 
 #-- Generate header dependencies and include them into the Makefile.
-$(SRC:%=%.d): %.d: %.c
-	@echo Generate header dependencies for $*.c ...
-	$(CC) -MM -MT'$(LIB4ti2)($*.o) $@' $(CPPFLAGS) $< > $@
-
+$(OBJDIR)/%.d: %.c
+	@mkdir -p $(OBJDIR)
+	@echo "Generating dependencies for $<"
+	@$(CC) -MM -MT'$@ $(@:.d=.o)' $(CPPFLAGS) $< > $@
 
 #-- This is a dummy generation of an empty file needed as a workaround
 #-- for the following `include'.
 Makefile.d:
 	touch $@
 
-include Makefile.d $(wildcard *.d)
+include Makefile.d $(wildcard $(OBJDIR)/*.d)
 
 # For each executable we generate a wrapper file that just contains a
 # main function which calles the appropriate main function from the
 # library, namely NAME_main().
 # If there is no header file NAME.h we generate even that.
-$(EXECUTABLES:%=%_main.c):
+$(MAINSRC):
 	@echo Generating source for $(@F) ...
 	@echo "#include \"myheader.h\""			>  $@
 	@echo "#include \"$(*F:%_main=%).h\""		>> $@
@@ -114,7 +90,7 @@ $(EXECUTABLES:%=%_main.c):
 	fi)
 
 clean:
-	rm -f $(SRC:%=%.d) $(SRC:%=%.o) $(LIB4ti2) $(EXECUTABLES) $(EXECUTABLES:%=%_main.c)
+	rm -rf $(OBJDIR) $(EXECUTABLES) $(MAINSRC)
 
 ###################################################################
 #EMACS Local Variables:

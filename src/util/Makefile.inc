@@ -26,57 +26,11 @@
 #------------------------------------------------------------------
 #-- The programs that we use within the Makefile
 #------------------------------------------------------------------
-# Path to the perl executable.
-PERL=perl
-
 # The C compiler we use.
 #CC=cc
 CC=g++
 
-# Create the directory including missing parent dirs.
-MKDIR=mkdir
-
-# Copy files without changing their timestamp.
-CP=cp -p
-
-# To create the release archive we need to put a script together with
-# the tgz archive.
-CAT=cat
-
-# To produce the archive... (flags for replacing an archive member)
-AR=ar
-ARREPLFLAGS=rv
-
-# Remove a file.
-RM=rm
-
-# Pack into an archive
-TAR=tar
-TARFLAGS=cvf
-
-# Unpack
-UNTAR=tar
-UNTARFLAGS=xvf
-
-# Compress the archive
-GZIP=gzip
-GZIPFLAGS=
-
-# Uncompress the archive
-GUNZIP=gunzip
-GUNZIPFLAGS=
-
-# Search regular expressions in a text file
-GREP=grep
-
-# Someone should know how to compile the documentation
-LATEX=latex
-
 #------------------------------------------------------------------
-
-# Where are we? The make command should be started from the top-level
-# 4ti2 directory.
-ROOT4ti2 := $(shell pwd)
 
 # The names of the final executables.
 EXECUTABLES= \
@@ -84,14 +38,25 @@ EXECUTABLES= \
   gensymm \
   output \
 
-# The source files that should go to the library.
+# The source files.
 SRC= \
-  genmodel \
-  gensymm \
-  orbit \
-  output \
-  print \
-  vector
+  genmodel.c \
+  gensymm.c \
+  orbit.c \
+  output.c \
+  print.c \
+  vector.c
+
+# The main source files for each of the executables.
+MAINSRC = $(EXECUTABLES:%=%_main.c)
+
+# The directory for the object and dependency files.
+OBJDIR = ../../obj/util
+# The object files to create.
+OBJ = $(SRC:%.c=$(OBJDIR)/%.o)
+
+# The dependency files to create.
+DEP = $(OBJ:%.o=%.d) $(MAINSRC:%.c=$(OBJDIR)/%.d)
 
 # The place to put the executables.
 BINDIR = ../../bin
