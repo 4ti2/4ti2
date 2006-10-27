@@ -42,7 +42,7 @@ CFLAGS += -Wall -O3 -fomit-frame-pointer -fpic
 LDFLAGS = -shared
 endif
 
-all: ${LIBARY_NAME} ${BINARY_NAME} ${SCRIPTS}
+all: ${BINARY_NAME} ${SCRIPTS}
 
 ${OBJDIR}/%.o : %.c
 	@mkdir -p ${OBJDIR}
