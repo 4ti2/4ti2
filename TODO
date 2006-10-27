@@ -1,0 +1,77 @@
+4ti2 -- A software package for algebraic, geometric and combinatorial
+problems on linear spaces.
+
+Copyright (C) 2006 4ti2 team.
+ 
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
+-------------------------------------------------------------------------------
+
+This file contains suggested improvements and bugs for the 4ti2 release 1.3.
+Any improvements that are implemented and any bugs that are fixed should remain
+in this file until the next release thus providing a way of keeping track of
+changes from one release to another.
+
+====
+BUGS
+====
+
+NO. STATUS DESCRIPTION
+----------------------
+1.  FIXED  qsolve prints the file foo.qfree incorrectly. It fails to project
+           out the slack variables.
+2.  OPEN   The zsolve executable does not have executable permission in the
+           binary distribution for linux. The other distributions need to be
+           checked.
+3.  FIXED  The zsolve source fails to build on some macOSX machines because the
+           gcc option --shared is not supported.
+4.  OPEN   The util source fails to build on some macOSX machines because the
+           Makefile creates an empty library which sometimes is not allowed
+           on macOSX.
+5.  OPEN   graver outputs an empty foo.gra file when there are definitely
+           homogeneous solutions if there is an all negative foo.sign file.
+
+============
+IMPROVEMENTS
+============
+
+NO. STATUS DESCRIPTION 
+----------------------
+1.  OPEN   We need a command line option for changing the output format so
+           that output does not overwrite itself.
+2.  OPEN   We need batch files for windows.
+3.  OPEN   qsolve should handle rational input and output.
+4.  OPEN   zsolve should handle rational input.
+5.  OPEN   qsolve should handle inhomogeneous solutions, i.e. foo.rhs. Until
+           it can handle foo.rhs it should emit an error. This depends upon
+           improvement number 3.
+6.  OPEN   Add the ability to output to print initial ideals.
+7.  OPEN   The automatic checking should not run the long checks.  The long
+           checks should be moved to a separate performance directory perhaps
+           which is used primarily for performance profiling. These long
+           checks probably should not be in the source distribution since they
+           are quite large.
+8.  OPEN   The --quiet option should probably mean that absolutely no output
+           is printed to the screen.
+9.  OPEN   The unbounded algorithm for groebner does not output status
+           information often enough.
+10. OPEN   We need an online user manual.
+11. OPEN   The webpage needs to be updated so that the function descriptions
+           are correct.
+12. OPEN   The --help output should be complete and correct for all functions.
+           The function should print all of its options as well as its input
+           and output files.
+13. OPEN   Add the ability to groebner to handle the foo.rel file.
+14. OPEN   4ti2 needs better checking of the output status returned by glpk.
+15. OPEN   Allow long options on sun machines.
