@@ -134,20 +134,81 @@ CircuitOptions::process_options(int argc, char** argv)
 void
 CircuitOptions::print_usage()
 {
-    std::cerr << "Usage: " << Globals::exec << " [options] <filename>\n\n";
+    if (Globals::exec == "rays")
+    {
+        std::cerr << "Computes the extreme rays of a cone.\n";
+        std::cerr << "Usage: rays [options] <PROJECT>\n\n";
+        std::cerr << "\
+Input Files:\n\
+  PROJECT             A matrix (optional if lattice basis is given).\n\
+  PROJECT.lat         A lattice basis (optional if matrix is given).\n\
+  PROJECT.sign        The sign constraints of the variables ('1' means\n\
+                      non-negative and '0' means a free variable).\n\
+                      It is optional, and the default is all non-negative.\n\
+  PROJECT.rel         The relations on the matrix rows ('<','>','=').\n\
+                      It is optional and the default is all '='.\n\
+                      The matrix must be given with this file.\n\
+Output Files:\n\
+  PROJECT.ray         The extreme rays of the cone.\n\
+  PROJECT.qfree       A basis for the linear subspace of the cone.\n\
+                      If this file does not exist then the linear subspace\n\
+                      is trivial.\n\n";
+    }
+    else if (Globals::exec == "circuits")
+    {
+        std::cerr << "Computes the circuits of a cone.\n";
+        std::cerr << "Usage: circuits [options] <PROJECT>\n\n";
+        std::cerr << "\
+Input Files:\n\
+  PROJECT             A matrix (optional if lattice basis is given).\n\
+  PROJECT.lat         A lattice basis (optional if matrix is given).\n\
+  PROJECT.sign        The sign constraints of the variables ('1' means\n\
+                      non-negative, '0' means a free variable, and '2' means\n\
+                      both non-negative and non-positive).\n\
+                      It is optional, and the default is all '2'.\n\
+  PROJECT.rel         The relations on the matrix rows ('<','>','=').\n\
+                      It is optional and the default is all '='.\n\
+                      The matrix must be given with this file.\n\
+Output Files:\n\
+  PROJECT.cir         The circuits of the cone.\n\
+  PROJECT.qfree       A basis for the linear subspace of the cone.\n\
+                      If this file does not exist then the linear subspace\n\
+                      is trivial.\n\n";
+    }
+    else if (Globals::exec == "qsolve")
+    {
+        std::cerr << "Computes a generator description of a cone.\n";
+        std::cerr << "Usage: qsolve [options] <PROJECT>\n\n";
+        std::cerr << "\
+Input Files:\n\
+  PROJECT             A matrix (optional if lattice basis is given).\n\
+  PROJECT.lat         A lattice basis (optional if matrix is given).\n\
+  PROJECT.sign        The sign constraints of the variables ('1' means\n\
+                      non-negative, '0' means a free variable, and '2' means\n\
+                      both non-negative and non-positive).\n\
+                      It is optional, and the default is all free.\n\
+  PROJECT.rel         The relations on the matrix rows ('<','>','=').\n\
+                      It is optional and the default is all '='.\n\
+                      The matrix must be given with this file.\n\
+Output Files:\n\
+  PROJECT.qhom        The homogeneous generators of the linear system.\n\
+  PROJECT.qfree       A basis for the linear subspace of the cone.\n\
+                      If this file does not exist then the linear subspace\n\
+                      is trivial.\n\n";
+    }
     std::cerr << "\
 Options:\n\
   -p, --precision=PREC       Select PREC as the integer arithmetic precision.\n\
                              PREC is one of the following: `64' (default),\n\
                              `32', and `arbitrary' (only `arb` is needed).\n\
-  -m, --matrix                Use the Matrix algorithm (default).\n\
-  -s, --support               Use the Support algorithm.\n\
-  -o, --order=ORDERING        Set ORDERING as the ordering in which the columns\n\
-                              are chosen. The possible orderings are `maxinter',\n\
-                              `minindex', `maxcutoff' (default), and `mincutoff'.\n\
-  -f, --output_freq=n         Set the frequency of output (default is 1000).\n\
-  -q, --quiet                 Do not output anything to the screen.\n\
-  -h, --help                  Display this help and exit.\n\
+  -m, --matrix               Use the Matrix algorithm (default).\n\
+  -s, --support              Use the Support algorithm.\n\
+  -o, --order=ORDERING       Set ORDERING as the ordering in which the columns\n\
+                             are chosen. The possible orderings are `maxinter',\n\
+                             `minindex', `maxcutoff' (default), and `mincutoff'.\n\
+  -f, --output_freq=n        Set the frequency of output (default is 1000).\n\
+  -q, --quiet                Do not output anything to the screen.\n\
+  -h, --help                 Display this help and exit.\n\
 \n\
 Only short options are supported on sun machines.\n\
 \n";

@@ -76,9 +76,7 @@ BasicOptions::process_options(int argc, char** argv)
             output = SILENT;
             out = new std::ofstream;
             break;
-        case 'h':
-        case '?':
-        case ':':
+        case 'h': case '?': case ':':
             print_usage();
             exit(1);
             break;
@@ -105,7 +103,38 @@ BasicOptions::process_options(int argc, char** argv)
 void
 BasicOptions::print_usage()
 {
-    std::cerr << "Usage: " << Globals::exec << " [options] <filename>\n\n";
+    if (Globals::exec == "zbasis")
+    {
+        std::cerr << "Computes an integer lattice basis.\n";
+        std::cerr << "Usage: zbasis [options] <PROJECT>\n\n";
+        std::cerr << "\
+Input Files:\n\
+  PROJECT             A matrix (needed).\n\
+Output Files:\n\
+  PROJECT.lat         A lattice basis.\n";
+    }
+    else if (Globals::exec == "normalform")
+    {
+        std::cerr << "Computes the normal form of a list of feasible points.\n";
+        std::cerr << "Usage: normalform [options] <PROJECT>\n\n";
+        std::cerr << "\
+Input Files:\n\
+  PROJECT             A matrix (optional if lattice basis is given).\n\
+  PROJECT.lat         A lattice basis (optional if matrix is given).\n\
+  PROJECT.gro         The Groebner basis of the lattice (needed).\n\
+  PROJECT.cost        The cost matrix (optional, default is degrevlex).\n\
+                      Ties are broken with degrevlex.\n\
+  PROJECT.feas        An list of integer feasible solutions (needed).\n\
+  PROJECT.sign        The sign constraints of the variables ('1' means\n\
+                      non-negative and '0' means a free variable).\n\
+                      It is optional, and the default is all non-negative.\n\
+Output Files:\n\
+  PROJECT.nf          The normal forms of the feasible solutions.\n\n";
+    }
+    else
+    {
+        std::cerr << "Usage: " << Globals::exec << " [options] <filename>\n\n";
+    }
     std::cerr << "\
 Options:\n\
   -p, --precision=PREC       Select PREC as the integer arithmetic precision.\n\

@@ -125,9 +125,7 @@ MinimizeOptions::process_options(int argc, char** argv)
             else if (std::string("arbitrary").find(optarg) == 0) { }
             else { unrecognised_option_argument("-p, --precision"); }
             break;
-        case 'h':
-        case '?':
-        case ':':
+        case 'h': case '?': case ':':
             print_usage();
             exit(1);
             break;
@@ -154,7 +152,24 @@ MinimizeOptions::process_options(int argc, char** argv)
 void
 MinimizeOptions::print_usage()
 {
-    std::cerr << "Usage: " << Globals::exec << " [options] <filename>\n\n";
+    std::cerr << "Computes the minimal solution of an integer lattice program.\n";
+    std::cerr << "Usage: minimize [options] <PROJECT>\n\n";
+    std::cerr << "\
+Input Files:\n\
+  PROJECT             A matrix (optional only if lattice basis is given).\n\
+  PROJECT.lat         A lattice basis (optional only if matrix is given).\n\
+  PROJECT.cost        The cost vector. Exactly one vector allowed.\n\
+  PROJECT.zsol        An integer solution to specify a fiber (needed).\n\
+  PROJECT.sign        The sign constraints of the variables ('1' means\n\
+                      non-negative and '0' means a free variable).\n\
+                      It is optional, and the default is all non-negative.\n\
+Output Files:\n\
+  PROJECT.min         The minimal solution for the given fiber.\n\n";
+// TODO: What happens with the weights files? Should we allow PROJECT.weights
+// but not PROJECT.weights.max?
+//PROJECT.weights     The weight vectors used for truncation (optional).\n
+//PROJECT.weights.max The maximum weights used for truncation.\n
+//                    This file is needed when PROJECT.weights exists.\n
     std::cerr << "\
 Options:\n\
   -p, --precision=PREC       Select PREC as the integer arithmetic precision.\n\
@@ -162,10 +177,10 @@ Options:\n\
                              `32', and `arbitrary' (only `arb` is needed).\n\
   -a, --algorithm=ALG        Select ALG as the completion procedure for\n\
                              computing Groebner bases. ALG is one of\n\
-                             `fifo' (default), `weighted', or 'unbounded.'\n\
+                             `fifo', `weighted', or 'unbounded.'\n\
   -t, --truncation=TRUNC     Set TRUNC as the truncation method.  TRUNC is\n\
                              of the following: `ip', `lp', `weight' (default),\n\
-                             or `none'.\n\
+                             or `none'. Only relevant if `zsol' is given.\n\
   -r, --auto-reduce-freq=n   Set the frequency of auto reduction.\n\
                              (default is 2500).\n\
   -f, --output-freq=n        Set the frequency of output (default is 1000).\n\

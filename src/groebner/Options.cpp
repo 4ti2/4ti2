@@ -127,9 +127,7 @@ Options::process_options(int argc, char** argv)
             else if (std::string("arbitrary").find(optarg) == 0) { }
             else { unrecognised_option_argument("-p, --precision"); }
             break;
-        case 'h':
-        case '?':
-        case ':':
+        case 'h': case '?': case ':':
             print_usage();
             exit(1);
             break;
@@ -156,7 +154,51 @@ Options::process_options(int argc, char** argv)
 void
 Options::print_usage()
 {
-    std::cerr << "Usage: " << Globals::exec << " [options] <filename>\n\n";
+    if (Globals::exec == "groebner")
+    {
+        std::cerr << "Computes the Groebner basis of a lattice.\n";
+        std::cerr << "Usage: groebner [options] <PROJECT>\n\n";
+        std::cerr << "\
+Input Files:\n\
+  PROJECT             A matrix (optional if lattice basis is given).\n\
+  PROJECT.lat         A lattice basis (optional if matrix is given).\n\
+  PROJECT.cost        The cost matrix (optional, default is degrevlex).\n\
+                      Ties are broken with degrevlex.\n\
+  PROJECT.sign        The sign constraints of the variables ('1' means\n\
+                      non-negative and '0' means a free variable).\n\
+                      It is optional, and the default is all non-negative.\n\
+  PROJECT.mar         The Markov basis/generating set of the lattice (optional).\n\
+  PROJECT.weights     The weight vectors used for truncation (optional).\n\
+  PROJECT.weights.max The maximum weights used for truncation.\n\
+                      This file is needed when PROJECT.weights exists.\n\
+  PROJECT.zsol        An integer solution to specify a fiber (optional).\n\
+                      The integer solution is used for truncation.\n\
+Output Files:\n\
+  PROJECT.gro         The Groebner basis of the lattice.\n\n";
+    }
+    else if (Globals::exec == "markov")
+    {
+        std::cerr << "Computes the markov basis/generating set of a lattice.\n";
+        std::cerr << "Usage: markov [options] <PROJECT>\n\n";
+        std::cerr << "\
+Input Files:\n\
+  PROJECT             A matrix (optional only if lattice basis is given).\n\
+  PROJECT.lat         A lattice basis (optional only if matrix is given).\n\
+  PROJECT.sign        The sign constraints of the variables ('1' means\n\
+                      non-negative and '0' means a free variable).\n\
+                      It is optional, and the default is all non-negative.\n\
+  PROJECT.weights     The weight vectors used for truncation (optional).\n\
+  PROJECT.weights.max The maximum weights used for truncation.\n\
+                      This file is needed when PROJECT.weights exists.\n\
+  PROJECT.zsol        An integer solution to specify a fiber (optional).\n\
+                      The integer solution is used for truncation.\n\
+Output Files:\n\
+  PROJECT.mar         The Markov basis/generating set of the lattice.\n";
+    }
+    else
+    {
+        std::cerr << "Usage: " << Globals::exec << " [options] <filename>\n\n";
+    }
     std::cerr << "\
 Options:\n\
   -p, --precision=PREC       Select PREC as the integer arithmetic precision.\n\
@@ -171,7 +213,7 @@ Options:\n\
                              or 'saturation'. The default is hybrid.\n\
   -t, --truncation=TRUNC     Set TRUNC as the truncation method.  TRUNC is\n\
                              of the following: `ip', `lp', `weight' (default),\n\
-                             or `none'.\n\
+                             or `none'. Only relevant if `zsol' is given.\n\
   -m, --minimal=STATE        If STATE is `yes' (default), then 4ti2 will\n\
                              compute a minimal Markov basis. If STATE is\n\
                              'no', then the Markov basis will not \n\
