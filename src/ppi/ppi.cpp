@@ -1,5 +1,6 @@
 // Computation of the primitive partition identities (PPI)
-// Copyright 1998, 1999, 2002, 2003 Matthias Koeppe <mkoeppe@mail.math.uni-magdeburg.de>
+// Copyright (C) 1998, 1999, 2002, 2003 Matthias Koeppe <mkoeppe@mail.math.uni-magdeburg.de>
+// Copyright (C) 2006 4ti2 team.
 // $Id$
 
 // This program is free software; you can redistribute it and/or modify it
@@ -27,11 +28,12 @@
 #define _NOTHREADS
 // STL would use slow mutexes 
 
-#include <stdio.h>
+#include <cstdio>
+#include <cassert>
 #include <set>
 #include <vector>
-#include <iostream.h>
-#include <iomanip.h>
+#include <iostream>
+#include <iomanip>
 #include <sys/times.h>
 #include <time.h>
 #include <limits.h>
@@ -152,7 +154,7 @@ public:
   SimpleVectorSet *the_set;
   Vector *node;
   SimpleVectorSetIterator(SimpleVectorSet *theset, size_t ndex, Vector *ode) :
-    the_set(theset), index(ndex), node(ode) {}
+    index(ndex), the_set(theset), node(ode) {}
   Vector &operator*();
   friend bool operator == (const SimpleVectorSetIterator &a, const SimpleVectorSetIterator &b);
   friend bool operator != (const SimpleVectorSetIterator &a, const SimpleVectorSetIterator &b);
@@ -373,7 +375,7 @@ public:
   unsigned char advance;
   signed char isleaf;
   Node(char leaf, unsigned char adv = 1) : 
-    isleaf(leaf), advance(adv) {}
+    advance(adv), isleaf(leaf) {}
   void *operator new(size_t s) {
     return malloc(s);
   }
@@ -418,9 +420,9 @@ class DigitalTree {
 public:
   int Dimension;
   DigitalTree(int dimension) : 
-    Dimension(dimension), 
     root(new InnerNode(0)),
-    AdvanceNodes(0) {}
+    AdvanceNodes(0),
+    Dimension(dimension) {}
   ~DigitalTree() { 
     if (root) Destroy(root);
     /*if (AdvanceNodes) delete AdvanceNodes;*/ /* FIXME: really kill 'em */}
@@ -607,6 +609,7 @@ bool DigitalTree::Insert(const Vector &v)
       return true; 
     }
   }
+  assert(0);
 }
 
 class VectorSet {
