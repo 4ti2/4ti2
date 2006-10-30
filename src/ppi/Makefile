@@ -27,7 +27,7 @@ OBJFILES = $(SRCFILES:%.cpp=$(OBJDIR)/%.o)
 # The dependency files.
 DEPFILES = $(OBJFILES:%.o=%.d)
 # The directory for the object and dependency files.
-OBJDIR = ../../obj
+OBJDIR = ../../obj/ppi
 # The executable to build.
 EXECUTABLE = $(BINDIR)/ppi
 # The binary directory where all executables are placed.

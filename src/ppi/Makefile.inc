@@ -29,13 +29,6 @@ INCLUDE=
 # The include path for libraries.
 LIBINCLUDE=
 
-# 4ti2 uses the glpk linear programming library (GLPL).
-LIBS+=
-# Add include path to the file glpk.h if necessary.
-INCLUDE+=
-# Add library include path for the library libglpk if necessary.
-LIBINCLUDE+=
-
 # The optimisation flags.
 CXXFLAGS += -O3 -DNDEBUG
 # Uncomment the next line for debugging.
