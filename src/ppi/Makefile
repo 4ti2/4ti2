@@ -29,7 +29,7 @@ DEPFILES = $(OBJFILES:%.o=%.d)
 # The directory for the object and dependency files.
 OBJDIR = ../../obj
 # The executable to build.
-EXECUTABLE = $(BINDIR)/4ti2_ppi
+EXECUTABLE = $(BINDIR)/ppi
 # The binary directory where all executables are placed.
 BINDIR = ../../bin
 
