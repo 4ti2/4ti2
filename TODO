@@ -75,3 +75,5 @@ NO. STATUS DESCRIPTION
 13. OPEN   Add the ability to groebner to handle the foo.rel file.
 14. OPEN   4ti2 needs better checking of the output status returned by glpk.
 15. OPEN   Allow long options on sun machines.
+16. OPEN   Add the ability to groebner, markov, and minimize to handle the
+           foo.rhs file.
