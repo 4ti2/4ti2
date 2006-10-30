@@ -1,0 +1,53 @@
+#!/bin/bash
+# 4ti2 -- A software package for algebraic, geometric and combinatorial
+# problems on linear spaces.
+#
+# Copyright (C) 2006 4ti2 team.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+SCRIPT=`which $0`
+DIR=`dirname $SCRIPT`
+EXECPATH=$DIR/../../bin
+
+# The executable we are using.
+echo "$EXECPATH/$@"
+# Check that the executable exists.
+if [ ! -f "$EXECPATH/$1" ]
+then
+    echo "Error: Unable to find executable '$EXECPATH/$1'."
+    exit 1
+fi
+
+FILES=`ls -1 *.chk | sed 's/\.[a-z]*\.chk//g' | sort -u`
+echo $FILES
+for file in $FILES; do
+    CHECK_FILES=`ls -1 ${file}.*.chk | egrep "^${file}.[a-z]*.chk" | sed s/\.chk//g`
+    rm -f $CHECK_FILES
+    COMMAND="$@ `echo $file | sed 's/ppi//'` "
+    echo -n "$COMMAND ..."
+    TIME=`$EXECPATH/$COMMAND 2>&1 | grep "Elapsed time" | tail -1 | awk '/^Elapsed time:/ { print $3, $4 }'`
+    STATUS="passed"
+    for check_file in $CHECK_FILES; do
+        diff -b -q ${check_file}.chk ${check_file} > /dev/null
+        if [ $? != 0 ]; then
+            STATUS="FAILED"
+            break
+        fi
+    done
+    echo -n " $STATUS "
+    echo "$TIME"
+    rm -f $CHECK_FILES
+done
