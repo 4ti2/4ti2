@@ -51,6 +51,17 @@ _4ti2_::qsolve_main(int argc, char **argv)
 {
     CircuitOptions::instance()->process_options(argc, argv);
 
+    std::string rhs_filename(CircuitOptions::instance()->filename+".rhs");
+    std::ifstream rhs_file(rhs_filename.c_str());
+    if (rhs_file.good())
+    {
+        std::cerr << "ERROR: The file " << rhs_filename;
+        std::cerr << " is not allowed with " << Globals::exec << ".\n";
+        std::cerr << "ERROR: Remove it and call ";
+        std::cerr << Globals::exec << " again.\n";
+        exit(1);
+    }
+
     // Read in the file with the matrix.
     std::string matrix_filename(CircuitOptions::instance()->filename);
     VectorArray* matrix = input_VectorArray(matrix_filename.c_str());
