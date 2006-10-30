@@ -35,18 +35,29 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
-#include <sys/times.h>
-#include <time.h>
 #include <limits.h>
 #include <functional>
 
 using namespace std;
 
-double user_time()
+// Timer stuff taken from src/zsolve/cputime.c
+#ifdef _POSIX_TIMERS
+#include <sys/time.h>
+#include <sys/resource.h>
+#endif
+#include <time.h>
+
+double getCPUTime()
 {
-  struct tms t;
-  times(&t);
-  return (double)t.tms_utime / CLK_TCK;
+#ifdef _POSIX_TIMERS
+	struct rusage usage;
+
+	getrusage(RUSAGE_SELF, &usage);
+
+	return (double)usage.ru_utime.tv_sec + 1e-6*usage.ru_utime.tv_usec;
+#else
+	return (double) clock() / CLOCKS_PER_SEC;
+#endif
 }
 
 #define TALKATIVE 0
@@ -365,7 +376,7 @@ typedef set<Vector, less<Vector> > SimpleVectorSet;
 Vector Vector::operator-() const 
 {
   Vector v(size());
-  for (int i = 0; i<size(); i++) v[i] = -(*this)[i];
+  for (size_t i = 0; i<size(); i++) v[i] = -(*this)[i];
   return v;
 }
 
@@ -611,6 +622,7 @@ bool DigitalTree::Insert(const Vector &v)
     }
   }
   assert(0);
+  return false;
 }
 
 class VectorSet {
@@ -633,7 +645,7 @@ public:
 
 ostream &operator<<(ostream &s, const Vector &z)
 {
-  for (int i = 0; i<z.size(); i++)
+  for (size_t i = 0; i<z.size(); i++)
     s << setw(4) << (int)(z[i]);
   return s;
 }
@@ -1168,7 +1180,7 @@ int main(int argc, char *argv[])
       }
       cerr << " done." << endl;
     }
-    cerr << "Elapsed time: " << user_time() << " seconds" << endl;
+    cerr << "Elapsed time: " << getCPUTime() << " seconds" << endl;
   }
   delete V;
 }
