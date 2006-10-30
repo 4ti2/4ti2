@@ -33,6 +33,7 @@
 #include <set>
 #include <vector>
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <sys/times.h>
 #include <time.h>
@@ -662,12 +663,16 @@ void writeppi(ostream &c, Vector z, int n)
 }
 
 static int ppicount;
+#ifdef WITH_STATS
 static int dupcount, simplecount, goodcount, redcount, hitcount[2], failcount[2];
+#endif 
 
 /* rangereport parameters */
 static Vector rangemin, rangemax;
+#ifdef WITH_STATS
 static int LastNonzeroPos;
-
+#endif
+ 
 /////////////////
 
 //
@@ -1062,14 +1067,30 @@ VerySimpleVectorSet *ExtendPPI(VerySimpleVectorSet *Pn, int n)
   return Pn;
 }
 
+static void usage()
+{
+  cerr << "usage: ppi [--binary-output] N" << endl;
+  exit(1);
+}
+ 
 int main(int argc, char *argv[])
 {
-  // PPI n = 5.
-  int n = 0;
-  if (argc >= 2) {
-    sscanf(argv[1], "%d", &n);
+  // Command-line handling
+  int n;
+  bool binary = false;
+  switch (argc) {
+  case 3:
+    if (strcmp(argv[1], "--binary-output") != 0)
+      usage();
+    binary = true;
+    // FALLTHRU
+  case 2:
+    if (sscanf(argv[argc-1], "%d", &n) != 1)
+      usage();
+    break;
+  default:
+    usage();
   }
-  if (!n) n = 5;
 
   // Setup PPI set for n=2
   VerySimpleVectorSet *V;
@@ -1097,20 +1118,57 @@ int main(int argc, char *argv[])
 #endif
 	 << endl;
     if (i==n-1) { 
-      cerr << "### Writing data file..." << flush;
-      char fname[20];
-      sprintf(fname, "ppi%d.dat", n);
-      FILE *f = fopen(fname, "wb");
-      char cn = n;
-      fwrite(&cn, 1, 1, f);
-      VerySimpleVectorSet::iterator j = V->begin();
-      for (; j!=V->end(); ++j) {
-	fwrite(&(*j)[0], 1, n, f);
+      cerr << "### Writing data file " << flush;
+      if (binary) {
+	// Output binary format.
+	char fname[20];
+	sprintf(fname, "ppi%d.dat", n);
+	cerr << fname << flush;
+	FILE *f = fopen(fname, "wb");
+	char cn = n;
+	fwrite(&cn, 1, 1, f);
+	VerySimpleVectorSet::iterator j = V->begin();
+	for (; j!=V->end(); ++j) {
+	  fwrite(&(*j)[0], 1, n, f);
+	}
+	fclose(f);
       }
-      fclose(f);
-      cerr << "done." << endl;
+      else {
+	// Output standard 4ti2 format:
+	{
+	  // The .gra (Graver) file:
+	  char fname[20];
+	  sprintf(fname, "ppi%d.gra", n);
+	  cerr << fname << flush;
+	  ofstream f(fname);
+	  // #Vectors, Dimension.
+	  f << V->count << " " << n << endl;
+	  // The vectors.
+	  VerySimpleVectorSet::iterator j = V->begin();
+	  for (; j!=V->end(); ++j) {
+	    int k;
+	    for (k = 0; k<n; k++)
+	      f << (int) (*j)[k] << " ";
+	    f << endl;
+	  }
+	}
+	{
+	  // Also output a matrix file.
+	  char fname[20];
+	  sprintf(fname, "ppi%d.mat", n);
+	  cerr << " and matrix file " << fname << flush;
+	  ofstream f(fname);
+	  // #Rows, Dimension.
+	  f << 1 << " " << n << endl;
+	  int k;
+	  for (k = 1; k<=n; k++)
+	    f << k << " ";
+	  f << endl;
+	}
+      }
+      cerr << " done." << endl;
     }
-    cerr << "Elapsed time: " << user_time() << endl;
+    cerr << "Elapsed time: " << user_time() << " seconds" << endl;
   }
   delete V;
 }
