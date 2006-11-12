@@ -581,6 +581,22 @@ int main(int argc, char *argv[])
 				BaseName[BaseLength] = '\0';
 				if (stream!=NULL)
 				{
+					if (OGraver || OHilbert)
+					{
+						fclose(stream);
+						printf("Input Error: No rhs file is allowed with --graver and --hilbert!\n");
+						printf("Input Error: Please delete %s.rhs and rerun zsolve\n", BaseName);
+						if (LogFile)
+						{
+							fprintf(LogFile, "Input Error: No rhs file is allowed with --graver and --hilbert!\n");
+							fprintf(LogFile, "Input Error: Please delete %s.rhs and rerun zsolve\n", BaseName);
+							fclose(LogFile);
+						}
+						deleteMatrix(matrix);
+						free(BaseName);
+						exit(1);
+					}
+					
 					fscanf(stream, "%d", &i);
 					if (i!=1)
 					{
@@ -894,7 +910,13 @@ int main(int argc, char *argv[])
 			{
 				for (j=0; j<ctx->Homs->Variables && ctx->Homs->Data[i][j]==0; j++)
 					;
-				if (j==ctx->Homs->Variables || ctx->Homs->Data[i][j]>=0)
+				if (!flag) // maybe not symmetric!
+				{
+					for (j=0; j<ctx->Homs->Variables; j++)
+						if (!checkVariableBounds(ctx->Lattice->Properties, j, -ctx->Homs->Data[i][j]))
+							flag = true;
+				}
+				if (flag)
 					count++;
 			}
 
@@ -903,7 +925,14 @@ int main(int argc, char *argv[])
 			{
 				for (j=0; j<ctx->Homs->Variables && ctx->Homs->Data[i][j]==0; j++)
 					;
-				if (j==ctx->Homs->Variables || ctx->Homs->Data[i][j]>=0)
+				flag = j==ctx->Homs->Variables || ctx->Homs->Data[i][j]>=0; // all zero || [1st nonzero] >= 0 
+				if (!flag) // maybe not symmetric!
+				{
+					for (j=0; j<ctx->Homs->Variables; j++)
+						if (!checkVariableBounds(ctx->Lattice->Properties, j, -ctx->Homs->Data[i][j]))
+							flag = true;
+				}
+				if (flag)
 				{
 					fprintVector(stream, ctx->Homs->Data[i], ctx->Homs->Variables);
 					fprintf(stream, "\n");

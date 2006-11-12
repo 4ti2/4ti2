@@ -85,8 +85,9 @@ void printUsage(char *program)
 	printf("FILE        matrix\n");
 	printf("FILE.rhs    right hand side (optional)\n");
 	printf("FILE.rel    relations (<, >, =, p)\n");
-	printf("FILE.type   type of columns (optional)\n");
-	printf("FILE.sign   limitations for columns (optional)\n");
+	printf("FILE.sign   sign of columns (optional)\n");
+	printf("FILE.lb     lower bounds columns (optional)\n");
+	printf("FILE.ub     upper bounds columns (optional)\n");
 	printf("FILE.backup backup file\n");
 	printf("FILE.zinhom inhomogeneous part of the solution\n");
 	printf("FILE.zhom   homogeneous part of the solution\n");

@@ -30,7 +30,7 @@ OBJECTS = ${OBJDIR}/defs.o ${OBJDIR}/vector.o ${OBJDIR}/vectorarray.o ${OBJDIR}/
 SOLVE_OBJECTS = ${OBJDIR}/solve.o ${OBJDIR}/opts.o
 
 # release?
-#DEFINES += -DNDEBUG
+DEFINES += -DNDEBUG
 
 CFLAGS = ${DEFINES}
 ifeq (${HOSTTYPE},sun4)
