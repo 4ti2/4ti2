@@ -55,7 +55,8 @@ ifeq ($(INT),int64)
 CXXFLAGS+= -D_4ti2_INT64_
 # The flag -ftrapv means that arithmetic overflow checking is enabled.
 # This only works with the g++ compiler version 3.4 and newer versions.
-CXXFLAGS+=-ftrapv
+TRAPV=-ftrapv
+CXXFLAGS+=$(TRAPV)
 endif
 
 # 32 bit precision flags.
