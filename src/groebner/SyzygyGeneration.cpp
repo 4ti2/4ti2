@@ -21,6 +21,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #include "SyzygyGeneration.h"
 #include "Statistics.h"
+#include "Globals.h"
+#include "Debug.h"
 
 #include <iostream>
 #include <iomanip>
@@ -82,8 +84,20 @@ SyzygyGeneration::generate(
 {
     Binomial b;
     std::vector<std::vector<int> > back_syzergies(end-start);
+    unsigned int num_iterations = end - start;
     for (int i = end-1; i >= (int) start; --i)
     {
+        if (num_iterations % Globals::output_freq == 0)
+        {
+            // TODO: (U) should not be hard wired here.
+            *out << "\r" << Globals::context << "(U)";
+            *out << " Size: " << std::setw(8) << bs.get_number();
+            *out << ", ToDo: " << std::setw(8);
+            *out << num_iterations << std::flush;
+            DEBUG_4ti2(*out << "\n";)
+            DEBUG_4ti2(*out << bs << "\n";)
+        }
+
         const Binomial& bi = bs[i];
         std::vector<std::pair<IntegerType,int> > ordering;
         ordering.reserve(i);
@@ -122,7 +136,14 @@ SyzygyGeneration::generate(
             if (index >= 0) back_syzergies[index].push_back(i);
         }
         back_syzergies[i-start].clear();
+        num_iterations--;
     }
+    *out << "\r" << Globals::context << "(U)";
+    *out << " Size: " << std::setw(8) << bs.get_number();
+    *out << ", ToDo: " << std::setw(8);
+    *out << 0 << std::flush;
+    DEBUG_4ti2(*out << "\n";)
+    DEBUG_4ti2(*out << bs << "\n";)
 }
 
 bool
