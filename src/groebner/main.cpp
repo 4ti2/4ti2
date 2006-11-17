@@ -48,6 +48,8 @@ typedef std::map<std::string,int (*)(int,char**)> ExecutableMap;
 void signal_handler(int)
 {
     std::cerr << "\nERROR: Arithmetic exception.\n";
+    std::cerr << "ERROR: Try running 4ti2 with arbitrary precision\n";
+    std::cerr << "ERROR: by using the option `-parb'\n";
     exit(1);
 }
 
@@ -71,7 +73,7 @@ For details, see the file COPYING.\n\
  
 try
 {
-#ifndef _4ti2_GMP_
+#ifdef _4ti2_INT64_
     // Set the signal handler to catch arithmetic signals.
     // TODO: Unfortunately, arithmetic overflow exceptions send a generic
     // SIGABRT signal.
