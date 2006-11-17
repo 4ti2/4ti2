@@ -156,8 +156,8 @@ Options::print_usage()
 {
     if (Globals::exec == "groebner")
     {
-        std::cerr << "Computes the Groebner basis of a lattice.\n";
         std::cerr << "Usage: groebner [options] <PROJECT>\n\n";
+        std::cerr << "Computes the Groebner basis of a lattice.\n";
         std::cerr << "\
 Input Files:\n\
   PROJECT             A matrix (optional if lattice basis is given).\n\

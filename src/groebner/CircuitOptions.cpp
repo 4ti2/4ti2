@@ -136,8 +136,8 @@ CircuitOptions::print_usage()
 {
     if (Globals::exec == "rays")
     {
-        std::cerr << "Computes the extreme rays of a cone.\n";
         std::cerr << "Usage: rays [options] <PROJECT>\n\n";
+        std::cerr << "Computes the extreme rays of a cone.\n";
         std::cerr << "\
 Input Files:\n\
   PROJECT             A matrix (optional if lattice basis is given).\n\

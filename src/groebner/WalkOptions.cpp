@@ -123,8 +123,8 @@ WalkOptions::process_options(int argc, char** argv)
 void
 WalkOptions::print_usage()
 {
-    std::cerr << "Computes the minimal solution of an integer lattice program.\n";
     std::cerr << "Usage: walk [options] <PROJECT>\n\n";
+    std::cerr << "Computes the minimal solution of an integer lattice program.\n";
     std::cerr << "\
 Input Files:\n\
   PROJECT             A matrix (optional only if lattice basis is given).\n\

@@ -105,8 +105,8 @@ BasicOptions::print_usage()
 {
     if (Globals::exec == "zbasis")
     {
-        std::cerr << "Computes an integer lattice basis.\n";
         std::cerr << "Usage: zbasis [options] <PROJECT>\n\n";
+        std::cerr << "Computes an integer lattice basis.\n";
         std::cerr << "\
 Input Files:\n\
   PROJECT             A matrix (needed).\n\
