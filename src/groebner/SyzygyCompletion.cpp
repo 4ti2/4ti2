@@ -23,6 +23,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "SyzygyGeneration.h"
 #include "BasicGeneration.h"
 #include "Globals.h"
+#include "BinomialSetStream.h"
+//#define DEBUG_4ti2(X) X
 #include "Debug.h"
 
 #include <iostream>
@@ -44,8 +46,10 @@ SyzygyCompletion::~SyzygyCompletion()
 bool
 SyzygyCompletion::algorithm(BinomialSet& bs)
 {
+    DEBUG_4ti2(*out << "Initial Binomials:\n" << bs;)
     WeightedBinomialSet s;
     bs.auto_reduce_once();
+    DEBUG_4ti2(*out << "Binomials After Auto Reduction:\n" << bs;)
 
     // long int num_iterations = 0;
     int previous_num = 0;
@@ -63,6 +67,7 @@ SyzygyCompletion::algorithm(BinomialSet& bs)
         *out << ", ToDo: " << std::setw(8);
         *out << current_num - previous_num << std::flush;
         DEBUG_4ti2(*out << "\n";)
+        DEBUG_4ti2(*out << "Binomials:\n" << bs;)
 
         // If there are many binomials to process, then we queue them for
         // processing otherwise we just place them straight into the set of
@@ -87,7 +92,9 @@ SyzygyCompletion::algorithm(BinomialSet& bs)
         previous_num = current_num;
         current_num = bs.get_number();
     }
+    DEBUG_4ti2(*out << "Binomials Before Minimal and Reduced:\n" << bs;)
     bs.minimal();
     bs.reduced();
+    DEBUG_4ti2(*out << "Final Binomials:\n" << bs;)
     return true;
 }
