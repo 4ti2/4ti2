@@ -94,6 +94,7 @@ BinomialSet::reduce(
     bool reducing = true;
     const Binomial* ptr;
     //Statistics::incr_num_reduction_steps();
+    DEBUG_4ti2(unsigned int count = 0;)
     while (reducing)
     {
         reducing = false;
@@ -117,8 +118,11 @@ BinomialSet::reduce(
             DEBUG_4ti2(*out << "+Reduced: " << b << "\n";)
             reducing = true;
             changed = true;
+            DEBUG_4ti2(++count;)
         }
     }
+    DEBUG_4ti2(
+    if (count >= 100) { std::cout << "\nNum reductions = " << count << "\n"; })
     // Now reduce the negative part of the Binomial.
     reducing = true;
     while (reducing)
