@@ -36,7 +36,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <iomanip>
 #include "BitSetStream.h"
 
-//#define DEBUG_4ti2(X)
+//#define DEBUG_4ti2(X) X
 #include "Debug.h"
 
 using namespace _4ti2_;
@@ -113,13 +113,13 @@ SaturationGenSet::compute_bounded(
         VectorArray cost(1,dim,0);
         cost[0][index] = 0;
         sprintf(buffer, "  Sat %3d: Col: %3d ",
-                        urs.get_size()-urs.count()-sat.count(),
-                        index);
+                        urs.get_size()-urs.count()-sat.count(), index);
         Globals::context = buffer;
         cost[0][index] = -1;
 
         Completion algorithm;
         algorithm.compute(feasible, cost, sat, gens);
+        DEBUG_4ti2(*out << "Gens:\n" << gens << "\n";)
 
         sat.set(index);
         saturate_zero_columns(gens, sat, urs);
@@ -160,7 +160,7 @@ SaturationGenSet::saturate_zero_columns(
     int num_zero_cols = 0;
     for (Index c = 0; c < gens.get_size(); ++c)
     {
-        if (urs[c] == 0 && is_column_zero(gens, c))
+        if (urs[c] == 0 && sat[c] == 0 && is_column_zero(gens, c))
         {
             sat.set(c);
             ++num_zero_cols;
