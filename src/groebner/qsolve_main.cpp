@@ -63,8 +63,25 @@ _4ti2_::qsolve_main(int argc, char **argv)
     }
 
     // Read in the file with the matrix.
-    std::string matrix_filename(CircuitOptions::instance()->filename);
+    std::string project_filename(CircuitOptions::instance()->filename);
+    VectorArray* project = input_VectorArray(project_filename.c_str());
+    std::string matrix_filename(project_filename + ".mat");
     VectorArray* matrix = input_VectorArray(matrix_filename.c_str());
+    if (matrix != 0 && project != 0)
+    {
+        std::cerr << "INPUT ERROR: Both " << project_filename << " and ";
+        std::cerr << matrix_filename << " exist.\n";
+        std::cerr << "INPUT ERROR: Only one of them allowed (preferably ";
+        std::cerr << matrix_filename << ").\n";
+        exit(1);
+    }
+    if (project != 0)
+    {
+        std::cout << "WARNING: Please specify the matrix in " << matrix_filename;
+        std::cout << " instead of " << project_filename << ".\n";
+        std::cout << "WARNING: The use of " << project_filename << " is obsolete.\n";
+        matrix = project;
+    }
 
     // Read in the file with the lattice basis.
     std::string lattice_filename(CircuitOptions::instance()->filename + ".lat");
@@ -72,23 +89,24 @@ _4ti2_::qsolve_main(int argc, char **argv)
 
     if (matrix == 0 && rays == 0)
     {
-        std::cerr << "Input Error: Could not find either " << matrix_filename;
+        std::cerr << "INPUT ERROR: Could not find either " << project_filename;
         std::cerr << " or " << lattice_filename << ".\n";
         exit(1);
     }
-
     if (matrix != 0 && rays != 0 && matrix->get_size() != rays->get_size())
     {
-        std::cerr << "Input Error: Size mismatch in files " << matrix_filename;
-        std::cerr << " and " << lattice_filename << ".\n";
+        std::cerr << "INPUT ERROR: Size mismatch in files " << lattice_filename;
+        if (project != 0) { std::cerr << " and " << project_filename << ".\n"; }
+        else { std::cerr << " and " << matrix_filename << ".\n"; }
         exit(1);
     }
+
     int dim = 0;
     if (matrix != 0) { dim = matrix->get_size(); }
     else if (rays != 0) { dim = rays->get_size(); }
 
     // Read in the sign of the components.
-    std::string sign_filename(matrix_filename + ".sign");
+    std::string sign_filename(project_filename + ".sign");
     BitSet* urs = new BitSet(dim);
     BitSet* cirs = new BitSet(dim);
     BitSet* rs = new BitSet(dim);
@@ -98,8 +116,8 @@ _4ti2_::qsolve_main(int argc, char **argv)
     input_Sign(sign_filename.c_str(), *rs, *cirs, *urs);
     if (Globals::exec == "rays" && !cirs->empty())
     {
-        std::cerr << "Input Error: Circuit components for `rays' executable.\n";
-        std::cerr << "Input Error: Use the `circuits' executable instead.\n";
+        std::cerr << "INPUT ERROR: Circuit components for `rays' executable.\n";
+        std::cerr << "INPUT ERROR: Use the `circuits' executable instead.\n";
         exit(1);
     }
 
@@ -107,7 +125,7 @@ _4ti2_::qsolve_main(int argc, char **argv)
     {
         // Read in the type of constraints.
         int rank = matrix->get_number();
-        std::string rel_filename(matrix_filename + ".rel");
+        std::string rel_filename(project_filename + ".rel");
         BitSet eq(rank, true); // By default everything is an equality constraint.
         BitSet lt(rank);
         BitSet gt(rank);
@@ -169,7 +187,7 @@ _4ti2_::qsolve_main(int argc, char **argv)
         algorithm.compute(*matrix, *rays, *subspace, *rs);
     }
 
-    std::string output_filename(matrix_filename);
+    std::string output_filename(project_filename);
     if (Globals::exec == "rays")
     {
         output_filename += ".ray";
@@ -204,7 +222,7 @@ _4ti2_::qsolve_main(int argc, char **argv)
     if (!urs->empty())
     {
         subspace->sort();
-        std::string subspace_filename(matrix_filename + ".qfree");
+        std::string subspace_filename(project_filename + ".qfree");
         std::ofstream subspace_file(subspace_filename.c_str());
         subspace_file << subspace->get_number() << " " << dim << "\n";
         print(subspace_file, *subspace, 0, dim);
@@ -231,7 +249,7 @@ input_Sign(const char* sign_filename, BitSet& rs, BitSet& cirs, BitSet& urs)
         rs.zero(); cirs.zero(); urs.zero();
         if (sign->get_number() != 1)
         {
-            std::cerr << "Input Error: Expected one vector in ";
+            std::cerr << "INPUT ERROR: Expected one vector in ";
             std::cerr << sign_filename << "\n";
             exit(1);
         }
@@ -243,13 +261,14 @@ input_Sign(const char* sign_filename, BitSet& rs, BitSet& cirs, BitSet& urs)
             else if (value == 2) { cirs.set(i); } // Circuit component.
             else if (value == -1)
             {
-                std::cerr << "Input Error in file " << sign_filename << "\n";
-                std::cerr << "The value " << value << " is not yet supported in sign vector.\n";
+                std::cerr << "INPUT ERROR: In file " << sign_filename << "\n";
+                std::cerr << "INPUT ERROR: the value " << value;
+                std::cerr << " is not yet supported.\n";
                 exit(1);
             }
             else
             {
-                std::cerr << "Input Error in file " << sign_filename << "\n";
+                std::cerr << "INPUT ERROR in file " << sign_filename << "\n";
                 std::cerr << "Unsupport number " << value << " in sign vector.\n";
                 exit(1);
             }
@@ -275,13 +294,13 @@ input_Rel(const char* rel_filename, BitSet& eq, BitSet& gt, BitSet& lt)
     file >> m >> n;
     if (m != 1)
     {
-        std::cerr << "Input Error: Expected one vector in ";
+        std::cerr << "INPUT ERROR: Expected one vector in ";
         std::cerr << rel_filename << "\n";
         exit(1);
     }
     if (n != rank)
     {
-        std::cerr << "Input Error: Expected length of " << rank;
+        std::cerr << "INPUT ERROR: Expected length of " << rank;
         std::cerr << " instead of " << n << " in " << rel_filename << "\n";
         exit(1);
     }
@@ -301,16 +320,16 @@ input_Rel(const char* rel_filename, BitSet& eq, BitSet& gt, BitSet& lt)
             gt.set(i);
             break;
         default:
-            std::cerr << "Input Error in file " << rel_filename << ".\n";
+            std::cerr << "INPUT ERROR in file " << rel_filename << ".\n";
             std::cerr << "Unrecognised character " << c << "\n";
             std::cerr << "Character should be one of =, <, and >.\n";
         }
     }
     if (file.fail() || file.bad())
     {
-        std::cerr << "Input Error: Badly formatted file " << rel_filename << ".\n";
-        std::cerr << "Input Error: Check the size.\n";
-        std::cerr << "Input Error: Check there are only the characters =, <, and >.\n";
+        std::cerr << "INPUT ERROR: Badly formatted file " << rel_filename << ".\n";
+        std::cerr << "INPUT ERROR: Check the size.\n";
+        std::cerr << "INPUT ERROR: Check there are only the characters =, <, and >.\n";
         exit(1);
     }
 }
