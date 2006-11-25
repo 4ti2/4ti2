@@ -436,10 +436,9 @@ ZSolveContext createZSolveContextFromBackup(FILE *stream, ZSolveLogCallback logc
 void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 {
 	int next;
-	int *map;
 	int split;
 	int count;
-	int i,j;
+	int i,j,k;
 	Vector vector;
 	CPUTime lastbackup = getCPUTime();
 
@@ -517,17 +516,21 @@ void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 	split = -1;
 	count = 0;
 
-	map = createVector(ctx->Variables);
+	for (i = 0; i<ctx->Variables-1; i++) {
+		k = i;
+		for (j=i+1; j<ctx->Variables; j++) {
+			if (ctx->Lattice->Properties[k].Column < 0 || (ctx->Lattice->Properties[j].Column >=0 && ctx->Lattice->Properties[j].Column < ctx->Lattice->Properties[k].Column))
+				k = j;
+		}
+		swapVectorArrayColumns(ctx->Lattice, i, k);
+	}
 
 	for (i=0; i<ctx->Variables; i++)
 	{
 		if (ctx->Lattice->Properties[i].Column == -2)
 			split = i;
 		else if (ctx->Lattice->Properties[i].Column >=0 )
-		{
-			map[ctx->Lattice->Properties[i].Column] = i;
 			count = maxi(count, ctx->Lattice->Properties[i].Column+1);
-		}
 	}
 
 	ctx->Homs = createVectorArray(count);
@@ -541,7 +544,7 @@ void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 	{
 		vector = createVector(count);
 		for (j=0; j<count; j++)
-			vector[j] = ctx->Lattice->Data[i][map[j]];
+			vector[j] = ctx->Lattice->Data[i][j];
 		if (normVector(ctx->Lattice->Data[i], ctx->Current)==0)
 		{
 			for (j=0; j<ctx->Lattice->Variables && ctx->Lattice->Data[i][j]==0; j++)
@@ -555,16 +558,15 @@ void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 			appendToVectorArray(ctx->Inhoms, vector);
 	}
 
-	deleteVector(map);
-
 	printf("\nFinal basis has %d inhomogeneous, %d homogeneous and %d free elements.\n", ctx->Inhoms->Size, ctx->Homs->Size, ctx->Frees->Size);
-        printf("4ti2 Total Time: ");
+  printf("4ti2 Total Time: ");
 	printCPUTime(maxd(getCPUTime() - ctx->AllTime, 0.0));
 	printf("\n");
 
 	if (ctx->LogLevel>0)
 	{
-		fprintf(ctx->LogFile, "\nFinal basis has %d inhomogeneous, %d homogeneous and %d free elements. Time: ", ctx->Inhoms->Size, ctx->Homs->Size, ctx->Frees->Size);
+		fprintf(ctx->LogFile, "\nFinal basis has %d inhomogeneous, %d homogeneous and %d free elements.\n", ctx->Inhoms->Size, ctx->Homs->Size, ctx->Frees->Size);
+		fprintf(ctx->LogFile, "4ti2 Total Time: ");
 		fprintCPUTime(ctx->LogFile, maxd(getCPUTime() - ctx->AllTime, 0.0));
 		fprintf(ctx->LogFile, "\n");
 	}

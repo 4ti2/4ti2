@@ -82,7 +82,7 @@ void printUsage(char *program)
 	printf(" -h, --help                display this help and exit\n");
 
 	printf("\n[Used files]\n\n");
-	printf("FILE        matrix\n");
+	printf("FILE.mat    matrix\n");
 	printf("FILE.rhs    right hand side (optional)\n");
 	printf("FILE.rel    relations (<, >, =, p)\n");
 	printf("FILE.sign   sign of columns (optional)\n");

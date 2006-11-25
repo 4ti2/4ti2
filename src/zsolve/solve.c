@@ -101,6 +101,7 @@ int main(int argc, char *argv[])
 	Matrix matrix = NULL;
 	Vector rhs = NULL;
 	VectorArray Lattice = NULL;
+	Vector vector = NULL;
 
 	LinearSystem initialsystem;
 	ZSolveContext ctx;
@@ -217,7 +218,24 @@ int main(int argc, char *argv[])
 		}
 	
 		// matrix
+		strcat(BaseName, ".mat");
 		stream = fopen(BaseName, "r");
+		BaseName[BaseLength] = '\0';
+
+		if (stream == NULL)
+		{
+			stream = fopen(BaseName, "r");
+			if (stream) {
+				if (OVerbose>0)
+					printf("Matrix file %s.mat not found, falling back to project file %s.\n\n", BaseName, BaseName);
+				if (OLogging>0)
+				{
+					fprintf(LogFile, "Matrix file %s.mat not found, falling back to project file %s.\n\n", BaseName, BaseName);
+					fclose(LogFile);
+				}
+			}
+		}
+
 		if (stream==NULL)
 		{
 			strcat(BaseName, ".lat");
@@ -227,10 +245,10 @@ int main(int argc, char *argv[])
 			{
 				// lattice
 				if (OVerbose>0)
-					printf("Neither matrix file %s nor lattice file %s.lat exists!\n", BaseName, BaseName);
+					printf("Neither matrix file %s.mat nor lattice file %s.lat exists!\n", BaseName, BaseName);
 				if (OLogging>0)
 				{
-					fprintf(LogFile, "Neither matrix file %s nor lattice file %s.lat exists!\n", BaseName, BaseName);
+					fprintf(LogFile, "Neither matrix file %s.mat nor lattice file %s.lat exists!\n", BaseName, BaseName);
 					fclose(LogFile);
 				}
 				free(BaseName);
@@ -910,6 +928,7 @@ int main(int argc, char *argv[])
 			{
 				for (j=0; j<ctx->Homs->Variables && ctx->Homs->Data[i][j]==0; j++)
 					;
+				flag = j==ctx->Homs->Variables || ctx->Homs->Data[i][j]>=0; // all zero || [1st nonzero] >= 0 
 				if (!flag) // maybe not symmetric!
 				{
 					for (j=0; j<ctx->Homs->Variables; j++)
