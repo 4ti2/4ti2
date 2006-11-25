@@ -231,12 +231,17 @@ void getopts(int argc, char **argv)
 
 	if (OHilbert && OGraver)
 	{
-		printf("Input Error: A Combination of --hilbert and --graver is not allowed!\n");
+		printf("Input Error: A combination of --hilbert and --graver is not allowed!\n");
 		exit(1);
 	}
 
 	if (optind>=argc)
 		printUsage(argv[0]);
+
+	if (optind<argc-1) {
+		printf("Input Error: Only one project file is possible: You specified '%s' and '%s'!\n\n", argv[optind], argv[optind+1]);
+		exit(1);
+	}
 
 	BaseLength = strlen(argv[optind]);
 	BaseName = (char *)malloc((BaseLength+10)*sizeof(char));
