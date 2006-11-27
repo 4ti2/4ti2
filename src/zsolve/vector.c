@@ -171,3 +171,12 @@ int gcdVector(Vector vector, int size)
 }
 
 //                                                                            //
+
+int lexCompareInverseVector(Vector vector, int size) {
+	int i = 0;
+	while (i<size && vector[i]==0)
+		i++;
+	return i==size ? 0 : vector[i];
+}
+
+//                                                                            //

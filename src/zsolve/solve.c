@@ -923,42 +923,8 @@ int main(int argc, char *argv[])
 		BaseName[BaseLength] = '\0';
 		if (stream)
 		{
-			count = ctx->Frees->Size;
-			for (i=0; i<ctx->Homs->Size; i++)
-			{
-				for (j=0; j<ctx->Homs->Variables && ctx->Homs->Data[i][j]==0; j++)
-					;
-				flag = j==ctx->Homs->Variables || ctx->Homs->Data[i][j]>=0; // all zero || [1st nonzero] >= 0 
-				if (!flag) // maybe not symmetric!
-				{
-					for (j=0; j<ctx->Homs->Variables; j++)
-						if (!checkVariableBounds(ctx->Lattice->Properties, j, -ctx->Homs->Data[i][j]))
-							flag = true;
-				}
-				if (flag)
-					count++;
-			}
-
-			fprintf(stream, "%d %d\n\n", count, ctx->Homs->Variables);
-			for (i=0; i<ctx->Homs->Size; i++)
-			{
-				for (j=0; j<ctx->Homs->Variables && ctx->Homs->Data[i][j]==0; j++)
-					;
-				flag = j==ctx->Homs->Variables || ctx->Homs->Data[i][j]>=0; // all zero || [1st nonzero] >= 0 
-				if (!flag) // maybe not symmetric!
-				{
-					for (j=0; j<ctx->Homs->Variables; j++)
-						if (!checkVariableBounds(ctx->Lattice->Properties, j, -ctx->Homs->Data[i][j]))
-							flag = true;
-				}
-				if (flag)
-				{
-					fprintVector(stream, ctx->Homs->Data[i], ctx->Homs->Variables);
-					fprintf(stream, "\n");
-				}
-			}
-			fprintf(stream, "\n");
-			fprintVectorArray(stream, ctx->Frees, false);
+			fprintf(stream, "%d %d\n\n", ctx->Graver->Size, ctx->Graver->Variables);
+			fprintVectorArray(stream, ctx->Graver, false);
 			fclose(stream);
 		}
 	}

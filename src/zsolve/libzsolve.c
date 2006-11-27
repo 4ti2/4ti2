@@ -358,6 +358,7 @@ ZSolveContext createZSolveContextFromSystem(LinearSystem initialsystem, FILE *lo
 	ctx->Homs = NULL;
 	ctx->Inhoms = NULL;
 	ctx->Frees = NULL;
+	ctx->Graver = NULL;
 
 	return ctx;
 }
@@ -391,6 +392,7 @@ ZSolveContext createZSolveContextFromLattice(VectorArray lattice, FILE *logfile,
 	ctx->Homs = NULL;
 	ctx->Inhoms = NULL;
 	ctx->Frees = NULL;
+	ctx->Graver = NULL;
 
 	return ctx;
 }
@@ -429,6 +431,7 @@ ZSolveContext createZSolveContextFromBackup(FILE *stream, ZSolveLogCallback logc
 	ctx->Homs = NULL;
 	ctx->Inhoms = NULL;
 	ctx->Frees = NULL;
+	ctx->Graver = NULL;
 
 	return ctx;
 }
@@ -439,6 +442,8 @@ void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 	int split;
 	int count;
 	int i,j,k;
+	bool is_hom, is_free, has_symmetric;
+	int lex_cmp;
 	Vector vector;
 	CPUTime lastbackup = getCPUTime();
 
@@ -536,26 +541,43 @@ void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 	ctx->Homs = createVectorArray(count);
 	ctx->Inhoms = createVectorArray(count);
 	ctx->Frees = createVectorArray(count);
+	ctx->Graver = createVectorArray(count);
 
 	if (split<0)
 		appendToVectorArray(ctx->Inhoms, createZeroVector(count));
 
 	for (i=0; i<ctx->Lattice->Size; i++)
 	{
-		vector = createVector(count);
-		for (j=0; j<count; j++)
-			vector[j] = ctx->Lattice->Data[i][j];
-		if (normVector(ctx->Lattice->Data[i], ctx->Current)==0)
-		{
-			for (j=0; j<ctx->Lattice->Variables && ctx->Lattice->Data[i][j]==0; j++)
-				;
-			if (j==ctx->Lattice->Variables || ctx->Lattice->Data[i][j]>0)
-				appendToVectorArray(ctx->Frees, vector);
+		vector = ctx->Lattice->Data[i];
+		is_hom = split < 0 || vector[split] == 0;
+		is_free = true;
+		for (j=0; j<ctx->Lattice->Variables; j++)
+			if (vector[j] != 0 && !ctx->Lattice->Properties[j].Free)
+				is_free = false;
+		has_symmetric = true;
+		for (j=0; j<ctx->Lattice->Variables; j++)
+			if (!checkVariableBounds(ctx->Lattice->Properties, j, -vector[j]))
+				has_symmetric = false;
+		lex_cmp = lexCompareInverseVector(vector, ctx->Lattice->Variables);
+		
+		assert(!is_free || has_symmetric);
+		
+		if (is_free) {
+			if (!has_symmetric || lex_cmp>0) {
+				appendToVectorArray(ctx->Frees, copyVector(vector, count));
+				appendToVectorArray(ctx->Graver, copyVector(vector, count));
+			}
 		}
-		else if (split<0 || ctx->Lattice->Data[i][split] == 0)
-			appendToVectorArray(ctx->Homs, vector);
-		else
-			appendToVectorArray(ctx->Inhoms, vector);
+		else {
+			if (is_hom) {
+				appendToVectorArray(ctx->Homs, copyVector(vector, count));
+				if (!has_symmetric || lex_cmp>0)
+					appendToVectorArray(ctx->Graver, copyVector(vector, count));
+			}
+			else {
+				appendToVectorArray(ctx->Inhoms, copyVector(vector, count));
+			}
+		}
 	}
 
 	printf("\nFinal basis has %d inhomogeneous, %d homogeneous and %d free elements.\n", ctx->Inhoms->Size, ctx->Homs->Size, ctx->Frees->Size);
@@ -582,6 +604,7 @@ void deleteZSolveContext(ZSolveContext ctx, bool deleteresult)
 		deleteVectorArray(ctx->Homs);
 		deleteVectorArray(ctx->Inhoms);
 		deleteVectorArray(ctx->Frees);
+		deleteVectorArray(ctx->Graver);
 	}
 
 	free(ctx);

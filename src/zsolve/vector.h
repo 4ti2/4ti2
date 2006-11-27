@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #include <stdio.h>
 
+#include "defs.h"
+
 typedef int vector_t;
 typedef vector_t *Vector;
 
@@ -56,5 +58,8 @@ void swapVector(Vector, int, int);
 
 int gcdVector(Vector, int);
 /* gcd of all numbers (vector, size) */
+
+int lexCompareInverseVector(Vector, int);
+/* lexicographically compare vector and its inverse */
 
 #endif
