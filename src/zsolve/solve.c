@@ -918,6 +918,10 @@ int main(int argc, char *argv[])
 
 	if (OGraver)
 	{
+		printf("Writing %d vectors to graver file, with respect to symmetry.\n", ctx->Graver->Size);
+		if (LogFile)
+			fprintf(LogFile, "Writing %d vectors to graver file, with respect to symmetry.\n", ctx->Graver->Size);
+		
 		strcat(BaseName, ".gra");
 		stream = fopen(BaseName, "w");
 		BaseName[BaseLength] = '\0';
@@ -976,6 +980,16 @@ int main(int argc, char *argv[])
 				fclose(stream);
 			}
 		}
+	}
+
+
+	printf("\n4ti2 Total Time: ");
+	printCPUTime(maxd(getCPUTime() - ctx->AllTime, 0.0));
+	printf("\n");
+	if (LogFile) {
+		fprintf(LogFile, "\n4ti2 Total Time: ");
+		fprintCPUTime(LogFile, maxd(getCPUTime() - ctx->AllTime, 0.0));
+		fprintf(LogFile, "\n");
 	}
 
 	deleteZSolveContext(ctx, true);

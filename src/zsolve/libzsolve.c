@@ -581,17 +581,8 @@ void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 	}
 
 	printf("\nFinal basis has %d inhomogeneous, %d homogeneous and %d free elements.\n", ctx->Inhoms->Size, ctx->Homs->Size, ctx->Frees->Size);
-  printf("4ti2 Total Time: ");
-	printCPUTime(maxd(getCPUTime() - ctx->AllTime, 0.0));
-	printf("\n");
-
 	if (ctx->LogLevel>0)
-	{
 		fprintf(ctx->LogFile, "\nFinal basis has %d inhomogeneous, %d homogeneous and %d free elements.\n", ctx->Inhoms->Size, ctx->Homs->Size, ctx->Frees->Size);
-		fprintf(ctx->LogFile, "4ti2 Total Time: ");
-		fprintCPUTime(ctx->LogFile, maxd(getCPUTime() - ctx->AllTime, 0.0));
-		fprintf(ctx->LogFile, "\n");
-	}
 }
 
 void deleteZSolveContext(ZSolveContext ctx, bool deleteresult)
