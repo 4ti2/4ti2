@@ -52,10 +52,21 @@ protected:
                     const BitSet& sat,
                     const BitSet& urs);
 
+    int compute_saturations(
+                    const VectorArray& gens,
+                    const BitSet& sat,
+                    const BitSet& urs,
+                    VectorArray& useful_gens);
+
     int saturate(
                     const VectorArray& gens,
                     BitSet& sat,
                     const BitSet& urs);
+    int saturate(
+                    const VectorArray& gens,
+                    BitSet& sat,
+                    const BitSet& urs,
+                    VectorArray& useful);
 
     int next_saturation(
                     const VectorArray& gens,

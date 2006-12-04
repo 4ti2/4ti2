@@ -99,17 +99,19 @@ SaturationGenSet::compute_bounded(
     Timer t;
 
     gens.insert(feasible.get_basis());
-    VectorArray orig_gens(gens);
 
-    *out << "Saturating " << urs.get_size()-urs.count() << " variable(s).";
-    *out << std::endl;
+    *out << "Saturating " << urs.get_size()-urs.count() << " variable(s).\n";
     int index = -1;
+    // We look for any columns that are all zeros and set them as saturated.
     saturate_zero_columns(gens, sat, urs);
-    saturate(orig_gens, sat, urs);
+    // We see if we can infer that any variables are saturated.
+    saturate(gens, sat, urs);
+    // We perform one iteration of the saturation algorithm.
     char buffer[250];
-    while (!is_saturated(sat, urs) && gens.get_number() != 0)
+    if (!is_saturated(sat, urs) && gens.get_number() != 0)
     {
-        index = next_saturation(orig_gens, sat, urs);
+        DEBUG_4ti2(*out << "Saturation:\n" << sat << "\n";)
+        index = next_saturation(gens, sat, urs);
         VectorArray cost(1,dim,0);
         cost[0][index] = 0;
         sprintf(buffer, "  Sat %3d: Col: %3d ",
@@ -119,12 +121,44 @@ SaturationGenSet::compute_bounded(
 
         Completion algorithm;
         algorithm.compute(feasible, cost, sat, gens);
-        DEBUG_4ti2(*out << "Gens:\n" << gens << "\n";)
+        //DEBUG_4ti2(*out << "Gens:\n" << gens << "\n";)
+
+        sat.set(index);
+        // We look for any columns that are all zeros and set them as saturated.
+        // This is possible here if truncation is strong.
+        saturate_zero_columns(gens, sat, urs);
+        // We see if we can infer that any variables are saturated.
+        saturate(gens, sat, urs);
+    }
+
+    // We compute the saturations that we need to perform using the set of
+    // vectors given from the first saturation step.
+    // We store the vectors that we used to infer saturation in the vector array
+    // useful_gens.
+    // TODO: We could probably do this in a cleaner way.
+    VectorArray useful_gens(0,gens.get_size());
+    compute_saturations(gens, sat, urs, useful_gens);
+
+    while (!is_saturated(sat, urs) && gens.get_number() != 0)
+    {
+        DEBUG_4ti2(*out << "Saturation:\n" << sat << "\n";)
+        index = next_saturation(useful_gens, sat, urs);
+        VectorArray cost(1,dim,0);
+        cost[0][index] = 0;
+        sprintf(buffer, "  Sat %3d: Col: %3d ",
+                        urs.get_size()-urs.count()-sat.count(), index);
+        Globals::context = buffer;
+        cost[0][index] = -1;
+
+        Completion algorithm;
+        algorithm.compute(feasible, cost, sat, gens);
+        //DEBUG_4ti2(*out << "Gens:\n" << gens << "\n";)
 
         sat.set(index);
         saturate_zero_columns(gens, sat, urs);
-        saturate(orig_gens, sat, urs);
+        saturate(useful_gens, sat, urs);
     }
+
     Globals::context = "";
     *out << "Done. ";
     *out << "Size: " << std::setw(6) << gens.get_number();
@@ -149,6 +183,28 @@ SaturationGenSet::compute_bounded(
             markov.compute(feasible, gens);
         }
     }
+}
+
+int
+SaturationGenSet::compute_saturations(
+                    const VectorArray& gens,
+                    const BitSet& sat,
+                    const BitSet& urs,
+                    VectorArray& useful_gens)
+{
+    BitSet tmp_sat(sat);
+    int index;
+    int count = 0;
+    while (!is_saturated(tmp_sat, urs))
+    {
+        DEBUG_4ti2(*out << "Saturation:\n" << tmp_sat << "\n";)
+        index = next_saturation(gens, tmp_sat, urs);
+        ++count;
+        tmp_sat.set(index);
+        saturate(gens, tmp_sat, urs, useful_gens);
+    }
+    DEBUG_4ti2(*out << "Useful:\n" << useful_gens << "\n";)
+    return count;
 }
 
 void
@@ -190,6 +246,41 @@ int
 SaturationGenSet::saturate(
                 const VectorArray& gens,
                 BitSet& sat,
+                const BitSet& urs,
+                VectorArray& useful)
+{
+    assert(gens.get_size() == sat.get_size());
+    assert(sat.get_size() == urs.get_size());
+    bool changed = true;
+    int num_sats = 0;
+    while (changed)
+    {
+        changed = false;
+        for (Index i = 0; i < gens.get_number(); ++i)
+        {
+            int pos, neg;
+            support_count(gens[i], sat, urs, pos, neg);
+            if ((pos == 0 && neg != 0) || (neg == 0 && pos != 0))
+            {
+                DEBUG_4ti2(*out << "Adding support:\n" << gens[i] << "\n";)
+                num_sats += add_support(gens[i], sat, urs);
+                useful.insert(gens[i]);
+                changed = true;
+            }
+        }
+    }
+    if (num_sats != 0)
+    {
+        *out << "  Saturated already on " << num_sats << " variable(s).";
+        *out << std::endl;
+    }
+    return num_sats;
+}
+
+int
+SaturationGenSet::saturate(
+                const VectorArray& gens,
+                BitSet& sat,
                 const BitSet& urs)
 {
     assert(gens.get_size() == sat.get_size());
@@ -205,6 +296,7 @@ SaturationGenSet::saturate(
             support_count(gens[i], sat, urs, pos, neg);
             if ((pos == 0 && neg != 0) || (neg == 0 && pos != 0))
             {
+                DEBUG_4ti2(*out << "Adding support:\n" << gens[i] << "\n";)
                 num_sats += add_support(gens[i], sat, urs);
                 changed = true;
             }
