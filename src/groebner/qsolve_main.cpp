@@ -77,9 +77,8 @@ _4ti2_::qsolve_main(int argc, char **argv)
     }
     if (project != 0)
     {
-        std::cout << "WARNING: Please specify the matrix in " << matrix_filename;
-        std::cout << " instead of " << project_filename << ".\n";
-        std::cout << "WARNING: The use of " << project_filename << " is obsolete.\n";
+        std::cout << "WARNING: Please specify the matrix in '" << matrix_filename;
+        std::cout << "' instead of '" << project_filename << "'.\n";
         matrix = project;
     }
 

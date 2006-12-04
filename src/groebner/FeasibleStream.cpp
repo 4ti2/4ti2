@@ -67,11 +67,9 @@ _4ti2_::input_Feasible(const char* filename)
     }
     if (project != 0)
     {
-        std::cout << "WARNING: Please specify the matrix in the file ";
-        std::cout << matrix_filename << " instead of the file ";
-        std::cout << project_filename << ".\n";
-        std::cout << "WARNING: The use of the file " << project_filename;
-        std::cout << " is obsolete.\n";
+        std::cout << "WARNING: Please specify the matrix in the file '";
+        std::cout << matrix_filename << "' instead of '";
+        std::cout << project_filename << "'.\n";
         matrix = project;
     }
 
