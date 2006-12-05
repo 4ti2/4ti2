@@ -1,5 +1,2 @@
 #!/bin/sh
 ../check.template rays -m $@
-#../check.template rays -s $@
-#../check.template rays -m -o maxinter $@
-#../check.template rays -s -o minindex $@

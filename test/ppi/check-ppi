@@ -31,6 +31,8 @@ then
     exit 1
 fi
 
+num_failures=0
+
 FILES=`ls -1 *.chk | sed 's/\.[a-z]*\.chk//g' | sort -u`
 echo $FILES
 for file in $FILES; do
@@ -44,6 +46,7 @@ for file in $FILES; do
         diff -b -q ${check_file}.chk ${check_file} > /dev/null
         if [ $? != 0 ]; then
             STATUS="FAILED"
+            num_failures=$(($num_failures+1))
             break
         fi
     done
@@ -51,3 +54,11 @@ for file in $FILES; do
     echo "$TIME"
     rm -f $CHECK_FILES
 done
+
+if [ $num_failures == 0 ]; then
+    echo "**** All tests PASSED! ****"
+else
+    echo "**** $num_failures test(s) FAILED! ****"
+fi
+# The exit status of this script is the number of tests that failed.
+exit $num_failures

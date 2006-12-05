@@ -23,7 +23,7 @@ DIR=`dirname $SCRIPT`
 EXECPATH=$DIR/../bin
 
 # The executable we are using.
-echo "$EXECPATH/$@"
+echo "EXECUTABLE: $EXECPATH/$@"
 # Check that the executable exists.
 if [ ! -f "$EXECPATH/$1" ]
 then
@@ -31,8 +31,10 @@ then
     exit 1
 fi
 
+NUM_FAILURES=0
+
 FILES=`ls -1 *.chk | sed 's/\.[a-z]*\.chk//g' | sort -u`
-echo $FILES
+echo "CHECKING: " $FILES
 for file in $FILES; do
     CHECK_FILES=`ls -1 ${file}.*.chk | egrep "^${file}.[a-z]*.chk" | sed s/\.chk//g`
     rm -f $CHECK_FILES
@@ -44,6 +46,7 @@ for file in $FILES; do
         diff -b -q ${check_file}.chk ${check_file} > /dev/null
         if [ $? != 0 ]; then
             STATUS="FAILED"
+            NUM_FAILURES=$(($NUM_FAILURES+1))
             break
         fi
     done
@@ -51,3 +54,11 @@ for file in $FILES; do
     echo "$TIME"
     rm -f $CHECK_FILES
 done
+
+if [ $NUM_FAILURES == 0 ]; then
+    echo "**** ALL TESTS PASSED! ****"
+else
+    echo "**** $NUM_FAILURES TEST(S) FAILED! ****"
+fi
+# The exit status of this script is the number of tests that failed.
+exit $NUM_FAILURES
