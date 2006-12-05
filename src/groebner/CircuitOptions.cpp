@@ -35,7 +35,11 @@ CircuitOptions* CircuitOptions::o = new CircuitOptions;
 
 CircuitOptions::CircuitOptions()
 {
+#ifdef _4ti2_GMP_
+    algorithm = SUPPORT;
+#else
     algorithm = MATRIX;
+#endif
     //next_column = MAXINTER;
     next_column = MAXCUTOFF;
     output = VERBOSE;
@@ -201,8 +205,8 @@ Options:\n\
   -p, --precision=PREC       Select PREC as the integer arithmetic precision.\n\
                              PREC is one of the following: `64' (default),\n\
                              `32', and `arbitrary' (only `arb` is needed).\n\
-  -m, --matrix               Use the Matrix algorithm (default).\n\
-  -s, --support              Use the Support algorithm.\n\
+  -m, --matrix               Use the Matrix algorithm (default for 32 and 64).\n\
+  -s, --support              Use the Support algorithm (default for arbitrary).\n\
   -o, --order=ORDERING       Set ORDERING as the ordering in which the columns\n\
                              are chosen. The possible orderings are `maxinter',\n\
                              `minindex', `maxcutoff' (default), and `mincutoff'.\n\
