@@ -1,7 +1,10 @@
 /bin
 /obj
+src/util/genmodel
 src/util/genmodel_main.c
+src/util/gensymm
 src/util/gensymm_main.c
+src/util/output
 src/util/output_main.c
 test/ppi/ppi10.mat
 test/ppi/ppi16.mat
