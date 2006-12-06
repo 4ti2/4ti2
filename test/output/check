@@ -1,2 +1,2 @@
 #!/bin/sh
-#../check.template output
+../check.template output --positive
