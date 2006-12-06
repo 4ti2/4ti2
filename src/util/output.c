@@ -41,8 +41,7 @@ listVector* readListVector(int *numOfVars, char *fileName) {
 
   setbuf(stdout,0);
   if (!(in = fopen(fileName,"r"))) {
-    printf("Error opening file \"%s\" containing list of vectors!",fileName);
-    (*numOfVars)=0;
+    printf("File \"%s\" not found for reading!\n",fileName);
     return(0);
   }
 
@@ -109,13 +108,33 @@ listVector* extractVectorsWithFirstEntryEqualToOne(listVector *basis,
   return(basis);
 }
 /* ----------------------------------------------------------------- */
+listVector* extractInitialForms(listVector *basis, vector w, int numOfVars) {
+  int i,s;
+  vector v;
+  listVector *tmp;
+
+  tmp=basis;
+
+  while (tmp) {
+    v=tmp->first;
+    s=dotProduct(v,w,numOfVars);
+    if (s>0)
+      for (i=0;i<numOfVars;i++) if (v[i]<0) v[i]=0;
+    tmp->first=v;
+    tmp=tmp->rest;
+  }
+
+  return(basis);
+}
+/* ----------------------------------------------------------------- */
 int output_main(int argc, char *argv[]) {
   int i,x,y,z,numOfVars,numOfLabels,infoLevel,degree,coord;
   char *s;
-  char fileName[127],outFileName[127],symFileName[127],varFileName[127];
+  char fileName[127],outFileName[127],symFileName[127],varFileName[127],
+    groFileName[127],costFileName[127];
   char **labels;
-  vector v;
-  listVector *basis, *circuits, *rays, *tmpV, *symmGroup;
+  vector v,w;
+  listVector *basis, *tmpV, *symmGroup, *weights;
   FILE *in;
 
   infoLevel=standardInfoLevel;
@@ -131,28 +150,25 @@ if (infoLevel>-1) {
   printVersionInfo();
 }
 
-  strcpy(fileName,argv[argc-1]);
-  basis=readListVector(&numOfVars,fileName);
-
   for (i=1; i<argc; i++) {
     if (strncmp(argv[i],"--pos",5)==0) {
+      strcpy(fileName,argv[argc-1]);
+      basis=readListVector(&numOfVars,fileName);
       basis=extractPositivePartsOfVectors(basis,numOfVars);
       strcpy(outFileName,fileName);
       strcat(outFileName,".pos");
       printListVectorToFile(outFileName,basis,numOfVars);
     }
-    if (strncmp(argv[i],"--sol",5)==0) {
-      basis=extractVectorsWithFirstEntryEqualToOne(basis,numOfVars);
-      strcpy(outFileName,fileName);
-      strcat(outFileName,".sol");
-      printListVectorToFile(outFileName,basis,numOfVars);
-    }
     if (strncmp(argv[i],"--rep",5)==0) {
+      strcpy(fileName,argv[argc-1]);
+      basis=readListVector(&numOfVars,fileName);
       strcpy(symFileName,fileName);
       strcat(symFileName,".sym.full");
       symmGroup=readListVector(&numOfVars,symFileName);
 
       if (symmGroup==0) { 
+        strcpy(fileName,argv[argc-1]);
+        basis=readListVector(&numOfVars,fileName);
 	strcpy(symFileName,fileName);
 	strcat(symFileName,".sym");
 	symmGroup=readListVector(&numOfVars,symFileName);
@@ -173,6 +189,8 @@ if (infoLevel>-1) {
       printListVectorToFile(outFileName,basis,numOfVars);
     }
     if (strncmp(argv[i],"--exp",5)==0) {
+      strcpy(fileName,argv[argc-1]);
+      basis=readListVector(&numOfVars,fileName);
       strcpy(symFileName,fileName);
       strcat(symFileName,".sym.full");
       symmGroup=readListVector(&numOfVars,symFileName);
@@ -196,6 +214,8 @@ if (infoLevel>-1) {
       printListVectorToFile(outFileName,basis,numOfVars);
     }
     if (strncmp(argv[i],"--deg",5)==0) {
+      strcpy(fileName,argv[argc-1]);
+      basis=readListVector(&numOfVars,fileName);
       if (argc==3) {
 	printL1NormOfListVector(basis,numOfVars);
       } else {
@@ -210,6 +230,8 @@ if (infoLevel>-1) {
       return(0);
     }
     if (strncmp(argv[i],"--non",5)==0) {
+      strcpy(fileName,argv[argc-1]);
+      basis=readListVector(&numOfVars,fileName);
       if (argc==3) {
 	printf("You need to specify a coordinate!\n");
 	return(0);
@@ -224,12 +246,16 @@ if (infoLevel>-1) {
       return(0);
     }
     if (strncmp(argv[i],"--0-1",5)==0) {
+      strcpy(fileName,argv[argc-1]);
+      basis=readListVector(&numOfVars,fileName);
       basis=extractZeroOneVectors(basis,numOfVars);
       strcpy(outFileName,fileName);
       strcat(outFileName,".0-1");
       printListVectorToFile(outFileName,basis,numOfVars);
     }
     if (strncmp(argv[i],"--3wa",5)==0) {
+      strcpy(fileName,argv[argc-1]);
+      basis=readListVector(&numOfVars,fileName);
       x=atoi(argv[i+1]);
       y=atoi(argv[i+2]);
       z=atoi(argv[i+3]);
@@ -238,31 +264,43 @@ if (infoLevel>-1) {
       print3wayTables(outFileName,basis,x,y,z,numOfVars);
     }
     if (strncmp(argv[i],"--tra",5)==0) {
+      strcpy(fileName,argv[argc-1]);
+      basis=readListVector(&numOfVars,fileName);
       strcpy(outFileName,fileName);
       strcat(outFileName,".tra");
       printTransposedListVectorToFile(outFileName,basis,numOfVars);
     }
     if (strncmp(argv[i],"--map",5)==0) {
+      strcpy(fileName,argv[argc-1]);
+      basis=readListVector(&numOfVars,fileName);
       strcpy(outFileName,fileName);
       strcat(outFileName,".maple");
       printListVectorMaple(outFileName,basis,numOfVars);
     }
     if (strncmp(argv[i],"--mac",5)==0) {
+      strcpy(fileName,argv[argc-1]);
+      basis=readListVector(&numOfVars,fileName);
       strcpy(outFileName,fileName);
       strcat(outFileName,".macaulay2");
       printListVectorMacaulay2(outFileName,basis,numOfVars);
     }
     if (strncmp(argv[i],"--mat",5)==0) {
+      strcpy(fileName,argv[argc-1]);
+      basis=readListVector(&numOfVars,fileName);
       strcpy(outFileName,fileName);
       strcat(outFileName,".mathematica");
       printListVectorMaple(outFileName,basis,numOfVars);
     }
     if (strncmp(argv[i],"--coc",5)==0) {
+      strcpy(fileName,argv[argc-1]);
+      basis=readListVector(&numOfVars,fileName);
       strcpy(outFileName,fileName);
       strcat(outFileName,".cocoa");
       printListVectorMaple(outFileName,basis,numOfVars);
     }
     if (strncmp(argv[i],"--bin",5)==0) {
+      strcpy(fileName,argv[argc-1]);
+      basis=readListVector(&numOfVars,fileName);
       strcpy(outFileName,fileName);
       strcat(outFileName,".bin");
 
@@ -295,17 +333,56 @@ if (infoLevel>-1) {
       }
       printListBinomialsToFile(outFileName,basis,numOfVars,labels);
     }
-    if (strncmp(argv[i],"--cir",5)==0) {
+    if (strncmp(argv[i],"--ini",5)==0) {
+      strcpy(fileName,argv[argc-1]);
+      strcpy(groFileName,fileName);
+      strcat(groFileName,".gro");
+      basis=readListVector(&numOfVars,groFileName);
+      strcpy(costFileName,argv[argc-1]);
+      strcat(costFileName,".cost");
+      weights=readListVector(&numOfVars,costFileName);
+      if (weights!=0) {
+        w=weights->first;
+      } else {
+	w=createVector(numOfVars);
+	for (i=0;i<numOfVars;i++) w[i]=1;
+      }
+      basis=extractInitialForms(basis,w,numOfVars);
+
       strcpy(outFileName,fileName);
-      strcat(outFileName,".cir");
-      circuits=extractCircuits(basis,numOfVars);
-      printListVectorToFile(outFileName,circuits,numOfVars);
-    }
-    if (strncmp(argv[i],"--ray",5)==0) {
+      strcat(outFileName,".ini");
+      printListVectorToFile(outFileName,basis,numOfVars);
+
+      labels=0;
+      strcpy(varFileName,fileName);
+      strcat(varFileName,".vars");
+      if ((in = fopen(varFileName,"r"))) {
+	printf("File \"%s\" found. 4ti2 will use it.\n\n",varFileName);
+	fscanf(in,"%d",&numOfLabels);
+	if (numOfLabels<numOfVars) {
+	  printf("There are not enough names in \"%s\" to rename variables.\n",
+		 varFileName);
+	  printf("4ti2 will use the standard names x[1], ..., x[%d].\n",
+		 numOfVars);
+	} else {
+	  if (numOfLabels>numOfVars) {
+	    printf("There too many names in \"%s\" to rename variables.\n",
+		   varFileName);
+	    printf("4ti2 will use the first %d names for renaming.\n",
+		   numOfVars);
+	  }
+	  labels = (char **)malloc(sizeof(char*)*(numOfVars));
+	  for (i=0; i<numOfVars; i++) {
+	    s=(char *)malloc(sizeof(char)*127);
+	    fscanf(in,"%s",s);
+	    labels[i]=s;
+	  }
+	}
+	fclose(in);
+      }
       strcpy(outFileName,fileName);
-      strcat(outFileName,".ray");
-      rays=extractCircuits(basis,numOfVars);
-      printListVectorToFile(outFileName,rays,numOfVars);
+      strcat(outFileName,".ini.bin");
+      printListMonomialsAndBinomialsToFile(outFileName,basis,numOfVars,labels);
     }
   }
 
