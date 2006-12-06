@@ -1,0 +1,2 @@
+#!/bin/sh
+../check.template gensymm 3 3 3 1
