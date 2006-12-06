@@ -33,13 +33,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <stdlib.h>
 /* ----------------------------------------------------------------- */
 void printVersionInfo() {
-  printf("------------------------------------------------------------------\n");
-  printf("4ti2 version 1.2 (September 5, 2005)\n");
-  printf("Free for non-commercial use.\n");
-  printf("4ti2 is provided without any warranty.\n");
-  printf("Authors: R. Hemmecke, R. Hemmecke, and P. Malkin.\n");
-  printf("Visit www.4ti2.de for more information including how to cite 4ti2.\n");
-  printf("------------------------------------------------------------------\n");
+
+  printf("-------------------------------------------------\n");
+  printf("4ti2 version 1.3.1, Copyright (C) 2006 4ti2 team.\n");
+  printf("4ti2 comes with ABSOLUTELY NO WARRANTY.\n");
+  printf("This is free software, and you are welcome\n");
+  printf("to redistribute it under certain conditions.\n");
+  printf("For details, see the file COPYING.\n");
+  printf("-------------------------------------------------\n");
   return ;
 }
 /* ----------------------------------------------------------------- */

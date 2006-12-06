@@ -50,13 +50,13 @@ void printUsage(char *program)
 {
 	assert(program);
 
-	puts("------------------------------------------------");
-	puts("4ti2 version 1.3, Copyright (C) 2006 4ti2 team.");
+	puts("-------------------------------------------------");
+	puts("4ti2 version 1.3.1, Copyright (C) 2006 4ti2 team.");
 	puts("4ti2 comes with ABSOLUTELY NO WARRANTY.");
 	puts("This is free software, and you are welcome");
 	puts("to redistribute it under certain conditions.");
 	puts("For details, see the file COPYING.");
-	puts("-----------------------------------------------\n");
+	puts("-------------------------------------------------\n");
 	
 	printf("[Basic options]\n");
 //	printf(" -f, --force               computation regardless of existing FILE.(in)hom\n");
