@@ -1,2 +1,2 @@
 #!/bin/sh
-../../check.template markov -gsaturation $@
+../../check.template markov -q -gsaturation $@

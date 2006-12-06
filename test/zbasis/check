@@ -1,2 +1,2 @@
 #!/bin/sh
-../check.template zbasis $@
+../check.template zbasis -q $@

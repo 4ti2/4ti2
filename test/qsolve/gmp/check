@@ -1,11 +1,2 @@
 #!/bin/sh
-NUM_FAILURES=0
-
-../../check.template qsolve -p arb -m $@
-NUM_FAILURES=$(($NUM_FAILURES+$?))
-
-../../check.template qsolve -p arb -s $@
-NUM_FAILURES=$(($NUM_FAILURES+$?))
-
-# The script returns the number of failures encountered.
-exit $NUM_FAILURES
+../../check.template qsolve -q -p arb $@

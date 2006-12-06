@@ -1,2 +1,2 @@
 #!/bin/sh
-../check.template walk $@
+../check.template walk -q $@

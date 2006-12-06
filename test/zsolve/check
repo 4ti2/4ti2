@@ -1,2 +1,2 @@
 #!/bin/sh
-../check.template zsolve $@
+../check.template zsolve -q $@

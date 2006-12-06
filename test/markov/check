@@ -1,10 +1,10 @@
 #!/bin/sh
 NUM_FAILURES=0
 
-../check.template markov -ghybrid $@
+../check.template markov -q -ghybrid $@
 NUM_FAILURES=$(($NUM_FAILURES+$?))
 
-../check.template markov -gproject-and-lift $@
+../check.template markov -q -gproject-and-lift $@
 NUM_FAILURES=$(($NUM_FAILURES+$?))
 
 # The script returns the number of failures encountered.

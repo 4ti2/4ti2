@@ -1,10 +1,10 @@
 #!/bin/sh
 NUM_FAILURES=0
 
-../check.template qsolve -m -o maxcutoff $@
+../check.template qsolve -q -m -o maxcutoff $@
 NUM_FAILURES=$(($NUM_FAILURES+$?))
 
-../check.template qsolve -s -o maxinter $@
+../check.template qsolve -q -s -o maxinter $@
 NUM_FAILURES=$(($NUM_FAILURES+$?))
 
 # The script returns the number of failures encountered.

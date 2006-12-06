@@ -1,2 +1,2 @@
 #!/bin/sh
-../check.template graver $@
+../check.template graver -q $@

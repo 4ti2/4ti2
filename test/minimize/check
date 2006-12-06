@@ -1,2 +1,2 @@
 #!/bin/sh
-../check.template minimize $@
+../check.template minimize -q $@

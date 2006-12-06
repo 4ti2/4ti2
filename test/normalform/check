@@ -1,2 +1,2 @@
 #!/bin/sh
-../check.template normalform $@
+../check.template normalform -q $@

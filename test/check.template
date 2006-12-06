@@ -38,7 +38,7 @@ echo "CHECKING: " $FILES
 for file in $FILES; do
     CHECK_FILES=`ls -1 ${file}.*.chk | egrep "^${file}.[a-z]*.chk" | sed s/\.chk//g`
     rm -f $CHECK_FILES
-    COMMAND="$@ -q $file"
+    COMMAND="$@ $file"
     echo -n "$COMMAND ..."
     TIME=`$EXECPATH/$COMMAND | awk '/^4ti2 Total Time/ { print $4, $5 }'`
     STATUS="passed"
@@ -60,5 +60,6 @@ if [ $NUM_FAILURES == 0 ]; then
 else
     echo "**** $NUM_FAILURES TEST(S) FAILED! ****"
 fi
+echo ""
 # The exit status of this script is the number of tests that failed.
 exit $NUM_FAILURES

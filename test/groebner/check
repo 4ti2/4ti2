@@ -1,10 +1,10 @@
 #!/bin/sh
 NUM_FAILURES=0
 
-../check.template groebner -afifo
+../check.template groebner -q -afifo
 NUM_FAILURES=$(($NUM_FAILURES+$?))
 
-../check.template groebner -aweighted
+../check.template groebner -q -aweighted
 NUM_FAILURES=$(($NUM_FAILURES+$?))
 
 # The script returns the number of failures encountered.
