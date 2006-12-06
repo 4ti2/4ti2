@@ -28,6 +28,8 @@ void printTransposedListVectorToFile(char*, listVector*, int);
 void printVectorToFileWithBrackets(FILE*, vector, int);
 void printBinomialToFile(FILE*, vector, int, char**);
 void printListBinomialsToFile(char*, listVector*, int, char**);
+void printMonomialToFile(FILE*, vector, int, char**);
+void printListMonomialsAndBinomialsToFile(char*, listVector*, int, char**);
 void printMatrix(vector, int, int);
 void printVectorToFileMaple(FILE*, vector, int);
 void printListVectorMaple(char*, listVector*, int);

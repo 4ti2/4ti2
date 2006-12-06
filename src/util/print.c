@@ -238,6 +238,69 @@ void printListBinomialsToFile(char* fileName, listVector* basis,
   return ;
 }
 /* ----------------------------------------------------------------- */
+void printMonomialToFile(FILE *out, vector v, int numOfVars, char** labels) {
+  int i,tmp,posNorm=0;
+
+  for (i=0; i<numOfVars; i++) posNorm = posNorm + v[i];
+
+  if (posNorm==0) fprintf(out,"1");
+  else {
+    tmp=posNorm;
+    i=0;
+    while (i<numOfVars && tmp>0) {
+      if (v[i]>0) {
+	if (v[i]>1) 
+	  if (labels!=0) { 
+	    fprintf(out,"%s^%d",labels[i],v[i]);
+	  } else {
+	    fprintf(out,"x[%d]^%d",i+1,v[i]);
+	  }
+	else
+	  if (labels!=0) { 
+	    fprintf(out,"%s",labels[i]);
+	  } else {
+	    fprintf(out,"x[%d]",i+1);
+	  }
+	tmp=tmp-v[i];
+	if (tmp>0) fprintf(out,"*");
+      }
+      i++;
+    }
+  }
+  return ;
+}
+/* ----------------------------------------------------------------- */
+void printListMonomialsAndBinomialsToFile(char* fileName, listVector* basis, 
+					  int numOfVars, char** labels) {
+  FILE* out;
+
+  if (!(out = fopen(fileName,"w"))) {
+    printf("Error opening binomial file!");
+    exit (0);
+  }
+  if (basis==0) {
+    fprintf(out,"[]\n");
+    fclose(out);
+    return;
+  }
+
+  printf("Writing monomials and binomials to file\n\n");
+  fprintf(out,"[\n");
+  while(basis->rest) {
+    if (isNonnegativeVector(basis->first,numOfVars)==1) {
+      printMonomialToFile(out,basis->first,numOfVars,labels);
+    } else {
+      printBinomialToFile(out,basis->first,numOfVars,labels);
+    }
+    fprintf(out,",\n");
+    basis = basis->rest;
+  }
+  printBinomialToFile(out,basis->first,numOfVars,labels);
+  fprintf(out,"\n]\n");
+  fclose(out);
+  return ;
+}
+/* ----------------------------------------------------------------- */
 void printMatrix(vector v, int numOfRows, int numOfVars) {
   int i,j;
 
