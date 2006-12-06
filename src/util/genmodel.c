@@ -116,6 +116,7 @@ if (infoLevel>-1) {
   strcpy(fileName,argv[argc-1]);
   strcat(fileName,".mod");
   strcpy(outFileName,argv[argc-1]);
+  strcat(outFileName,".mat");
 
 if (infoLevel>-1) {
   printf("Creating file %s.\n",outFileName);
@@ -125,9 +126,6 @@ if (infoLevel>-1) {
   faces=readSimplicialComplex(fileName,&numOfNodes);
   levels=faces->first;
   faces=faces->rest;
-
-/*   strcpy(outFileName,fileName); */
-/*   strcat(outFileName,".mod"); */
 
   if (!(out = fopen(outFileName,"w"))) {
     printf("Error opening file for output.");
