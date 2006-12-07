@@ -128,7 +128,7 @@ listVector* extractInitialForms(listVector *basis, vector w, int numOfVars) {
 }
 /* ----------------------------------------------------------------- */
 int output_main(int argc, char *argv[]) {
-  int i,x,y,z,numOfVars,numOfLabels,infoLevel,degree,coord;
+  int i,x,y,z,numOfVars,numOfRows, numOfLabels,infoLevel,degree,coord;
   char *s;
   char fileName[127],outFileName[127],symFileName[127],varFileName[127],
     groFileName[127],costFileName[127];
@@ -309,25 +309,24 @@ if (infoLevel>-1) {
       strcat(varFileName,".vars");
       if ((in = fopen(varFileName,"r"))) {
 	printf("File \"%s\" found. 4ti2 will use it.\n\n",varFileName);
-	fscanf(in,"%d",&numOfLabels);
-	if (numOfLabels<numOfVars) {
-	  printf("There are not enough names in \"%s\" to rename variables.\n",
-		 varFileName);
-	  printf("4ti2 will use the standard names x[1], ..., x[%d].\n",
-		 numOfVars);
-	} else {
-	  if (numOfLabels>numOfVars) {
-	    printf("There too many names in \"%s\" to rename variables.\n",
-		   varFileName);
-	    printf("4ti2 will use the first %d names for renaming.\n",
-		   numOfVars);
-	  }
-	  labels = (char **)malloc(sizeof(char*)*(numOfVars));
-	  for (i=0; i<numOfVars; i++) {
-	    s=(char *)malloc(sizeof(char)*127);
-	    fscanf(in,"%s",s);
-	    labels[i]=s;
-	  }
+	if (fscanf(in,"%d %d",&numOfRows, &numOfLabels)!=2 || numOfRows!=1) {
+          printf("ERROR: Unrecognised file format for \"%s\".\n", varFileName);
+          exit(1);
+        }
+	if (numOfLabels != numOfVars) {
+	  printf("ERROR: Incorrect number of variable names in \"%s\".\n",
+                          varFileName);
+          exit(1);
+	}
+	labels = (char **)malloc(sizeof(char*)*(numOfVars));
+	for (i=0; i<numOfVars; i++) {
+	  s=(char *)malloc(sizeof(char)*127);
+	  if (fscanf(in,"%s",s) != 1) {
+            printf("ERROR: Unrecognised file format for \"%s\".\n",
+                            varFileName);
+            exit(1);
+          }
+	  labels[i]=s;
 	}
 	fclose(in);
       }
@@ -358,25 +357,25 @@ if (infoLevel>-1) {
       strcat(varFileName,".vars");
       if ((in = fopen(varFileName,"r"))) {
 	printf("File \"%s\" found. 4ti2 will use it.\n\n",varFileName);
-	fscanf(in,"%d",&numOfLabels);
-	if (numOfLabels<numOfVars) {
-	  printf("There are not enough names in \"%s\" to rename variables.\n",
-		 varFileName);
-	  printf("4ti2 will use the standard names x[1], ..., x[%d].\n",
-		 numOfVars);
-	} else {
-	  if (numOfLabels>numOfVars) {
-	    printf("There too many names in \"%s\" to rename variables.\n",
-		   varFileName);
-	    printf("4ti2 will use the first %d names for renaming.\n",
-		   numOfVars);
-	  }
-	  labels = (char **)malloc(sizeof(char*)*(numOfVars));
-	  for (i=0; i<numOfVars; i++) {
-	    s=(char *)malloc(sizeof(char)*127);
-	    fscanf(in,"%s",s);
-	    labels[i]=s;
-	  }
+	fscanf(in,"%d %d",&numOfRows, &numOfLabels);
+	labels = (char **)malloc(sizeof(char*)*(numOfVars));
+	if (fscanf(in,"%d %d",&numOfRows, &numOfLabels)!=2 || numOfRows!=1) {
+          printf("ERROR: Unrecognised file format for \"%s\".\n", varFileName);
+          exit(1);
+        }
+	if (numOfLabels != numOfVars) {
+	  printf("ERROR: Incorrect number of variable names in \"%s\".\n",
+                          varFileName);
+          exit(1);
+	}
+	for (i=0; i<numOfVars; i++) {
+	  s=(char *)malloc(sizeof(char)*127);
+	  if (fscanf(in,"%s",s) != 1) {
+            printf("ERROR: Unrecognised file format for \"%s\".\n",
+                            varFileName);
+            exit(1);
+          }
+	  labels[i]=s;
 	}
 	fclose(in);
       }
