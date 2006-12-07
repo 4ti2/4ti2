@@ -1,0 +1,134 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% 4ti2 User Guide, Advanced guide
+%
+% $Id$
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Advanced guide}
+
+In this part, we deal with several more advanced problem
+specifications in \FourTiTwo{}.
+
+First we introduce \emph{affine systems} and their encodings. In
+fact, affine systems are the basic objects used in \FourTiTwo{},
+since every linear system is transformed into an affine system.
+However, in the integer situation, it is not always possible to
+transform an affine system back into a linear system without adding
+variables or modulo constraints.
+
+Next, we demonstrate how one can exploit bounds on integer variables
+to truncate the solution set.
+
+Again, we use a few sample problems to demonstrate how to use
+\FourTiTwo{}. After working through this part, you should know about
+how to run the following functions on affine systems:
+\begin{itemize}
+\item \File{qsolve}, \File{rays}, \File{circuits}
+\item \File{zsolve}, \File{hilbert}, \File{graver}, \File{ppi}
+\item \File{markov}, \File{groebner}, \File{normalform}, \File{minimize}
+\end{itemize}
+
+
+\section{Affine systems and their encodings}
+
+In \FourTiTwo, the definition of an \emph{affine system} is slightly
+different for the continuous and the integer situation. In fact, the
+definition for the integer case is simply the integer analogue to
+the definition for the continuous case.
+
+\subsection{Continuous affine systems}
+
+Let $a+\Lattice$ be a linear affine space given by the vector $a$
+and by generators for the linear space $\Lattice$. We wish to find a
+finite sign-compatible description for the set of all vectors $x\in
+a+\Lattice$.
+
+\subsection{Integer affine systems}
+
+Let $a+\Lattice$ be an ``integer linear affine space'' given by the
+vector $a\in\Z^n$ and by generators for the lattice
+$\Lattice\subseteq\Z^n$. We wish to find a finite sign-compatible
+description for the set of all (integer) vectors $x\in a+\Lattice$.
+
+\subsection{Specifying an affine system in \FourTiTwo{}}
+
+Currently, only homogeneous affine systems can be solved in
+\FourTiTwo{} over $\R$ and over $\Z$ using the functions
+\File{qsolve} and \File{zsolve}, respectively. In order to call
+these functions, one needs to specify an affine system to
+\FourTiTwo.
+
+As an example, take the homogeneous part of our running example
+above
+\[
+\left(
+\begin{array}{cccc}
+1 & 1 & 1 & 1\\
+1 & 2 & 3 & 4\\
+\end{array}
+\right)x
+\begin{array}{c}
+\leq\\
+\leq\\
+\end{array}
+\left(
+\begin{array}{c}
+0\\
+0\\
+\end{array}
+\right)
+\]
+with sign constraints $(1,2,2,0)$, and rewrite it as an affine
+system. As the linear subspace and the lattice $\Lattice$,
+respectively, we are dealing with the continuous and the integer
+kernel of the $2\times 4$ problem matrix. The following two vectors
+generate both the linear space over $\R$ and the lattice over $\Z$:
+\[
+\left(
+\begin{array}{r}
+1\\
+-2\\
+1\\
+0\\
+\end{array}
+\right),\;\;\; \left(
+\begin{array}{r}
+2\\
+-3\\
+0\\
+1\\
+\end{array}
+\right)
+\]
+Thus, we are looking for a finite sign-compatible description for
+all $x$ that can be written as
+\[
+x=\left(
+\begin{array}{rr}
+1 & 2\\
+-2 & -3\\
+1 & 0\\
+0 & 1\\
+\end{array}
+\right)\lambda,
+\]
+with $\lambda\in\R^2$ and $\lambda\in\Z^2$, respectively.
+
+In order to solve this affine system using \File{qsolve} or
+\File{zsolve}, we have
+
+\begin{itemize}
+\item The generators of $\Lattice$ have to be put into the file \File{PROJECT.lat}.
+\begin{myverbatim}
+2 4
+1 -1 1 0
+2 -3 0 1
+\end{myverbatim}
+\item The sign constraints end up in \File{PROJECT.sign}.
+\begin{myverbatim}
+1 4
+1 2 2 0
+\end{myverbatim}
+\end{itemize}

@@ -1,0 +1,152 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% 4ti2 User Guide, Beginner's guide
+%
+% $Id$
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Beginner's guide}
+
+%\FourTiTwo{} is a software package that is specifically tailored for
+%certain computational problems on linear spaces and integer
+%lattices.
+In this part, we use a few sample problems to introduce
+you to the basic functionality of \FourTiTwo{}. After working
+through this part, you should know about \emph{linear systems} and
+should be able to do computations using the following functions:
+\begin{itemize}
+\item \File{qsolve}, \File{rays}, \File{circuits}
+\item \File{zsolve}, \File{hilbert}, \File{graver}, \File{ppi}
+\item \File{markov}, \File{groebner}, \File{normalform}, \File{minimize}
+\end{itemize}
+
+
+
+\section{Linear systems and their encodings}
+
+\subsection{Linear systems and integer linear systems}
+
+In \FourTiTwo, a \emph{linear system} is defined by $d$ constraints
+$Ax\sim b$ in $n$ unknowns $x$, where each constraint is either
+$\leq$, $=$ or $\geq$, that is $\sim\;\in\{\leq,=,\geq\}^d$.
+Moreover, one may specify sign constraints on the variables that
+need to be respected in an explicit representation of all solutions.
+
+There is no particular difference in \FourTiTwo{} between a linear
+system and an integer linear system. Currently, the user chooses
+between one of the two by calling the appropriate functions on the
+linear system.
+
+\subsection{Specifying a linear system}
+
+In order to use a linear system as input, one needs to specify its
+parts to \FourTiTwo. As our running example, take
+\[
+\left(
+\begin{array}{cccc}
+1 & 1 & 1 & 1\\
+1 & 2 & 3 & 4\\
+\end{array}
+\right)x
+\begin{array}{c}
+\leq\\
+\leq\\
+\end{array}
+\left(
+\begin{array}{c}
+6\\
+10\\
+\end{array}
+\right)
+\]
+with sign constraints $(1,2,2,0)$, which we will explain below.
+
+First, one has to give his problem a project name, say
+\FILE{PROJECT}.
+\begin{itemize}
+\item The matrix $A$ has to be put into the main project file, say
+\File{PROJECT.mat}.
+\begin{myverbatim}
+2 4
+1 1 1 1
+1 2 3 4
+\end{myverbatim}
+\item The relations $\sim$ then have to be specified in \File{PROJECT.rel}.
+\begin{myverbatim}
+1 2
+< <
+\end{myverbatim}
+\item The right-hand side vector goes into \File{PROJECT.rhs}.
+\begin{myverbatim}
+1 2
+6 10
+\end{myverbatim}
+\item And finally, the sign constraints end up in \File{PROJECT.sign}.
+\begin{myverbatim}
+1 4
+1 2 2 0
+\end{myverbatim}
+\end{itemize}
+
+{\bf Note.}
+\begin{itemize}
+\item The input files all have the format of a matrix, preceded by
+  the matrix dimensions. As the dimensions specify how many symbols
+  have to be read, the matrix could be given in only one line or even
+  in many lines of different lengths.
+\item In \FourTiTwo{} version 1.3, all appearing numbers have to be
+  integers.
+\item Consequently, this implies that at the moment, \File{qsolve}
+  only supports homogeneous linear systems, that is systems with $b=0$.
+  Minimal inhomogeneous solutions could have rational components.
+\end{itemize}
+
+If the system is solved over $\R$ (using \File{qsolve}),
+\FourTiTwo{} returns two sets of integer vectors:
+\begin{itemize}
+\item a set $H$ of support minimal homogeneous solutions, and
+\item a set $F$ defining the linear vector space the solution set
+lives in.
+\end{itemize}
+As only \emph{homogeneous} linear systems are supported in this
+version of \FourTiTwo, no list of minimal inhomogeneous solutions is
+computed. Any solution $z$ of the linear system can now be written
+as
+\begin{equation}\label{Equation: Continuous representation}
+z=\sum \alpha_j h_j+ \sum \beta_k f_k
+\end{equation}
+with $h_j\in H$, $f_k\in F$, and $\alpha_j\geq 0$.
+
+If the system is solved over $\Z$ (using \File{zsolve}),
+\FourTiTwo{} returns three sets of integer vectors:
+\begin{itemize}
+\item a set $H$ of support minimal homogeneous \emph{integer} solutions,
+\item a set $I$ of support minimal inhomogeneous \emph{integer}
+solutions, and
+\item a set $F$ defining the sublattice of $\Z^n$ the solution set
+lives in.
+\end{itemize}
+Any solution $z$ of the linear system can now be written as
+\begin{equation}\label{Equation: Integer representation}
+z=i+ \sum \alpha_j h_j+\sum \beta_k f_k
+\end{equation}
+for some $i\in I$ and with $h_j\in H$, $f_j\in F$, and
+$\alpha_j\in\Z_+0$.
+
+{\bf Sign file.} Let us finally clarify what the sign file
+\File{proj.sign} is good for. The sign file may declare a variable
+to be nonnegative ($1$), to be non-positive ($-1$), or to consider
+both cases independently and unite the answers ($2$). If a nonzero
+sign has been assigned to a variable, the explicit representations
+(\ref{Equation: Continuous representation}) and (\ref{Equation:
+Integer representation}) above of a solution $z$ have to respect the
+sign on that component. The default setting for each variable is
+$0$, that is, the sign need not be respected in the explicit
+representation. In our example above, the first variable is declared
+to be nonnegative, the second and the third one expand to $2\cdot
+2=4$ orthant constraints, and the fourth variable is unconstrained.
+Note, however, that \FourTiTwo{} does \emph{not} decompose the
+problem internally into the four problems with sign patterns
+$(1,1,1,0)$, $(1,1,-1,0)$, $(1,-1,1,0)$, and $(1,-1,-1,0)$, but
+deals with them more efficiently at the same time.
