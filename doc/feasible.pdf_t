@@ -1,0 +1,17 @@
+\begin{picture}(0,0)%
+\includegraphics{feasible.pdf}%
+\end{picture}%
+\setlength{\unitlength}{1036sp}%
+%
+\begingroup\makeatletter\ifx\SetFigFont\undefined%
+\gdef\SetFigFont#1#2#3#4#5{%
+  \reset@font\fontsize{#1}{#2pt}%
+  \fontfamily{#3}\fontseries{#4}\fontshape{#5}%
+  \selectfont}%
+\fi\endgroup%
+\begin{picture}(10599,8799)(-11,-7948)
+\put(1126,389){\makebox(0,0)[lb]{\smash{\SetFigFont{8}{9.6}{\sfdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}y = 3x + 1}%
+}}}
+\put(6976,-3211){\makebox(0,0)[lb]{\smash{\SetFigFont{8}{9.6}{\sfdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}y = x - 2}%
+}}}
+\end{picture}%

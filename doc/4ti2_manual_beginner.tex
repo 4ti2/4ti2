@@ -38,7 +38,7 @@ system and an integer linear system. Currently, the user chooses
 between one of the two by calling the appropriate functions on the
 linear system.
 
-\subsection{Specifying a linear system}
+\subsection{Specifying a linear system in \FourTiTwo}
 
 In order to use a linear system as input, one needs to specify its
 parts to \FourTiTwo. As our running example, take
@@ -63,7 +63,7 @@ parts to \FourTiTwo. As our running example, take
 with sign constraints $(1,2,2,0)$, which we will explain below.
 
 First, one has to give his problem a project name, say
-\FILE{PROJECT}.
+\File{PROJECT}.
 \begin{itemize}
 \item The matrix $A$ has to be put into the main project file, say
 \File{PROJECT.mat}.
@@ -150,3 +150,368 @@ Note, however, that \FourTiTwo{} does \emph{not} decompose the
 problem internally into the four problems with sign patterns
 $(1,1,1,0)$, $(1,1,-1,0)$, $(1,-1,1,0)$, and $(1,-1,-1,0)$, but
 deals with them more efficiently at the same time.
+
+
+\section{Brief tutorial}
+
+\subsection{Solving linear systems over $\R$ and over $\Z$}
+
+To solve the system
+\[
+  \begin{array}{rcrcrlcl}
+    x & - & y & \leq & 2\\
+  -3x & + & y & \leq & 1\\
+    x & + & y & \geq & 1\\
+      &   & y & \geq & 0\\
+  \end{array}
+\]
+over $\R$, we have to create the files
+
+\begin{center}
+  \begin{tabular}{|l|l|l|l|}
+\hline
+    \text{ PROJECT.mat } & \text{ PROJECT.rel } & \text{ PROJECT.rhs } & \text{ PROJECT.sign }\\
+\hline
+  $\begin{array}{rrrr}& 3 & 2 & \\& 1 & -1\\& -3 & 1\\& 1 & 1 &\\ \end{array}$ & 
+  $\begin{array}{rrrrr}& 1 & 3 & \\& < &  < & = & \\ \\ \\\end{array}$ & 
+  $\begin{array}{rrrrr}& 1 & 3 & \\& 2 &  1 & 1 & \\ \\ \\\end{array}$ &
+  $\begin{array}{rrrr}& 1 & 2 & \\& 0 &  1 & \\ \\ \\\end{array}$\\
+\hline
+  \end{tabular}
+\end{center}
+
+and then call
+
+\begin{center}
+{\tt ./qsolve PROJECT}
+\end{center}
+
+This call creates three files
+
+\begin{center}
+  \begin{tabular}{|l|l|l|}
+\hline
+    \text{ PROJECT.qinhom } & \text{ PROJECT.qhom } & \text{ PROJECT.qfree }\\
+\hline
+  $\begin{array}{rrrr}& 3 & 2 &\\& 0 & 1 &\\& 0 & 2 &\\& 1 & 0 &\\\end{array}$ & 
+  $\begin{array}{rrrr}& 2 & 2 &\\& 1 & 1 &\\& 1 & 3 & \\ \\\end{array}$ &
+  $\begin{array}{rrrr}& 0 & 2 & \\ \\ \\ \\ \end{array}$\\
+\hline
+  \end{tabular}
+\end{center}
+
+which correspond to the explicit description of all solutions:
+\begin{center}
+  \begin{tabular}{cc}
+    \emph{Feasible solutions} & \emph{Computed representation}\\
+       \input{feasible.pdf_t} & \input{solved_LP.pdf_t}    \\
+  \end{tabular}
+\end{center}
+\[
+\conv\left({1\choose 0},{2\choose 0},{0\choose 1}\right) + \cone\left({1\choose 1},{1\choose 3}\right).
+\]
+Note that in the pictures above, the three colored cones are only a
+simplification and shall visualize the covering of the feasible
+region by infinitely many shifted copies of the cone
+\[
+\cone\left({1\choose 1},{1\choose 2},{1\choose 3}\right),
+\]
+appended to each point in
+\[
+\conv\left({1\choose 0},{2\choose 0},{0\choose 1}\right).
+\]
+
+Let us now turn to the integer situation, that is, let us solve the system
+\[
+  \begin{array}{rcrcrlcl}
+    x & - & y & \leq & 2\\
+  -3x & + & y & \leq & 1\\
+    x & + & y & \geq & 1\\
+      &   & y & \geq & 0\\
+  \end{array}
+\]
+over $\Z$. As the linear system itself is unchanged, we can use the
+same the same files as above in order to specify the linear system.
+
+\begin{center}
+  \begin{tabular}{|l|l|l|l|}
+\hline
+    \text{ PROJECT.mat } & \text{ PROJECT.rel } & \text{ PROJECT.rhs } & \text{ PROJECT.sign }\\
+\hline
+  $\begin{array}{rrrr}& 3 & 2 & \\& 1 & -1\\& -3 & 1\\& 1 & 1 &\\ \end{array}$ & 
+  $\begin{array}{rrrrr}& 1 & 3 & \\& < &  < & = & \\ \\ \\\end{array}$ & 
+  $\begin{array}{rrrrr}& 1 & 3 & \\& 2 &  1 & 1 & \\ \\ \\\end{array}$ &
+  $\begin{array}{rrrr}& 1 & 2 & \\& 0 &  1 & \\ \\ \\\end{array}$\\
+\hline
+  \end{tabular}
+\end{center}
+
+Then, however, we call
+
+\begin{center}
+{\tt ./zsolve PROJECT}
+\end{center}
+
+This call creates three files
+
+\begin{center}
+  \begin{tabular}{|l|l|l|}
+\hline
+    \text{ PROJECT.zinhom } & \text{ PROJECT.zhom } & \text{ PROJECT.zfree }\\
+\hline
+  $\begin{array}{rrrr}& 4 & 2 &\\& 0 & 1 &\\& 0 & 2 &\\& 1 & 0 &\\ & 1 & 1 &\\\end{array}$ & 
+  $\begin{array}{rrrr}& 3 & 2 &\\& 1 & 1 &\\& 1 & 2 &\\& 1 & 3 & \\ \\\end{array}$ &
+  $\begin{array}{rrrr}& 0 & 2 & \\ \\ \\ \\ \\ \end{array}$\\
+\hline
+  \end{tabular}
+\end{center}
+
+which correspond to the explicit description of all integer solutions:
+\begin{center}
+  \begin{tabular}{cc}
+    \emph{Feasible solutions} & \emph{Computed representation}\\
+       \input{feasible.pdf_t} & \input{solved_IP.pdf_t}    \\
+  \end{tabular}
+\end{center}
+\[
+\left\{{1\choose 0},{2\choose 0},{0\choose 1},{1\choose 1}\right\} + \monoid\left({1\choose 1},{1\choose 2},{1\choose 3}\right).
+\]
+Note that in the pictures above, we are only interested in the
+\emph{lattice points} inside the colored regions! The full regions are
+colored to visualize the covering of all feasible integer solutions by
+finitely many shifted copies of the monoid 
+\[
+\monoid\left({1\choose 1},{1\choose 2},{1\choose 3}\right).
+\]
+
+
+\subsection{Computing extreme rays and Hilbert bases}
+
+Let us consider the set of magic $3\times 3$ squares with nonnegative
+real entries, that is, the set of all $3\times 3$ arrays with
+non-negative real entries whose row sums, column sums, and main
+diagonal sums all add up to the same number, the magic constant of the
+square. 
+\vspace{-0.3cm}
+\begin{center}
+  \input{magicsqs.pdf_t}
+\end{center}
+\vspace{-0.4cm}
+Clearly, addition of two magic squares gives another magic square,
+as well as does multiplication of a magic square by a nonnegative
+number. Therefore, we may talk about the cone of magic $3\times 3$
+squares. In fact, this cone is a pointed rational polyhedral cone
+described by the linear system 
+\begin{eqnarray*}
+x_{11}+x_{12}+x_{13}
+& = & x_{21}+x_{22}+x_{23}\\
+& = & x_{31}+x_{32}+x_{33}\\
+& = & x_{11}+x_{21}+x_{31}\\
+& = & x_{12}+x_{22}+x_{32}\\
+& = & x_{13}+x_{23}+x_{33}\\
+& = & x_{11}+x_{22}+x_{33}\\
+& = & x_{31}+x_{22}+x_{13}\\
+&   & x_{ij} \geq 0,\;\;\; \text{ for all } i,j=1,2,3.
+\end{eqnarray*}
+Bringing all $x_{ij}$ to the left-hand side of these equations, the
+matrix $A_{3\times 3}$ defining this linear system is
+\[
+A_{3\times 3}=\left(
+\begin{array}{rrrrrrrrr}
+1 & 1 & 1 & -1 & -1 & -1 &  0 &  0 &  0\\
+1 & 1 & 1 &  0 &  0 &  0 & -1 & -1 & -1\\
+0 & 1 & 1 & -1 &  0 &  0 & -1 &  0 &  0\\
+1 & 0 & 1 &  0 & -1 &  0 &  0 & -1 &  0\\
+1 & 1 & 0 &  0 &  0 & -1 &  0 &  0 & -1\\
+0 & 1 & 1 &  0 & -1 &  0 &  0 &  0 & -1\\
+1 & 1 & 0 &  0 & -1 &  0 & -1 &  0 &  0\\
+\end{array}
+\right).
+\]
+Below, we will deal with the more interesting case of \emph{integer} magic
+squares. For the moment, however, we wish to compute the extreme rays
+of the magic square cone $\{z:A_{3\times 3}z=0,z\geq 0\}$. 
+
+In order to call the function \File{rays}, we are not allowed to
+specify a right-hand side in \File{PROJECT.rhs}, as it must be
+$0$. Moreover, we do not have to specify relations in
+\File{PROJECT.rel} if there are equations \emph{only} (= default
+setting for \File{rays}). Since we have nonnegativity constraints on
+\emph{all} variables, we do not have to specify signs in
+\File{PROJECT.sign} (= default setting for \File{rays}). Thus, we only
+have to specify the problem matrix $A_{3\times 3}$.
+\begin{center}
+  \begin{tabular}{|l|}
+\hline
+  \text{ PROJECT.mat } \\
+\hline
+$\begin{array}{rrrrrrrrrrr}
+& 7 & 9 &   &    &    &    &    &    &    & \\
+& 1 & 1 & 1 & -1 & -1 & -1 &  0 &  0 &  0 & \\
+& 1 & 1 & 1 &  0 &  0 &  0 & -1 & -1 & -1 & \\
+& 0 & 1 & 1 & -1 &  0 &  0 & -1 &  0 &  0 & \\
+& 1 & 0 & 1 &  0 & -1 &  0 &  0 & -1 &  0 & \\
+& 1 & 1 & 0 &  0 &  0 & -1 &  0 &  0 & -1 & \\
+& 0 & 1 & 1 &  0 & -1 &  0 &  0 &  0 & -1 & \\
+& 1 & 1 & 0 &  0 & -1 &  0 & -1 &  0 &  0 & \\
+\end{array}$\\
+\hline
+  \end{tabular}
+\end{center}
+Now we call
+
+\begin{center}
+{\tt ./rays PROJECT}
+\end{center}
+
+which creates the single file
+
+\begin{center}
+  \begin{tabular}{|l|}
+\hline
+    \text{ PROJECT.ray }\\
+\hline
+  $\begin{array}{rrrrrrrrrrr}& 4 & 9 &&&&&&&&\\ 
+  & 0 & 2 & 1 & 2 & 1 & 0 & 1 & 0 & 2 & \\
+  & 1 & 2 & 0 & 0 & 1 & 2 & 2 & 0 & 1 & \\
+  & 2 & 0 & 1 & 0 & 1 & 2 & 1 & 2 & 0 & \\
+  & 1 & 0 & 2 & 2 & 1 & 0 & 0 & 2 & 1 & \\\end{array}$\\
+\hline
+  \end{tabular}
+\end{center}
+
+that corresponds to the four extremal rays of the $3\times 3$ magic
+square cone:
+\vspace{-0.3cm}
+\begin{center}
+  \input{magicsqs_ray.pdf_t}
+\end{center}
+\vspace{-0.4cm}
+Every magic square is a nonnegative linear combination of these four
+magic squares.
+
+If we turn now to \emph{integer} magic squares, we are looking for a
+Hilbert basis of the $3\times 3$ magic square cone. As the default
+settings for \File{hilbert} are the same as for \File{rays}, we can
+use the same input file
+\begin{center}
+  \begin{tabular}{|l|}
+\hline
+  \text{ PROJECT.mat } \\
+\hline
+$\begin{array}{rrrrrrrrrrr}
+& 7 & 9 &   &    &    &    &    &    &    & \\
+& 1 & 1 & 1 & -1 & -1 & -1 &  0 &  0 &  0 & \\
+& 1 & 1 & 1 &  0 &  0 &  0 & -1 & -1 & -1 & \\
+& 0 & 1 & 1 & -1 &  0 &  0 & -1 &  0 &  0 & \\
+& 1 & 0 & 1 &  0 & -1 &  0 &  0 & -1 &  0 & \\
+& 1 & 1 & 0 &  0 &  0 & -1 &  0 &  0 & -1 & \\
+& 0 & 1 & 1 &  0 & -1 &  0 &  0 &  0 & -1 & \\
+& 1 & 1 & 0 &  0 & -1 &  0 & -1 &  0 &  0 & \\
+\end{array}$\\
+\hline
+  \end{tabular}
+\end{center}
+for this computation. However, we call
+
+\begin{center}
+{\tt ./hilbert PROJECT}
+\end{center}
+
+which creates the single file
+
+\begin{center}
+  \begin{tabular}{|l|}
+\hline
+    \text{ PROJECT.hil }\\
+\hline
+  $\begin{array}{rrrrrrrrrrr}& 4 & 9 &&&&&&&&\\ 
+  & 0 & 2 & 1 & 2 & 1 & 0 & 1 & 0 & 2 & \\
+  & 1 & 2 & 0 & 0 & 1 & 2 & 2 & 0 & 1 & \\
+  & 2 & 0 & 1 & 0 & 1 & 2 & 1 & 2 & 0 & \\
+  & 1 & 0 & 2 & 2 & 1 & 0 & 0 & 2 & 1 & \\
+  & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & \\\end{array}$\\
+\hline
+  \end{tabular}
+\end{center}
+
+that corresponds to the five elements in the minimal Hilbert basis of
+the $3\times 3$ magic square cone: 
+\vspace{-0.3cm}
+\begin{center}
+  \input{magicsqs_hil.pdf_t}
+\end{center}
+\vspace{-0.4cm}
+Every integer magic square is a nonnegative \emph{integer} linear
+combination of these five integer magic squares. Note that the all-$1$
+square is in the interior of the magic square cone.
+
+
+
+\subsection{Computing circuits and Graver bases}
+Let us compute the homogeneous primitive partition identities of order
+$n=4$. Before we do the simple computation, let us explain what a
+homogeneous primitive partition identity is.
+
+A \important{partition identity} is any identity of the form
+\[
+a_1+\ldots+a_k=b_1+\ldots+b_l
+\]
+with (generally not distinct) integer numbers $0<a_i,b_j\leq n$. It is
+called a \important{homogeneous partition identity}, if $k=l$. A homogeneous
+partition identity is called \important{primitive} if no proper homogeneous
+subidentity exists.
+
+For example,
+\[
+1+2+3=2+2+2
+\]
+is a homogeneous partition identity which is not primitive, since it
+contains the subidentity
+\[
+1+3=2+2
+\]
+which is in fact primitive.
+
+The description of the homogeneous primitive partition identities for
+fixed $n$, however, is exactly the description of the Graver basis of
+the matrix
+\[
+A=
+\left(
+\begin{array}{ccccc}
+ 1 & 1 & 1 & \ldots & 1 \\
+ 1 & 2 & 3 & \ldots & n \\
+\end{array}
+\right).
+\]
+Let us finally do the computation for $n=4$. We create an input file
+\File{hppi4} for \FourTiTwo{} which looks as follows:
+\begin{myverbatim}
+2 4
+1 1 1 1
+1 2 3 4
+\end{myverbatim}
+and invoke \FourTiTwo{} via
+\begin{myverbatim}
+./graver hppi4
+\end{myverbatim}
+This call will create an output file \File{hppi4.gra} that looks
+like:
+\begin{myverbatim}
+5 4
+-1 2 -1  0
+-2 3  0 -1
+-1 1  1 -1
+ 0 1 -2  1
+-1 0  3 -2
+\end{myverbatim}
+Thus, there are $5$ homogeneous primitive partition identities of
+order $n=4$:
+\begin{eqnarray*}
+1+3   & = & 2+2\\
+1+1+4 & = & 2+2+2\\
+1+4   & = & 2+3\\
+2+4   & = & 3+3\\
+1+4+4 & = & 3+3+3
+\end{eqnarray*}

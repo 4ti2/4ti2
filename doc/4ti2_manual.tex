@@ -10,18 +10,19 @@
 \usepackage{amssymb}
 \usepackage{amsmath}
 \usepackage{amsfonts}
-\usepackage{epsfig}
 \usepackage{rotating}
 \usepackage{myfancyheadings}
 \usepackage{color}
-\usepackage{url}
 \usepackage{verbatim}
 \usepackage{epic}
 \usepackage{enumerate}
 \usepackage{booktabs}
-\usepackage{hyperref}
+%\usepackage{hyperref}
+\usepackage{graphics}
 
-\textwidth15cm \textheight21cm \oddsidemargin0.7cm
+\textwidth15cm 
+\textheight21cm 
+\oddsidemargin0.7cm
 \evensidemargin0.7cm
 \parindent0cm
 \linespread{1.2}\normalsize
@@ -37,75 +38,6 @@
 \newtheorem{Call}{Call}
 \newtheorem{Result}{Result}
 \newtheorem{note}{Note}
-
-\makeatletter
-\newtheorem{lemma}{Lemma}
-\renewcommand*{\c@lemma}{\c@theorem}
-\renewcommand*{\p@lemma}{\p@theorem}
-\renewcommand*{\thelemma}{\thetheorem}
-\newcommand{\lemmaname}{Lemma}
-%%
-\newtheorem{conjecture}{Conjecture}
-\renewcommand*{\c@conjecture}{\c@theorem}
-\renewcommand*{\p@conjecture}{\p@theorem}
-\renewcommand*{\theconjecture}{\thetheorem}
-\newcommand{\conjecturename}{Conjecture}
-%%
-\newtheorem{proposition}{Proposition}
-\renewcommand*{\c@proposition}{\c@theorem}
-\renewcommand*{\p@proposition}{\p@theorem}
-\renewcommand*{\theproposition}{\thetheorem}
-\newcommand{\propositionname}{Proposition}
-%%
-\newtheorem{corollary}{Corollary}
-\renewcommand*{\c@corollary}{\c@theorem}
-\renewcommand*{\p@corollary}{\p@theorem}
-\renewcommand*{\thecorollary}{\thetheorem}
-\newcommand{\corollaryname}{Corollary}
-%%
-\newtheorem{observation}{Observation}
-\renewcommand*{\c@observation}{\c@theorem}
-\renewcommand*{\p@observation}{\p@theorem}
-\renewcommand*{\theobservation}{\thetheorem}
-\newcommand{\observationname}{Observation}
-%\theoremstyle{definition}
-%%
-\newtheorem{problem}{Problem}
-\renewcommand*{\c@problem}{\c@theorem}
-\renewcommand*{\p@problem}{\p@theorem}
-\renewcommand*{\theproblem}{\thetheorem}
-\newcommand{\problemname}{Problem}
-%%
-\newtheorem{definition}{Definition}
-\renewcommand*{\c@definition}{\c@theorem}
-\renewcommand*{\p@definition}{\p@theorem}
-\renewcommand*{\thedefinition}{\thetheorem}
-\newcommand{\definitionname}{Definition}
-%%
-\newtheorem{remark}{Remark}
-\renewcommand*{\c@remark}{\c@theorem}
-\renewcommand*{\p@remark}{\p@theorem}
-\renewcommand*{\theremark}{\thetheorem}
-\newcommand{\remarkname}{Remark}
-%%
-\newtheorem{example}{Example}
-\renewcommand*{\c@example}{\c@theorem}
-\renewcommand*{\p@example}{\p@theorem}
-\renewcommand*{\theexample}{\thetheorem}
-\newcommand{\examplename}{Example}
-%%
-\newtheorem{algorithm}{Algorithm}
-\renewcommand*{\c@algorithm}{\c@theorem}
-\renewcommand*{\p@algorithm}{\p@theorem}
-\renewcommand*{\thealgorithm}{\thetheorem}
-\newcommand{\algorithmname}{Algorithm}
-\makeatother
-
-%\newcommand{\theoremname}{Theorem}
-\renewcommand{\chapterautorefname}{Chapter}
-\renewcommand{\sectionautorefname}{Section}
-\renewcommand{\subsectionautorefname}{Subsection}
-%\newcommand{\lemmaname}{Lemma}
 
 \newcommand{\boprob}{\noindent {\bf Problem. }}
 \newcommand{\boremark}{\noindent {\bf Remark. }}
@@ -150,30 +82,13 @@
 \newcommand{\ExtFeasible}{\mathcal{E}}
 \newcommand{\Graph}{\mathcal{G}}
 \newcommand{\st}{\mathrm{s.t.}}
-\let\ve=\mathbf  %% Markup for vectors
-\newcommand\vealpha{{\boldsymbol{\alpha}}}
-\newcommand\vebeta{{\boldsymbol{\beta}}}
-\newcommand\vegamma{{\boldsymbol{\gamma}}}
-\newcommand\round[2][m]{\lfloor #2\rceil_{#1}}
-\newcommand{\CP}{\mathcal{CP}}
-
 
 \newcommand{\Kw}[1]{\underline{#1}}
 \newcommand{\keyw}[1]{{\bf #1}}
 \newcommand{\FourTiTwo}{{\tt 4ti2}}
 \newcommand{\important}{\textbf}
 
-%-- Filenames are typeset in this way.
-\newcommand\File{\begingroup \urlstyle{sf}\Url}
-
-%-- Command lines are typeset as follows.
-\newcommand\Command{\begingroup \urlstyle{sf}\Url}
-
-%-- How sets should appear which automatically adjust the size
-%-- of the braces.
-\newcommand{\Set}[1]{\left\{#1\right\}}
-\newcommand{\setDef}[2]{{#1}\left|\,\vphantom{#1}{#2}\right.}
-\newcommand{\SetDef}[2]{\Set{\,\setDef{#1}{#2}\,}}
+\newcommand{\File}[1]{{\tt #1}}
 
 %-- Create a verbatim environment which indents itself.
 \newenvironment{myverbatim}%
@@ -184,11 +99,7 @@
 \DeclareMathOperator{\cost}{cost} \DeclareMathOperator{\cone}{cone}
 \DeclareMathOperator{\linspan}{span}
 \DeclareMathOperator{\rank}{rank}
-
-\newenvironment{CTabular}[1]%
-  {\begin{center}\begin{tabular}{#1}}%
-  {\end{tabular}\end{center}}
-
+\DeclareMathOperator{\monoid}{monoid}
 
 \begin{document}
 
@@ -205,11 +116,11 @@ geometric and combinatorial problems on linear spaces}
 \newpage
 \thispagestyle{empty}
 
-\frontmatter
+%\frontmatter
 
 \tableofcontents
 
-\mainmatter
+%\mainmatter
 
 \input{4ti2_manual_beginner}
 \input{4ti2_manual_advanced}
