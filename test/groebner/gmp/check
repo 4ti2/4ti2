@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 NUM_FAILURES=0
 
 ../../check.template groebner -q -p arb -afifo

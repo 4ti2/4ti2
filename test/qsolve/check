@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 NUM_FAILURES=0
 
 ../check.template qsolve -q -m -o maxcutoff $@
