@@ -34,7 +34,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <stdlib.h>
 /* ----------------------------------------------------------------- */
 listVector* readListVector(int *numOfVars, char *fileName) {
-  int i,j,numOfVectors;
+  int numOfVectors;
   listVector *basis, *endBasis;
   vector b;
   FILE *in;
@@ -51,13 +51,13 @@ listVector* readListVector(int *numOfVars, char *fileName) {
   if (numOfVectors==0) return (0);
 
   b=createVector(*numOfVars);
-  for (j=0; j<(*numOfVars); j++) fscanf(in,"%d",&b[j]);
+  for (int j=0; j<(*numOfVars); j++) fscanf(in,"%d",&b[j]);
   basis = createListVector(b);
   endBasis = basis;
 
-  for (i=1; i<numOfVectors; i++) {
+  for (int i=1; i<numOfVectors; i++) {
     b=createVector(*numOfVars);
-    for (j=0; j<(*numOfVars); j++) fscanf(in,"%d",&b[j]);
+    for (int j=0; j<(*numOfVars); j++) fscanf(in,"%d",&b[j]);
     endBasis = updateBasis(createListVector(b), endBasis);
   }
   fclose(in);
@@ -66,7 +66,6 @@ listVector* readListVector(int *numOfVars, char *fileName) {
 /* ----------------------------------------------------------------- */
 listVector* extractPositivePartsOfVectors(listVector *basis, 
 					  int numOfVars) {
-  int i;
   vector v;
   listVector *tmp;
 
@@ -74,7 +73,7 @@ listVector* extractPositivePartsOfVectors(listVector *basis,
 
   while (tmp) {
     v=tmp->first;
-    for (i=0;i<numOfVars;i++) if (v[i]<0) v[i]=0;
+    for (int i=0;i<numOfVars;i++) if (v[i]<0) v[i]=0;
     tmp->first=v;
     tmp=tmp->rest;
   }
@@ -109,7 +108,7 @@ listVector* extractVectorsWithFirstEntryEqualToOne(listVector *basis,
 }
 /* ----------------------------------------------------------------- */
 listVector* extractInitialForms(listVector *basis, vector w, int numOfVars) {
-  int i,s;
+  int s;
   vector v;
   listVector *tmp;
 
@@ -119,7 +118,7 @@ listVector* extractInitialForms(listVector *basis, vector w, int numOfVars) {
     v=tmp->first;
     s=dotProduct(v,w,numOfVars);
     if (s>0)
-      for (i=0;i<numOfVars;i++) if (v[i]<0) v[i]=0;
+      for (int i=0;i<numOfVars;i++) { if (v[i]<0) v[i]=0; }
     tmp->first=v;
     tmp=tmp->rest;
   }
@@ -128,7 +127,7 @@ listVector* extractInitialForms(listVector *basis, vector w, int numOfVars) {
 }
 /* ----------------------------------------------------------------- */
 int output_main(int argc, char *argv[]) {
-  int i,x,y,z,numOfVars,numOfRows, numOfLabels,infoLevel,degree,coord;
+  int x,y,z,numOfVars,numOfRows, numOfLabels,infoLevel,degree,coord;
   char *s;
   char fileName[127],outFileName[127],symFileName[127],varFileName[127],
     groFileName[127],costFileName[127];
@@ -138,7 +137,7 @@ int output_main(int argc, char *argv[]) {
   FILE *in;
 
   infoLevel=standardInfoLevel;
-  for (i=1; i<argc-1; i++) {
+  for (int i=1; i<argc-1; i++) {
     if (strncmp(argv[i],"--",2)==0) {
       if (strncmp(argv[i],"--qui",5)==0) {
 	infoLevel=-1;
@@ -150,7 +149,7 @@ if (infoLevel>-1) {
   printVersionInfo();
 }
 
-  for (i=1; i<argc; i++) {
+  for (int i=1; i<argc; i++) {
     if (strncmp(argv[i],"--pos",5)==0) {
       strcpy(fileName,argv[argc-1]);
       basis=readListVector(&numOfVars,fileName);
@@ -176,7 +175,7 @@ if (infoLevel>-1) {
 	tmpV=symmGroup;
 	while (tmpV) {
 	  v=tmpV->first;
-	  for (i=0; i<numOfVars; i++) v[i]=v[i]-1;
+	  for (int i=0; i<numOfVars; i++) v[i]=v[i]-1;
 	  tmpV->first=v;
 	  tmpV=tmpV->rest;
 	}
@@ -202,7 +201,7 @@ if (infoLevel>-1) {
 	tmpV=symmGroup;
 	while (tmpV) {
 	  v=tmpV->first;
-	  for (i=0; i<numOfVars; i++) v[i]=v[i]-1;
+	  for (int i=0; i<numOfVars; i++) v[i]=v[i]-1;
 	  tmpV->first=v;
 	  tmpV=tmpV->rest;
 	}
@@ -319,7 +318,7 @@ if (infoLevel>-1) {
           exit(1);
 	}
 	labels = (char **)malloc(sizeof(char*)*(numOfVars));
-	for (i=0; i<numOfVars; i++) {
+	for (int i=0; i<numOfVars; i++) {
 	  s=(char *)malloc(sizeof(char)*127);
 	  if (fscanf(in,"%s",s) != 1) {
             printf("ERROR: Unrecognised file format for \"%s\".\n",
@@ -344,7 +343,7 @@ if (infoLevel>-1) {
         w=weights->first;
       } else {
 	w=createVector(numOfVars);
-	for (i=0;i<numOfVars;i++) w[i]=1;
+	for (int i=0;i<numOfVars;i++) w[i]=1;
       }
       basis=extractInitialForms(basis,w,numOfVars);
 
@@ -368,7 +367,7 @@ if (infoLevel>-1) {
                           varFileName);
           exit(1);
 	}
-	for (i=0; i<numOfVars; i++) {
+	for (int i=0; i<numOfVars; i++) {
 	  s=(char *)malloc(sizeof(char)*127);
 	  if (fscanf(in,"%s",s) != 1) {
             printf("ERROR: Unrecognised file format for \"%s\".\n",
