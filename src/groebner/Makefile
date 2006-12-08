@@ -41,13 +41,13 @@ SCRIPTS:=$(SCRIPTS:%_main.cpp=$(BINDIR)/%)
 default: $(EXECUTABLE) $(SCRIPTS)
 
 # The target to compile the executable.
-$(EXECUTABLE): $(OBJFILES)
+$(EXECUTABLE):  $(DEPFILES) $(OBJFILES) 
 	@mkdir -p $(BINDIR)
-	$(COMPILER) $(CXXFLAGS) $(INCLUDE) $^ $(LIBINCLUDE) $(LIBS) -o $@
-	@strip $(EXECUTABLE)
+	$(COMPILER) $(CXXFLAGS) $(INCLUDE) $(OBJFILES) $(LIBINCLUDE) $(LIBS) -o $@
 
 # The target to build object files from source files.
 $(OBJDIR)/%.o: %.cpp
+	@mkdir -p $(OBJDIR)
 	$(COMPILER) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
 
 # The target to build dependency files from source files.
@@ -65,4 +65,4 @@ clean:
 	rm -rf $(OBJDIR) $(EXECUTABLE) $(SCRIPTS)
 
 # Include all the dependency information from the dependency files.
--include $(DEPFILES)
+-include $(wildcard $(OBJDIR)/*.d)
