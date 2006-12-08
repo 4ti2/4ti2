@@ -44,19 +44,15 @@ COMPILER=$(CC) $(CFLAGS)
 all: exe
 #all: archive
 
-exe: $(EXECUTABLES) install
+exe: $(EXECUTABLES)
 
 #-- Generate executable files
-$(EXECUTABLES): %: $(OBJDIR)/%_main.o $(DEP) $(OBJ)
+$(EXECUTABLES): $(BINDIR)/%: $(OBJDIR)/%_main.o $(DEP) $(OBJ)
+	@mkdir -p $(BINDIR)
 	$(COMPILER) $< $(OBJ) $(LIBS) -o $@
 
-# Copies the executables into the bin directory.
-install: $(EXECUTABLES)
-	@mkdir -p $(BINDIR)
-	cp -p $(EXECUTABLES) $(BINDIR)
-
 #-- Compile a source file.
-$(OBJDIR)/%.o: %.c $(OBJDIR)/%.d
+$(OBJDIR)/%.o: %.c
 	@mkdir -p $(OBJDIR)
 	$(COMPILER) -c $< -o $@
 

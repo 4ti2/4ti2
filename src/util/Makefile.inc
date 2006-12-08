@@ -33,10 +33,15 @@ CC=g++
 #------------------------------------------------------------------
 
 # The names of the final executables.
-EXECUTABLES= \
+EXECNAMES= \
   genmodel \
   gensymm \
   output \
+
+# The place to put the executables.
+BINDIR = ../../bin
+# The executables to create.
+EXECUTABLES=$(EXECNAMES:%=$(BINDIR)/%)
 
 # The source files.
 SRC= \
@@ -48,7 +53,7 @@ SRC= \
   vector.c
 
 # The main source files for each of the executables.
-MAINSRC = $(EXECUTABLES:%=%_main.c)
+MAINSRC = $(EXECNAMES:%=%_main.c)
 
 # The directory for the object and dependency files.
 OBJDIR = ../../obj/util
@@ -57,9 +62,6 @@ OBJ = $(SRC:%.c=$(OBJDIR)/%.o)
 
 # The dependency files to create.
 DEP = $(OBJ:%.o=%.d) $(MAINSRC:%.c=$(OBJDIR)/%.d)
-
-# The place to put the executables.
-BINDIR = ../../bin
 
 ###################################################################
 #EMACS Local Variables:
