@@ -40,7 +40,6 @@ default: $(EXECUTABLE) $(SCRIPTS)
 $(EXECUTABLE): $(OBJFILES)
 	@mkdir -p $(BINDIR)
 	$(COMPILER) $(CXXFLAGS) $(INCLUDE) $^ $(LIBINCLUDE) $(LIBS) -o $@
-	@strip $(EXECUTABLE)
 
 # The target to build object files from source files.
 $(OBJDIR)/%.o: %.cpp
