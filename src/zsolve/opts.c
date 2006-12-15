@@ -57,16 +57,22 @@ void printUsage(char *program)
 	puts("to redistribute it under certain conditions.");
 	puts("For details, see the file COPYING.");
 	puts("-------------------------------------------------\n");
+
+        printf("Usage: ");
+        if (OHilbert) { printf("hilbert"); }
+        else if (OGraver) { printf("graver"); }
+        else { printf("zsolve"); }
+        printf(" [options] PROJECT\n\n");
 	
 	printf("[Basic options]\n");
-//	printf(" -f, --force               computation regardless of existing FILE.(in)hom\n");
-	printf(" -i, --ignore              system is homogeneous, regardless of FILE.rhs\n");
+//	printf(" -f, --force               computation regardless of existing PROJECT.(in)hom\n");
+	printf(" -i, --ignore              system is homogeneous, regardless of PROJECT.rhs\n");
 
 	printf("\n[Logging options]\n");
 	printf(" -n, --logging=0           no logging (default)\n");
-	printf(" -l, --logging[=1]         simple logging to FILE.log\n");
-	printf(" -ll, --logging=2          verbose logging to FILE.log\n");
-	printf(" -lll, --logging=3         very verbose logging to FILE.log\n");
+	printf(" -l, --logging[=1]         simple logging to PROJECT.log\n");
+	printf(" -ll, --logging=2          verbose logging to PROJECT.log\n");
+	printf(" -lll, --logging=3         very verbose logging to PROJECT.log\n");
 
 	printf("\n[Output options]\n");
 	printf(" -q, --quiet, --verbose=0  quiet mode\n");
@@ -75,23 +81,24 @@ void printUsage(char *program)
 	printf(" -vvv, --verbose=3         very verbose output\n");
 
 	printf("\n[Backup options]\n");
-	printf(" -b[FREQ], --backup[=FREQ] frequently backup status to FILE.backup,\n                           where FREQ must be \"[1-9][0-9]*[mhd]\" for mins,\n                           hours or days. default is 1h\n");
-	printf(" -r, --resume              resume from a backup like FILE.backup\n");	
+	printf(" -b[FREQ], --backup[=FREQ] frequently backup status to PROJECT.backup,\n                           where FREQ must be \"[1-9][0-9]*[mhd]\" for mins,\n                           hours or days. default is 1h\n");
+	printf(" -r, --resume              resume from a backup like PROJECT.backup\n");	
 
 	printf("\n[Other options]\n");
 	printf(" -h, --help                display this help and exit\n");
 
 	printf("\n[Used files]\n\n");
-	printf("FILE.mat    matrix\n");
-	printf("FILE.rhs    right hand side (optional)\n");
-	printf("FILE.rel    relations (<, >, =, p)\n");
-	printf("FILE.sign   sign of columns (optional)\n");
-	printf("FILE.lb     lower bounds columns (optional)\n");
-	printf("FILE.ub     upper bounds columns (optional)\n");
-	printf("FILE.backup backup file\n");
-	printf("FILE.zinhom inhomogeneous part of the solution\n");
-	printf("FILE.zhom   homogeneous part of the solution\n");
-	printf("FILE.zfree  free part of the solution\n");
+	printf("PROJECT.mat    matrix\n");
+	printf("PROJECT.rhs    right hand side (optional)\n");
+	//printf("PROJECT.rel    relations (<, >, =, p)\n");
+	printf("PROJECT.rel    relations (<, >, =)\n");
+	printf("PROJECT.sign   sign of columns (optional)\n");
+	printf("PROJECT.lb     lower bounds columns (optional)\n");
+	printf("PROJECT.ub     upper bounds columns (optional)\n");
+	printf("PROJECT.backup backup file\n");
+	printf("PROJECT.zinhom inhomogeneous part of the solution\n");
+	printf("PROJECT.zhom   homogeneous part of the solution\n");
+	printf("PROJECT.zfree  free part of the solution\n");
 
 	exit(0);
 }
