@@ -156,7 +156,7 @@ MinimizeOptions::print_usage()
     std::cerr << "Computes the minimal solution of an integer lattice program.\n";
     std::cerr << "\
 Input Files:\n\
-  PROJECT             A matrix (optional only if lattice basis is given).\n\
+  PROJECT.mat         A matrix (optional only if lattice basis is given).\n\
   PROJECT.lat         A lattice basis (optional only if matrix is given).\n\
   PROJECT.cost        The cost vector. Exactly one vector allowed.\n\
   PROJECT.zsol        An integer solution to specify a fiber (needed).\n\

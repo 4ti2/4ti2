@@ -127,7 +127,7 @@ WalkOptions::print_usage()
     std::cerr << "Computes the minimal solution of an integer lattice program.\n";
     std::cerr << "\
 Input Files:\n\
-  PROJECT             A matrix (optional only if lattice basis is given).\n\
+  PROJECT.mat         A matrix (optional only if lattice basis is given).\n\
   PROJECT.lat         A lattice basis (optional only if matrix is given).\n\
   PROJECT.gro.start   The starting Groebner basis (needed).\n\
   PROJECT.gro.cost    The starting cost vector (optional, default is degrevlex).\n\

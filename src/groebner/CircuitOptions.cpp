@@ -144,7 +144,7 @@ CircuitOptions::print_usage()
         std::cerr << "Computes the extreme rays of a cone.\n";
         std::cerr << "\
 Input Files:\n\
-  PROJECT             A matrix (optional if lattice basis is given).\n\
+  PROJECT.mat         A matrix (optional if lattice basis is given).\n\
   PROJECT.lat         A lattice basis (optional if matrix is given).\n\
   PROJECT.sign        The sign constraints of the variables ('1' means\n\
                       non-negative and '0' means a free variable).\n\

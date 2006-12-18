@@ -160,7 +160,7 @@ Options::print_usage()
         std::cerr << "Computes the Groebner basis of a lattice.\n";
         std::cerr << "\
 Input Files:\n\
-  PROJECT             A matrix (optional if lattice basis is given).\n\
+  PROJECT.mat         A matrix (optional if lattice basis is given).\n\
   PROJECT.lat         A lattice basis (optional if matrix is given).\n\
   PROJECT.cost        The cost matrix (optional, default is degrevlex).\n\
                       Ties are broken with degrevlex.\n\

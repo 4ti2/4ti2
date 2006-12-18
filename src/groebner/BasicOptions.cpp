@@ -119,7 +119,7 @@ Output Files:\n\
         std::cerr << "Usage: normalform [options] <PROJECT>\n\n";
         std::cerr << "\
 Input Files:\n\
-  PROJECT             A matrix (optional if lattice basis is given).\n\
+  PROJECT.mat         A matrix (optional if lattice basis is given).\n\
   PROJECT.lat         A lattice basis (optional if matrix is given).\n\
   PROJECT.gro         The Groebner basis of the lattice (needed).\n\
   PROJECT.cost        The cost matrix (optional, default is degrevlex).\n\
