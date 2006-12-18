@@ -37,22 +37,30 @@ _4ti2_::zbasis_main(int argc, char **argv)
     BasicOptions::instance()->process_options(argc, argv);
 
     // Read in the file with the matrix.
-    std::string matrix_filename(BasicOptions::instance()->filename.c_str());
-    std::ifstream matrix_file(matrix_filename.c_str());
-    int m=0,n=0;
-    if (!matrix_file.good())
+    std::string project_filename(BasicOptions::instance()->filename);
+    VectorArray* project = input_VectorArray(project_filename.c_str());
+    std::string matrix_filename(project_filename + ".mat");
+    VectorArray* matrix = input_VectorArray(matrix_filename.c_str());
+    if (matrix != 0 && project != 0)
     {
-        std::cerr << "File not found: " << matrix_filename << std::endl;
+        std::cerr << "Input Error: Both " << project_filename << " and ";
+        std::cerr << matrix_filename << " exist.\n";
+        std::cerr << "Input Error: Only one of them allowed (preferably ";
+        std::cerr << matrix_filename << ").\n";
         exit(1);
     }
-    matrix_file >> m >> n;
-    VectorArray matrix(m, n);
-    matrix_file >> matrix;
+    if (project != 0)
+    {
+        std::cout << "WARNING: Please specify the matrix in the file '";
+        std::cout << matrix_filename << "' instead of '";
+        std::cout << project_filename << "'.\n";
+        matrix = project;
+    }
 
-    VectorArray zbasis(0, n);
-    lattice_basis(matrix, zbasis);
+    VectorArray zbasis(0, matrix->get_size());
+    lattice_basis(*matrix, zbasis);
 
-    std::string zbasis_filename(matrix_filename + ".lat");
+    std::string zbasis_filename(project_filename + ".lat");
     output(zbasis_filename.c_str(), zbasis);
 
     return 0;
