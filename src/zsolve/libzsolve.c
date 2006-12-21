@@ -467,10 +467,13 @@ void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 		{
 			ctx->VarTime = getCPUTime();
 			next = nextVariable(ctx);
+//			printf("next variable = %d\n", next);
 			if (next<0)
 				break;
 			splitLog(ctx, ZSOLVE_LOG_VARIABLE_STARTED, 0.0);
 			swapVectorArrayColumns(ctx->Lattice, next, ctx->Current);
+//			printf("after next_var_swap:\n");
+//			printVectorArray(ctx->Lattice, true);
 			createValueTrees(ctx);
 		}
 
@@ -511,6 +514,9 @@ void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 				splitLog(ctx, ZSOLVE_LOG_VARIABLE_FINISHED, ctx->VarTime);
 				ctx->Current++;
 				ctx->SumNorm = 0;
+
+//				printf("After COMPLETE and FILTER\n");
+//				printVectorArray(ctx->Lattice, true);
 			}
 
 			ctx->FirstNorm = 0;
@@ -518,8 +524,12 @@ void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 
 	}
 
+	// algorithm completed
+
 	split = -1;
 	count = 0;
+
+	// repermute
 
 	for (i = 0; i<ctx->Variables-1; i++) {
 		k = i;
@@ -529,6 +539,12 @@ void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 		}
 		swapVectorArrayColumns(ctx->Lattice, i, k);
 	}
+
+	// DEBUG
+//	printVectorArray(ctx->Lattice, true);
+
+	// split - variable for hom / inhom
+	// count - number of columns for output
 
 	for (i=0; i<ctx->Variables; i++)
 	{
@@ -543,25 +559,31 @@ void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 	ctx->Frees = createVectorArray(count);
 	ctx->Graver = createVectorArray(count);
 
+	// if no splitting, inhom only contains (0,...,0)
+
 	if (split<0)
 		appendToVectorArray(ctx->Inhoms, createZeroVector(count));
 
 	for (i=0; i<ctx->Lattice->Size; i++)
 	{
 		vector = ctx->Lattice->Data[i];
+		// hom depends on splitting variable
 		is_hom = split < 0 || vector[split] == 0;
+		// free, if all nonzero-vars are free
 		is_free = true;
 		for (j=0; j<ctx->Lattice->Variables; j++)
 			if (vector[j] != 0 && !ctx->Lattice->Properties[j].Free)
 				is_free = false;
+		// has_symmetric, if inverse fits the bounds
 		has_symmetric = true;
 		for (j=0; j<ctx->Lattice->Variables; j++)
 			if (!checkVariableBounds(ctx->Lattice->Properties, j, -vector[j]))
 				has_symmetric = false;
+		// lex compare of vector with its inverse
 		lex_cmp = lexCompareInverseVector(vector, ctx->Lattice->Variables);
-		
+
 		assert(!is_free || has_symmetric);
-		
+
 		if (is_free) {
 			if (!has_symmetric || lex_cmp>0) {
 				appendToVectorArray(ctx->Frees, copyVector(vector, count));

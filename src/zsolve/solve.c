@@ -914,6 +914,9 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	// DEBUG
+//	printVectorArray(ctx->Lattice, true);
+
 	zsolveSystem(ctx, !OResume);
 
 	if (OGraver)

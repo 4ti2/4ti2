@@ -216,6 +216,10 @@ void createValueTrees(ZSolveContext ctx)
 	for (i=0; i<ctx->Lattice->Size; i++)
 	{
 		j = normVector(ctx->Lattice->Data[i], ctx->Current);
+		// TODO is it correct, to throw out if all 0 on before and current ?! - it seems incorrect, as bayer-test fails.
+		if (j==0 && ctx->Lattice->Data[i][ctx->Current] == 0)
+			continue;
+		// put in corresponding norm-tree
 		if (ctx->Norm[j]==NULL)
 			ctx->Norm[j] = createValueTree(-1);
 		appendToIndexArray( ((ValueTree *)ctx->Norm)[j]->vectors, i);
@@ -279,6 +283,11 @@ bool enumValueReducer(ZSolveContext ctx, ValueTree tree)
 			for (i=0; i<tree->vectors->Size; i++)
 			{
 				Reducer = ctx->Lattice->Data[tree->vectors->Data[i]];
+/*				printf("=> Testing reduction of [");
+				printVector(ctx->Sum, ctx->Variables);
+				printf("] by [");
+				printVector(Reducer, ctx->Variables);
+				printf("]\n"); */
 				for (j=0; j<=ctx->Current; j++)
 					if (Reducer[j]*ctx->Sum[j]<0 || abs(ctx->Sum[j])<abs(Reducer[j]))
 						break;
@@ -435,6 +444,11 @@ void buildValueSum(ZSolveContext ctx)
 	if (norm==0)
 		return;
 
+	// DEBUG
+/*	printf("build: [");
+	printVector(ctx->Sum, ctx->Variables);
+	printf("]\n"); */
+
 	// reducable ?
 	flag = false;
 	for (i=0; i<=norm/2; i++)
@@ -448,16 +462,22 @@ void buildValueSum(ZSolveContext ctx)
 			}
 		}
 	}
-	if (flag)
+	if (flag) {
+//		printf("(reduced)\n");
 		return;
+	}
 
 	// limits okay ?
 	for (i=0; i<ctx->Current; i++)
 	{
-		if (ctx->Lattice->Properties[i].Lower>ctx->Sum[i])
+		if (ctx->Lattice->Properties[i].Lower>ctx->Sum[i]) {
+//			printf("(lower bounds failed)\n");
 			return;
-		if (ctx->Lattice->Properties[i].Upper<ctx->Sum[i])
+		}
+		if (ctx->Lattice->Properties[i].Upper<ctx->Sum[i]) {
+//			printf("(upper bounds failed)\n");
 			return;
+		}
 	}
 
 	if (norm<=ctx->MaxNorm)
