@@ -1,6 +1,7 @@
 // Computation of the primitive partition identities (PPI)
 // Copyright (C) 1998, 1999, 2002, 2003 Matthias Koeppe <mkoeppe@mail.math.uni-magdeburg.de>
 // Copyright (C) 2006 4ti2 team.
+// Main author(s): Matthias Koeppe
 // $Id$
 
 // This program is free software; you can redistribute it and/or modify it
