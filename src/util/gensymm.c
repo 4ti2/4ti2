@@ -3,6 +3,7 @@
 problems on linear spaces.
 
 Copyright (C) 2006 4ti2 team.
+Main author(s): Raymond Hemmecke.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
