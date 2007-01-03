@@ -32,7 +32,6 @@ INCLUDE=
 LIBINCLUDE=
 
 # 4ti2 uses the glpk linear programming library (GLPL).
-LIBS+=-lglpk
 # Add include path to the file glpk.h if necessary.
 INCLUDE+=@GLPK_CFLAGS@
 # Add library include path for the library libglpk if necessary.
@@ -74,10 +73,9 @@ endif
 # Arbitrary precision flags.
 # 4ti2 uses GMP (GLPL), an arbitrary precision arithmetic library.
 ifeq ($(INT),gmp)
-LIBS+=-lgmpxx -lgmp
 CXXFLAGS+= -D_4ti2_GMP_
 # Add include path to gmp.h and gmpxx.h files if necessary.
 INCLUDE+=@GMP_CFLAGS@
 # Add include path for the libraries libgmp and libgmpxx if necessary.
-LIBINCLUDE+=-@GMP_LIBS@
+LIBINCLUDE+=@GMP_LIBS@
 endif
