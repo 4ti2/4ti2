@@ -28,14 +28,10 @@ include Makefile.inc
 
 #------------------------------------------------------------------
 
-# Some flags for the C compiler to produce optimized code.
-CFLAGS = -O3 -Wall
-##??CFLAGS2 = -g
-
 # Additional flags for the linker.
 LIBS =
 
-COMPILER=$(CC) $(CFLAGS)
+COMPILER=$(CXX) $(CXXFLAGS)
 
 #------------------------------------------------------------------
 #-- The commands ...

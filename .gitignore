@@ -1,4 +1,6 @@
 /bin
+m4/Makefile
+m4/Makefile.in
 /obj
 src/util/genmodel
 src/util/genmodel_main.c
