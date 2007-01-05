@@ -7,23 +7,29 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \chapter{Beginner's guide}
+\label{Chapter: Beginner's guide}
 
 %\FourTiTwo{} is a software package that is specifically tailored for
 %certain computational problems on linear spaces and integer
 %lattices.
-In this part, we use a few sample problems to introduce
-you to the basic functionality of \FourTiTwo{}. After working
-through this part, you should know about \emph{linear systems} and
-should be able to do computations using the following functions:
+In this part, we use a few sample problems to introduce you to the
+basic functionality of \FourTiTwo{}. After working through this
+part, you should know about \emph{linear systems} and their
+encodings in \FourTiTwo{}, and should be able to do computations
+using the following functions:
 \begin{itemize}
 \item \File{qsolve}, \File{rays}, \File{circuits}
 \item \File{zsolve}, \File{hilbert}, \File{graver}, \File{ppi}
-\item \File{markov}, \File{groebner}, \File{normalform}, \File{minimize}
+\item \File{minimize}, \File{groebner}, \File{normalform}
+\item \File{genmodel}, \File{markov}
 \end{itemize}
 
 
 
 \section{Linear systems and their encodings}
+
+In this section you learn about the data structure \File{linear
+system} and how it is specified in \FourTiTwo.
 
 \subsection{Linear systems and integer linear systems}
 
@@ -31,16 +37,19 @@ In \FourTiTwo, a \emph{linear system} is defined by $d$ constraints
 $Ax\sim b$ in $n$ unknowns $x$, where each constraint is either
 $\leq$, $=$ or $\geq$, that is $\sim\;\in\{\leq,=,\geq\}^d$.
 Moreover, one may specify sign constraints on the variables that
-need to be respected in an explicit representation of all solutions.
+need to be respected in an explicit continuous/integer
+representation of all solutions.
 
 There is no particular difference in \FourTiTwo{} between a linear
 system and an integer linear system. Currently, the user chooses
 between one of the two by calling the appropriate functions on the
 linear system.
 
+
+
 \subsection{Specifying a linear system in \FourTiTwo}
 
-In order to use a linear system as input, one needs to specify its
+In order to use a linear system as input, we need to specify its
 parts to \FourTiTwo. As our running example, take
 \[
 \left(
@@ -62,11 +71,10 @@ parts to \FourTiTwo. As our running example, take
 \]
 with sign constraints $(1,2,2,0)$, which we will explain below.
 
-First, one has to give his problem a project name, say
+First, we have to give our problem a project name, say
 \File{PROJECT}.
 \begin{itemize}
-\item The matrix $A$ has to be put into the main project file, say
-\File{PROJECT.mat}.
+\item The matrix $A$ has to be put into the file \File{PROJECT.mat}.
 \begin{myverbatim}
 2 4
 1 1 1 1
@@ -92,20 +100,25 @@ First, one has to give his problem a project name, say
 {\bf Note.}
 \begin{itemize}
 \item The input files all have the format of a matrix, preceded by
-  the matrix dimensions. As the dimensions specify how many symbols
-  have to be read, the matrix could be given in only one line or even
+  the matrix dimensions. As the dimensions already specify how many symbols
+  have to be read, the matrix could also be given in only one line or even
   in many lines of different lengths.
-\item In \FourTiTwo{} version 1.3, all appearing numbers have to be
+\item In \FourTiTwo{} version 1.3.1, all appearing numbers have to be
   integers.
-\item Consequently, this implies that at the moment, \File{qsolve}
-  only supports homogeneous linear systems, that is systems with $b=0$.
-  Minimal inhomogeneous solutions could have rational components.
+\item Consequently, this implies that, at the moment, \File{qsolve}
+  only supports homogeneous linear systems, that is systems with
+  $b=0$, since minimal inhomogeneous solutions could have rational
+  components.
 \end{itemize}
+
+
+
+\subsection{How does an explicit solution to linear systems look like?}
 
 If the system is solved over $\R$ (using \File{qsolve}),
 \FourTiTwo{} returns two sets of integer vectors:
 \begin{itemize}
-\item a set $H$ of support minimal homogeneous solutions, and
+\item a set $H$ of support-minimal homogeneous solutions, and
 \item a set $F$ defining the linear vector space the solution set
 lives in.
 \end{itemize}
@@ -121,8 +134,8 @@ with $h_j\in H$, $f_k\in F$, and $\alpha_j\geq 0$.
 If the system is solved over $\Z$ (using \File{zsolve}),
 \FourTiTwo{} returns three sets of integer vectors:
 \begin{itemize}
-\item a set $H$ of support minimal homogeneous \emph{integer} solutions,
-\item a set $I$ of support minimal inhomogeneous \emph{integer}
+\item a set $H$ of minimal homogeneous \emph{integer} solutions,
+\item a set $I$ of minimal inhomogeneous \emph{integer}
 solutions, and
 \item a set $F$ defining the sublattice of $\Z^n$ the solution set
 lives in.
@@ -132,19 +145,20 @@ Any solution $z$ of the linear system can now be written as
 z=i+ \sum \alpha_j h_j+\sum \beta_k f_k
 \end{equation}
 for some $i\in I$ and with $h_j\in H$, $f_j\in F$, and
-$\alpha_j\in\Z_+0$.
+$\alpha_j\in\Z_+$.
 
 {\bf Sign file.} Let us finally clarify what the sign file
-\File{proj.sign} is good for. The sign file may declare a variable
-to be nonnegative ($1$), to be non-positive ($-1$), or to consider
-both cases independently and unite the answers ($2$). If a nonzero
-sign has been assigned to a variable, the explicit representations
-(\ref{Equation: Continuous representation}) and (\ref{Equation:
-Integer representation}) above of a solution $z$ have to respect the
-sign on that component. The default setting for each variable is
-$0$, that is, the sign need not be respected in the explicit
+\File{PROJECT.sign} is good for. The sign file may declare a
+variable to be non-negative ($1$), to be non-positive ($-1$), or to
+consider both cases independently and unite the answers ($2$). If a
+nonzero sign has been assigned to a variable, the explicit
+representations (\ref{Equation: Continuous representation}) and
+(\ref{Equation: Integer representation}) above of a solution $z$
+have to respect the sign on that variable. The default setting for
+each variable is $0$ (when using \File{qsolve} and \File{zsolve}),
+that is, the sign need not be respected in the explicit
 representation. In our example above, the first variable is declared
-to be nonnegative, the second and the third one expand to $2\cdot
+to be non-negative, the second and the third one expand to $2\cdot
 2=4$ orthant constraints, and the fourth variable is unconstrained.
 Note, however, that \FourTiTwo{} does \emph{not} decompose the
 problem internally into the four problems with sign patterns
@@ -156,7 +170,10 @@ deals with them more efficiently at the same time.
 
 \subsection{Solving linear systems over $\R$ and over $\Z$}
 
-To solve the system
+In this example you learn about the functions \File{qsolve} and
+\File{zsolve}.
+
+Let us have a look at the linear system
 \[
   \begin{array}{rcrcrlcl}
     x & - & y & \leq & 2\\
@@ -165,58 +182,54 @@ To solve the system
       &   & y & \geq & 0\\
   \end{array}
 \]
-over $\R$, we have to create the files
-
+and let us solve it over $\R$, we have to create the files encoding
+the linear system. Let us call our project \File{system}. Then the
+input files look as follows:
 \begin{center}
   \begin{tabular}{|l|l|l|l|}
 \hline
-    \text{ PROJECT.mat } & \text{ PROJECT.rel } & \text{ PROJECT.rhs } & \text{ PROJECT.sign }\\
+    \text{ system.mat } & \text{ system.rel } & \text{ system.rhs } & \text{ system.sign }\\
 \hline
-  $\begin{array}{rrrr}& 3 & 2 & \\& 1 & -1\\& -3 & 1\\& 1 & 1 &\\ \end{array}$ & 
-  $\begin{array}{rrrrr}& 1 & 3 & \\& < &  < & = & \\ \\ \\\end{array}$ & 
+  $\begin{array}{rrrr}& 3 & 2 & \\& 1 & -1\\& -3 & 1\\& 1 & 1 &\\ \end{array}$ &
+  $\begin{array}{rrrrr}& 1 & 3 & \\& < &  < & > & \\ \\ \\\end{array}$ &
   $\begin{array}{rrrrr}& 1 & 3 & \\& 2 &  1 & 1 & \\ \\ \\\end{array}$ &
   $\begin{array}{rrrr}& 1 & 2 & \\& 0 &  1 & \\ \\ \\\end{array}$\\
 \hline
   \end{tabular}
 \end{center}
-
 and then call
-
 \begin{center}
-{\tt ./qsolve PROJECT}
+{\tt ./qsolve system}
 \end{center}
-
 This call creates three files
-
 \begin{center}
   \begin{tabular}{|l|l|l|}
 \hline
-    \text{ PROJECT.qinhom } & \text{ PROJECT.qhom } & \text{ PROJECT.qfree }\\
+    \text{ system.qinhom } & \text{ system.qhom } & \text{ system.qfree }\\
 \hline
-  $\begin{array}{rrrr}& 3 & 2 &\\& 0 & 1 &\\& 0 & 2 &\\& 1 & 0 &\\\end{array}$ & 
+  $\begin{array}{rrrr}& 3 & 2 &\\& 0 & 1 &\\& 0 & 2 &\\& 1 & 0 &\\\end{array}$ &
   $\begin{array}{rrrr}& 2 & 2 &\\& 1 & 1 &\\& 1 & 3 & \\ \\\end{array}$ &
   $\begin{array}{rrrr}& 0 & 2 & \\ \\ \\ \\ \end{array}$\\
 \hline
   \end{tabular}
 \end{center}
-
 which correspond to the explicit description of all solutions:
 \begin{center}
   \begin{tabular}{cc}
     \emph{Feasible solutions} & \emph{Computed representation}\\
-       \input{feasible.pdf_t} & \input{solved_LP.pdf_t}    \\
+       \input{feasible_LP.pdf_t} & \input{solved_LP.pdf_t}    \\
   \end{tabular}
 \end{center}
 \[
 \conv\left({1\choose 0},{2\choose 0},{0\choose 1}\right) + \cone\left({1\choose 1},{1\choose 3}\right).
 \]
-Note that in the pictures above, the three colored cones are only a
-simplification and shall visualize the covering of the feasible
-region by infinitely many shifted copies of the cone
+Note that in the second picture above, the three colored cones are
+only a simplification and shall visualize the covering of the
+feasible region by infinitely many shifted copies of the cone
 \[
-\cone\left({1\choose 1},{1\choose 2},{1\choose 3}\right),
+\cone\left({1\choose 1},{1\choose 3}\right),
 \]
-appended to each point in
+one appended to each point in
 \[
 \conv\left({1\choose 0},{2\choose 0},{0\choose 1}\right).
 \]
@@ -231,42 +244,37 @@ Let us now turn to the integer situation, that is, let us solve the system
   \end{array}
 \]
 over $\Z$. As the linear system itself is unchanged, we can use the
-same the same files as above in order to specify the linear system.
-
+same input files as above in order to specify the linear system.
 \begin{center}
   \begin{tabular}{|l|l|l|l|}
 \hline
-    \text{ PROJECT.mat } & \text{ PROJECT.rel } & \text{ PROJECT.rhs } & \text{ PROJECT.sign }\\
+    \text{ system.mat } & \text{ system.rel } & \text{ system.rhs } & \text{ system.sign }\\
 \hline
-  $\begin{array}{rrrr}& 3 & 2 & \\& 1 & -1\\& -3 & 1\\& 1 & 1 &\\ \end{array}$ & 
-  $\begin{array}{rrrrr}& 1 & 3 & \\& < &  < & = & \\ \\ \\\end{array}$ & 
+  $\begin{array}{rrrr}& 3 & 2 & \\& 1 & -1\\& -3 & 1\\& 1 & 1 &\\ \end{array}$ &
+  $\begin{array}{rrrrr}& 1 & 3 & \\& < &  < & = & \\ \\ \\\end{array}$ &
   $\begin{array}{rrrrr}& 1 & 3 & \\& 2 &  1 & 1 & \\ \\ \\\end{array}$ &
   $\begin{array}{rrrr}& 1 & 2 & \\& 0 &  1 & \\ \\ \\\end{array}$\\
 \hline
   \end{tabular}
 \end{center}
-
 Then, however, we call
-
 \begin{center}
-{\tt ./zsolve PROJECT}
+{\tt ./zsolve system}
 \end{center}
-
 This call creates three files
-
 \begin{center}
   \begin{tabular}{|l|l|l|}
 \hline
-    \text{ PROJECT.zinhom } & \text{ PROJECT.zhom } & \text{ PROJECT.zfree }\\
+    \text{ system.zinhom } & \text{ system.zhom } & \text{ system.zfree }\\
 \hline
-  $\begin{array}{rrrr}& 4 & 2 &\\& 0 & 1 &\\& 0 & 2 &\\& 1 & 0 &\\ & 1 & 1 &\\\end{array}$ & 
+  $\begin{array}{rrrr}& 4 & 2 &\\& 0 & 1 &\\& 0 & 2 &\\& 1 & 0 &\\ & 1 & 1 &\\\end{array}$ &
   $\begin{array}{rrrr}& 3 & 2 &\\& 1 & 1 &\\& 1 & 2 &\\& 1 & 3 & \\ \\\end{array}$ &
   $\begin{array}{rrrr}& 0 & 2 & \\ \\ \\ \\ \\ \end{array}$\\
 \hline
   \end{tabular}
 \end{center}
-
-which correspond to the explicit description of all integer solutions:
+which correspond to the explicit description of all integer
+solutions:
 \begin{center}
   \begin{tabular}{cc}
     \emph{Feasible solutions} & \emph{Computed representation}\\
@@ -274,34 +282,38 @@ which correspond to the explicit description of all integer solutions:
   \end{tabular}
 \end{center}
 \[
-\left\{{1\choose 0},{2\choose 0},{0\choose 1},{1\choose 1}\right\} + \monoid\left({1\choose 1},{1\choose 2},{1\choose 3}\right).
+\left\{{1\choose 0},{2\choose 0},{0\choose 1},{1\choose 1}\right\} +
+\monoid\left({1\choose 1},{1\choose 2},{1\choose 3}\right).
 \]
 Note that in the pictures above, we are only interested in the
-\emph{lattice points} inside the colored regions! The full regions are
-colored to visualize the covering of all feasible integer solutions by
-finitely many shifted copies of the monoid 
+\emph{lattice points} inside the colored regions! The full regions
+are colored only for the purpose of visualizing the covering of all
+feasible integer solutions by finitely many shifted copies of the
+monoid
 \[
 \monoid\left({1\choose 1},{1\choose 2},{1\choose 3}\right).
 \]
 
 
+
 \subsection{Computing extreme rays and Hilbert bases}
 
-Let us consider the set of magic $3\times 3$ squares with nonnegative
-real entries, that is, the set of all $3\times 3$ arrays with
-non-negative real entries whose row sums, column sums, and main
-diagonal sums all add up to the same number, the magic constant of the
-square. 
-\vspace{-0.3cm}
+In this example you learn about the functions \File{rays} and
+\File{hilbert}.
+
+Let us consider the set of magic $3\times 3$ squares with
+non-negative real entries, that is, the set of all $3\times 3$
+arrays with non-negative real entries whose row sums, column sums,
+and main diagonal sums all add up to the same number, the magic
+constant of the square. \vspace{-0.3cm}
 \begin{center}
   \input{magicsqs.pdf_t}
 \end{center}
-\vspace{-0.4cm}
-Clearly, addition of two magic squares gives another magic square,
-as well as does multiplication of a magic square by a nonnegative
-number. Therefore, we may talk about the cone of magic $3\times 3$
-squares. In fact, this cone is a pointed rational polyhedral cone
-described by the linear system 
+\vspace{-0.4cm} Clearly, addition of two magic squares gives another
+magic square, as well as does multiplication of a magic square by a
+non-negative number. Therefore, we may talk about the \emph{cone} of
+magic $3\times 3$ squares. In fact, this cone is a pointed rational
+polyhedral cone described by the linear system
 \begin{eqnarray*}
 x_{11}+x_{12}+x_{13}
 & = & x_{21}+x_{22}+x_{23}\\
@@ -330,22 +342,20 @@ A_{3\times 3}=\left(
 \]
 Below, we will deal with the more interesting case of \emph{integer} magic
 squares. For the moment, however, we wish to compute the extreme rays
-of the magic square cone $\{z:A_{3\times 3}z=0,z\geq 0\}$. 
+of the magic square cone $\{z:A_{3\times 3}z=0,z\geq 0\}$.
 
-In order to call the function \File{rays}, we are not allowed to
-specify a right-hand side in \File{PROJECT.rhs}, as it must be
-$0$. Moreover, we do not have to specify relations in
-\File{PROJECT.rel} if there are equations \emph{only} (= default
-setting for \File{rays}). Since we have nonnegativity constraints on
-\emph{all} variables, we do not have to specify signs in
-\File{PROJECT.sign} (= default setting for \File{rays}). Thus, we only
-have to specify the problem matrix $A_{3\times 3}$.
+In order to call the function \File{rays}, we only have to create
+one file, say \File{magic3x3.mat}, in which we specify the problem
+matrix $A_{3\times 3}$. The remaining data is set by default to
+"equations only", to "homogeneous system", and to "all variables are
+non-negative". Note that we are allowed to change these defaults
+(except homogeneity) by specifying data in \File{magic3x3.rel} and
+\File{magic3x3.sign}
 \begin{center}
   \begin{tabular}{|l|}
 \hline
-  \text{ PROJECT.mat } \\
-\hline
-$\begin{array}{rrrrrrrrrrr}
+  \text{ magic3x3.mat } \\
+\hline $\begin{array}{rrrrrrrrrrr}
 & 7 & 9 &   &    &    &    &    &    &    & \\
 & 1 & 1 & 1 & -1 & -1 & -1 &  0 &  0 &  0 & \\
 & 1 & 1 & 1 &  0 &  0 &  0 & -1 & -1 & -1 & \\
@@ -359,19 +369,16 @@ $\begin{array}{rrrrrrrrrrr}
   \end{tabular}
 \end{center}
 Now we call
-
 \begin{center}
-{\tt ./rays PROJECT}
+{\tt ./rays magic3x3}
 \end{center}
-
 which creates the single file
-
 \begin{center}
   \begin{tabular}{|l|}
 \hline
-    \text{ PROJECT.ray }\\
+    \text{ magic3x3.ray }\\
 \hline
-  $\begin{array}{rrrrrrrrrrr}& 4 & 9 &&&&&&&&\\ 
+  $\begin{array}{rrrrrrrrrrr}& 4 & 9 &&&&&&&&\\
   & 0 & 2 & 1 & 2 & 1 & 0 & 1 & 0 & 2 & \\
   & 1 & 2 & 0 & 0 & 1 & 2 & 2 & 0 & 1 & \\
   & 2 & 0 & 1 & 0 & 1 & 2 & 1 & 2 & 0 & \\
@@ -379,16 +386,13 @@ which creates the single file
 \hline
   \end{tabular}
 \end{center}
-
 that corresponds to the four extremal rays of the $3\times 3$ magic
-square cone:
-\vspace{-0.3cm}
+square cone: \vspace{-0.3cm}
 \begin{center}
   \input{magicsqs_ray.pdf_t}
 \end{center}
-\vspace{-0.4cm}
-Every magic square is a nonnegative linear combination of these four
-magic squares.
+\vspace{-0.4cm} Every magic $3\times 3$ square is a non-negative
+linear combination of these four magic squares.
 
 If we turn now to \emph{integer} magic squares, we are looking for a
 Hilbert basis of the $3\times 3$ magic square cone. As the default
@@ -397,9 +401,8 @@ use the same input file
 \begin{center}
   \begin{tabular}{|l|}
 \hline
-  \text{ PROJECT.mat } \\
-\hline
-$\begin{array}{rrrrrrrrrrr}
+  \text{ magic3x3.mat } \\
+\hline $\begin{array}{rrrrrrrrrrr}
 & 7 & 9 &   &    &    &    &    &    &    & \\
 & 1 & 1 & 1 & -1 & -1 & -1 &  0 &  0 &  0 & \\
 & 1 & 1 & 1 &  0 &  0 &  0 & -1 & -1 & -1 & \\
@@ -412,20 +415,17 @@ $\begin{array}{rrrrrrrrrrr}
 \hline
   \end{tabular}
 \end{center}
-for this computation. However, we call
-
+for this computation. However, to compute the Hilbert basis, we call
 \begin{center}
-{\tt ./hilbert PROJECT}
+{\tt ./hilbert magic3x3}
 \end{center}
-
-which creates the single file
-
+which creates the single output file
 \begin{center}
   \begin{tabular}{|l|}
 \hline
-    \text{ PROJECT.hil }\\
+    \text{ magic3x3.hil }\\
 \hline
-  $\begin{array}{rrrrrrrrrrr}& 4 & 9 &&&&&&&&\\ 
+  $\begin{array}{rrrrrrrrrrr}& 4 & 9 &&&&&&&&\\
   & 0 & 2 & 1 & 2 & 1 & 0 & 1 & 0 & 2 & \\
   & 1 & 2 & 0 & 0 & 1 & 2 & 2 & 0 & 1 & \\
   & 2 & 0 & 1 & 0 & 1 & 2 & 1 & 2 & 0 & \\
@@ -434,84 +434,505 @@ which creates the single file
 \hline
   \end{tabular}
 \end{center}
-
-that corresponds to the five elements in the minimal Hilbert basis of
-the $3\times 3$ magic square cone: 
-\vspace{-0.3cm}
+that corresponds to the five elements in the minimal Hilbert basis
+of the $3\times 3$ magic square cone: \vspace{-0.3cm}
 \begin{center}
   \input{magicsqs_hil.pdf_t}
 \end{center}
-\vspace{-0.4cm}
-Every integer magic square is a nonnegative \emph{integer} linear
-combination of these five integer magic squares. Note that the all-$1$
-square is in the interior of the magic square cone.
+\vspace{-0.4cm} Every integer magic $3\times 3$ square is a
+non-negative \emph{integer} linear combination of these five integer
+magic squares. Note that the all-$1$ square is in the interior of
+the magic square cone.
 
 
 
 \subsection{Computing circuits and Graver bases}
-Let us compute the homogeneous primitive partition identities of order
-$n=4$. Before we do the simple computation, let us explain what a
-homogeneous primitive partition identity is.
+
+In this example you learn about the functions \File{graver},
+\File{ppi}, and \File{circuits}.
+
+As an example of a Graver basis computation, let us compute the
+primitive partition identities of order $n=4$. Before we do the
+simple computation, let us explain what a primitive partition
+identity is.
 
 A \important{partition identity} is any identity of the form
 \[
 a_1+\ldots+a_k=b_1+\ldots+b_l
 \]
-with (generally not distinct) integer numbers $0<a_i,b_j\leq n$. It is
-called a \important{homogeneous partition identity}, if $k=l$. A homogeneous
-partition identity is called \important{primitive} if no proper homogeneous
+with (generally not distinct) integer numbers $0<a_i,b_j\leq n$. A
+partition identity is called \important{primitive} if no proper
 subidentity exists.
 
 For example,
 \[
 1+2+3=2+2+2
 \]
-is a homogeneous partition identity which is not primitive, since it
-contains the subidentity
+is a partition identity which is not primitive, since it contains
+the subidentity
 \[
 1+3=2+2
 \]
 which is in fact primitive.
 
-The description of the homogeneous primitive partition identities for
-fixed $n$, however, is exactly the description of the Graver basis of
-the matrix
+The description of the primitive partition identities for fixed $n$,
+however, is exactly the description of the Graver basis of the
+matrix
 \[
-A=
-\left(
+A_n= \left(
 \begin{array}{ccccc}
- 1 & 1 & 1 & \ldots & 1 \\
  1 & 2 & 3 & \ldots & n \\
 \end{array}
 \right).
 \]
-Let us finally do the computation for $n=4$. We create an input file
-\File{hppi4} for \FourTiTwo{} which looks as follows:
+Let us finally do the computation for $n=3$. We create an input file
+\File{ppi3} for \FourTiTwo{} which looks as follows:
+\begin{center}
+  \begin{tabular}{|l|}
+\hline
+    \text{ ppi3.mat }\\
+\hline
+  $\begin{array}{rrrrr}
+    & 1 & 3 &&\\
+    & 1 & 2 & 3 & \\
+  \end{array}$\\
+\hline
+  \end{tabular}
+\end{center}
+and call
 \begin{myverbatim}
-2 4
-1 1 1 1
-1 2 3 4
+./graver ppi3
 \end{myverbatim}
-and invoke \FourTiTwo{} via
-\begin{myverbatim}
-./graver hppi4
-\end{myverbatim}
-This call will create an output file \File{hppi4.gra} that looks
+This call will create an output file \File{ppi3.gra} that looks
 like:
-\begin{myverbatim}
-5 4
--1 2 -1  0
--2 3  0 -1
--1 1  1 -1
- 0 1 -2  1
--1 0  3 -2
-\end{myverbatim}
-Thus, there are $5$ homogeneous primitive partition identities of
-order $n=4$:
+\begin{center}
+  \begin{tabular}{|l|}
+\hline
+    \text{ ppi3.gra }\\
+\hline
+  $\begin{array}{rrrrr}
+    & 5 & 3 &&\\
+    & 3 &  0 & -1 & \\
+    & 2 & -1 &  0 & \\
+    & 0 &  3 & -2 & \\
+    & 1 &  1 & -1 & \\
+    & 1 & -2 &  1 & \\
+  \end{array}$\\
+\hline
+  \end{tabular}
+\end{center}
+Thus, there are $5$ primitive partition identities of order $n=3$:
 \begin{eqnarray*}
-1+3   & = & 2+2\\
-1+1+4 & = & 2+2+2\\
-1+4   & = & 2+3\\
-2+4   & = & 3+3\\
-1+4+4 & = & 3+3+3
+1+1+1 & = & 3\\
+1+1   & = & 2\\
+2+2+2 & = & 3+3\\
+1+2   & = & 3\\
+1+3   & = & 2+2
 \end{eqnarray*}
+You may try and compute the primitive partition identities for
+bigger $n$, say $n=17$, $20$, or $23$. Be aware, especially the
+latter two problems take a long, long time. What is the biggest $n$
+for which you can compute the primitive partition identities of
+order $n$ on your machine within one hour?
+
+Due to the very special structure of the matrix, there are
+algorithmic speed-ups \cite{Haus+Koeppe+Weismantel,Koeppe,Urbaniak}.
+The currently fastest algorithm to compute primitive partition
+identities is implemented in the function \File{ppi} of
+\FourTiTwo{}. Try running
+\begin{myverbatim}
+./ppi 17
+\end{myverbatim}
+which creates two files \File{ppi17.mat} (so we do not really have
+to create this file ourselves) and the file \File{ppi17.gra}
+containing the desired identities. Compare this running time with
+the time taken by
+\begin{myverbatim}
+./graver ppi17
+\end{myverbatim}
+Do you notice the speed-up?
+
+Let us now turn to the question of determining the support-minimal
+partition identities. This, in fact, is the question of computing
+the circuits of the matrix
+\[
+A_n= \left(
+\begin{array}{ccccc}
+ 1 & 2 & 3 & \ldots & n \\
+\end{array}
+\right).
+\]
+We use the same input file
+\begin{center}
+  \begin{tabular}{|l|}
+\hline
+    \text{ ppi3.mat }\\
+\hline
+  $\begin{array}{rrrrr}
+    & 1 & 3 &&\\
+    & 1 & 2 & 3 & \\
+  \end{array}$\\
+\hline
+  \end{tabular}
+\end{center}
+as above and call
+\begin{myverbatim}
+./circuits ppi3
+\end{myverbatim}
+This call will create an output file \File{ppi3.cir} that looks
+like:
+\begin{center}
+  \begin{tabular}{|l|}
+\hline
+    \text{ ppi3.cir }\\
+\hline
+  $\begin{array}{rrrrr}
+    & 3 & 3 &&\\
+    & 3 &  0 & -1 & \\
+    & 2 & -1 &  0 & \\
+    & 0 &  3 & -2 & \\
+  \end{array}$\\
+\hline
+  \end{tabular}
+\end{center}
+Thus, there are $3$ support-minimal partition identities of order
+$n=3$:
+\begin{eqnarray*}
+1+1+1 & = & 3\\
+1+1   & = & 2\\
+2+2+2 & = & 3+3\\
+\end{eqnarray*}
+Note that support-minimal partition identities are primitive, since
+the circuits of a matrix are contained in the Graver basis of this
+matrix.
+
+
+\subsection{Integer programming and toric Gr\"obner bases}
+In this example you learn about the functions \File{minimize},
+\File{groebner}, and \File{normalform}.
+
+The following neat example is based on the example presented in
+\cite{Sturmfels:03}. Let us assume that we want to give change worth
+99 cents using only pennies ($1$ct), nickels ($5$ct), dimes
+($10$ct), and quarters ($25$ct). Clearly,
+\[
+4\cdot 1+4\cdot 5+0\cdot 10+3\cdot 25=99
+\]
+would be one way to do it. Is this there another choice of $11$ coins
+that sums up to $99$ct but uses fewer nickels and quarters (in total)?
+In other words, we would like to solve
+\[
+\min\{x_2+x_4:x_1+x_2+x_3+x_4=11,x_1+5x_2+10x_3+25x_4=99,
+x_1,x_2,x_3,x_4\in\Z_+\}
+\]
+Let us set up the problem in \FourTiTwo{}.
+\begin{center}
+  \begin{tabular}{|l|l|l|l|}
+\hline
+    \text{ 4coins.mat } & \text{ 4coins.rhs } & \text{ 4coins.sign } & \text{ 4coins.cost } \\
+\hline
+  $\begin{array}{rrrrrr}& 2 & 4 & & & \\& 1 & 1 & 1 & 1 &\\& 1 & 5 & 10 & 25 & \\ \end{array}$ &
+  $\begin{array}{rrrr}& 1 & 2 & \\& 11 & 99 & \\ \\\end{array}$ &
+  $\begin{array}{rrrrrr}& 1 & 4 & \\& 1 &  1 & 1 & 1 &\\ \\\end{array}$ &
+  $\begin{array}{rrrrrr}& 1 & 4 & & & \\& 0 & 1 & 0 & 1 &\\ \\
+  \end{array}$\\
+\hline
+  \end{tabular}
+\end{center}
+Note that we do not have to specify a relations file
+\File{4coins.rel}, since already by default all relations are
+assumed to be equations. Now we simply call
+\begin{center}
+{\tt ./minimize 4coins}
+\end{center}
+which creates the single output file
+\begin{center}
+  \begin{tabular}{|l|}
+\hline
+    \text{ 4coins.min }\\
+\hline
+  $\begin{array}{rrrrrr}
+    & 1 & 4 &&&\\
+    & 4 & 1 & 4 & 2 & \\
+  \end{array}$\\
+\hline
+  \end{tabular}
+\end{center}
+From this, we conclude that
+\[
+4\cdot 1+1\cdot 5+4\cdot 10+2\cdot 25=99
+\]
+is an optimal choice, using only $3$ instead of $7$ nickels and
+quarters.
+
+{\bf Remark.} We could also specify a list of right-hand sides in
+\File{4coins.rhs}. The call
+\begin{center}
+{\tt ./minimize 4coins}
+\end{center}
+then creates a file \File{4coins.min} containing minima to the
+corresponding integer programs. \eoproof
+
+Since we already know a feasible solution, there is another way we
+might attack this problem, namely via toric Gr\"obner bases. For
+this, we first need to specify the matrix $A$ and the cost vector
+$c$ in the two files \File{4coins.mat} and \File{4coins.cost}:
+\begin{center}
+  \begin{tabular}{|l|l|}
+\hline
+    \text{ 4coins.mat } & \text{ 4coins.cost } \\
+\hline
+  $\begin{array}{rrrrrr}& 2 & 4 & & & \\& 1 & 1 & 1 & 1 &\\& 1 & 5 & 10 & 25 & \\ \end{array}$ &
+  $\begin{array}{rrrrrr}& 1 & 4 & & & \\& 0 & 1 & 0 & 1 &\\ \\
+  \end{array}$\\
+\hline
+  \end{tabular}
+\end{center}
+Then we compute the Gr\"obner basis of the toric ideal
+\[
+I_A=\langle x^u-x^v:Au=Av, u,v\in\Z^4_+\rangle
+\]
+with respect to a term ordering $\prec$ compatible with $c$, that
+is, $c^\intercal v < c^\intercal u$ implies $x^v\prec x^u$. This
+toric Gr\"obner basis is computed by
+\begin{center}
+{\tt ./groebner 4coins}
+\end{center}
+and gives the output file
+\begin{center}
+  \begin{tabular}{|l|}
+\hline
+    \text{ 4coins.gro }\\
+\hline
+  $\begin{array}{rrrrrr}
+    & 1 & 4 &&&\\
+    & 4 & 4 & 0 & 3 & \\
+  \end{array}$\\
+\hline
+  \end{tabular}
+\end{center}
+Then we specify our feasible solution in
+\begin{center}
+  \begin{tabular}{|l|}
+\hline
+    \text{ 4coins.zfeas }\\
+\hline
+  $\begin{array}{rrrrrr}
+    & 1 & 4 &&&\\
+    & 4 & 4 & 0 & 3 & \\
+  \end{array}$\\
+\hline
+  \end{tabular}
+\end{center}
+and call
+\begin{center}
+{\tt ./normalform 4coins}
+\end{center}
+to produce the file
+\begin{center}
+  \begin{tabular}{|l|}
+\hline
+    \text{ 4coins.nf }\\
+\hline
+  $\begin{array}{rrrrrr}
+    & 1 & 4 &&&\\
+    & 4 & 1 & 4 & 2 & \\
+  \end{array}$\\
+\hline
+  \end{tabular}
+\end{center}
+that also contains the desired optimal solution.
+
+{\bf Remark.} We could also specify a list of feasible solutions in
+\File{4coins.zfeas}. Then the call
+\begin{center}
+{\tt ./normalform 4coins}
+\end{center}
+creates a file \File{4coins.nf} containing the minima to the
+corresponding integer programs. (If $z_0$ is a feasible solution,
+the corresponding integer program is defined by putting the
+right-hand side to $Az_0$.) \eoproof
+
+{\bf Rename \File{4coins.zfeas} to \File{4coins.zfea}?!}
+
+\subsection{Markov Bases in Statistics}
+In this example you learn about the functions \File{markov} and
+\File{genmodel}.
+
+Let us consider the following $4\times 4$ table of non-negative
+integer numbers together with all row and column sums.
+\[
+\begin{array}{cc}
+\left(
+\begin{array}{rrrr}
+11 & 23 & 34 &  3\\
+ 4 & 15 & 12 & 11\\
+17 &  2 &  3 & 25\\
+16 & 12 & 22 &  7\\
+\end{array}
+\right)
+&
+\begin{array}{r}
+71\\
+42\\
+47\\
+57\\
+\end{array}\\
+\begin{array}{rrrr}
+48 & 52 & 71 & 46\\
+\end{array} & \\
+\end{array}
+\]
+In statistics, one wishes to sample among arrays that have fixed
+counts, say fixed row and column sums. In order to sample, one needs
+a set of moves that, in particular, do not change the counts when
+added to the current table. Clearly, these moves must have counts
+$0$ and thus quite naturally lead us to the toric ideal
+\[
+I_A=\langle x^u-x^v:Au=Av, u,v\in\Z^{16}_+\rangle,
+\]
+where
+\[
+A=\left(
+\begin{array}{rrrrrrrrrrrrrrrr}
+1 &  1 & 1 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\
+0 &  0 & 0 & 0 & 1 & 1 & 1 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\
+0 &  0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 1 & 1 & 0 & 0 & 0 & 0\\
+0 &  0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 1 & 1\\
+1 &  0 & 0 & 0 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0\\
+0 &  1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 1 & 0 & 0\\
+0 &  0 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 1 & 0\\
+0 &  0 & 0 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 1\\
+\end{array}
+\right).
+\]
+It turns out that for any set of fixed counts, a (minimal)
+\emph{Markov basis} is given by a minimal generating set of this
+toric ideal. Note that a Markov basis connects all non-negative
+tables with these counts in the sense that for any two non-negative
+tables $T_1$ and $T_2$ with these counts, there is a sequence of
+non-negative tables $T_1=S_0,\ldots, S_N=T_2$ with the same counts
+as $T_1$ and $T_2$ and such that $S_i-S_{i-1}$ or $S_{i-1}-S_{i}$ is
+in the Markov basis for $i=1,\ldots, N$.
+
+For two-way tables the situation is still very simple as our
+computations with $4\times 4$ tables will now demonstrate. Write the
+matrix that defines our toric ideal in the file \File{4x4.mat}:
+\begin{center}
+  \begin{tabular}{|l|}
+\hline
+  \text{ 4x4.mat } \\
+\hline $\begin{array}{rrrrrrrrrrrrrrrrrr}
+& 8 & 16 &   &   &   &   &   &   &   &   &   &   &   &   &   &   & \\
+& 1 &  1 & 1 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \\
+& 0 &  0 & 0 & 0 & 1 & 1 & 1 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \\
+& 0 &  0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 1 & 1 & 0 & 0 & 0 & 0 & \\
+& 0 &  0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 1 & 1 & \\
+& 1 &  0 & 0 & 0 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & \\
+& 0 &  1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & \\
+& 0 &  0 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 1 & 0 & \\
+& 0 &  0 & 0 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 1 & \\
+\end{array}$\\
+\hline
+  \end{tabular}
+\end{center}
+Let us compute the Markov basis via the call
+\begin{center}
+{\tt ./markov 4x4}
+\end{center}
+which creates a single output file \File{4x4.mar} containing the
+$36$ Markov basis elements. Up to symmetry (swapping rows or
+columns), the Markov basis consists of the single move
+\[
+\left(
+\begin{array}{rrrr}
+ 1 & -1 &  0 &  0\\
+-1 &  1 &  0 &  0\\
+ 0 &  0 &  0 &  0\\
+ 0 &  0 &  0 &  0\\
+\end{array}
+\right).
+\]
+In fact, this elementary move is (up to symmetry) the only
+representative of the minimal Markov moves for arbitrary $m\times n$
+tables using row and column counts.
+
+Creating the matrices for statistical models may be pretty
+cumbersome. \FourTiTwo{} provides a litte function, \File{genmodel},
+that helps the user with creating matrices for hierarchical models
+defined by a complex. 
+
+The $m\times n$ tables problem above corresponds to the complex
+$\{\{1\},\{2\}\}$ on two nodes with levels $m$ and $n$,
+respectively. Let us encode the complex for $3x6$ tables with
+$1$-marginals (row and column sums) in \File{3x6.mod}.
+
+\begin{center}
+  \begin{tabular}{|l|}
+\hline
+    \text{ 3x6.mod }\\
+\hline
+  $\begin{array}{rrrr}
+    & 3 &&\\
+    & 3 & 6 & \\
+    & 2 &&\\
+    & 1 & 1 &\\
+    & 1 & 2 &\\
+  \end{array}$\\
+\hline
+  \end{tabular}
+\end{center}
+and call
+\begin{center}
+{\tt ./genmodel 3x6}
+\end{center}
+to produce the desired matrix file \File{3x6.mat}.
+
+The encoding of the complex should be obvious from the example: first
+we state the number of nodes and their levels, then we give the number
+of maximal faces. Finally, we list each maximal face by first
+specifying the number of nodes on it and then by listing these nodes.
+
+Thus, a $3x4x6$ table with $2$-marginals (that is, again only counts
+along coordinate axes) corresponds to the complex
+$\{\{(1,2)\},\{(2,3)\},\{(3,1)\}\}$ on $3$ nodes with levels $3$,
+$4$, and $6$, respectively. Thus, its encoding is in \FourTiTwo{} would
+look like:
+\begin{center}
+  \begin{tabular}{|l|}
+\hline
+    \text{ 3x4x6.mod }\\
+\hline
+  $\begin{array}{rrrrr}
+    & 3 &&\\
+    & 3 & 4 & 6 & \\
+    & 3 &&\\
+    & 2 & 1 & 2 &\\
+    & 2 & 2 & 3 &\\
+    & 2 & 3 & 1 &\\
+  \end{array}$\\
+\hline
+  \end{tabular}
+\end{center}
+
+A binary model on the bipartite graph $K_{2,3}$ then reads as
+\begin{center}
+  \begin{tabular}{|l|}
+\hline
+    \text{ 3x4x6.mod }\\
+\hline
+  $\begin{array}{rrrrrrr}
+    & 5 &&&&\\
+    & 2 & 2 & 2 & 2 & 2 &\\
+    & 6 &&&&\\
+    & 2 & 1 & 3 &\\
+    & 2 & 1 & 4 &\\
+    & 2 & 1 & 5 &\\
+    & 2 & 2 & 3 &\\
+    & 2 & 2 & 4 &\\
+    & 2 & 2 & 5 &\\
+  \end{array}$\\
+\hline
+  \end{tabular}
+\end{center}
+
