@@ -38,7 +38,7 @@ INCLUDE+=@GLPK_CFLAGS@
 LIBINCLUDE+=@GLPK_LIBS@
 
 # 4ti2 needs the next option to access maximum values of integer types.
-CXXFLAGS = -D__STDC_LIMIT_MACROS
+CXXFLAGS += -D__STDC_LIMIT_MACROS
 # The optimisation flags.
 CXXFLAGS += -DNDEBUG
 # Uncomment the next line for debugging.
