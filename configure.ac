@@ -9,6 +9,12 @@ AC_CONFIG_FILES([Makefile src/groebner/Makefile.inc src/util/Makefile.inc
 			  src/ppi/Makefile.inc src/zsolve/Makefile
 			  m4/Makefile])
 
+## Using the C compiler
+AC_PROG_CC
+AX_COMPILER_VENDOR
+AX_CC_MAXOPT
+AX_CFLAGS_WARN_ALL
+
 ## Using the C++ compiler
 AC_PROG_CXX
 # Check for specific compiler flags
@@ -22,13 +28,6 @@ AX_CXXFLAGS_WARN_ALL
 # This only works with the g++ compiler version 3.4 and newer versions.
 AX_CHECK_COMPILER_FLAGS(-ftrapv, TRAPV_FLAG=-ftrapv)
 AC_SUBST(TRAPV_FLAG, ${TRAPV_FLAG})
-
-## Using the C compiler
-AC_PROG_CC
-AC_LANG(C)
-AX_COMPILER_VENDOR
-AX_CC_MAXOPT
-AX_CFLAGS_WARN_ALL
 
 # This triggers selection of some optimization flags (-g -O2), 
 # so it should appear _after_ the AX_CXX_MAXOPT, AX_CC_MAXOPT calls.
