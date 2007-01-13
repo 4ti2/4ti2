@@ -1,3 +1,4 @@
+/Makefile
 /Makefile.in
 /aclocal.m4
 /autom4te.cache
@@ -20,7 +21,13 @@ src/util/gensymm
 src/util/gensymm_main.c
 src/util/output
 src/util/output_main.c
+src/zsolve/*.lo
+src/zsolve/.deps
+src/zsolve/.libs
 src/zsolve/Makefile
+src/zsolve/Makefile.in
+src/zsolve/libzsolve.la
+src/zsolve/zsolve
 test/ppi/ppi10.mat
 test/ppi/ppi16.mat
 test/ppi/ppi5.mat
