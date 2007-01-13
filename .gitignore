@@ -12,8 +12,14 @@ m4/Makefile
 m4/Makefile.in
 /missing
 /obj
+src/Makefile
+src/Makefile.in
 src/groebner/Makefile.inc
+src/ppi/.deps
+src/ppi/.libs
+src/ppi/Makefile.in
 src/ppi/Makefile.inc
+src/ppi/ppi
 src/util/Makefile.inc
 src/util/genmodel
 src/util/genmodel_main.c

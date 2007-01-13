@@ -7,7 +7,7 @@ AM_INIT_AUTOMAKE(foreign)
 AM_MAINTAINER_MODE
 AC_CONFIG_FILES([Makefile src/Makefile 
 		 src/groebner/Makefile.inc src/util/Makefile.inc 
-		 src/ppi/Makefile.inc src/zsolve/Makefile
+		 src/ppi/Makefile src/zsolve/Makefile
 		 m4/Makefile])
 
 ## Using the C compiler

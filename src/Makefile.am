@@ -19,19 +19,15 @@
 
 # 4ti2 Makefile
 
-SUBDIRS = zsolve
+SUBDIRS = zsolve ppi
 
 # By default compile 4ti2 with 32 bit precision, 64 bit precision, and 
 # arbitrary precision.
-all-local:  util_target ppi_target groebner_target
+all-local:  util_target groebner_target
 
 # The following target compiles everything in the util directory.
 util_target:
 	cd util && $(MAKE)
-
-# The following target compiles everything in the ppi directory.
-ppi_target:
-	cd ppi && $(MAKE)
 
 # The following target compiles everything in the groebner directory.
 groebner_target: groebner_int32 groebner_int64 groebner_gmp
@@ -49,7 +45,6 @@ check-local:
 
 clean-local:
 	cd util && $(MAKE) clean
-	cd ppi && $(MAKE) clean
 	cd groebner && $(MAKE) INT=int32 clean
 	cd groebner && $(MAKE) INT=int64 clean
 	cd groebner && $(MAKE) INT=gmp clean
