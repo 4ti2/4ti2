@@ -27,6 +27,7 @@ src/groebner/lib4ti2int32.la
 src/groebner/lib4ti2int64.la
 src/ppi/.deps
 src/ppi/.libs
+src/ppi/Makefile
 src/ppi/Makefile.in
 src/ppi/Makefile.inc
 src/ppi/ppi
