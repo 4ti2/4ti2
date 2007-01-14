@@ -31,6 +31,9 @@ src/ppi/Makefile
 src/ppi/Makefile.in
 src/ppi/Makefile.inc
 src/ppi/ppi
+src/util/.deps
+src/util/.libs
+src/util/Makefile.in
 src/util/Makefile.inc
 src/util/genmodel
 src/util/genmodel_main.c
