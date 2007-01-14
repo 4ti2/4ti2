@@ -20,6 +20,7 @@ src/groebner/.libs
 src/groebner/4ti2gmp
 src/groebner/4ti2int32
 src/groebner/4ti2int64
+src/groebner/Makefile
 src/groebner/Makefile.in
 src/groebner/Makefile.inc
 src/groebner/lib4ti2gmp.la
