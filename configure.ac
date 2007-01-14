@@ -2,11 +2,11 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(4ti2, 1.3)
+AC_INIT(4ti2, 1.3.1)
 AM_INIT_AUTOMAKE(foreign)
 AM_MAINTAINER_MODE
 AC_CONFIG_FILES([Makefile src/Makefile 
-		 src/groebner/Makefile.inc src/util/Makefile.inc 
+		 src/groebner/Makefile src/util/Makefile.inc 
 		 src/ppi/Makefile src/zsolve/Makefile
 		 m4/Makefile])
 
