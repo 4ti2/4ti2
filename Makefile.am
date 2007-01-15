@@ -26,9 +26,5 @@ SUBDIRS = src m4
 # The check target runs automatic checks to verify that 4ti2 was compiled
 # correctly and is running correctly.
 check-local:
-	cd test && ./checkall
-
-# Remove automatically generated files.
-clean-local:
-	rm -rf obj bin lib
+	top_builddir=`(cd $(top_builddir) && pwd)`; export top_builddir; (cd $(top_srcdir)/test &&  ./checkall)
 
