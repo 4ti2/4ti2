@@ -58,4 +58,14 @@ zsolve_SOURCES = 				\
 
 zsolve_LDADD = libzsolve.la
 
+# For out-of-source builds, make sure we have a copy of the script in
+# the build directory, so that the script finds the binary.
 dist_bin_SCRIPTS = hilbert graver
+
+EXTRA_DIST = hilbert.template graver.template
+
+hilbert: hilbert.template
+	cp $< $@
+
+graver: graver.template
+	cp $< $@

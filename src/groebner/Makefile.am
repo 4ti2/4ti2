@@ -208,6 +208,17 @@ noinst_HEADERS = 				\
 	walk_main.h				\
 	zbasis_main.h
 
+dist_bin_SCRIPTS =				\
+	circuits				\
+	groebner				\
+	markov					\
+	minimize				\
+	normalform				\
+	qsolve					\
+	rays					\
+	walk					\
+	zbasis
+
 # 16 bit precision flags.
 # 4ti2int16_LDADD = lib4ti2int16.la
 # 4ti2int16_CPPFLAGS = -D_4ti2_INT16_
@@ -234,9 +245,14 @@ lib4ti2int64_la_SOURCES = $(lib4ti2sources)
 # Arbitrary precision flags.
 # 4ti2 uses GMP (GLPL), an arbitrary precision arithmetic library.
 4ti2gmp_LDADD = lib4ti2gmp.la
-4ti2gmp_CPPFLAGS = -D_4ti2_GMP_
+4ti2gmp_CPPFLAGS = -D_4ti2_GMP_ $(GMP_CFLAGS)
 4ti2gmp_SOURCES = $(4ti2sources)
 lib4ti2gmp_la_CPPFLAGS = -D_4ti2_GMP_
 lib4ti2gmp_la_CPPFLAGS += $(GMP_CFLAGS)
 lib4ti2gmp_la_LIBADD = $(GMP_LIBS)
 lib4ti2gmp_la_SOURCES = $(lib4ti2sources)
+
+EXTRA_DIST = script.template
+
+$(dist_bin_SCRIPTS): script.template
+	cp $< $@
