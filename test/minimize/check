@@ -1,2 +1,2 @@
 #!/bin/bash
-../check.template minimize -q $@
+../check.template src/groebner/minimize -q $@

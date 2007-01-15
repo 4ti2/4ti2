@@ -1,2 +1,2 @@
 #!/bin/bash
-../check.template walk -q $@
+../check.template src/groebner/walk -q $@

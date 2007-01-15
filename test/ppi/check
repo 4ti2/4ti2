@@ -1,2 +1,2 @@
 #!/bin/bash
-./check-ppi ppi $@
+./check-ppi src/ppi/ppi $@

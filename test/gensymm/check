@@ -1,2 +1,2 @@
 #!/bin/bash
-../check.template gensymm 3 3 3 1
+../check.template src/util/gensymm 3 3 3 1

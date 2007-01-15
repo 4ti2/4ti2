@@ -1,2 +1,2 @@
 #!/bin/bash
-../../check.template qsolve -q -p arb $@
+../../check.template src/groebner/qsolve -q -p arb $@

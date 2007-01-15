@@ -1,2 +1,2 @@
 #!/bin/bash
-../../check.template output --binomials
+../../check.template src/util/output --binomials

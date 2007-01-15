@@ -1,2 +1,2 @@
 #!/bin/bash
-../check.template genmodel -q
+../check.template src/util/genmodel -q

@@ -1,2 +1,2 @@
 #!/bin/bash
-../../check.template output --positive
+../../check.template src/util/output --positive
