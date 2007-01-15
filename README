@@ -22,9 +22,15 @@ COMPILING 4ti2
 
 Run the following commands with the 4ti2 directory:
 
-    	./configure
+    	./configure --prefix=INSTALLATION-DIRECTORY
         make
         make check
+	make install
+
+The final command will install 4ti2 in a directory tree below the
+INSTALLATION-DIRECTORY that you gave with the first command.  If you
+omit the --prefix option, `make install' will install 4ti2 in the
+/usr/local hierarchy.
 
 You will need glpk and gmp installed first (see below).
 
