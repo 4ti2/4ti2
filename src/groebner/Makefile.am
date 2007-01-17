@@ -18,7 +18,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 
-bin_PROGRAMS = 4ti2int32 4ti2int64 4ti2gmp
+bin_PROGRAMS = 4ti2int32 4ti2int64 
+if HAVE_GMP_WITH_CXX
+bin_PROGRAMS += 4ti2gmp
+endif
 
 lib_LTLIBRARIES = lib4ti2int32.la lib4ti2int64.la lib4ti2gmp.la
 
@@ -244,6 +247,7 @@ lib4ti2int64_la_SOURCES = $(lib4ti2sources)
 
 # Arbitrary precision flags.
 # 4ti2 uses GMP (GLPL), an arbitrary precision arithmetic library.
+if HAVE_GMP_WITH_CXX
 4ti2gmp_LDADD = lib4ti2gmp.la
 4ti2gmp_CPPFLAGS = -D_4ti2_GMP_ $(GMP_CFLAGS)
 4ti2gmp_SOURCES = $(4ti2sources)
@@ -251,6 +255,7 @@ lib4ti2gmp_la_CPPFLAGS = -D_4ti2_GMP_
 lib4ti2gmp_la_CPPFLAGS += $(GMP_CFLAGS)
 lib4ti2gmp_la_LIBADD = $(GMP_LIBS)
 lib4ti2gmp_la_SOURCES = $(lib4ti2sources)
+endif
 
 EXTRA_DIST = script.template
 

@@ -30,6 +30,12 @@ AX_CXXFLAGS_WARN_ALL
 AX_CHECK_COMPILER_FLAGS(-ftrapv, TRAPV_FLAG=-ftrapv)
 AC_SUBST(TRAPV_FLAG, ${TRAPV_FLAG})
 
+# Change the default behaviour to disable shared libraries.  The user
+# may still override this default by specifying `--enable-shared'.
+# The reasons for the changed default is that the complexities of
+# building shared libraries are avoided, and also that static build
+# can result in faster code on some architectures.
+AC_DISABLE_SHARED
 # This triggers selection of some optimization flags (-g -O2), 
 # so it should appear _after_ the AX_CXX_MAXOPT, AX_CC_MAXOPT calls.
 AC_PROG_LIBTOOL
@@ -47,11 +53,14 @@ AC_PROG_LIBTOOL
 
 # Check for GNU MP.
 AC_LANG(C++)
-LB_CHECK_GMP(,,[AC_MSG_ERROR([GNU MP not found!])])
-if test -z "GMP_HAVE_CXX" ; then 
-  AC_MSG_ERROR([Unable to use the GNU MP C++ library.  
-Please make sure that GNU MP was configured with "--enable-cxx".])
+LB_CHECK_GMP(,,[AC_MSG_WARN([GNU MP not found.
+4ti2 will be built without support for arbitrary-precision computations.])])
+if test -z "${GMP_HAVE_CXX}" ; then 
+  AC_MSG_WARN([Unable to use the GNU MP C++ library.  
+Please make sure that GNU MP was configured with "--enable-cxx".
+4ti2 will be built without support for arbitrary-precision computations.])
 fi
+AM_CONDITIONAL([HAVE_GMP_WITH_CXX], [test -n "${GMP_HAVE_CXX}"])
 
 LB_CHECK_GLPK(,,[AC_MSG_ERROR([GNU Linear Programming Kit not found!])])
 
