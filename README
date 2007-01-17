@@ -25,7 +25,7 @@ Run the following commands with the 4ti2 directory:
     	./configure --prefix=INSTALLATION-DIRECTORY
         make
         make check
-	make install
+	make install-exec
 
 The final command will install 4ti2 in a directory tree below the
 INSTALLATION-DIRECTORY that you gave with the first command.  If you
