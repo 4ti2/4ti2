@@ -124,7 +124,7 @@ in "-pedantic  % -Wall"       dnl   GCC
    "-h conform % -h msglevel 2" dnl Cray C (Unicos)
    #
 do FLAGS="$ac_save_[]FLAGS "`echo $ac_arg | sed -e 's,%%.*,,' -e 's,%,,'`
-   AC_TRY_COMPILE([],[return 0;],
+   AC_TRY_LINK([],[return 0;],
    [VAR=`echo $ac_arg | sed -e 's,.*% *,,'` ; break])
 done
  FLAGS="$ac_save_[]FLAGS"
