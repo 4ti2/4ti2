@@ -47,6 +47,8 @@ src/zsolve/.deps
 src/zsolve/.libs
 src/zsolve/Makefile
 src/zsolve/Makefile.in
+src/zsolve/graver
+src/zsolve/hilbert
 src/zsolve/libzsolve.la
 src/zsolve/zsolve
 test/ppi/ppi10.mat
