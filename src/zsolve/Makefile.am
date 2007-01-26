@@ -65,7 +65,7 @@ dist_bin_SCRIPTS = hilbert graver
 EXTRA_DIST = hilbert.template graver.template
 
 hilbert: hilbert.template
-	$(install_sh) -m 755 $< $@
+	$(install_sh) -c -m 755 $< $@
 
 graver: graver.template
-	$(install_sh) -m 755 $< $@
+	$(install_sh) -c -m 755 $< $@
