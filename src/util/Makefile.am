@@ -56,9 +56,3 @@ gensymm_LDADD = lib4ti2util.a
 
 output_SOURCES = output_main.c
 output_LDADD = lib4ti2util.a
-
-# BUILT_SOURCES = 				\
-# 	genmodel.h genmodel_main.c		\
-# 	gensymm.h gensymm_main.c		\
-# 	output.h output_main.c
-
