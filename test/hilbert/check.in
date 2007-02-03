@@ -1,2 +1,2 @@
 #!/bin/bash
-../check.template src/zsolve/hilbert -q $@
+../check.template @srcdir@ src/zsolve/hilbert -q $@

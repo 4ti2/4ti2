@@ -1,2 +1,2 @@
 #!/bin/bash
-../check.template src/zsolve/graver -q $@
+../check.template @srcdir@ src/zsolve/graver -q $@

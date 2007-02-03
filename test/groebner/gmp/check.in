@@ -1,10 +1,10 @@
 #!/bin/bash
 NUM_FAILURES=0
 
-../../check.template src/groebner/groebner -q -p arb -afifo
+../../check.template @srcdir@ src/groebner/groebner -q -p arb -afifo
 NUM_FAILURES=$(($NUM_FAILURES+$?))
 
-../../check.template src/groebner/groebner -q -p arb -aweighted
+../../check.template @srcdir@ src/groebner/groebner -q -p arb -aweighted
 NUM_FAILURES=$(($NUM_FAILURES+$?))
 
 # The script returns the number of failures encountered.

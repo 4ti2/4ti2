@@ -1,2 +1,2 @@
 #!/bin/bash
-../check.template src/groebner/rays -q -m $@
+../check.template @srcdir@ src/groebner/rays -q -m $@

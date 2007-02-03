@@ -1,2 +1,2 @@
 #!/bin/bash
-../check.template src/groebner/normalform -q $@
+../check.template @srcdir@ src/groebner/normalform -q $@

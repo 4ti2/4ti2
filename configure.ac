@@ -8,32 +8,32 @@ AM_MAINTAINER_MODE
 AC_CONFIG_FILES([Makefile src/Makefile 
 		 src/groebner/Makefile src/util/Makefile 
 		 src/ppi/Makefile src/zsolve/Makefile
-		 m4/Makefile
-		 test/check.template
-		 test/ppi/check-ppi
-		 test/circuits/check
-		 test/genmodel/check
-		 test/gensymm/check
-		 test/graver/check	 
-		 test/groebner/check	 
-		 test/groebner/gmp/check
-		 test/hilbert/check
-		 test/markov/check
-		 test/markov/gmp/check
-		 test/markov/saturation/check
-		 test/minimize/check
-		 test/normalform/check
-		 test/output/binomials/check
-		 test/output/maple/check
-		 test/output/positive/check
-		 test/ppi/check
-		 test/qsolve/check
-		 test/qsolve/gmp/check
-		 test/rays/check
-		 test/walk/check
-		 test/zbasis/check
-		 test/zsolve/check
-		])
+		 m4/Makefile])
+AC_CONFIG_FILES([test/checkall],		[chmod +x test/checkall])
+AC_CONFIG_FILES([test/check.template], 		[chmod +x test/check.template])
+AC_CONFIG_FILES([test/ppi/check-ppi], 		[chmod +x test/ppi/check-ppi])
+AC_CONFIG_FILES([test/circuits/check], 		[chmod +x test/circuits/check])
+AC_CONFIG_FILES([test/genmodel/check], 		[chmod +x test/genmodel/check])
+AC_CONFIG_FILES([test/gensymm/check], 		[chmod +x test/gensymm/check])
+AC_CONFIG_FILES([test/graver/check], 		[chmod +x test/graver/check])
+AC_CONFIG_FILES([test/groebner/check], 		[chmod +x test/groebner/check])
+AC_CONFIG_FILES([test/groebner/gmp/check], 	[chmod +x test/groebner/gmp/check])
+AC_CONFIG_FILES([test/hilbert/check], 		[chmod +x test/hilbert/check])
+AC_CONFIG_FILES([test/markov/check], 		[chmod +x test/markov/check])
+AC_CONFIG_FILES([test/markov/gmp/check], 	[chmod +x test/markov/gmp/check])
+AC_CONFIG_FILES([test/markov/saturation/check], [chmod +x test/markov/saturation/check])
+AC_CONFIG_FILES([test/minimize/check], 		[chmod +x test/minimize/check])
+AC_CONFIG_FILES([test/normalform/check],	[chmod +x test/normalform/check])
+AC_CONFIG_FILES([test/output/binomials/check],	[chmod +x test/output/binomials/check])
+AC_CONFIG_FILES([test/output/maple/check],	[chmod +x test/output/maple/check])
+AC_CONFIG_FILES([test/output/positive/check],	[chmod +x test/output/positive/check])
+AC_CONFIG_FILES([test/ppi/check],		[chmod +x test/ppi/check])
+AC_CONFIG_FILES([test/qsolve/check],		[chmod +x test/qsolve/check])
+AC_CONFIG_FILES([test/qsolve/gmp/check],	[chmod +x test/qsolve/gmp/check])
+AC_CONFIG_FILES([test/rays/check], 		[chmod +x test/rays/check])
+AC_CONFIG_FILES([test/walk/check], 		[chmod +x test/walk/check])
+AC_CONFIG_FILES([test/zbasis/check], 		[chmod +x test/zbasis/check])
+AC_CONFIG_FILES([test/zsolve/check], 		[chmod +x test/zsolve/check])
 
 ## Using the C compiler
 AC_PROG_CC

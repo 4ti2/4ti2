@@ -1,2 +1,2 @@
 #!/bin/bash
-../check.template src/groebner/circuits -q $@
+../check.template @srcdir@ src/groebner/circuits -q $@

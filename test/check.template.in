@@ -21,7 +21,12 @@
 SCRIPT=`which $0`
 DIR=`dirname $SCRIPT`
 #EXECPATH=$DIR/../bin
-EXECPATH=${top_builddir}
+EXECPATH=@abs_top_builddir@
+
+# The directory where the input data and the results reside.
+SRCDIR=$1
+shift 1
+cd $SRCDIR
 
 # The executable we are using.
 echo "EXECUTABLE: $EXECPATH/$@"

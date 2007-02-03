@@ -1,2 +1,2 @@
 #!/bin/bash
-../check.template src/groebner/zbasis -q $@
+../check.template @srcdir@ src/groebner/zbasis -q $@

@@ -1,2 +1,2 @@
 #!/bin/bash
-../../check.template src/groebner/markov -q -gsaturation $@
+../../check.template @srcdir@ src/groebner/markov -q -gsaturation $@
