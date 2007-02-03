@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 /* Co-Author: Ralf Hemmecke      (data structure, code optimization) */
 /*                                                                   */
 /*------------------------------------------------------------------ */
+#include "../banner.h"
 #include "myheader.h"
 #include "orbit.h"
 #include "vector.h"
@@ -35,13 +36,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 /* ----------------------------------------------------------------- */
 void printVersionInfo() {
 
-  printf("-------------------------------------------------\n");
-  printf("4ti2 version 1.3.1, Copyright (C) 2006 4ti2 team.\n");
-  printf("4ti2 comes with ABSOLUTELY NO WARRANTY.\n");
-  printf("This is free software, and you are welcome\n");
-  printf("to redistribute it under certain conditions.\n");
-  printf("For details, see the file COPYING.\n");
-  printf("-------------------------------------------------\n");
+  printf("%s", FORTY_TWO_BANNER);
   return ;
 }
 /* ----------------------------------------------------------------- */
