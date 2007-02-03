@@ -8,7 +8,32 @@ AM_MAINTAINER_MODE
 AC_CONFIG_FILES([Makefile src/Makefile 
 		 src/groebner/Makefile src/util/Makefile 
 		 src/ppi/Makefile src/zsolve/Makefile
-		 m4/Makefile])
+		 m4/Makefile
+		 test/check.template
+		 test/ppi/check-ppi
+		 test/circuits/check
+		 test/genmodel/check
+		 test/gensymm/check
+		 test/graver/check	 
+		 test/groebner/check	 
+		 test/groebner/gmp/check
+		 test/hilbert/check
+		 test/markov/check
+		 test/markov/gmp/check
+		 test/markov/saturation/check
+		 test/minimize/check
+		 test/normalform/check
+		 test/output/binomials/check
+		 test/output/maple/check
+		 test/output/positive/check
+		 test/ppi/check
+		 test/qsolve/check
+		 test/qsolve/gmp/check
+		 test/rays/check
+		 test/walk/check
+		 test/zbasis/check
+		 test/zsolve/check
+		])
 
 ## Using the C compiler
 AC_PROG_CC
