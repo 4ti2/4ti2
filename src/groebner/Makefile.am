@@ -187,6 +187,19 @@ include_HEADERS = 				\
 	WeightedReduction.h			\
 	Weight.h
 
+# These files are #include'd C++ files.
+noinst_HEADERS = 				\
+	CircuitImplementation.tpp		\
+	CircuitMatrixAlgorithm.tpp		\
+	CircuitSupportAlgorithm.tpp		\
+	DiagonalAlgorithm.tpp			\
+	HermiteAlgorithm.tpp			\
+	OnesTree.tpp				\
+	RayImplementation.tpp			\
+	RayMatrixAlgorithm.tpp			\
+	RaySupportAlgorithm.tpp			\
+	SupportTree.tpp
+
 4ti2sources =					\
 	circuits_main.cpp			\
 	groebner_main.cpp			\
@@ -200,7 +213,7 @@ include_HEADERS = 				\
 	main.cpp
 
 # These headers are not installed
-noinst_HEADERS = 				\
+noinst_HEADERS += 				\
 	circuits_main.h				\
 	groebner_main.h				\
 	markov_main.h				\
@@ -211,7 +224,7 @@ noinst_HEADERS = 				\
 	walk_main.h				\
 	zbasis_main.h
 
-dist_bin_SCRIPTS =				\
+WRAPPERSCRIPTS =				\
 	circuits				\
 	groebner				\
 	markov					\
@@ -221,6 +234,8 @@ dist_bin_SCRIPTS =				\
 	rays					\
 	walk					\
 	zbasis
+
+nodist_bin_SCRIPTS = $(WRAPPERSCRIPTS)
 
 # 16 bit precision flags.
 # 4ti2int16_LDADD = lib4ti2int16.la
@@ -259,5 +274,5 @@ endif
 
 EXTRA_DIST = script.template
 
-$(dist_bin_SCRIPTS): script.template
+$(WRAPPERSCRIPTS): script.template
 	cp $< $@

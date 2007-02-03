@@ -21,10 +21,4 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = src m4
-
-# The check target runs automatic checks to verify that 4ti2 was compiled
-# correctly and is running correctly.
-check-local:
-	(cd test && ./checkall)
-
+SUBDIRS = src m4 test

@@ -19,3 +19,4 @@
 
 SUBDIRS = zsolve ppi util groebner
 
+noinst_HEADERS = banner.h
