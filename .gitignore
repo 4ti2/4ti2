@@ -64,6 +64,7 @@ test/markov/gmp/Makefile.in
 test/markov/saturation/Makefile.in
 test/minimize/Makefile.in
 test/normalform/Makefile.in
+test/output/Makefile.in
 test/output/binomials/Makefile.in
 test/output/maple/Makefile.in
 test/output/positive/Makefile.in
