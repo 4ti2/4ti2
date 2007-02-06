@@ -1,3 +1,5 @@
+SUBDIRS = gmp
+
 EXTRA_DIST =																	\
 	333 333.gro.chk 333.lat 333.mar														\
 	333.1 333.1.gro.chk 333.1.mar 333.1.weights 333.1.weights.max										\

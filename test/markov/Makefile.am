@@ -1,3 +1,5 @@
+SUBDIRS = saturation gmp
+
 EXTRA_DIST = 									\
 	333 333.mar.chk								\
 	334 334.mar.chk								\

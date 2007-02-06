@@ -1,3 +1,5 @@
+SUBDIRS = gmp
+
 EXTRA_DIST = 								\
 	33.1 33.1.qhom.chk 33.1.sign					\
 	33.2 33.2.qhom.chk 33.2.sign					\

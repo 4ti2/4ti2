@@ -1,0 +1,2 @@
+SUBDIRS = maple binomials positive
+

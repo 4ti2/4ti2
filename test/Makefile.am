@@ -1,21 +1,15 @@
 SUBDIRS =					\
 	normalform				\
 	qsolve					\
-	qsolve/gmp				\
 	graver					\
 	gensymm					\
 	groebner				\
-	groebner/gmp				\
 	zsolve					\
 	walk					\
 	ppi					\
 	zbasis					\
-	output/maple				\
-	output/binomials			\
-	output/positive				\
+	output					\
 	markov					\
-	markov/saturation			\
-	markov/gmp				\
 	circuits				\
 	genmodel				\
 	minimize				\
