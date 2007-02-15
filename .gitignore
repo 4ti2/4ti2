@@ -69,8 +69,14 @@ test/output/binomials/Makefile.in
 test/output/maple/Makefile.in
 test/output/positive/Makefile.in
 test/ppi/Makefile.in
+test/ppi/ppi10.gra.srt
+test/ppi/ppi10.gra.srt.chk
 test/ppi/ppi10.mat
+test/ppi/ppi16.gra.srt
+test/ppi/ppi16.gra.srt.chk
 test/ppi/ppi16.mat
+test/ppi/ppi5.gra.srt
+test/ppi/ppi5.gra.srt.chk
 test/ppi/ppi5.mat
 test/qsolve/Makefile.in
 test/qsolve/gmp/Makefile.in
