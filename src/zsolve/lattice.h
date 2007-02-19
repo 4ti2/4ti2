@@ -20,8 +20,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _LATTICE_H
-#define _LATTICE_H
+#ifndef _4ti2_zsolve__LATTICE_H
+#define _4ti2_zsolve__LATTICE_H
 
 #include "vectorarray.h"
 #include "linearsystem.h"
