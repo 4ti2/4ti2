@@ -355,6 +355,7 @@ ZSolveContext createZSolveContextFromSystem(LinearSystem initialsystem, FILE *lo
 	ctx->FirstNorm = 0;
 	ctx->AllTime = getCPUTime();
 	ctx->BackupCallback = backupcallback;
+	ctx->BackupTime = 0;
 	ctx->LogCallback = logcallback;
 	ctx->Homs = NULL;
 	ctx->Inhoms = NULL;
