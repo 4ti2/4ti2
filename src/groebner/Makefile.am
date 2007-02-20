@@ -236,6 +236,7 @@ WRAPPERSCRIPTS =				\
 	zbasis
 
 nodist_bin_SCRIPTS = $(WRAPPERSCRIPTS)
+DISTCLEANFILES = $(WRAPPERSCRIPTS)
 
 # 16 bit precision flags.
 # 4ti2int16_LDADD = lib4ti2int16.la
@@ -276,3 +277,4 @@ EXTRA_DIST = script.template
 
 $(WRAPPERSCRIPTS): script.template
 	cp $< $@
+
