@@ -21,12 +21,12 @@
 SCRIPT=`which $0`
 DIR=`dirname $SCRIPT`
 #EXECPATH=$DIR/../bin
-EXECPATH=@abs_top_builddir@
+EXECPATH=`cd @abs_top_builddir@ && pwd`
 
 # The directory where the input data and the results reside.
-SRCDIR=$1
+SRCDIR=`cd $1 && pwd`
 shift 1
-cd $SRCDIR
+###cd $SRCDIR
 
 # The executable we are using.
 echo "EXECUTABLE: $EXECPATH/$@"
@@ -39,17 +39,31 @@ fi
 
 NUM_FAILURES=0
 
-FILES=`ls -1 *.chk | sed 's/\.[a-z]*\.chk//g' | sort -u`
+FILES=`cd $SRCDIR && ls -1 *.chk | sed 's/\.[a-z]*\.chk//g' | sort -u`
 echo "CHECKING: " $FILES
 for file in $FILES; do
-    CHECK_FILES=`ls -1 ${file}.*.chk | egrep "^${file}.[a-z]*.chk" | sed s/\.chk//g`
+    CHECK_FILES=`cd $SRCDIR && ls -1 ${file}.*.chk | egrep "^${file}.[a-z]*.chk" | sed s/\.chk//g`
+    #echo rm -f $CHECK_FILES
     rm -f $CHECK_FILES
     COMMAND="$@ $file"
+    # Copy the source files into a subdir of the build directory
+    if [ -d checkdir ] ; then
+	rm -rf checkdir
+    fi
+    mkdir checkdir 
+    cd checkdir
+    INPUT_FILES=`cd $SRCDIR && ls -1 ${file}* | egrep -v "[.]chk$" `
+    #echo $INPUT_FILES
+    for input_file in $INPUT_FILES; do
+	if test ! -r ${input_file} ; then 
+	    cp ${SRCDIR}/${input_file} ${input_file}
+	fi
+    done
     echo -n "$COMMAND ..."
     TIME=`$EXECPATH/$COMMAND | awk '/^4ti2 Total Time/ { print $4, $5 }'`
     STATUS="passed"
     for check_file in $CHECK_FILES; do
-        diff -b -q ${check_file}.chk ${check_file} > /dev/null
+        diff -b -q ${SRCDIR}/${check_file}.chk ${check_file} > /dev/null
         if [ $? != 0 ]; then
             STATUS="FAILED"
             NUM_FAILURES=$(($NUM_FAILURES+1))
@@ -58,7 +72,9 @@ for file in $FILES; do
     done
     echo -n " $STATUS "
     echo "$TIME"
-    rm -f $CHECK_FILES
+    #echo rm -f $CHECK_FILES
+    cd ..
+    rm -rf checkdir
 done
 
 if [ $NUM_FAILURES == 0 ]; then

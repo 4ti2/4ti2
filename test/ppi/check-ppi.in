@@ -26,7 +26,7 @@ EXECPATH=@abs_top_builddir@
 # The directory where the input data and the results reside.
 SRCDIR=$1
 shift 1
-cd $SRCDIR
+###cd $SRCDIR
 
 # The executable we are using.
 echo "$EXECPATH/$@"
@@ -49,7 +49,7 @@ for file in $FILES; do
     
     TIME=`$EXECPATH/$COMMAND 2>&1 | grep "Elapsed time" | tail -1 | awk '/^Elapsed time:/ { print $3, $4 }'`
     sort < $file.gra > $file.gra.srt
-    sort < $file.gra.chk > $file.gra.srt.chk
+    sort < ${SRCDIR}/$file.gra.chk > $file.gra.srt.chk
     STATUS="passed"
     diff -b -q $file.gra.srt $file.gra.srt.chk > /dev/null
     if [ $? != 0 ]; then
@@ -59,7 +59,7 @@ for file in $FILES; do
     fi
     echo -n " $STATUS "
     echo "$TIME"
-    rm -f $CHECK_FILES
+    rm -f $CHECK_FILES $file.gra.srt $file.gra.srt.chk
 done
 
 if [ $num_failures == 0 ]; then
