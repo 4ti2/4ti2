@@ -97,7 +97,9 @@ void backupZSolveContext(FILE *, ZSolveContext);
 
 /*** main calls ***/
 ZSolveContext createZSolveContextFromSystem(LinearSystem, FILE *, int, int, ZSolveLogCallback, ZSolveBackupCallback);
-/* (system to solve, logfile, loglevel = 0..3, verbosity = 0..3, custom log callback or zsolveLogCallbackDefault, backup callback) */
+/* (system to solve, logfile, loglevel = 0..3, verbosity = 0..3, custom log callback or zsolveLogCallbackDefault, backup callback) 
+   The LinearSystem is NOT consumed.
+*/
 
 ZSolveContext createZSolveContextFromLattice(VectorArray, FILE *, int, int, ZSolveLogCallback, ZSolveBackupCallback);
 /* (lattice, logfile, loglevel = 0..3, verbosity = 0..3, custom log callback or zsolveLogCallbackDefault, backup callback) */

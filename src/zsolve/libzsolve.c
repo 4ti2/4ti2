@@ -325,7 +325,6 @@ ZSolveContext createZSolveContextFromSystem(LinearSystem initialsystem, FILE *lo
 	}
 
 	finalsystem = homogenizeLinearSystem(initialsystem);
-	deleteLinearSystem(initialsystem);
 
 	if (ctx->Verbosity>0)
 	{
@@ -604,7 +603,9 @@ void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 		}
 	}
 
-	printf("\nFinal basis has %d inhomogeneous, %d homogeneous and %d free elements.\n", ctx->Inhoms->Size, ctx->Homs->Size, ctx->Frees->Size);
+	if (ctx->Verbosity >= 0)
+		printf("\nFinal basis has %d inhomogeneous, %d homogeneous and %d free elements.\n",
+		       ctx->Inhoms->Size, ctx->Homs->Size, ctx->Frees->Size);
 	if (ctx->LogLevel>0)
 		fprintf(ctx->LogFile, "\nFinal basis has %d inhomogeneous, %d homogeneous and %d free elements.\n", ctx->Inhoms->Size, ctx->Homs->Size, ctx->Frees->Size);
 }
