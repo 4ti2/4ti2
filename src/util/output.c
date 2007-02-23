@@ -181,6 +181,8 @@ if (infoLevel>-1) {
 	  tmpV=tmpV->rest;
 	}
 	symmGroup=generateSymmetryGroup(symmGroup,numOfVars);
+	strcat(symFileName,".full");
+	printListVectorToFile(symFileName, symmGroup, numOfVars);
       }
 
       basis=extractSymmetryRepresentatives(basis,symmGroup,numOfVars);
