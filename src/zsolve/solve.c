@@ -905,6 +905,7 @@ int main(int argc, char *argv[])
 			}
 
 			ctx = createZSolveContextFromSystem(initialsystem, LogFile, OLogging, OVerbose, zsolveLogCallbackDefault, backupEvent);
+			deleteLinearSystem(initialsystem);
 	
 			// END OF SYSTEM SECTION
 		}
