@@ -262,10 +262,10 @@ void zsolveLogCallbackDefault(FILE *stream, int level, int type, int var, int su
 
 void splitLog(ZSolveContext ctx, int type, CPUTime steptime)
 {
-	CPUTime currenttime = getCPUTime();
-
 	if (ctx->LogCallback)
 	{
+		CPUTime currenttime = getCPUTime();
+
 		ctx->LogCallback(stdout, ctx->Verbosity, type, ctx->Current, ctx->SumNorm, ctx->FirstNorm, ctx->Lattice->Size, maxd(currenttime - ctx->AllTime, 0.0), maxd(steptime, 0.0));
 		if (ctx->LogFile)
 			ctx->LogCallback(ctx->LogFile, ctx->LogLevel, type, ctx->Current, ctx->SumNorm, ctx->FirstNorm, ctx->Lattice->Size, maxd(currenttime - ctx->AllTime, 0.0), maxd(steptime, 0.0));
