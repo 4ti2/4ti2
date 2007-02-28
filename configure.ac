@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(4ti2, 1.3.1+autoconf)
+AC_INIT(4ti2, 1.3.1+autoconf-0.1)
 AM_INIT_AUTOMAKE(foreign)
 AM_MAINTAINER_MODE
 AC_CONFIG_FILES([Makefile src/Makefile 
@@ -61,6 +61,14 @@ AC_CONFIG_FILES([test/walk/check], 		[chmod +x test/walk/check])
 AC_CONFIG_FILES([test/zbasis/check], 		[chmod +x test/zbasis/check])
 AC_CONFIG_FILES([test/zsolve/check], 		[chmod +x test/zsolve/check])
 
+## Check what components to enable
+AC_ARG_ENABLE(groebner, AS_HELP_STRING([--disable-groebner], [Disable building the groebner components]),
+			[enable_groebner=${enableval}], [enable_groebner=yes])
+AC_ARG_ENABLE(zsolve, AS_HELP_STRING([--disable-zsolve], [Disable building the zsolve components]),
+			[enable_zsolve=${enableval}], [enable_zsolve=yes])
+AM_CONDITIONAL([ENABLE_GROEBNER], [ test x${enable_groebner} == xyes ])
+AM_CONDITIONAL([ENABLE_ZSOLVE], [ test x${enable_zsolve} == xyes ])
+
 ## Using the C compiler
 AC_PROG_CC
 AX_COMPILER_VENDOR
@@ -80,6 +88,17 @@ AX_CXXFLAGS_WARN_ALL
 # This only works with the g++ compiler version 3.4 and newer versions.
 AX_CHECK_COMPILER_FLAGS(-ftrapv, TRAPV_FLAG=-ftrapv)
 AC_SUBST(TRAPV_FLAG, ${TRAPV_FLAG})
+
+### Taken from GMP's configure.in:
+# The dead hand of AC_REQUIRE makes AC_PROG_LIBTOOL expand and execute
+# AC_PROG_F77, even when F77 is not in the selected with_tags.  This is
+# probably harmless, but it's unsightly and bloats our configure, so pretend
+# AC_PROG_F77 has been expanded already.
+#
+# FIXME: Rumour has it libtool will one day provide a way for a configure.in
+# to say what it wants from among supported languages etc.
+#
+AC_PROVIDE([AC_PROG_F77])
 
 # Change the default behaviour to disable shared libraries.  The user
 # may still override this default by specifying `--enable-shared'.
@@ -102,6 +121,7 @@ AC_PROG_LIBTOOL
 # Checks for library functions.
 #AC_FUNC_MALLOC
 
+if test x${enable_groebner} == xyes ; then
 # Check for GNU MP.
 AC_LANG(C++)
 LB_CHECK_GMP(,,[AC_MSG_WARN([GNU MP not found.
@@ -111,8 +131,15 @@ if test -z "${GMP_HAVE_CXX}" ; then
 Please make sure that GNU MP was configured with "--enable-cxx".
 4ti2 will be built without support for arbitrary-precision computations.])
 fi
-AM_CONDITIONAL([HAVE_GMP_WITH_CXX], [test -n "${GMP_HAVE_CXX}"])
 
-LB_CHECK_GLPK(,,[AC_MSG_ERROR([GNU Linear Programming Kit not found!])])
+# Check for GLPK.
+LB_CHECK_GLPK(,,[
+  AC_MSG_ERROR([GNU Linear Programming Kit not found!
+It is required for building the Groebner component of 4ti2.
+To just build the zsolve component use --disable-groebner.])])
+
+fi
+
+AM_CONDITIONAL([HAVE_GMP_WITH_CXX], [test -n "${GMP_HAVE_CXX}"])
 
 AC_OUTPUT
