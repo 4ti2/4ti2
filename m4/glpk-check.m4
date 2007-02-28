@@ -33,15 +33,15 @@ AC_MSG_CHECKING(for GLPK)
 
 for GLPK_HOME in ${GLPK_HOME_PATH} 
   do	
-	if test -r "$GLPK_HOME/include/glpk.h"; then
+	if test "x$GMP_HOME" == "xDEFAULT" -o -r "$GLPK_HOME/include/glpk.h"; then
 
-#		if test "x$GLPK_HOME" != "x/usr" -a "x$GLPK_HOME" != "x/usr/local"; then
+		if test "x$GMP_HOME" != "xDEFAULT" ; then
 			GLPK_CFLAGS="-I${GLPK_HOME}/include"
 			GLPK_LIBS="-L${GLPK_HOME}/lib -R${GLPK_HOME}/lib -lglpk"	
-# 		else
-# 			GLPK_CFLAGS=
-# 			GLPK_LIBS="-lglpk"		
-# 		fi
+		else
+			GLPK_CFLAGS=
+			GLPK_LIBS="-lglpk"		
+		fi
 
 		CXXFLAGS="${CXXFLAGS} ${GLPK_CFLAGS}"
 		LIBS="${LIBS} ${GLPK_LIBS}"
