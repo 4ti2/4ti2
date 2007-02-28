@@ -8,18 +8,17 @@ dnl Test for the GNU Multiprecision library and define GMP_CFLAGS and GMP_LIBS
 
 AC_DEFUN([LB_CHECK_GMP],
 [
-DEFAULT_CHECKING_PATH="/usr /usr/local"
+DEFAULT_CHECKING_PATH="DEFAULT"
 
 GMP_HOME_PATH="${DEFAULT_CHECKING_PATH}"
 
 AC_ARG_WITH(gmp,
-		[  --with-gmp= <path>|yes|no
-	   				   Use GMP library. 
-					   If argument is no, you do not have the library installed on your machine.
-					   If argument is yes or <empty> that means the library is reachable with the standard
-					   search path "/usr" or "/usr/local"  (set as default).
-	 				   Otherwise you give the <path> to the directory which contain the library. 
-		],
+		AS_HELP_STRING([--with-gmp={DIR|no}],
+			[Use the GMP library installed in DIR. 
+			 If the argument is no, do not use the GMP library; 
+			 some functionality will not be available then. 
+			 Otherwise, the library is searched in the standard locations 
+			 (like "/usr" or "/usr/local").]),
 		[if test "$withval" = yes ; then
 			GMP_HOME_PATH="${DEFAULT_CHECKING_PATH}"
 	         elif test "$withval" != no ; then
@@ -37,9 +36,9 @@ AC_MSG_CHECKING(for GMP >= $min_gmp_version)
 
 for GMP_HOME in ${GMP_HOME_PATH} 
   do	
-	if test -r "$GMP_HOME/include/gmp.h"; then
+	if test "x$GMP_HOME" == "xDEFAULT" -o -r "$GMP_HOME/include/gmp.h"; then
 
-		if test "x$GMP_HOME" != "x/usr" -a "x$GMP_HOME" != "x/usr/local"; then
+		if test "x$GMP_HOME" != "xDEFAULT" ; then
 			GMP_CFLAGS="-I${GMP_HOME}/include"
 			GMP_LIBS="-L${GMP_HOME}/lib -R${GMP_HOME}/lib -lgmp"	
 		else
