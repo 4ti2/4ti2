@@ -10,6 +10,8 @@ AC_CONFIG_FILES([Makefile src/Makefile
 		 src/ppi/Makefile src/zsolve/Makefile
 		 m4/Makefile])
 
+AC_CONFIG_HEADERS(src/config.h)
+
 AC_CONFIG_FILES([test/Makefile])
 AC_CONFIG_FILES([test/circuits/Makefile])
 AC_CONFIG_FILES([test/genmodel/Makefile])

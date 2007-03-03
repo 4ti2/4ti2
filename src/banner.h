@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #define FORTY_TWO_BANNER \
 "-------------------------------------------------\n\
 4ti2 version " PACKAGE_VERSION ", Copyright (C) 2006 4ti2 team.\n\
