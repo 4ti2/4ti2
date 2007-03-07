@@ -16,3 +16,8 @@ EXTRA_DIST = 						\
 	prob16 prob16.gro prob16.lat prob16.mar.chk	\
 	prob18 prob18.gro prob18.mar.chk		\
 	prob20 prob20.mar.chk
+
+check-local:
+	@../../check.template $(srcdir) "" src/groebner/markov -q -gsaturation
+
+CLEANFILES = .num_failures

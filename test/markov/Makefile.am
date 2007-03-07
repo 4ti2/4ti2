@@ -1,4 +1,7 @@
-SUBDIRS = saturation gmp
+SUBDIRS = saturation
+if HAVE_GMP_WITH_CXX
+SUBDIRS += gmp
+endif
 
 EXTRA_DIST = 									\
 	333 333.mar.chk								\
@@ -25,3 +28,15 @@ EXTRA_DIST = 									\
 	prob16 prob16.lat prob16.mar.chk					\
 	prob18 prob18.mar.chk							\
 	prob20 prob20.mar.chk
+
+check-hybrid:
+	@../check.template $(srcdir) "-hybrid" src/groebner/markov -q -ghybrid
+
+check-project-and-lift:
+	@../check.template $(srcdir) "-project-and-lift" src/groebner/markov -q -gproject-and-lift
+
+check-local: check-hybrid check-project-and-lift
+	@../flavorsum "-hybrid" "-project-and-lift"
+	@../subdirsum $(SUBDIRS)
+
+CLEANFILES = .num_failures .num_failures-hybrid .num_failures-project-and-lift

@@ -6,3 +6,9 @@ EXTRA_DIST =					\
 	hppi6 hppi6.gra.chk			\
 	hppi6.lb hppi6.rel hppi6.sign hppi6.ub	\
 	small.gra.chk small.mat small.sign
+
+
+check-local:
+	@../check.template $(srcdir) "" src/zsolve/graver -q 
+
+CLEANFILES = .num_failures

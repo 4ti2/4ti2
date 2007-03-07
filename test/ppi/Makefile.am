@@ -4,4 +4,6 @@ EXTRA_DIST =					\
 	ppi5.gra.chk
 
 check-local:
-	./check
+	@./check-ppi $(srcdir) src/ppi/ppi
+
+CLEANFILES = .num_failures

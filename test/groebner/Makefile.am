@@ -1,4 +1,6 @@
+if HAVE_GMP_WITH_CXX
 SUBDIRS = gmp
+endif
 
 EXTRA_DIST =																	\
 	333 333.gro.chk 333.lat 333.mar														\
@@ -21,3 +23,17 @@ EXTRA_DIST =																	\
 	grin10900.3 grin10900.3.cost grin10900.3.gro.chk grin10900.3.mar grin10900.3.zsol							\
 	grin10900.4 grin10900.4.cost grin10900.4.gro.chk grin10900.4.mar grin10900.4.zsol							\
 	grin10900.5 grin10900.5.cost grin10900.5.mar grin10900.5.zsol
+
+
+check-fifo: 
+	@../check.template $(srcdir) "-fifo" src/groebner/groebner -q -afifo
+
+check-weighted:
+	@../check.template $(srcdir) "-weighted" src/groebner/groebner -q -aweighted
+
+check-local: check-fifo check-weighted
+	@../flavorsum "-fifo" "-weighted"
+
+CLEANFILES = .num_failures .num_failures-fifo .num_failures-weighted
+
+

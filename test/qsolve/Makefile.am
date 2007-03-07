@@ -1,4 +1,7 @@
-SUBDIRS = gmp
+SUBDIRS = .
+if HAVE_GMP_WITH_CXX
+SUBDIRS += gmp
+endif
 
 EXTRA_DIST = 								\
 	33.1 33.1.qhom.chk 33.1.sign					\
@@ -14,3 +17,16 @@ EXTRA_DIST = 								\
 	small small.qhom.chk small.rel small.sign			\
 	subspace subspace.qfree.chk subspace.qhom.chk			\
 	subspace2 subspace2.qfree.chk subspace2.qhom.chk subspace2.sign
+
+check-maxcutoff:
+	@../check.template $(srcdir) "-maxcutoff" src/groebner/qsolve -q -m -o maxcutoff
+
+check-maxinter:
+	@../check.template $(srcdir) "-maxinter" src/groebner/qsolve -q -s -o maxinter 
+
+check-local: check-maxcutoff check-maxinter
+	@../flavorsum "-maxcutoff" "-maxinter"
+	@../subdirsum $(SUBDIRS)
+
+CLEANFILES = .num_failures .num_failures-maxcutoff .num_failures-maxinter
+

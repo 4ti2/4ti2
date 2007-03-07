@@ -9,3 +9,8 @@ EXTRA_DIST = 					\
 	cuww4.lat.chk cuww4.mat			\
 	cuww5.lat.chk cuww5.mat			\
 	grin grin.lat.chk
+
+check-local:
+	@../check.template $(srcdir) "" src/groebner/zbasis -q 
+
+CLEANFILES = .num_failures

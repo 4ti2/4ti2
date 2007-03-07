@@ -5,3 +5,8 @@ EXTRA_DIST = 															\
 	grin10900.3 grin10900.3.cost grin10900.3.gro grin10900.3.mar grin10900.3.min.chk grin10900.3.opt grin10900.3.zsol	\
 	grin10900.4 grin10900.4.cost grin10900.4.gro grin10900.4.mar grin10900.4.min.chk grin10900.4.zsol			\
 	grin10900.5 grin10900.5.cost grin10900.5.mar grin10900.5.min.chk grin10900.5.opt grin10900.5.zsol
+
+check-local:
+	@../check.template $(srcdir) "" src/groebner/minimize -q
+
+CLEANFILES = .num_failures
