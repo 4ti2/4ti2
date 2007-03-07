@@ -1,4 +1,4 @@
-SUBDIRS = .
+SUBDIRS =
 if HAVE_GMP_WITH_CXX
 SUBDIRS += gmp
 endif
