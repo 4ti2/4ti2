@@ -46,7 +46,7 @@ for GLPK_HOME in ${GLPK_HOME_PATH}
 		CXXFLAGS="${CXXFLAGS} ${GLPK_CFLAGS}"
 		LIBS="${LIBS} ${GLPK_LIBS}"
 
-		AC_LINK_IFELSE(AC_LANG_CALL([], [glp_lpx_create_prob]),
+		AC_LINK_IFELSE(AC_LANG_CALL([#include <glpk.h>], [glp_lpx_create_prob]),
 		[
 				AC_MSG_RESULT(found)
 				AC_SUBST(GLPK_CFLAGS)
