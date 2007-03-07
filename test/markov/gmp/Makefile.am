@@ -6,12 +6,12 @@ EXTRA_DIST = 									\
 	prob06 prob06.lat prob06.mar.chk
 
 check-hybrid:
-	@../check.template $(srcdir) "-hybrid" src/groebner/markov -q -p arb -ghybrid
+	@../../check.template $(srcdir) "-hybrid" src/groebner/markov -q -p arb -ghybrid
 
 check-project-and-lift:
-	@../check.template $(srcdir) "-project-and-lift" src/groebner/markov -q -p arb -gproject-and-lift
+	@../../check.template $(srcdir) "-project-and-lift" src/groebner/markov -q -p arb -gproject-and-lift
 
 check-local: check-hybrid check-project-and-lift
-	@../flavorsum "-hybrid" "-project-and-lift"
+	@../../flavorsum "-hybrid" "-project-and-lift"
 
 CLEANFILES = .num_failures .num_failures-hybrid .num_failures-project-and-lift
