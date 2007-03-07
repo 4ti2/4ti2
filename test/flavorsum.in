@@ -1,0 +1,6 @@
+#! /bin/bash
+NUM_FAILURES=0
+for FLAVOR in $* ; do
+    NUM_FAILURES=$(($NUM_FAILURES+$(cat .num_failures$FLAVOR)))
+done
+echo $NUM_FAILURES > .num_failures

@@ -1,0 +1,6 @@
+#! /bin/bash
+NUM_FAILURES=0
+for DIR in $* ; do
+    NUM_FAILURES=$(($NUM_FAILURES+$(cat $DIR/.num_failures)))
+done
+echo $NUM_FAILURES > .num_failures

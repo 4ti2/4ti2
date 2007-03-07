@@ -14,6 +14,7 @@ m4/Makefile.in
 /obj
 src/Makefile
 src/Makefile.in
+src/config.h.in
 src/groebner/*.lo
 src/groebner/.deps
 src/groebner/.libs
