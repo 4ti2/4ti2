@@ -42,6 +42,9 @@ public:
     const Binomial* reducable(
                     const Binomial& b,
                     const Binomial* b1 = 0) const;
+    const Binomial* reducable_negative(
+                    const Binomial& b,
+                    const Binomial* b1 = 0) const;
 
 protected:
     std::vector<const Binomial*> binomials;

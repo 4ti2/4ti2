@@ -160,10 +160,15 @@ _4ti2_::matrix_bounded(
                 BitSet& bounded,
                 Vector& grading)
 {
+    DEBUG_4ti2(*out << "Checking matrix for bounded components.\n";)
     VectorArray matrix(_matrix);
     // Eliminate the urs variables.
     int rows = upper_triangle(matrix, urs);
     matrix.remove(0, rows);
+    DEBUG_4ti2(*out << "Matrix:\n" << matrix << "\n";)
+    DEBUG_4ti2(*out << "URS:\n" << urs << "\n";)
+    DEBUG_4ti2(*out << "Bounded:\n" << bounded << "\n";)
+    DEBUG_4ti2(*out << "Grading:\n" << grading << "\n";)
     while (bounded.count()+urs.count() < bounded.get_size())
     {
         Size count = bounded.count();
@@ -306,6 +311,7 @@ _4ti2_::add_positive_support(
             else if (v[i] < 0)
             {
                 assert(bounded[i]);
+                assert(grading[i]);
                 IntegerType ratio = (-v[i])/grading[i] + 1;
                 if (ratio > factor) { factor = ratio; }
             }
@@ -518,6 +524,8 @@ _4ti2_::lp_bounded(
     VectorArray lattice(tmp_lattice);
     BitSet rs(urs);
     rs.set_complement();
+    // TODO: We should not use the hermite normal form since sometimes this
+    // introduces numerical problems.
     int rows = hermite(lattice, rs);
     lattice.remove(rows, lattice.get_number());
 
@@ -655,13 +663,16 @@ _4ti2_::lp_bounded(
     lpx_delete_prob(lp);
 }
 
+// TODO: This function is quite ugly and should be rewritten.
 bool
 _4ti2_::bounded(const VectorArray& matrix,
                 const VectorArray& lattice,
                 const BitSet& urs,
                 const VectorArray& cost,
                 const BitSet& bnd,
+                const Vector& grading,
                 const BitSet& unbnd,
+                const Vector& ray,
                 BitSet& cost_unbnd)
 {
     DEBUG_4ti2(*out << "Determining if cost is bounded or unbounded...\n";)
@@ -697,9 +708,12 @@ _4ti2_::bounded(const VectorArray& matrix,
     { if (bnd[i]) { full_bnd.set(i); } }
     DEBUG_4ti2(*out << "Extended BND:\n" << full_bnd << "\n";)
     BitSet full_unbnd(unbnd.get_size()+1);
-    for (int i = 0; i < unbnd.get_size(); ++i)
-    { if (unbnd[i]) { full_unbnd.set(i); } }
     DEBUG_4ti2(*out << "Extended UNBND:\n" << full_unbnd << "\n";)
+
+    // Extend the grading.
+    Vector full_grading(grading.get_size()+1,0);
+    Vector::lift(grading, 0, grading.get_size(), full_grading);
+    DEBUG_4ti2(*out << "Extended Grading:\n" << full_grading << "\n";)
 
     int col = full_matrix.get_size()-1;
     BitSet col_set(full_matrix.get_size());
@@ -717,32 +731,35 @@ _4ti2_::bounded(const VectorArray& matrix,
         // Add the cost component to the lattice.
         Vector ltmp(full_lattice.get_number(),0);
         VectorArray::dot(full_lattice, full_cost[m], ltmp);
-        for (int i = 0; i < full_lattice.get_number(); ++i)
-        {   full_lattice[i][col] = -ltmp[i]; }
-        DEBUG_4ti2(*out << "Full Lattice:\n" << full_lattice << "\n";)
-
-        // Check whether the cost component is bounded.
-        full_unbnd.zero();
-        Vector grading(full_matrix.get_size(),0);
-        Vector ray(full_matrix.get_size(),0);
-        bounded(full_matrix, full_lattice, full_urs,
-                        full_bnd, grading,
-                        full_unbnd, ray);
-        DEBUG_4ti2(*out << "Grading:\n" << grading << "\n";)
-        DEBUG_4ti2(
-        if (!full_unbnd.empty()) {*out<<"Cost Zero Vector:\n"<<ray<<"\n";}
-        )
-        if (!full_bnd[col]) { return false; }
-
-        if (m+1 != cost.get_number())
+        if (!ltmp.is_zero())
         {
-            // Zero the cost component.
-            full_matrix[0][col] = 0;
-            DEBUG_4ti2(*out << "Zeroed Full Matrix:\n" << full_matrix << "\n";)
-            // Eliminate the cost component.
-            upper_triangle(full_lattice, col_set);
-            full_lattice.remove(0);
-            DEBUG_4ti2(*out << "Eliminated Full Lattice:\n" << full_lattice << "\n";)
+            for (int i = 0; i < full_lattice.get_number(); ++i)
+            {   full_lattice[i][col] = -ltmp[i]; }
+            DEBUG_4ti2(*out << "Full Lattice:\n" << full_lattice << "\n";)
+    
+            // Check whether the cost component is bounded.
+            full_unbnd.zero();
+            Vector full_ray(ray.get_size()+1,0);
+            full_grading[grading.get_size()]=0;
+            bounded(full_matrix, full_lattice, full_urs,
+                            full_bnd, full_grading,
+                            full_unbnd, full_ray);
+            DEBUG_4ti2(*out << "Grading:\n" << full_grading << "\n";)
+            DEBUG_4ti2(if (!full_unbnd.empty()) {*out<<"Cost Ray:\n"<<ray<<"\n";})
+            DEBUG_4ti2(*out << "EXT BND:\n" << full_bnd << "\n";)
+            DEBUG_4ti2(*out << "EXT UNBND:\n" << full_unbnd << "\n";)
+            if (!full_bnd[col]) { return false; }
+    
+            if (m+1 != cost.get_number())
+            {
+                // Zero the cost component.
+                full_matrix[0][col] = 0;
+                DEBUG_4ti2(*out << "Zeroed Full Matrix:\n" << full_matrix << "\n";)
+                // Eliminate the cost component.
+                upper_triangle(full_lattice, col_set);
+                full_lattice.remove(0);
+                DEBUG_4ti2(*out << "Eliminated Full Lattice:\n" << full_lattice << "\n";)
+            }
         }
         ++m;
     }
@@ -753,6 +770,8 @@ _4ti2_::bounded(const VectorArray& matrix,
     return true;
 }
 
+// TODO: We should have a version of bounded_projection which uses linear
+// programming instead of ray computation because of numerical stability.
 void
 _4ti2_::bounded_projection(
                 const VectorArray& _matrix,

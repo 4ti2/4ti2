@@ -319,7 +319,7 @@ BinomialFactory::convert(const VectorArray& vs, BinomialCollection& bc, bool ori
         convert(vs[i], b);
         if (!Binomial::overweight(b) && !Binomial::truncated(b))
         {
-            if (orientate && b.orientate()) { bc.add(b); }
+            if (orientate) { if (b.orientate()) { bc.add(b); } }
             else { bc.add(b); }
             assert(!b.is_non_positive());
         }

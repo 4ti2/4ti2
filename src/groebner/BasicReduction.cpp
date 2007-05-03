@@ -74,4 +74,20 @@ BasicReduction::reducable(const Binomial& b, const Binomial* b1) const
     return 0;
 }
 
+// Returns a point in the point set which dominates p excluding the point
+// itself and b1. Returns 0 if no point exists.
+const Binomial*
+BasicReduction::reducable_negative(const Binomial& b, const Binomial* b1) const
+{
+    //Statistics::incr_num_reducable_checks();
+    for (unsigned int i = 0; i < binomials.size(); ++i)
+    {
+        if (Binomial::reduces_negative(*binomials[i], b))
+        {
+            if (binomials[i] != &b && binomials[i] != b1) return binomials[i];
+        }
+    }
+    return 0;
+}
+
 

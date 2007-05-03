@@ -270,11 +270,6 @@ SaturationGenSet::saturate(
             }
         }
     }
-    if (num_sats != 0)
-    {
-        *out << "  Saturated already on " << num_sats << " variable(s).";
-        *out << std::endl;
-    }
     return num_sats;
 }
 
