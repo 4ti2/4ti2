@@ -191,7 +191,7 @@ Feasible::bounded(
     compute_bounded();
     return _4ti2_::bounded(*matrix, *basis,
                     *urs, cost,
-                    *bnd, *unbnd, cost_unbnd);
+                    *bnd, *grading, *unbnd, *ray, cost_unbnd);
 }
 
 #if 0
