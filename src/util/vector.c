@@ -301,6 +301,7 @@ listVector* appendVectorToListVector(vector v, listVector *REST) {
     exit(0);
   }
   LIST->first = v;
+  LIST->sign = 0;
   LIST->rest = REST;
   return (LIST);
 }

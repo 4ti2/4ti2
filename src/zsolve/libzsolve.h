@@ -20,8 +20,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _LIBZSOLVE_H
-#define _LIBZSOLVE_H
+#ifndef _4ti2_zsolve__LIBZSOLVE_H
+#define _4ti2_zsolve__LIBZSOLVE_H
 
 #include "vectorarray.h"
 #include "linearsystem.h"
@@ -97,7 +97,9 @@ void backupZSolveContext(FILE *, ZSolveContext);
 
 /*** main calls ***/
 ZSolveContext createZSolveContextFromSystem(LinearSystem, FILE *, int, int, ZSolveLogCallback, ZSolveBackupCallback);
-/* (system to solve, logfile, loglevel = 0..3, verbosity = 0..3, custom log callback or zsolveLogCallbackDefault, backup callback) */
+/* (system to solve, logfile, loglevel = 0..3, verbosity = 0..3, custom log callback or zsolveLogCallbackDefault, backup callback) 
+   The LinearSystem is NOT consumed.
+*/
 
 ZSolveContext createZSolveContextFromLattice(VectorArray, FILE *, int, int, ZSolveLogCallback, ZSolveBackupCallback);
 /* (lattice, logfile, loglevel = 0..3, verbosity = 0..3, custom log callback or zsolveLogCallbackDefault, backup callback) */

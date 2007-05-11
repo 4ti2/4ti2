@@ -1,0 +1,72 @@
+#!/bin/bash
+# 4ti2 -- A software package for algebraic, geometric and combinatorial
+# problems on linear spaces.
+#
+# Copyright (C) 2006 4ti2 team.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+SCRIPT=`which $0`
+DIR=`dirname $SCRIPT`
+#EXECPATH=$DIR/../../bin
+EXECPATH=@abs_top_builddir@
+
+# The directory where the input data and the results reside.
+SRCDIR=$1
+shift 1
+###cd $SRCDIR
+
+# The executable we are using.
+echo "$EXECPATH/$@"
+# Check that the executable exists.
+if [ ! -f "$EXECPATH/$1" ]
+then
+    echo "Error: Unable to find executable '$EXECPATH/$1'."
+    exit 1
+fi
+
+num_failures=0
+
+FILES="ppi5 ppi10 ppi16"
+echo $FILES
+for file in $FILES; do
+    CHECK_FILES="$file.mat $file.gra"
+    rm -f $CHECK_FILES
+    COMMAND="$@ `echo $file | sed 's/ppi//'` "
+    echo -n "$COMMAND ..."
+    
+    TIME=`$EXECPATH/$COMMAND 2>&1 | grep "Elapsed time" | tail -1 | awk '/^Elapsed time:/ { print $3, $4 }'`
+    sort < $file.gra > $file.gra.srt
+    sort < ${SRCDIR}/$file.gra.chk > $file.gra.srt.chk
+    STATUS="passed"
+    diff -b -q $file.gra.srt $file.gra.srt.chk > /dev/null
+    if [ $? != 0 ]; then
+	STATUS="FAILED"
+	num_failures=$(($num_failures+1))
+	break
+    fi
+    echo -n " $STATUS "
+    echo "$TIME"
+    rm -f $CHECK_FILES $file.gra.srt $file.gra.srt.chk
+done
+
+if [ $num_failures == 0 ]; then
+    echo "**** All tests PASSED! ****"
+else
+    echo "**** $num_failures test(s) FAILED! ****"
+fi
+echo ""
+# Record the number of failures in a file.
+echo $num_failures > .num_failures

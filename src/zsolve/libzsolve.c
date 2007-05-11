@@ -262,10 +262,10 @@ void zsolveLogCallbackDefault(FILE *stream, int level, int type, int var, int su
 
 void splitLog(ZSolveContext ctx, int type, CPUTime steptime)
 {
-	CPUTime currenttime = getCPUTime();
-
 	if (ctx->LogCallback)
 	{
+		CPUTime currenttime = getCPUTime();
+
 		ctx->LogCallback(stdout, ctx->Verbosity, type, ctx->Current, ctx->SumNorm, ctx->FirstNorm, ctx->Lattice->Size, maxd(currenttime - ctx->AllTime, 0.0), maxd(steptime, 0.0));
 		if (ctx->LogFile)
 			ctx->LogCallback(ctx->LogFile, ctx->LogLevel, type, ctx->Current, ctx->SumNorm, ctx->FirstNorm, ctx->Lattice->Size, maxd(currenttime - ctx->AllTime, 0.0), maxd(steptime, 0.0));
@@ -325,7 +325,6 @@ ZSolveContext createZSolveContextFromSystem(LinearSystem initialsystem, FILE *lo
 	}
 
 	finalsystem = homogenizeLinearSystem(initialsystem);
-	deleteLinearSystem(initialsystem);
 
 	if (ctx->Verbosity>0)
 	{
@@ -355,6 +354,7 @@ ZSolveContext createZSolveContextFromSystem(LinearSystem initialsystem, FILE *lo
 	ctx->FirstNorm = 0;
 	ctx->AllTime = getCPUTime();
 	ctx->BackupCallback = backupcallback;
+	ctx->BackupTime = 0;
 	ctx->LogCallback = logcallback;
 	ctx->Homs = NULL;
 	ctx->Inhoms = NULL;
@@ -466,7 +466,8 @@ void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 
 		if (ctx->SumNorm == 0) // start of var loop
 		{
-			ctx->VarTime = getCPUTime();
+			if (ctx->LogCallback)
+				ctx->VarTime = getCPUTime();
 			next = nextVariable(ctx);
 //			printf("next variable = %d\n", next);
 			if (next<0)
@@ -480,15 +481,19 @@ void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 
 		if (ctx->FirstNorm == 0) // start of sum loop
 		{
-			ctx->SumTime = getCPUTime();
-			splitLog(ctx, ZSOLVE_LOG_SUM_STARTED, 0.0);
+			if (ctx->LogCallback) {
+				ctx->SumTime = getCPUTime();
+				splitLog(ctx, ZSOLVE_LOG_SUM_STARTED, 0.0);
+			}
 		}
 
 		// start of norm loop
 
 		ctx->SecondNorm = ctx->SumNorm - ctx->FirstNorm;
-		ctx->NormTime = getCPUTime();
-		splitLog(ctx, ZSOLVE_LOG_NORM_STARTED, 0.0);
+		if (ctx->LogCallback) {
+			ctx->NormTime = getCPUTime();
+			splitLog(ctx, ZSOLVE_LOG_NORM_STARTED, 0.0);
+		}
 
 		if (ctx->FirstNorm <= ctx->MaxNorm && ctx->SecondNorm <= ctx->MaxNorm && ctx->Norm[ctx->FirstNorm]!=NULL && ctx->Norm[ctx->SecondNorm]!=NULL)
 		{
@@ -498,12 +503,16 @@ void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 
 		// end of norm loop
 
-		splitLog(ctx, ZSOLVE_LOG_NORM_FINISHED, ctx->NormTime);
+		if (ctx->LogCallback) {
+			splitLog(ctx, ZSOLVE_LOG_NORM_FINISHED, ctx->NormTime);
+		}
 		ctx->FirstNorm++;
 	
 		if (ctx->FirstNorm > ctx->SumNorm/2) // end of sum loop?
 		{
-			splitLog(ctx, ZSOLVE_LOG_SUM_FINISHED, ctx->SumTime);
+			if (ctx->LogCallback) {
+				splitLog(ctx, ZSOLVE_LOG_SUM_FINISHED, ctx->SumTime);
+			}
 			ctx->SumNorm++;
 
 			if (ctx->SumNorm > 2*ctx->MaxNorm) // end of var loop?
@@ -512,7 +521,9 @@ void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 				if (ctx->Lattice->Properties[ctx->Current].Lower+ctx->Lattice->Properties[ctx->Current].Upper!=0)
 					ctx->Symmetric = false;
 				filterLimits(ctx);
-				splitLog(ctx, ZSOLVE_LOG_VARIABLE_FINISHED, ctx->VarTime);
+				if (ctx->LogCallback) {
+					splitLog(ctx, ZSOLVE_LOG_VARIABLE_FINISHED, ctx->VarTime);
+				}
 				ctx->Current++;
 				ctx->SumNorm = 0;
 
@@ -603,7 +614,9 @@ void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 		}
 	}
 
-	printf("\nFinal basis has %d inhomogeneous, %d homogeneous and %d free elements.\n", ctx->Inhoms->Size, ctx->Homs->Size, ctx->Frees->Size);
+	if (ctx->Verbosity >= 0)
+		printf("\nFinal basis has %d inhomogeneous, %d homogeneous and %d free elements.\n",
+		       ctx->Inhoms->Size, ctx->Homs->Size, ctx->Frees->Size);
 	if (ctx->LogLevel>0)
 		fprintf(ctx->LogFile, "\nFinal basis has %d inhomogeneous, %d homogeneous and %d free elements.\n", ctx->Inhoms->Size, ctx->Homs->Size, ctx->Frees->Size);
 }

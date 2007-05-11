@@ -20,8 +20,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _MATRIX_H
-#define _MATRIX_H
+#ifndef _4ti2_zsolve__MATRIX_H
+#define _4ti2_zsolve__MATRIX_H
 
 #include <stdio.h>
 
