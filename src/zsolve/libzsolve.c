@@ -59,7 +59,7 @@ int nextVariable(ZSolveContext ctx)
 	Vector gcds;
 	int i,j,k,col = -1;
 	int factor, value;
-	bool flag;
+	BOOL flag;
 
 	assert(ctx);
 
@@ -111,7 +111,7 @@ int nextVariable(ZSolveContext ctx)
 			printVectorArray(ctx->Lattice, VECTORARRAY_INDENT);
 			printf("Reducing Slot: Row = %d, Col = %d\n\n", j, col);
 */
-			flag = false;
+			flag = FALSE;
 			for (i=0; i<ctx->Lattice->Size; i++)
 			{
 				if (ctx->Lattice->Data[i][col]!=0 && i!=j)
@@ -125,7 +125,7 @@ int nextVariable(ZSolveContext ctx)
 					if (factor!=0)
 					{
 //						printf("factor = %d\n", factor);
-						flag = true;
+						flag = TRUE;
 					}
 					for (k=0; k<ctx->Variables; k++)
 						ctx->Lattice->Data[i][k] -= factor * ctx->Lattice->Data[j][k];
@@ -285,7 +285,7 @@ void backupZSolveContext(FILE *stream, ZSolveContext ctx)
 
 	fprintf(stream, "%.2f %.2f %.2f %.2f\n\n" , currenttime - ctx->AllTime, currenttime - ctx->VarTime, currenttime - ctx->SumTime, currenttime - ctx->NormTime);
 
-	fprintVectorArray(stream, ctx->Lattice, true);
+	fprintVectorArray(stream, ctx->Lattice, TRUE);
 }
 
 int originalCompare(int a, int b)
@@ -348,7 +348,7 @@ ZSolveContext createZSolveContextFromSystem(LinearSystem initialsystem, FILE *lo
 
 	ctx->Variables = ctx->Lattice->Variables;
 	ctx->MaxNorm = 0;
-	ctx->Symmetric = true;
+	ctx->Symmetric = TRUE;
 	ctx->Current = 0;
 	ctx->SumNorm = 0;
 	ctx->FirstNorm = 0;
@@ -383,7 +383,7 @@ ZSolveContext createZSolveContextFromLattice(VectorArray lattice, FILE *logfile,
 	ctx->Lattice = lattice;
 	ctx->Variables = ctx->Lattice->Variables;
 	ctx->MaxNorm = 0;
-	ctx->Symmetric = true;
+	ctx->Symmetric = TRUE;
 	ctx->Current = 0;
 	ctx->SumNorm = 0;
 	ctx->FirstNorm = 0;
@@ -423,7 +423,7 @@ ZSolveContext createZSolveContextFromBackup(FILE *stream, ZSolveLogCallback logc
 	ctx->SumTime = currenttime - ctx->SumTime;
 	ctx->NormTime = currenttime - ctx->NormTime;
 
-	ctx->Lattice = readVectorArray(stream, true);
+	ctx->Lattice = readVectorArray(stream, TRUE);
 
 	ctx->Variables = ctx->Lattice->Variables;
 
@@ -437,13 +437,13 @@ ZSolveContext createZSolveContextFromBackup(FILE *stream, ZSolveLogCallback logc
 	return ctx;
 }
 
-void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
+void zsolveSystem(ZSolveContext ctx, BOOL appendnegatives)
 {
 	int next;
 	int split;
 	int count;
 	int i,j,k;
-	bool is_hom, is_free, has_symmetric;
+	BOOL is_hom, is_free, has_symmetric;
 	int lex_cmp;
 	Vector vector;
 	CPUTime lastbackup = getCPUTime();
@@ -475,7 +475,7 @@ void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 			splitLog(ctx, ZSOLVE_LOG_VARIABLE_STARTED, 0.0);
 			swapVectorArrayColumns(ctx->Lattice, next, ctx->Current);
 //			printf("after next_var_swap:\n");
-//			printVectorArray(ctx->Lattice, true);
+//			printVectorArray(ctx->Lattice, TRUE);
 			createValueTrees(ctx);
 		}
 
@@ -519,7 +519,7 @@ void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 			{
 				deleteValueTrees(ctx);
 				if (ctx->Lattice->Properties[ctx->Current].Lower+ctx->Lattice->Properties[ctx->Current].Upper!=0)
-					ctx->Symmetric = false;
+					ctx->Symmetric = FALSE;
 				filterLimits(ctx);
 				if (ctx->LogCallback) {
 					splitLog(ctx, ZSOLVE_LOG_VARIABLE_FINISHED, ctx->VarTime);
@@ -528,7 +528,7 @@ void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 				ctx->SumNorm = 0;
 
 //				printf("After COMPLETE and FILTER\n");
-//				printVectorArray(ctx->Lattice, true);
+//				printVectorArray(ctx->Lattice, TRUE);
 			}
 
 			ctx->FirstNorm = 0;
@@ -553,7 +553,7 @@ void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 	}
 
 	// DEBUG
-//	printVectorArray(ctx->Lattice, true);
+//	printVectorArray(ctx->Lattice, TRUE);
 
 	// split - variable for hom / inhom
 	// count - number of columns for output
@@ -582,15 +582,15 @@ void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 		// hom depends on splitting variable
 		is_hom = split < 0 || vector[split] == 0;
 		// free, if all nonzero-vars are free
-		is_free = true;
+		is_free = TRUE;
 		for (j=0; j<ctx->Lattice->Variables; j++)
 			if (vector[j] != 0 && !ctx->Lattice->Properties[j].Free)
-				is_free = false;
+				is_free = FALSE;
 		// has_symmetric, if inverse fits the bounds
-		has_symmetric = true;
+		has_symmetric = TRUE;
 		for (j=0; j<ctx->Lattice->Variables; j++)
 			if (!checkVariableBounds(ctx->Lattice->Properties, j, -vector[j]))
-				has_symmetric = false;
+				has_symmetric = FALSE;
 		// lex compare of vector with its inverse
 		lex_cmp = lexCompareInverseVector(vector, ctx->Lattice->Variables);
 
@@ -621,7 +621,7 @@ void zsolveSystem(ZSolveContext ctx, bool appendnegatives)
 		fprintf(ctx->LogFile, "\nFinal basis has %d inhomogeneous, %d homogeneous and %d free elements.\n", ctx->Inhoms->Size, ctx->Homs->Size, ctx->Frees->Size);
 }
 
-void deleteZSolveContext(ZSolveContext ctx, bool deleteresult)
+void deleteZSolveContext(ZSolveContext ctx, BOOL deleteresult)
 {
 	deleteVector(ctx->Sum);
 	deleteVectorArray(ctx->Lattice);

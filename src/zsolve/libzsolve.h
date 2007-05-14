@@ -50,7 +50,7 @@ typedef struct zsolvecontext_t
 	Vector Second;
 	Vector Sum;
 
-	bool Symmetric;
+	BOOL Symmetric;
 
 	FILE *LogFile;
 	int LogLevel;
@@ -107,10 +107,10 @@ ZSolveContext createZSolveContextFromLattice(VectorArray, FILE *, int, int, ZSol
 ZSolveContext createZSolveContextFromBackup(FILE *, ZSolveLogCallback, ZSolveBackupCallback);
 /* (open backup file, custom log callback or zsolveLogCallbackDefault, backup callback) */
 
-void zsolveSystem(ZSolveContext, bool);
+void zsolveSystem(ZSolveContext, BOOL);
 /* (context created by createZSolveContext or resumeZSolveContext, append negatives? should be true for system/lattice, false for resume) */
 
-void deleteZSolveContext(ZSolveContext, bool);
+void deleteZSolveContext(ZSolveContext, BOOL);
 /* (context, delete Hom and Inhom?) */
 
 #endif

@@ -38,13 +38,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 extern int OVerbose;
 extern int OLogging;
 extern int OBackup;
-extern bool OForce;
-extern bool ORightHandSide;
-extern bool OResume;
+extern BOOL OForce;
+extern BOOL ORightHandSide;
+extern BOOL OResume;
 extern int BaseLength;
 extern char *BaseName;
-extern bool OHilbert;
-extern bool OGraver;
+extern BOOL OHilbert;
+extern BOOL OGraver;
 
 //                                                                            //
 
@@ -126,11 +126,11 @@ void getopts(int argc, char **argv)
 	OVerbose = 1;
 	OLogging = 0;
 	OBackup = 0;
-	OResume = false;
-	ORightHandSide = true;
-	OHilbert = false;
-	OGraver = false;
-	OForce = true;
+	OResume = FALSE;
+	ORightHandSide = TRUE;
+	OHilbert = FALSE;
+	OGraver = FALSE;
+	OForce = TRUE;
 
 #ifdef __GNU_LIBRARY__
 	while ((c = getopt_long(argc, argv, "b::d::fhinl::qrv::VHG", long_options, NULL)) != -1)
@@ -143,19 +143,19 @@ void getopts(int argc, char **argv)
 		switch(c)
 		{
 			case 'f':
-				OForce = true;
+				OForce = TRUE;
 			break;
 			case 'i':
-				ORightHandSide = false;
+				ORightHandSide = FALSE;
 			break;
 			case 'H':
-				OHilbert = true;
+				OHilbert = TRUE;
 			break;
 			case 'G':
-				OGraver = true;
+				OGraver = TRUE;
 			break;
 			case 'r':
-				OResume = true;
+				OResume = TRUE;
 			break;
 			case 'b':
 				if (optarg==NULL)

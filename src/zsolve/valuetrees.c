@@ -81,7 +81,7 @@ void deleteValueTree(ValueTree tree)
 void splitValueTree(ZSolveContext ctx, ValueTree tree, int start)
 {
 	int i, compo, value;
-	bool pos, neg, zero;
+	BOOL pos, neg, zero;
 	ValueTreeNode node, temp;
 
 	if (!tree || tree->level>=0)
@@ -96,17 +96,17 @@ void splitValueTree(ZSolveContext ctx, ValueTree tree, int start)
 	for (; start<ctx->Current; start++)
 	{
 		compo = start<0 ? ctx->Current : start;
-		pos = false;
-		neg = false;
-		zero = false;
+		pos = FALSE;
+		neg = FALSE;
+		zero = FALSE;
 		for (i=0; i<tree->vectors->Size; i++)
 		{
 			if (ctx->Lattice->Data[tree->vectors->Data[i]][compo]>0)
-				pos = true;
+				pos = TRUE;
 			else if (ctx->Lattice->Data[tree->vectors->Data[i]][compo]<0)
-				neg = true;
+				neg = TRUE;
 			else
-				zero = true;
+				zero = TRUE;
 		}
 		if (pos+neg>1)
 			break;
@@ -221,13 +221,13 @@ void createValueTrees(ZSolveContext ctx)
 		if (j==0 && ctx->Lattice->Data[i][ctx->Current] == 0)
 			continue;
 		// put in corresponding norm-tree
-		if (ctx->Norm[j]==NULL)
-			ctx->Norm[j] = createValueTree(-1);
+		if (((ValueTree *)ctx->Norm)[j]==NULL)
+			((ValueTree *)ctx->Norm)[j] = createValueTree(-1);
 		appendToIndexArray( ((ValueTree *)ctx->Norm)[j]->vectors, i);
 	}
 
 	for (i=0; i<=ctx->MaxNorm; i++)
-		splitValueTree(ctx, ctx->Norm[i], -1);
+		splitValueTree(ctx, ((ValueTree *)ctx->Norm)[i], -1);
 }
 
 //                                                                            //
@@ -237,15 +237,15 @@ void deleteValueTrees(ZSolveContext ctx)
 	int i;
 
 	for (i=0; i<=ctx->MaxNorm; i++)
-		deleteValueTree(ctx->Norm[i]);
+		deleteValueTree(((ValueTree *)ctx->Norm)[i]);
 
-	free(ctx->Norm);
+	free((ValueTree *)ctx->Norm);
 	ctx->Norm = NULL;
 }
 
 //                                                                            //
 
-bool enumValueReducer(ZSolveContext ctx, ValueTree tree)
+BOOL enumValueReducer(ZSolveContext ctx, ValueTree tree)
 {
 	int value, i, j;
 	Vector Reducer;
@@ -262,7 +262,7 @@ bool enumValueReducer(ZSolveContext ctx, ValueTree tree)
 				while (node && node->value<=value)
 				{
 					if (enumValueReducer(ctx, node->sub))
-						return true;
+						return TRUE;
 					node = node->next;
 				}
 			}
@@ -272,12 +272,12 @@ bool enumValueReducer(ZSolveContext ctx, ValueTree tree)
 				while (node && node->value>=value)
 				{
 					if (enumValueReducer(ctx, node->sub))
-						return true;
+						return TRUE;
 					node = node->next;
 				}
 			}
 			if (enumValueReducer(ctx, tree->zero))
-				return true;
+				return TRUE;
 		}
 		else
 		{
@@ -293,11 +293,11 @@ bool enumValueReducer(ZSolveContext ctx, ValueTree tree)
 					if (Reducer[j]*ctx->Sum[j]<0 || abs(ctx->Sum[j])<abs(Reducer[j]))
 						break;
 				if (j>ctx->Current)
-					return true;
+					return TRUE;
 			}
 		}
 	}
-	return false;
+	return FALSE;
 }
 
 //                                                                            //
@@ -393,19 +393,19 @@ void insertVectorToValueTrees(ZSolveContext ctx, Vector vector, int norm)
 {
 	if (norm>ctx->MaxNorm)
 	{
-		ctx->Norm = (void **)realloc(ctx->Norm, (norm+1)*sizeof(ValueTree));
+		ctx->Norm = (void **)realloc((ValueTree *)ctx->Norm, (norm+1)*sizeof(ValueTree));
 		while (norm>ctx->MaxNorm)
-			ctx->Norm[++ctx->MaxNorm] = NULL;
+			((ValueTree *)ctx->Norm)[++ctx->MaxNorm] = NULL;
 	}
 
 	appendToVectorArray(ctx->Lattice, vector);
-	if (ctx->Norm[norm]==NULL)
+	if (((ValueTree *)ctx->Norm)[norm]==NULL)
 	{
-		ctx->Norm[norm] = createValueTree(-1);
+		((ValueTree *)ctx->Norm)[norm] = createValueTree(-1);
 		appendToIndexArray(((ValueTree *)ctx->Norm)[norm]->vectors, ctx->Lattice->Size-1);
 	}
 	else
-		insertVectorToValueTree(ctx, ctx->Norm[norm], ctx->Lattice->Size-1);
+		insertVectorToValueTree(ctx, ((ValueTree *)ctx->Norm)[norm], ctx->Lattice->Size-1);
 }
 
 //                                                                            //
@@ -413,7 +413,7 @@ void insertVectorToValueTrees(ZSolveContext ctx, Vector vector, int norm)
 void buildValueSum(ZSolveContext ctx)
 {
 	int i,norm;
-	bool flag;
+	BOOL flag;
 
 	assert(ctx->First);
 	assert(ctx->Second);
@@ -426,10 +426,10 @@ void buildValueSum(ZSolveContext ctx)
 	// pattern okay ?
 	if (ctx->First[ctx->Current]*ctx->Second[ctx->Current]>0)
 		return;
-	flag = false;
+	flag = FALSE;
 	for (i=0; i<ctx->Current; i++)
 		if (ctx->First[i]*ctx->Second[i]<0)
-			flag = true;
+			flag = TRUE;
 	if (flag)
 		return;
 
@@ -451,14 +451,14 @@ void buildValueSum(ZSolveContext ctx)
 	printf("]\n"); */
 
 	// reducable ?
-	flag = false;
+	flag = FALSE;
 	for (i=0; i<=norm/2; i++)
 	{
 		if (i<=ctx->MaxNorm)
 		{
-			if (enumValueReducer(ctx, ctx->Norm[i]))
+			if (enumValueReducer(ctx, ((ValueTree *)ctx->Norm)[i]))
 			{
-				flag = true;
+				flag = TRUE;
 				break;
 			}
 		}
@@ -482,7 +482,7 @@ void buildValueSum(ZSolveContext ctx)
 	}
 
 	if (norm<=ctx->MaxNorm)
-		if (enumValueReducer(ctx, ctx->Norm[norm]))
+		if (enumValueReducer(ctx, ((ValueTree *)ctx->Norm)[norm]))
 			return;
 
 	insertVectorToValueTrees(ctx, copyVector(ctx->Sum, ctx->Variables), norm);
@@ -598,7 +598,7 @@ void enumValueFirst(ZSolveContext ctx, ValueTree tree, int norm)
 			{
 				ctx->First = ctx->Lattice->Data[tree->vectors->Data[i]];
 				if ((!ctx->Symmetric && ctx->First[ctx->Current]<0) || ctx->First[ctx->Current]>0)
-					enumValueSecond(ctx, ctx->Norm[norm]);
+					enumValueSecond(ctx, ((ValueTree *)ctx->Norm)[norm]);
 			}
 			
 			if (tree->vectors==NULL)
@@ -612,9 +612,10 @@ void enumValueFirst(ZSolveContext ctx, ValueTree tree, int norm)
 void completeValueTrees(ZSolveContext ctx, int norm1, int norm2)
 {
 	assert(ctx->Norm);
-	assert(!(norm1>ctx->MaxNorm || norm2>ctx->MaxNorm || ctx->Norm[norm1]==NULL || ctx->Norm[norm2]==NULL));
+	assert(!(norm1>ctx->MaxNorm || norm2>ctx->MaxNorm || ((ValueTree *)ctx->Norm)[norm1]==NULL 
+                                || ((ValueTree *)ctx->Norm)[norm2]==NULL));
 
-	enumValueFirst(ctx, ctx->Norm[norm1], norm2);
+	enumValueFirst(ctx, ((ValueTree *)ctx->Norm)[norm1], norm2);
 }
 
 //                                                                            //

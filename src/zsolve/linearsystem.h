@@ -76,7 +76,7 @@ void setLinearSystemMatrix(LinearSystem, Matrix);
 void setLinearSystemRHS(LinearSystem, Vector);
 /* Copies the contents from Vector to RHS (system, rhs) */
 
-void setLinearSystemLimit(LinearSystem, int, int, int, bool);
+void setLinearSystemLimit(LinearSystem, int, int, int, BOOL);
 /* Sets limits for one variable (system, var, lower, upper, free?) */
 
 void setLinearSystemBound(LinearSystem, int, char, int);
