@@ -18,10 +18,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-SCRIPT=`which $0`
-DIR=`dirname $SCRIPT`
-#EXECPATH=$DIR/../../bin
-EXECPATH=@abs_top_builddir@
+EXECPATH="@abs_top_builddir@"
 
 # The directory where the input data and the results reside.
 SRCDIR=$1
@@ -33,7 +30,7 @@ echo "$EXECPATH/$@"
 # Check that the executable exists.
 if [ ! -f "$EXECPATH/$1" ]
 then
-    echo "Error: Unable to find executable '$EXECPATH/$1'."
+    echo "Error: Unable to find executable \`$EXECPATH/$1'."
     exit 1
 fi
 
@@ -47,9 +44,9 @@ for file in $FILES; do
     COMMAND="$@ `echo $file | sed 's/ppi//'` "
     echo -n "$COMMAND ..."
     
-    TIME=`$EXECPATH/$COMMAND 2>&1 | grep "Elapsed time" | tail -1 | awk '/^Elapsed time:/ { print $3, $4 }'`
+    TIME=`"$EXECPATH"/$COMMAND 2>&1 | grep "Elapsed time" | tail -1 | awk '/^Elapsed time:/ { print $3, $4 }'`
     sort < $file.gra > $file.gra.srt
-    sort < ${SRCDIR}/$file.gra.chk > $file.gra.srt.chk
+    sort < "${SRCDIR}"/$file.gra.chk > $file.gra.srt.chk
     STATUS="passed"
     diff -b -q $file.gra.srt $file.gra.srt.chk > /dev/null
     if [ $? != 0 ]; then

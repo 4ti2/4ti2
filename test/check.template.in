@@ -18,10 +18,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-SCRIPT=`which $0`
-DIR=`dirname $SCRIPT`
-#EXECPATH=$DIR/../bin
-EXECPATH=`cd @abs_top_builddir@ && pwd`
+EXECPATH=`cd "@abs_top_builddir@" && pwd`
 
 # The directory where the input data and the results reside.
 SRCDIR=`cd $1 && pwd`
@@ -32,20 +29,20 @@ CHECKDIR=checkdir$FLAVOR
 shift 1
 
 # The executable we are using.
-echo "EXECUTABLE: $EXECPATH/$@"
+echo "EXECUTABLE: \`$EXECPATH/$1'"
 # Check that the executable exists.
 if [ ! -f "$EXECPATH/$1" ]
 then
-    echo "Error: Unable to find executable '$EXECPATH/$1'."
+    echo "Error: Unable to find executable \`$EXECPATH/$1'."
     exit 1
 fi
 
 NUM_FAILURES=0
 
-FILES=`cd $SRCDIR && ls -1 *.chk | sed 's/\.[a-z]*\.chk//g' | sort -u`
+FILES=`cd "$SRCDIR" && ls -1 *.chk | sed 's/\.[a-z]*\.chk//g' | sort -u`
 echo "CHECKING: " $FILES
 for file in $FILES; do
-    CHECK_FILES=`cd $SRCDIR && ls -1 ${file}.*.chk | egrep "^${file}.[a-z]*.chk" | sed s/\.chk//g`
+    CHECK_FILES=`cd "$SRCDIR" && ls -1 ${file}.*.chk | egrep "^${file}.[a-z]*.chk" | sed s/\.chk//g`
     #echo rm -f $CHECK_FILES
     rm -f $CHECK_FILES
     COMMAND="$@ $file"
@@ -55,18 +52,18 @@ for file in $FILES; do
     fi
     mkdir ${CHECKDIR} 
     cd ${CHECKDIR}
-    INPUT_FILES=`cd $SRCDIR && ls -1 ${file}* | egrep -v "[.]chk$" `
+    INPUT_FILES=`cd "$SRCDIR" && ls -1 ${file}* | egrep -v "[.]chk$" `
     #echo $INPUT_FILES
     for input_file in $INPUT_FILES; do
 	if test ! -r ${input_file} ; then 
-	    cp ${SRCDIR}/${input_file} ${input_file}
+	    cp "${SRCDIR}"/${input_file} ${input_file}
 	fi
     done
     echo -n "$COMMAND ..."
-    TIME=`$EXECPATH/$COMMAND | awk '/^4ti2 Total Time/ { print $4, $5 }'`
+    TIME=`"$EXECPATH"/$COMMAND | awk '/^4ti2 Total Time/ { print $4, $5 }'`
     STATUS="passed"
     for check_file in $CHECK_FILES; do
-        diff -b -q ${SRCDIR}/${check_file}.chk ${check_file} > /dev/null
+        diff -b -q "${SRCDIR}"/${check_file}.chk ${check_file} > /dev/null
         if [ $? != 0 ]; then
             STATUS="FAILED"
             NUM_FAILURES=$(($NUM_FAILURES+1))

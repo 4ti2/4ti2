@@ -21,9 +21,9 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 
 # We locate where this script is so we can call the executables.
-SCRIPT=`which $0`
-DIR=`dirname $SCRIPT`
-FUNCTION=`basename $SCRIPT`
+SCRIPT=`which "$0"`
+DIR=`dirname "$SCRIPT"`
+FUNCTION=`basename "$SCRIPT"`
 
 # The default executable.
 EXECUTABLE=4ti2int64
@@ -51,9 +51,9 @@ then
 fi
 
 # We check whether the 4ti2 executable exists.
-if [ ! -f $DIR/$EXECUTABLE ]
+if [ ! -f "$DIR/$EXECUTABLE" ]
 then
-    echo "Error: Unable to find 4ti2 executable '$EXECUTABLE'"
+    echo "Error: Unable to find 4ti2 executable \`$EXECUTABLE'"
     exit 1
 fi
 
@@ -61,4 +61,4 @@ fi
 # libgmp, and libgmpxx libraries.
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$DIR
 
-$DIR/$EXECUTABLE $FUNCTION $@
+"$DIR"/$EXECUTABLE $FUNCTION $@
