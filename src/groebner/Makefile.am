@@ -76,6 +76,7 @@ lib4ti2sources =				\
 	LongDenseIndexSet.cpp			\
 	LongDenseIndexSetStream.cpp		\
 	Markov.cpp				\
+	MaxMinGenSet.cpp			\
 	Minimize.cpp				\
 	MinimizeOptions.cpp			\
 	OnesReduction.cpp			\
@@ -150,6 +151,7 @@ include_HEADERS = 				\
 	LongDenseIndexSet.h			\
 	LongDenseIndexSetStream.h		\
 	Markov.h				\
+	MaxMinGenSet.h				\
 	Minimize.h				\
 	MinimizeOptions.h			\
 	OnesReduction.h				\

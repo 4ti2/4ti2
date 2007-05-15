@@ -62,6 +62,9 @@ test/groebner/gmp/Makefile.in
 test/hilbert/Makefile.in
 test/markov/Makefile.in
 test/markov/gmp/Makefile.in
+test/markov/maxmin/.num_failures
+test/markov/maxmin/Makefile
+test/markov/maxmin/Makefile.in
 test/markov/saturation/Makefile.in
 test/minimize/Makefile.in
 test/normalform/Makefile.in

@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "ProjectLiftGenSet.h"
 #include "SaturationGenSet.h"
 #include "HybridGenSet.h"
+#include "MaxMinGenSet.h"
 #include "Markov.h"
 #include "Options.h"
 #include "Globals.h"
@@ -82,6 +83,12 @@ GeneratingSet::compute()
 #endif
         ProjectLiftGenSet algorithm;
         algorithm.compute(*feasible, *gens, Globals::minimal);
+    }
+    else if (Globals::generation == Globals::MAXMIN)
+    {
+        MaxMinGenSet algorithm;
+        BitSet sat(feasible->get_dimension(), false);
+        algorithm.compute(*feasible, *gens, sat, Globals::minimal);
     }
     else //if (Globals::generation == Globals::HYBRID)
     {
