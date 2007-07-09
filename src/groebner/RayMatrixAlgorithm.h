@@ -53,9 +53,27 @@ protected:
                     const IndexSet& rs);
     IndexSet compute1(VectorArray& matrix,
                     VectorArray& vs,
+                    std::vector<IndexSet>& supports,
                     const IndexSet& rs);
     IndexSet compute2(VectorArray& matrix,
                     VectorArray& vs,
+                    std::vector<IndexSet>& supports,
+                    const IndexSet& rs);
+    IndexSet compute3(VectorArray& matrix,
+                    VectorArray& vs,
+                    std::vector<IndexSet>& supports,
+                    const IndexSet& rs);
+    IndexSet compute4(VectorArray& matrix,
+                    VectorArray& vs,
+                    std::vector<IndexSet>& supports,
+                    const IndexSet& rs);
+    IndexSet compute5(VectorArray& matrix,
+                    VectorArray& vs,
+                    std::vector<IndexSet>& supports,
+                    const IndexSet& rs);
+    IndexSet compute6(VectorArray& matrix,
+                    VectorArray& vs,
+                    std::vector<IndexSet>& supports,
                     const IndexSet& rs);
 
     bool rank_check(VectorArray& matrix,

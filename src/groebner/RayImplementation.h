@@ -28,6 +28,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 namespace _4ti2_
 {
 
+typedef std::vector<int> Fathers;
+typedef std::vector<int> History;
+
 template <class IndexSet>
 class RayImplementation
 {
@@ -100,10 +103,25 @@ protected:
                     int next_zero_count,
                     int next_positive_count, 
                     int next_negative_count);
+    void sort(      VectorArray& vs,
+                    std::vector<IndexSet>& supports,
+                    Fathers& fathers, 
+                    std::vector<IndexSet>& zeros, 
+                    int next_col,
+                    int next_zero_count,
+                    int next_positive_count, 
+                    int next_negative_count);
 
     void create_new_vector(
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
+                    int r1, int r2, int next_col,
+                    int next_positive_count, int next_negative_count,
+                    Vector& temp, IndexSet& temp_supp);
+    void create_new_vector(
+                    VectorArray& vs,
+                    std::vector<IndexSet>& supports,
+                    Fathers& fathers,
                     int r1, int r2, int next_col,
                     int next_positive_count, int next_negative_count,
                     Vector& temp, IndexSet& temp_supp);
