@@ -41,6 +41,7 @@ SupportTree<IndexSet>::SupportTreeNode::~SupportTreeNode()
     for (unsigned int i = 0; i < nodes.size(); ++i)  { delete nodes[i].second; }
 }
 
+#if 1
 template <class IndexSet>
 void
 SupportTree<IndexSet>::insert(
@@ -72,6 +73,58 @@ SupportTree<IndexSet>::insert(
         assert(node.index == -1);
         node.index = index;
     }
+}
+#endif
+
+#if 0
+template <class IndexSet>
+void
+SupportTree<IndexSet>::insert(
+                SupportTreeNode& node, const IndexSet& support,
+                int start, int remaining, int index)
+{
+    assert(index >= 0);
+    if (remaining > 0)
+    {
+        // There should always be another unless remaining == 0.
+        int next_one = start;
+        while (!support[next_one]) { ++next_one; }
+    
+        int i = 0;
+        while (i < (int) node.nodes.size() && next_one > node.nodes[i].first) { ++i; }
+        if (i < (int) node.nodes.size() && next_one == node.nodes[i].first)
+        {
+            insert(*node.nodes[i].second, support, next_one+1, remaining-1, index);
+        }
+        else
+        {
+            SupportTreeNode* new_node = new SupportTreeNode;
+            node.nodes.insert(node.nodes.begin()+i, std::pair<int,SupportTreeNode*>(next_one,new_node));
+            insert(*new_node, support, next_one+1, remaining-1, index);
+        }
+    }
+    else
+    {
+        assert(node.index == -1);
+        node.index = index;
+    }
+}
+#endif
+
+template <class IndexSet>
+bool
+SupportTree<IndexSet>::dominated(SupportTreeNode& node, const IndexSet& b)
+{
+    if (node.index < 0)
+    {
+        for (unsigned int i = 0; i < node.nodes.size(); ++i)
+        {
+            if (b[node.nodes[i].first] && dominated(*node.nodes[i].second, b))
+            { return true; }
+        }
+        return false;
+    }
+    else { return true; }
 }
 
 template <class IndexSet>

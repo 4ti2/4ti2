@@ -38,6 +38,7 @@ public:
 
     void insert(const std::vector<IndexSet>& supports, int num);
     void insert(const IndexSet& support, int index);
+    bool dominated(const IndexSet& b);
     bool dominated(const IndexSet& b, int index1, int index2);
     int index_dominated(const IndexSet& b, int index1, int index2);
     int find(const IndexSet& b);
@@ -61,6 +62,7 @@ private:
 
     void insert(SupportTreeNode& node, const IndexSet& support, int start, int remaining, int index);
     void dump(SupportTreeNode& node, int level);
+    bool dominated(SupportTreeNode& node, const IndexSet& b);
     bool dominated(SupportTreeNode& node, const IndexSet& b, int index1, int index2);
     int index_dominated(SupportTreeNode& node, const IndexSet& b, int index1, int index2);
     int find(SupportTreeNode& node, const IndexSet& b, int start, int remaining);
@@ -93,6 +95,14 @@ void
 SupportTree<IndexSet>::insert(const IndexSet& support, int index)
 {
     insert(root, support, 0, support.count(), index);
+}
+
+template <class IndexSet>
+inline
+bool
+SupportTree<IndexSet>::dominated(const IndexSet& support)
+{
+    return dominated(root, support);
 }
 
 template <class IndexSet>
