@@ -20,8 +20,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _OPTS_H
-#define _OPTS_H
+#ifndef _4ti2_zsolve__OPTS_H
+#define _4ti2_zsolve__OPTS_H
 
 void getopts(int, char **);
 

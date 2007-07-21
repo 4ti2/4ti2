@@ -20,24 +20,16 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2_DEFS_H
-#define _4ti2_DEFS_H
+#ifndef _4ti2_4ti2_zsolve__DEFS_H
+#define _4ti2_4ti2_zsolve__DEFS_H
 
 #include <stdio.h>
 
-// bool
+// BOOL
 
-#ifndef bool
-# define bool int
-#endif
-
-#ifndef true
-# define true 1
-#endif
-
-#ifndef false
-# define false 0
-#endif
+# define BOOL int
+# define TRUE 1
+# define FALSE 0
 
 // math
 

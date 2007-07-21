@@ -34,7 +34,7 @@ class Globals
 {
 public:
     typedef enum {DEFAULT, NORMAL, WEIGHTED, GEBAUER_MOELLER} Algorithm;
-    typedef enum {HYBRID, SATURATION, PROJECT_AND_LIFT} Generation;
+    typedef enum {HYBRID, SATURATION, PROJECT_AND_LIFT, MAXMIN} Generation;
     typedef enum {WEIGHT, IP, LP, NONE} Truncation;
 
     static Algorithm algorithm;

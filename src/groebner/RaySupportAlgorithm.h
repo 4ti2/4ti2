@@ -59,6 +59,14 @@ protected:
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
                     const IndexSet& rs);
+    IndexSet compute3(VectorArray& matrix,
+                    VectorArray& vs,
+                    std::vector<IndexSet>& supports,
+                    const IndexSet& rs);
+    IndexSet compute4(VectorArray& matrix,
+                    VectorArray& vs,
+                    std::vector<IndexSet>& supports,
+                    const IndexSet& rs);
 };
 
 } // namespace _4ti2_

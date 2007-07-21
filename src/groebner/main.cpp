@@ -20,6 +20,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
+#include "../banner.h"
 #include "Globals.h"
 #include "DataType.h"
 #include "Timer.h"
@@ -56,15 +57,7 @@ void signal_handler(int)
 
 int main(int argc, char** argv)
 {
-    std::cout << "\
--------------------------------------------------\n\
-4ti2 version 1.3.1, Copyright (C) 2006 4ti2 team.\n\
-4ti2 comes with ABSOLUTELY NO WARRANTY.\n\
-This is free software, and you are welcome\n\
-to redistribute it under certain conditions.\n\
-For details, see the file COPYING.\n\
--------------------------------------------------\n\
-";
+    std::cout << FORTY_TWO_BANNER;
 
 #if defined(_4ti2_INT32_) || defined(_4ti2_INT64_)
     std::cout << "Using " << sizeof(IntegerType)*CHAR_BIT << " bit integers.\n";

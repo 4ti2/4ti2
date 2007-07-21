@@ -35,7 +35,7 @@ VectorArray generateLattice(LinearSystem system)
 	int currentindex, bestindex, currentvalue, bestvalue;
 	int identities;
 	int factor;
-	bool flag;
+	BOOL flag;
 	VectorArray array;
 	Matrix H,I,C;
 	Vector vec;
@@ -60,10 +60,10 @@ VectorArray generateLattice(LinearSystem system)
 	identities = 0;
 	for (i=n-1; i>=0; i--)
 	{
-		flag = false;
+		flag = FALSE;
 		for (j=0; j<identities; j++)
 			if (H->Data[i+(j+e-identities)*n]!=0)
-				flag = true;
+				flag = TRUE;
 		if (flag)
 			continue;
 		k = -1;
@@ -144,14 +144,14 @@ VectorArray generateLattice(LinearSystem system)
 				}
 	
 				// reduce
-				flag = false;
+				flag = FALSE;
 				for (j=0; j<n; j++)
 				{
 					if (j!=bestindex)
 					{
 						factor = H->Data[j+H->Width*i] / -bestvalue;
 						if (H->Data[j+H->Width*i] % bestvalue != 0 && j>i)
-							flag = true;
+							flag = TRUE;
 						combineMatrixColumns(H, j, factor, bestindex);
 						combineMatrixColumns(I, j, factor, bestindex);
 					}

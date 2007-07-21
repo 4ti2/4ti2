@@ -90,6 +90,8 @@ Options::process_options(int argc, char** argv)
             { Globals::generation = Globals::PROJECT_AND_LIFT; }
             else if (std::string("saturation").find(optarg) == 0)
             { Globals::generation = Globals::SATURATION; }
+            else if (std::string("max-min").find(optarg) == 0)
+            { Globals::generation = Globals::MAXMIN; }
             else { unrecognised_option_argument("-g, --generation"); }
             break;
         case 'm':
@@ -211,7 +213,7 @@ Options:\n\
   -g, --generation=ALG       Select ALG as the procedure for computing \n\
                              a generating set or Markov basis. ALG is\n\
                              one of `hybrid' (default), `project-and-lift',\n\
-                             or 'saturation'. The default is hybrid.\n\
+                             `max-min', or 'saturation'.\n\
   -t, --truncation=TRUNC     Set TRUNC as the truncation method.  TRUNC is\n\
                              of the following: `ip', `lp', `weight' (default),\n\
                              or `none'. Only relevant if `zsol' is given.\n\

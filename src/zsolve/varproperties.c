@@ -44,7 +44,7 @@ VariableProperties createVariableProperties(int size)
 
 	for (i=0; i<size; i++)
 	{
-		var[i].Free = true;
+		var[i].Free = TRUE;
 		var[i].Upper = MAXINT;
 		var[i].Lower = -MAXINT;
 		var[i].Column = i;
@@ -63,7 +63,7 @@ void deleteVariableProperties(VariableProperties var)
 
 //                                                                            //
 
-bool checkVariableSymmetry(VariableProperties var, int id)
+BOOL checkVariableSymmetry(VariableProperties var, int id)
 {
 	assert(var);
 	assert(id>=0);
@@ -73,7 +73,7 @@ bool checkVariableSymmetry(VariableProperties var, int id)
 
 //                                                                            //
 
-bool checkVariableFree(VariableProperties var, int id)
+BOOL checkVariableFree(VariableProperties var, int id)
 {
 	assert(var);
 	assert(id>=0);
@@ -83,7 +83,7 @@ bool checkVariableFree(VariableProperties var, int id)
 
 //                                                                            //
 
-bool checkVariableBounds(VariableProperties var, int id, int num)
+BOOL checkVariableBounds(VariableProperties var, int id, int num)
 {
 	assert(var);
 	assert(id>=0);

@@ -22,8 +22,15 @@ COMPILING 4ti2
 
 Run the following commands with the 4ti2 directory:
 
+    	./configure --prefix=INSTALLATION-DIRECTORY
         make
         make check
+	make install-exec
+
+The final command will install 4ti2 in a directory tree below the
+INSTALLATION-DIRECTORY that you gave with the first command.  If you
+omit the --prefix option, `make install' will install 4ti2 in the
+/usr/local hierarchy.
 
 You will need glpk and gmp installed first (see below).
 
@@ -32,29 +39,26 @@ The first command, 'make', compiles all the executables which are placed in the
 checks. This will take a while.  If a check fails, then please notify the 4ti2
 team.
 
-You will need gcc version 3.4 or higher. If you are using an earlier version,
-then the arithmetic overflow checking will probably not work for the 64 bit
-precision version. You can turn off overflow checking by removing the
-compilation option '-ftrapv' from the makefile 'src/groebner/Makefile.inc'
-or by running `make TRAPV=`.
+You will need gcc version 3.4 or higher.
 
 You will need an installed version of glpk (linear programming software). See
 the website http://www.gnu.org/software/glpk for more information. The
 version 4.7 has been tested. If you do not have glpk installed or 4ti2 cannot
 find glpk, then the compilation will fail saying that it cannot find the file
 "glpk.h".  If you have installed glpk but not in a location that 4ti2 finds by
-default, then you will need to change the makefile 'src/groebner/Makefile.inc'
-to indicate where glpk is.
+default, then you will need to invoke 
+
+	 ./configure --with-glpk=/ROOT/OF/GLPK/INSTALLATION/HIERARCHY
 
 You will also need an installed version of gmp, The GNU MP
 Bignum Library, with c++ support enabled (see http://www.swox.com/gmp/ for more
 details).  Versions 4.2.1 and 4.1.4 have been tested. If you are compiling a
 version of gmp from the source, make sure that you enable c++ support
-(--enable-cxx configure option).  If you do not have a version of gmp installed,
-then running 'make' *should* compile 4ti2 but without arbitrary precision
-support (32 bit and 64 bit precision support will compile); the compilation will
-fail with an error saying that it cannot find the file "gmp.h".  If you have
+(--enable-cxx configure option).  If you have
 installed gmp but not in a location that 4ti2 finds by default, then you
-will need to change the makefile 'src/groebner/Makefile.inc' to indicate where
-gmp is.  If you have gmp but not with c++ support, then the compilation will
+will need to invoke
+     
+     ./configure --with-gmp=/ROOT/OF/GMP/INSTALLATION/HIERARCHY
+
+If you have gmp but not with c++ support, then ./configure will
 fail with an error saying that the file "gmpxx.h" cannot be found.

@@ -142,7 +142,7 @@ Optimise::compute_infeasible(
     *out << "Computing Groebner basis for the group relaxation...\n";
     Completion algorithm;
     algorithm.compute(*projection, costs, gens, sols);
-    *out << "Optimal Solution:\n" << sols[0] << "\n";
+    *out << "Optimal Solution of relaxation:\n" << sols[0] << "\n";
     *out << "Objective = " << Vector::dot(sols[0], cost) << "\n";
     if (sols[0].is_non_negative(rs))
     {
@@ -205,7 +205,7 @@ Optimise::compute_infeasible(
 
         Completion algorithm;
         algorithm.compute(*next_projection, costs, gens, sols);
-        DEBUG_4ti2(*out << "Optimal Solution:\n" << sols[0] << "\n";)
+        *out << "Optimal Solution of relaxation:\n" << sols[0] << "\n";
         *out << "Objective = " << Vector::dot(sols[0], cost) << "\n";
         if (sols[0].is_non_negative(rs))
         {
@@ -318,7 +318,7 @@ Optimise::compute_feasible(
     switch (status)
     {
         case 0:
-            *out << "LP Objective value/Lower Bound = " << objective << "\n";
+            *out << "LP Objective value/Lower Bound = " << cost_offset + objective << "\n";
             DEBUG_4ti2(*out << "Basic variables:\n" << basic << "\n";)
             break;
         case -1:
@@ -358,7 +358,7 @@ Optimise::compute_feasible(
     sols.insert(sol);
     Completion algorithm;
     algorithm.compute(*projection, costs, gens, sols);
-    *out << "Optimal Solution:\n" << sols[0] << "\n";
+    *out << "Optimal Solution of relaxation:\n" << sols[0] << "\n";
     *out << "Objective = " << cost_offset - sols[0][cost_col] << "\n";
     if (sols[0].is_non_negative(rs))
     {
@@ -388,6 +388,7 @@ Optimise::compute_feasible(
     DEBUG_4ti2(*out << *projection << "\n";)
 
     BitSet remaining(basic);
+    remaining.unset(cost_col);
     while (!remaining.empty())
     {
         DEBUG_4ti2(*out << "NEXT ITERATION\n";)
@@ -428,11 +429,10 @@ Optimise::compute_feasible(
 
         *out << "Computing Groebner basis...\n";
         DEBUG_4ti2(*out << *next_projection << "\n";)
-        VectorArray sols(0, n);
-        sols.insert(sol);
+        sols[0]= sol;
         Completion algorithm;
         algorithm.compute(*next_projection, costs, gens, sols);
-        DEBUG_4ti2(*out << "Optimal Solution:\n" << sols[0] << "\n";)
+        *out << "Optimal Solution of relaxation:\n" << sols[0] << "\n";
         *out << "Objective = " << cost_offset - sols[0][cost_col] << "\n";
         if (sols[0].is_non_negative(rs))
         {
@@ -531,7 +531,7 @@ Optimise::compute_bounded(
     *out << "Solving the group relaxation...\n";
     Completion algorithm;
     algorithm.compute(*projection, costs, gens, sols);
-    *out << "Optimal Solution:\n" << sols[0] << "\n";
+    *out << "Optimal Solution of relaxation:\n" << sols[0] << "\n";
     *out << "Objective = " << cost_offset - sols[0][cost_col] << "\n";
     if (sols[0].is_non_negative(rs))
     {
@@ -611,7 +611,7 @@ Optimise::compute_bounded(
         *out << "Computing Groebner basis...\n";
         Completion algorithm;
         algorithm.compute(*next_projection, costs, gens, sols);
-        DEBUG_4ti2(*out << "Optimal Solution:\n" << sols[0] << "\n";)
+        *out << "Optimal Solution of relaxation:\n" << sols[0] << "\n";
         *out << "Objective = " << cost_offset - sols[0][cost_col] << "\n";
         if (sols[0].is_non_negative(rs))
         {

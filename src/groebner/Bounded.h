@@ -41,7 +41,9 @@ bool bounded(   const VectorArray& matrix,
                 const BitSet& urs,
                 const VectorArray& cost,
                 const BitSet& bnd,
+                const Vector& grading,
                 const BitSet& unbnd,
+                const Vector& ray,
                 BitSet& cost_unbnd);
 
 void bounded_projection(

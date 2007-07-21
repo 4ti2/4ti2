@@ -20,8 +20,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _VECTORARRAY_H
-#define _VECTORARRAY_H
+#ifndef _4ti2_zsolve__VECTORARRAY_H
+#define _4ti2_zsolve__VECTORARRAY_H
 
 #include <stdio.h>
 #include "defs.h"
@@ -45,10 +45,10 @@ VectorArray createVectorArray(int);
 void deleteVectorArray(VectorArray);
 /* Free memory and all vectors (array) */
 
-void fprintVectorArray(FILE *, VectorArray, bool);
+void fprintVectorArray(FILE *, VectorArray, BOOL);
 /* Print to stream with or without header (stream, array, header) */
 
-void printVectorArray(VectorArray, bool);
+void printVectorArray(VectorArray, BOOL);
 /* Print to stdout with or without header (stream, array, header) */
 
 void appendToVectorArray(VectorArray, Vector);
@@ -68,7 +68,7 @@ typedef int (*ColumnCompare)(int, int);
 void sortVectorArrayColumns(VectorArray, ColumnCompare);
 /* sort columns by order in Properties */
 
-VectorArray readVectorArray(FILE *, bool);
+VectorArray readVectorArray(FILE *, BOOL);
 /* read vectorarray from a stream, optionally with header (stream, header?) */
 
 #endif

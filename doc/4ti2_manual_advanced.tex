@@ -26,7 +26,7 @@ Again, we use a few sample problems to demonstrate how to use
 how to run the following functions on affine systems:
 \begin{itemize}
 \item \File{qsolve}, \File{rays}, \File{circuits}
-\item \File{zsolve}, \File{hilbert}, \File{graver}, \File{ppi}
+\item \File{zsolve}, \File{hilbert}, \File{graver}
 \item \File{markov}, \File{groebner}, \File{normalform}, \File{minimize}
 \end{itemize}
 
@@ -34,23 +34,24 @@ how to run the following functions on affine systems:
 \section{Affine systems and their encodings}
 
 In \FourTiTwo, the definition of an \emph{affine system} is slightly
-different for the continuous and the integer situation. In fact, the
-definition for the integer case is simply the integer analogue to
-the definition for the continuous case.
+different for the continuous and for the integer situation. In fact,
+the definition for the integer case is simply the integer analogue
+to the definition for the continuous case.
 
 \subsection{Continuous affine systems}
 
-Let $a+\Lattice$ be a linear affine space given by the vector $a$
-and by generators for the linear space $\Lattice$. We wish to find a
-finite sign-compatible description for the set of all vectors $x\in
-a+\Lattice$.
+Let $a+\Lattice_{\R}$ be a linear affine space given by the vector
+$a$ and by generators for the linear space $\Lattice_{\R}$. We wish
+to find a finite sign-compatible description for the set of all
+vectors $x\in a+\Lattice_{\R}$.
 
 \subsection{Integer affine systems}
 
-Let $a+\Lattice$ be an ``integer linear affine space'' given by the
-vector $a\in\Z^n$ and by generators for the lattice
-$\Lattice\subseteq\Z^n$. We wish to find a finite sign-compatible
-description for the set of all (integer) vectors $x\in a+\Lattice$.
+Let $a+\Lattice_{\Z}$ be an ``integer linear affine space'' given by
+the vector $a\in\Z^n$ and by generators for the lattice
+$\Lattice_{\Z}\subseteq\Z^n$. We wish to find a finite
+sign-compatible description for the set of all (integer) vectors
+$x\in a+\Lattice_{\Z}$.
 
 \subsection{Specifying an affine system in \FourTiTwo{}}
 
@@ -60,50 +61,11 @@ Currently, only homogeneous affine systems can be solved in
 these functions, one needs to specify an affine system to
 \FourTiTwo.
 
-As an example, take the homogeneous part of our running example
-above
-\[
-\left(
-\begin{array}{cccc}
-1 & 1 & 1 & 1\\
-1 & 2 & 3 & 4\\
-\end{array}
-\right)x
-\begin{array}{c}
-\leq\\
-\leq\\
-\end{array}
-\left(
-\begin{array}{c}
-0\\
-0\\
-\end{array}
-\right)
-\]
-with sign constraints $(1,2,2,0)$, and rewrite it as an affine
-system. As the linear subspace and the lattice $\Lattice$,
-respectively, we are dealing with the continuous and the integer
-kernel of the $2\times 4$ problem matrix. The following two vectors
-generate both the linear space over $\R$ and the lattice over $\Z$:
-\[
-\left(
-\begin{array}{r}
-1\\
--2\\
-1\\
-0\\
-\end{array}
-\right),\;\;\; \left(
-\begin{array}{r}
-2\\
--3\\
-0\\
-1\\
-\end{array}
-\right)
-\]
-Thus, we are looking for a finite sign-compatible description for
-all $x$ that can be written as
+As an example, let consider the linear space $\Lattice_{\R}$ and the
+lattice $\Lattice_{\Z}$ both spanned by the two vectors $(1,-2,1,0)$
+and $(2,-3,-0,1)$. Moreover, consider the sign-constraints
+$(1,2,2,0)$. Thus, we are looking for a finite explicit
+sign-compatible description for all $x$ that can be written as
 \[
 x=\left(
 \begin{array}{rr}
@@ -117,18 +79,31 @@ x=\left(
 with $\lambda\in\R^2$ and $\lambda\in\Z^2$, respectively.
 
 In order to solve this affine system using \File{qsolve} or
-\File{zsolve}, we have
+\File{zsolve}, we create the following input files to encode the
+affine system:
+\begin{center}
+  \begin{tabular}{|l|l|}
+\hline
+    \text{ PROJECT.lat } & \text{ PROJECT.sign }\\
+\hline
+  $\begin{array}{rrrrrr}& 2 & 4 & & &\\& 1 & -1 & 1 & 0 &\\& 2 & -3 & 0 & 1 &\\ \end{array}$ &
+  $\begin{array}{rrrrrr}& 1 & 4 & & &\\& 1 &  2 & 2 & 0 &\\ \\ \\\end{array}$\\
+\hline
+  \end{tabular}
+\end{center}
+and then call
+\begin{center}
+{\tt ./qsolve PROJECT}
+\end{center}
+and
+\begin{center}
+{\tt ./zsolve PROJECT}
+\end{center}
+In the continuous case, this creates the files \File{PROJECT.qhom}
+and \File{PROJECT.qfree}, and in the integer case this creates the
+files \File{PROJECT.zhom} and \File{PROJECT.zfree}.
 
-\begin{itemize}
-\item The generators of $\Lattice$ have to be put into the file \File{PROJECT.lat}.
-\begin{myverbatim}
-2 4
-1 -1 1 0
-2 -3 0 1
-\end{myverbatim}
-\item The sign constraints end up in \File{PROJECT.sign}.
-\begin{myverbatim}
-1 4
-1 2 2 0
-\end{myverbatim}
-\end{itemize}
+In contrast to calling \File{qsolve} and \File{zsolve} on a inear
+system, these calls create only two files, since at the moment only
+homogeneous affine systems (with $a=0$) are supported by
+\FourTiTwo{}.

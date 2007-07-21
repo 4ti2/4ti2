@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "CircuitOptions.h"
 #include "Globals.h"
 #include "HermiteAlgorithm.h"
+#include "VectorStream.h"
 
 #include "ShortDenseIndexSet.h"
 #include "LongDenseIndexSet.h"
@@ -205,6 +206,60 @@ RayImplementation<IndexSet>::sort(
 
 template <class IndexSet>
 void
+RayImplementation<IndexSet>::sort(
+                VectorArray& vs,
+                std::vector<IndexSet>& supports,
+                Fathers& fathers,
+                std::vector<IndexSet>& zeros,
+                int next_col,
+                int next_zero_count,
+                int next_positive_count, 
+                int next_negative_count)
+{
+    std::vector<int> perm(vs.get_number());
+    for (int i = 0; i < vs.get_number(); ++i) { perm[i] = i; }
+
+    int zero_index = 0;
+    for (int i = 0; i < vs.get_number(); ++i)
+    {
+        if (vs[i][next_col] == 0)
+        {
+            vs.swap_vectors(i,zero_index);
+            IndexSet::swap(supports[i], supports[zero_index]);
+            IndexSet::swap(zeros[i], zeros[zero_index]);
+            int tmp = fathers[i]; fathers[i] = fathers[zero_index]; fathers[zero_index] = tmp;
+            tmp = perm[i]; perm[i] = perm[zero_index]; perm[zero_index] = tmp;
+            ++zero_index;
+        }
+    }
+    int positive_index = next_zero_count;
+    for (int i = positive_index; i < vs.get_number(); ++i)
+    {
+        if (vs[i][next_col] > 0)
+        {
+            vs.swap_vectors(i,positive_index);
+            IndexSet::swap(supports[i], supports[positive_index]);
+            IndexSet::swap(zeros[i], zeros[positive_index]);
+            int tmp = fathers[i]; fathers[i] = fathers[positive_index]; fathers[positive_index] = tmp;
+            tmp = perm[i]; perm[i] = perm[positive_index]; perm[positive_index] = tmp;
+            ++positive_index;
+        }
+    }
+    //*out << "\nPermutation:\n";
+    //for (int i = 0; i < vs.get_number(); ++i) { *out << perm[i] << " "; }
+    //*out << "\n";
+    std::vector<int> back(vs.get_number());
+    for (int i = 0; i < vs.get_number(); ++i) { back[perm[i]] = i; }
+    //for (int i = 0; i < vs.get_number(); ++i) { *out << back[i] << " "; }
+    //*out << "\n";
+    for (int i = 0; i < vs.get_number(); ++i)
+    { 
+        if (fathers[i] >= 0) { fathers[i] = back[fathers[i]]; }
+    }
+}
+
+template <class IndexSet>
+void
 RayImplementation<IndexSet>::create_new_vector(
                 VectorArray& vs,
                 std::vector<IndexSet>& supports,
@@ -236,4 +291,40 @@ RayImplementation<IndexSet>::create_new_vector(
 #endif
 }
 
+template <class IndexSet>
+void
+RayImplementation<IndexSet>::create_new_vector(
+                VectorArray& vs,
+                std::vector<IndexSet>& supports,
+                Fathers& fathers,
+                int r1, int r2, int next_col,
+                int next_positive_count, int next_negative_count,
+                Vector& temp, IndexSet& temp_supp)
+{
+    if (next_positive_count <= next_negative_count)
+    {
+        Vector::sub(vs[r2],vs[r1][next_col],
+                    vs[r1],vs[r2][next_col],temp);
+        fathers.push_back(r1);
+    }
+    else
+    {
+        Vector::sub(vs[r1],vs[r2][next_col],
+                    vs[r2],vs[r1][next_col],temp);
+        fathers.push_back(r2);
+    }
+    temp.normalise();
+    vs.insert(temp);
+    IndexSet::set_union(supports[r1],supports[r2],temp_supp);
+    supports.push_back(temp_supp);
+#if 0
+    *out << "\nADDING VECTOR.\n";
+    *out << "R1[" << r1 << "]:\n";
+    *out << vs[r1] << "\n";
+    *out << "R2[" << r2 << "]:\n";
+    *out << vs[r2] << "\n";
+    *out << "R[" << vs.get_number()-1 << "]: " << fathers.back() << "\n";
+    *out << temp << "\n";
+#endif
+}
 

@@ -20,8 +20,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _LIBZSOLVE_H
-#define _LIBZSOLVE_H
+#ifndef _4ti2_zsolve__LIBZSOLVE_H
+#define _4ti2_zsolve__LIBZSOLVE_H
 
 #include "vectorarray.h"
 #include "linearsystem.h"
@@ -43,6 +43,7 @@ typedef struct zsolvecontext_t
 	VectorArray Inhoms;
 	VectorArray Frees;
 	VectorArray Graver;
+    VectorArray MaxNormVectors;
 
 	int MaxNorm;
 	void **Norm;
@@ -50,7 +51,7 @@ typedef struct zsolvecontext_t
 	Vector Second;
 	Vector Sum;
 
-	bool Symmetric;
+	BOOL Symmetric;
 
 	FILE *LogFile;
 	int LogLevel;
@@ -97,7 +98,9 @@ void backupZSolveContext(FILE *, ZSolveContext);
 
 /*** main calls ***/
 ZSolveContext createZSolveContextFromSystem(LinearSystem, FILE *, int, int, ZSolveLogCallback, ZSolveBackupCallback);
-/* (system to solve, logfile, loglevel = 0..3, verbosity = 0..3, custom log callback or zsolveLogCallbackDefault, backup callback) */
+/* (system to solve, logfile, loglevel = 0..3, verbosity = 0..3, custom log callback or zsolveLogCallbackDefault, backup callback) 
+   The LinearSystem is NOT consumed.
+*/
 
 ZSolveContext createZSolveContextFromLattice(VectorArray, FILE *, int, int, ZSolveLogCallback, ZSolveBackupCallback);
 /* (lattice, logfile, loglevel = 0..3, verbosity = 0..3, custom log callback or zsolveLogCallbackDefault, backup callback) */
@@ -105,10 +108,10 @@ ZSolveContext createZSolveContextFromLattice(VectorArray, FILE *, int, int, ZSol
 ZSolveContext createZSolveContextFromBackup(FILE *, ZSolveLogCallback, ZSolveBackupCallback);
 /* (open backup file, custom log callback or zsolveLogCallbackDefault, backup callback) */
 
-void zsolveSystem(ZSolveContext, bool);
+void zsolveSystem(ZSolveContext, BOOL);
 /* (context created by createZSolveContext or resumeZSolveContext, append negatives? should be true for system/lattice, false for resume) */
 
-void deleteZSolveContext(ZSolveContext, bool);
+void deleteZSolveContext(ZSolveContext, BOOL);
 /* (context, delete Hom and Inhom?) */
 
 #endif

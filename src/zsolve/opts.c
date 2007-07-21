@@ -20,6 +20,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
+#include "../banner.h"
 #include "opts.h"
 
 #include <stdio.h>
@@ -37,13 +38,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 extern int OVerbose;
 extern int OLogging;
 extern int OBackup;
-extern bool OForce;
-extern bool ORightHandSide;
-extern bool OResume;
+extern BOOL OForce;
+extern BOOL ORightHandSide;
+extern BOOL OResume;
 extern int BaseLength;
 extern char *BaseName;
-extern bool OHilbert;
-extern bool OGraver;
+extern BOOL OHilbert;
+extern BOOL OGraver;
+extern BOOL OMaxNorm;
 
 //                                                                            //
 
@@ -51,13 +53,7 @@ void printUsage(char *program)
 {
 	assert(program);
 
-	puts("-------------------------------------------------");
-	puts("4ti2 version 1.3.1, Copyright (C) 2006 4ti2 team.");
-	puts("4ti2 comes with ABSOLUTELY NO WARRANTY.");
-	puts("This is free software, and you are welcome");
-	puts("to redistribute it under certain conditions.");
-	puts("For details, see the file COPYING.");
-	puts("-------------------------------------------------\n");
+	puts(FORTY_TWO_BANNER);
 
         printf("Usage: ");
         if (OHilbert) { printf("hilbert"); }
@@ -68,6 +64,7 @@ void printUsage(char *program)
 	printf("[Basic options]\n");
 //	printf(" -f, --force               computation regardless of existing PROJECT.(in)hom\n");
 	printf(" -i, --ignore              system is homogeneous, regardless of PROJECT.rhs\n");
+	printf(" -m, --maxnorm             write vectors with maximum norm to PROJECT.maxnorm\n");
 
 	printf("\n[Logging options]\n");
 	printf(" -n, --logging=0           no logging (default)\n");
@@ -124,43 +121,48 @@ void getopts(int argc, char **argv)
 		{ "resume", no_argument, NULL, 'r'},
 		{ "verbose", optional_argument, NULL, 'v'},
 		{ "hilbert", no_argument, NULL, 'H'},
-		{ "graver", no_argument, NULL, 'G'}
+		{ "graver", no_argument, NULL, 'G'},
+		{ "maxnorm", no_argument, NULL, 'm'}
 	};
 #endif
 
 	OVerbose = 1;
 	OLogging = 0;
 	OBackup = 0;
-	OResume = false;
-	ORightHandSide = true;
-	OHilbert = false;
-	OGraver = false;
-	OForce = true;
+	OResume = FALSE;
+	ORightHandSide = TRUE;
+	OHilbert = FALSE;
+	OGraver = FALSE;
+	OForce = TRUE;
+    OMaxNorm = FALSE;
 
 #ifdef __GNU_LIBRARY__
-	while ((c = getopt_long(argc, argv, "b::d::fhinl::qrv::VHG", long_options, NULL)) != -1)
+	while ((c = getopt_long(argc, argv, "b::d::fmhinl::qrv::VHG", long_options, NULL)) != -1)
 #else
-	while ((c = getopt(argc, argv, "b::d::fhinl::qrv::VHG")) != -1)
+	while ((c = getopt(argc, argv, "b::d::fmhinl::qrv::VHG")) != -1)
 #endif
 	{
 		if (optarg!=NULL && optarg[0]=='=')
 			optarg++;
 		switch(c)
 		{
+            case 'm':
+                OMaxNorm = TRUE;
+            break;
 			case 'f':
-				OForce = true;
+				OForce = TRUE;
 			break;
 			case 'i':
-				ORightHandSide = false;
+				ORightHandSide = FALSE;
 			break;
 			case 'H':
-				OHilbert = true;
+				OHilbert = TRUE;
 			break;
 			case 'G':
-				OGraver = true;
+				OGraver = TRUE;
 			break;
 			case 'r':
-				OResume = true;
+				OResume = TRUE;
 			break;
 			case 'b':
 				if (optarg==NULL)
