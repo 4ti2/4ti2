@@ -38,6 +38,7 @@ BOOL ORightHandSide;
 BOOL OResume;
 BOOL OHilbert;
 BOOL OGraver;
+BOOL OMaxNorm;
 
 int BaseLength;
 char *BaseName;
@@ -97,13 +98,12 @@ void backupEvent(ZSolveContext ctx)
 int main(int argc, char *argv[])
 {
 	FILE *stream = NULL;
-	int i, j, r, count;
+	int i, j, r;
 	BOOL flag;
 
 	Matrix matrix = NULL;
 	Vector rhs = NULL;
 	VectorArray Lattice = NULL;
-	Vector vector = NULL;
 
 	LinearSystem initialsystem;
 	ZSolveContext ctx;
@@ -981,6 +981,20 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+    if (OMaxNorm)
+    {
+	    printf("\nMaximum norm of solution is %d\n", ctx->MaxNorm);
+
+		strcat(BaseName, ".maxnorm");
+		stream = fopen(BaseName, "w");
+		BaseName[BaseLength] = '\0';
+		if (stream)
+		{
+			fprintf(stream, "%d %d\n\n", ctx->MaxNormVectors->Size, ctx->MaxNormVectors->Variables);
+			fprintVectorArray(stream, ctx->MaxNormVectors, FALSE);
+			fclose(stream);
+		}
+    }
 
 
 	printf("\n4ti2 Total Time: ");

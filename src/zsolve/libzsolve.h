@@ -43,6 +43,7 @@ typedef struct zsolvecontext_t
 	VectorArray Inhoms;
 	VectorArray Frees;
 	VectorArray Graver;
+    VectorArray MaxNormVectors;
 
 	int MaxNorm;
 	void **Norm;
