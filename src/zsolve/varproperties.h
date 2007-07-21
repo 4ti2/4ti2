@@ -36,7 +36,7 @@ typedef struct variableproperty_t
 	int Lower;
 	/* Lower limit, -MAXINT for -infinity */
 
-	BOOL Free;
+	bool Free;
 	/* Free flag */
 } variableproperty_t;
 typedef variableproperty_t *VariableProperties;
@@ -50,13 +50,13 @@ void deleteVariableProperties(VariableProperties);
 void swapVariableProperties(VariableProperties, int, int);
 /* Swap a and b (variable, a, b) */
 
-BOOL checkVariableSymmetry(VariableProperties, int);
+bool checkVariableSymmetry(VariableProperties, int);
 /* Is variable symmetric? (variable, id) */
 
-BOOL checkVariableFree(VariableProperties, int);
+bool checkVariableFree(VariableProperties, int);
 /* Is variable free? (variable, id) */
 
-BOOL checkVariableBounds(VariableProperties, int, int);
+bool checkVariableBounds(VariableProperties, int, int);
 /* is given number in bounds? (variable, id, num) */
 
 void fprintVariableProperties(FILE *, VariableProperties, int);

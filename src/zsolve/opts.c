@@ -38,14 +38,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 extern int OVerbose;
 extern int OLogging;
 extern int OBackup;
-extern BOOL OForce;
-extern BOOL ORightHandSide;
-extern BOOL OResume;
+extern bool OForce;
+extern bool ORightHandSide;
+extern bool OResume;
 extern int BaseLength;
 extern char *BaseName;
-extern BOOL OHilbert;
-extern BOOL OGraver;
-extern BOOL OMaxNorm;
+extern bool OHilbert;
+extern bool OGraver;
 
 //                                                                            //
 
@@ -64,7 +63,6 @@ void printUsage(char *program)
 	printf("[Basic options]\n");
 //	printf(" -f, --force               computation regardless of existing PROJECT.(in)hom\n");
 	printf(" -i, --ignore              system is homogeneous, regardless of PROJECT.rhs\n");
-	printf(" -m, --maxnorm             write vectors with maximum norm to PROJECT.maxnorm\n");
 
 	printf("\n[Logging options]\n");
 	printf(" -n, --logging=0           no logging (default)\n");
@@ -121,48 +119,43 @@ void getopts(int argc, char **argv)
 		{ "resume", no_argument, NULL, 'r'},
 		{ "verbose", optional_argument, NULL, 'v'},
 		{ "hilbert", no_argument, NULL, 'H'},
-		{ "graver", no_argument, NULL, 'G'},
-		{ "maxnorm", no_argument, NULL, 'm'}
+		{ "graver", no_argument, NULL, 'G'}
 	};
 #endif
 
 	OVerbose = 1;
 	OLogging = 0;
 	OBackup = 0;
-	OResume = FALSE;
-	ORightHandSide = TRUE;
-	OHilbert = FALSE;
-	OGraver = FALSE;
-	OForce = TRUE;
-    OMaxNorm = FALSE;
+	OResume = false;
+	ORightHandSide = true;
+	OHilbert = false;
+	OGraver = false;
+	OForce = true;
 
 #ifdef __GNU_LIBRARY__
-	while ((c = getopt_long(argc, argv, "b::d::fmhinl::qrv::VHG", long_options, NULL)) != -1)
+	while ((c = getopt_long(argc, argv, "b::d::fhinl::qrv::VHG", long_options, NULL)) != -1)
 #else
-	while ((c = getopt(argc, argv, "b::d::fmhinl::qrv::VHG")) != -1)
+	while ((c = getopt(argc, argv, "b::d::fhinl::qrv::VHG")) != -1)
 #endif
 	{
 		if (optarg!=NULL && optarg[0]=='=')
 			optarg++;
 		switch(c)
 		{
-            case 'm':
-                OMaxNorm = TRUE;
-            break;
 			case 'f':
-				OForce = TRUE;
+				OForce = true;
 			break;
 			case 'i':
-				ORightHandSide = FALSE;
+				ORightHandSide = false;
 			break;
 			case 'H':
-				OHilbert = TRUE;
+				OHilbert = true;
 			break;
 			case 'G':
-				OGraver = TRUE;
+				OGraver = true;
 			break;
 			case 'r':
-				OResume = TRUE;
+				OResume = true;
 			break;
 			case 'b':
 				if (optarg==NULL)

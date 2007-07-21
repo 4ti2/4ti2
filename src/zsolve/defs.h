@@ -25,11 +25,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #include <stdio.h>
 
-// BOOL
+// bool
 
-# define BOOL int
-# define TRUE 1
-# define FALSE 0
+#ifndef bool
+# define bool int
+#endif
+
+#ifndef true
+# define true 1
+#endif
+
+#ifndef false
+# define false 0
+#endif
 
 // math
 

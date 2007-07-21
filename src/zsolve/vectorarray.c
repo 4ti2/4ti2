@@ -66,7 +66,7 @@ void deleteVectorArray(VectorArray array)
 
 //                                                                            //
 
-void fprintVectorArray(FILE *stream, VectorArray array, BOOL header)
+void fprintVectorArray(FILE *stream, VectorArray array, bool header)
 {
 	int i;
 
@@ -89,7 +89,7 @@ void fprintVectorArray(FILE *stream, VectorArray array, BOOL header)
 
 //                                                                            //
 
-void printVectorArray(VectorArray array, BOOL header)
+inline void printVectorArray(VectorArray array, bool header)
 {
 	assert(array);
 
@@ -189,7 +189,7 @@ void sortVectorArrayColumns(VectorArray array, ColumnCompare cmp)
 
 //                                                                            //
 
-VectorArray readVectorArray(FILE *stream, BOOL header)
+VectorArray readVectorArray(FILE *stream, bool header)
 {
 	VectorArray array;
 	Vector vector;

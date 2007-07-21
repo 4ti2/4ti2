@@ -177,7 +177,7 @@ void setLinearSystemRHS(LinearSystem system, Vector vector)
 
 //                                                                            //
 
-void setLinearSystemLimit(LinearSystem system, int id, int lower, int upper, BOOL free)
+void setLinearSystemLimit(LinearSystem system, int id, int lower, int upper, bool free)
 {
 	assert(system);
 	assert(lower<=0);
@@ -292,7 +292,7 @@ void fprintLinearSystem(FILE *stream, LinearSystem system)
 {
 	Vector space;
 	int i,j;
-	BOOL allfree = TRUE;
+	bool allfree = true;
 
 	if (!stream || !system)
 	{
@@ -306,7 +306,7 @@ void fprintLinearSystem(FILE *stream, LinearSystem system)
 	for (i=0; i<system->Variables; i++)
 	{
 		if (!checkVariableFree(system->VarProperties, i))
-			allfree = FALSE;
+			allfree = false;
 		space[i] = propertySize(system->VarProperties[i]);
 		for (j=0; j<system->Equations; j++)
 			space[i] = imax(space[i], numberSize(system->A[i][j]));
@@ -387,27 +387,27 @@ void printLinearSystem(LinearSystem system)
 
 LinearSystem homogenizeLinearSystem(LinearSystem old)
 {
-	LinearSystem system;
+	LinearSystem new;
 	int i,j,k;
 
 	if (old==NULL)
 		return NULL;
 
-	system = createLinearSystem();
+	new = createLinearSystem();
 
-	system->Equations = old->Equations;
-	system->Variables = old->Variables;
+	new->Equations = old->Equations;
+	new->Variables = old->Variables;
 
 	// RHS stays temporarily the same
-	system->b = copyVector(old->b, old->Equations);
+	new->b = copyVector(old->b, old->Equations);
 
 	// Original matrix with properties
-	system->A = (Vector *)malloc(system->Variables*sizeof(Vector));
-	system->VarProperties = createVariableProperties(system->Variables);
-	for (i=0; i<system->Variables; i++)
+	new->A = (Vector *)malloc(new->Variables*sizeof(Vector));
+	new->VarProperties = createVariableProperties(new->Variables);
+	for (i=0; i<new->Variables; i++)
 	{
-		system->A[i] = copyVector(old->A[i], old->Equations);
-		system->VarProperties[i] = old->VarProperties[i];
+		new->A[i] = copyVector(old->A[i], old->Equations);
+		new->VarProperties[i] = old->VarProperties[i];
 	}
 
 	// transformation
@@ -415,10 +415,10 @@ LinearSystem homogenizeLinearSystem(LinearSystem old)
 	{
 		if (old->EqProperties[i].Type==EQUATION_LESSER)
 		{
-			system->b[i]--;
+			new->b[i]--;
 		}
 		if (old->EqProperties[i].Type==EQUATION_GREATER)
-			system->b[i]++;
+			new->b[i]++;
 		switch (old->EqProperties[i].Type)
 		{
 			case EQUATION_LESSER:
@@ -438,49 +438,49 @@ LinearSystem homogenizeLinearSystem(LinearSystem old)
 		}
 		if (k!=0)
 		{
-			system->Variables++;
-			system->A = (Vector *)realloc(system->A, system->Variables*sizeof(Vector));
-			system->VarProperties = (VariableProperties)realloc(system->VarProperties, system->Variables*sizeof(variableproperty_t));
-			system->A[system->Variables-1] = createVector(system->Equations);
-			for (j=0; j<system->Equations; j++)
-				system->A[system->Variables-1][j] = (j==i ? k : 0);
-			system->VarProperties[system->Variables-1].Free = (old->EqProperties[i].Type==EQUATION_MODULO);
-			system->VarProperties[system->Variables-1].Upper = MAXINT;
-			system->VarProperties[system->Variables-1].Lower = (old->EqProperties[i].Type==EQUATION_MODULO ? -MAXINT : 0);
-			system->VarProperties[system->Variables-1].Column = -1;
+			new->Variables++;
+			new->A = (Vector *)realloc(new->A, new->Variables*sizeof(Vector));
+			new->VarProperties = (VariableProperties)realloc(new->VarProperties, new->Variables*sizeof(variableproperty_t));
+			new->A[new->Variables-1] = createVector(new->Equations);
+			for (j=0; j<new->Equations; j++)
+				new->A[new->Variables-1][j] = (j==i ? k : 0);
+			new->VarProperties[new->Variables-1].Free = (old->EqProperties[i].Type==EQUATION_MODULO);
+			new->VarProperties[new->Variables-1].Upper = MAXINT;
+			new->VarProperties[new->Variables-1].Lower = (old->EqProperties[i].Type==EQUATION_MODULO ? -MAXINT : 0);
+			new->VarProperties[new->Variables-1].Column = -1;
 		}
 	}
 
-	// -rhs as a system row in [0;1]
-	if (normVector(system->b, old->Equations)>0)
+	// -rhs as a new row in [0;1]
+	if (normVector(new->b, old->Equations)>0)
 	{
-		system->Variables++;
-		system->A = (Vector *)realloc(system->A, system->Variables*sizeof(Vector));
-		system->VarProperties = (VariableProperties)realloc(system->VarProperties, system->Variables*sizeof(variableproperty_t));
+		new->Variables++;
+		new->A = (Vector *)realloc(new->A, new->Variables*sizeof(Vector));
+		new->VarProperties = (VariableProperties)realloc(new->VarProperties, new->Variables*sizeof(variableproperty_t));
 
-		system->A[system->Variables-1] = system->b;
+		new->A[new->Variables-1] = new->b;
 		for (i=0; i<old->Equations; i++)
-			system->A[system->Variables-1][i] *= -1;
-		system->VarProperties[system->Variables-1].Free = FALSE;
-		system->VarProperties[system->Variables-1].Upper = 1;
-		system->VarProperties[system->Variables-1].Lower = 0;
-		system->VarProperties[system->Variables-1].Column = -2;
+			new->A[new->Variables-1][i] *= -1;
+		new->VarProperties[new->Variables-1].Free = false;
+		new->VarProperties[new->Variables-1].Upper = 1;
+		new->VarProperties[new->Variables-1].Lower = 0;
+		new->VarProperties[new->Variables-1].Column = -2;
 
 		// recreate rhs as a zero-vector
-		system->b = createVector(system->Equations);
-		for (i=0; i<system->Equations; i++)
-			system->b[i] = 0;
+		new->b = createVector(new->Equations);
+		for (i=0; i<new->Equations; i++)
+			new->b[i] = 0;
 	}
 
 	// all are now equaitons
-	system->EqProperties = (EquationProperties)malloc(system->Equations*sizeof(equationproperty_t));
-	for (i=0; i<system->Equations; i++)
+	new->EqProperties = (EquationProperties)malloc(new->Equations*sizeof(equationproperty_t));
+	for (i=0; i<new->Equations; i++)
 	{
-		system->EqProperties[i].Type = EQUATION_EQUAL;
-		system->EqProperties[i].Modulus = 0;
+		new->EqProperties[i].Type = EQUATION_EQUAL;
+		new->EqProperties[i].Modulus = 0;
 	}
 
-	return system;
+	return new;
 }
 
 //                                                                            //

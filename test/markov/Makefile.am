@@ -1,4 +1,4 @@
-SUBDIRS = saturation maxmin
+SUBDIRS = saturation
 if HAVE_GMP_WITH_CXX
 SUBDIRS += gmp
 endif

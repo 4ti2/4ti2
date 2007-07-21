@@ -33,12 +33,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 int OVerbose;
 int OLogging;
 int OBackup;
-BOOL OForce;
-BOOL ORightHandSide;
-BOOL OResume;
-BOOL OHilbert;
-BOOL OGraver;
-BOOL OMaxNorm;
+bool OForce;
+bool ORightHandSide;
+bool OResume;
+bool OHilbert;
+bool OGraver;
 
 int BaseLength;
 char *BaseName;
@@ -98,12 +97,13 @@ void backupEvent(ZSolveContext ctx)
 int main(int argc, char *argv[])
 {
 	FILE *stream = NULL;
-	int i, j, r;
-	BOOL flag;
+	int i, j, r, count;
+	bool flag;
 
 	Matrix matrix = NULL;
 	Vector rhs = NULL;
 	VectorArray Lattice = NULL;
+	Vector vector = NULL;
 
 	LinearSystem initialsystem;
 	ZSolveContext ctx;
@@ -254,7 +254,7 @@ int main(int argc, char *argv[])
 			{
 				// START OF LATTICE SECTION - READ FILES AND CREATE CONTEXT
 
-				Lattice = readVectorArray(stream, FALSE);
+				Lattice = readVectorArray(stream, false);
 				fclose(stream);
 				if (Lattice == NULL)
 				{
@@ -328,12 +328,12 @@ int main(int argc, char *argv[])
 				{
 					token = NULL;
 					memory = 0;
-					flag = FALSE;
+					flag = false;
 
 					if (fscanf(stream, "%d %d", &r, &j)<2 || r != 1)
 					{
 						printf("RELATION file %s.rel must start with the dimensions.\n", BaseName);
-						flag = TRUE;
+						flag = true;
 					}
 
 					for (i=0; i<j; i++)
@@ -341,17 +341,17 @@ int main(int argc, char *argv[])
 						if (readTokenFromFile(stream, "0123456789=<>", &token, &memory) == 0)
 						{
 							printf("RELATION file %s.rel ends unexpectedly.\n", BaseName);
-							flag = TRUE;
+							flag = true;
 						}
 						else if (!strcmp(token, "<") || !strcmp(token, ">"))
 						{
 							printf("When reading from %s.lat, inequalities are not allowed.\n", BaseName);
-							flag = TRUE;
+							flag = true;
 						}
 						else if (strcmp(token, "="))
 						{
 							printf("Unknown token '%s' in RELATION file %s.rel.\n", token, BaseName);
-							flag = TRUE;
+							flag = true;
 						}
 					}
 					free(token);
@@ -372,12 +372,12 @@ int main(int argc, char *argv[])
 				{
 					token = NULL;
 					memory = 0;
-					flag = FALSE;
+					flag = false;
 	
 					if (fscanf(stream, "%d %d", &r, &i)<2 || i != Lattice->Variables || r != 1)
 					{
 						printf("SIGN file %s.sign must start with '1 %d'.\n", BaseName, Lattice->Variables);
-						flag = TRUE;
+						flag = true;
 					}
 	
 					for (i=0; i<Lattice->Variables; i++)
@@ -385,44 +385,44 @@ int main(int argc, char *argv[])
 						if (readTokenFromFile(stream, "0123456789-abcdefghijklmnopqrstuvwxyz", &token, &memory) == 0)
 						{
 							printf("SIGN file %s.sign ends unexpectedly.\n", BaseName);
-							flag = TRUE;
+							flag = true;
 						}
 						if (!strcmp(token, "0") || !strcmp(token, "free") || !strcmp(token, "f"))
 						{
 							Lattice->Properties[i].Upper = MAXINT;
 							Lattice->Properties[i].Lower = -MAXINT;
-							Lattice->Properties[i].Free = TRUE;
+							Lattice->Properties[i].Free = true;
 						}
 						else if (!strcmp(token, "1") || !strcmp(token, "hil") || !strcmp(token, "h"))
 						{
 							Lattice->Properties[i].Upper = MAXINT;
 							Lattice->Properties[i].Lower = 0;
-							Lattice->Properties[i].Free = FALSE;
+							Lattice->Properties[i].Free = false;
 						}
 						else if (!strcmp(token, "-1") || !strcmp(token, "-hil") || !strcmp(token, "-h"))
 						{
 							Lattice->Properties[i].Upper = 0;
 							Lattice->Properties[i].Lower = -MAXINT;
-							Lattice->Properties[i].Free = FALSE;
+							Lattice->Properties[i].Free = false;
 						}
 						else if (!strcmp(token, "2") || !strcmp(token, "graver") || !strcmp(token, "g"))
 						{
 							if (OHilbert)
 							{
 								printf("Input Error: Graver components for `hilbert' executable.\nInput Error: Use the `graver' executable instead.\n");
-								flag = TRUE;
+								flag = true;
 							}
 							else
 							{
 								Lattice->Properties[i].Upper = MAXINT;
 								Lattice->Properties[i].Lower = -MAXINT;
-								Lattice->Properties[i].Free = FALSE;
+								Lattice->Properties[i].Free = false;
 							}
 						}
 						else
 						{
 							printf("Unknown token '%s' in SIGN file %s.sign.\n", token, BaseName);
-							flag = TRUE;
+							flag = true;
 						}
 					}
 					free(token);
@@ -444,12 +444,12 @@ int main(int argc, char *argv[])
 				{
 					token = NULL;
 					memory = 0;
-					flag = FALSE;
+					flag = false;
 		
 					if (fscanf(stream, "%d %d", &r, &i)<2 || i != Lattice->Variables || r != 1)
 					{
 						printf("UPPER BOUNDS file %s.ub must start with '1 %d'.\n", BaseName, Lattice->Variables);
-						flag = TRUE;
+						flag = true;
 					}
 	
 					for (i=0; i<Lattice->Variables; i++)
@@ -457,7 +457,7 @@ int main(int argc, char *argv[])
 						if (readTokenFromFile(stream, "0123456789*-", &token, &memory) == 0)
 						{
 							printf("UPPER BOUNDS file %s.ub ends unexpectedly.\n", BaseName);
-							flag = TRUE;
+							flag = true;
 						}
 						if (!strcmp(token, "*"))
 							Lattice->Properties[i].Upper = MAXINT;
@@ -466,20 +466,20 @@ int main(int argc, char *argv[])
 							if (Lattice->Properties[i].Free)
 							{
 								printf("Upper bound '%s' cannot be set for free variables.\n", token);
-								flag = TRUE;
+								flag = true;
 							}
 							else if (j>=0)
 								Lattice->Properties[i].Upper = j;
 							else
 							{
 								printf("Negative upper bound '%s' in UPPER BOUNDS file %s.ub.\n", token, BaseName);
-								flag = TRUE;
+								flag = true;
 							}
 						}
 						else
 						{
 							printf("Unknown token '%s' in UPPER BOUNDS file %s.ub.\n", token, BaseName);
-							flag = TRUE;
+							flag = true;
 						}
 					}
 					free(token);
@@ -501,12 +501,12 @@ int main(int argc, char *argv[])
 				{
 					token = NULL;
 					memory = 0;
-					flag = FALSE;
+					flag = false;
 		
 					if (fscanf(stream, "%d %d", &r, &i)<2 || i != Lattice->Variables || r != 1)
 					{
 						printf("LOWER BOUNDS file %s.lb must start with '1 %d'.\n", BaseName, Lattice->Variables);
-						flag = TRUE;
+						flag = true;
 					}
 	
 					for (i=0; i<Lattice->Variables; i++)
@@ -514,7 +514,7 @@ int main(int argc, char *argv[])
 						if (readTokenFromFile(stream, "0123456789*-", &token, &memory) == 0)
 						{
 							printf("LOWER BOUNDS file %s.lb ends unexpectedly.\n", BaseName);
-							flag = TRUE;
+							flag = true;
 						}
 						if (!strcmp(token, "*"))
 							Lattice->Properties[i].Lower = -MAXINT;
@@ -523,20 +523,20 @@ int main(int argc, char *argv[])
 							if (Lattice->Properties[i].Free)
 							{
 								printf("Lower bound '%s' cannot be set for free variables.\n", token);
-								flag = TRUE;
+								flag = true;
 							}
 							else if (j<=0)
 								Lattice->Properties[i].Lower = j;
 							else
 							{
 								printf("Positive lower bound '%s' in LOWER BOUNDS file %s.lb.\n", token, BaseName);
-								flag = TRUE;
+								flag = true;
 							}
 						}
 						else
 						{
 							printf("Unknown token '%s' in LOWER BOUNDS file %s.lb.\n", token, BaseName);
-							flag = TRUE;
+							flag = true;
 						}
 					}
 					free(token);
@@ -556,13 +556,13 @@ int main(int argc, char *argv[])
 				if (ctx->Verbosity>0)
 				{
 					printf("\nLattice to use:\n\n");
-					printVectorArray(ctx->Lattice, FALSE);
+					printVectorArray(ctx->Lattice, false);
 					printf("\n\n");
 				}
 				if (ctx->LogLevel>0)
 				{
 					fprintf(ctx->LogFile, "\nLattice to use:\n\n");
-					fprintVectorArray(ctx->LogFile, ctx->Lattice, FALSE);
+					fprintVectorArray(ctx->LogFile, ctx->Lattice, false);
 					fprintf(ctx->LogFile, "\n\n");
 				}
 
@@ -676,11 +676,11 @@ int main(int argc, char *argv[])
 			// default limits
 
 			if (OGraver)
-				setLinearSystemLimit(initialsystem, -1, -MAXINT, MAXINT, FALSE);
+				setLinearSystemLimit(initialsystem, -1, -MAXINT, MAXINT, false);
 			else if (OHilbert)
-				setLinearSystemLimit(initialsystem, -1, 0, MAXINT, FALSE);
+				setLinearSystemLimit(initialsystem, -1, 0, MAXINT, false);
 			else
-				setLinearSystemLimit(initialsystem, -1, -MAXINT, MAXINT, TRUE);
+				setLinearSystemLimit(initialsystem, -1, -MAXINT, MAXINT, true);
 	
 			// default equation type
 
@@ -694,12 +694,12 @@ int main(int argc, char *argv[])
 			{
 				token = NULL;
 				memory = 0;
-				flag = FALSE;
+				flag = false;
 
 				if (fscanf(stream, "%d %d", &r, &i)<2 || i != initialsystem->Equations || r != 1)
 				{
 					printf("RELATION file %s.rel must start with '1 %d'.\n", BaseName, initialsystem->Equations);
-					flag = TRUE;
+					flag = true;
 				}
 
 				for (i=0; i<initialsystem->Equations; i++)
@@ -707,7 +707,7 @@ int main(int argc, char *argv[])
 					if (readTokenFromFile(stream, "0123456789=<>", &token, &memory) == 0)
 					{
 						printf("RELATION file %s.rel ends unexpectedly.\n", BaseName);
-						flag = TRUE;
+						flag = true;
 					}
 					if (!strcmp(token, "="))
 						setLinearSystemEquationType(initialsystem, i, EQUATION_EQUAL, 0);
@@ -719,7 +719,7 @@ int main(int argc, char *argv[])
 					else
 					{
 						printf("Unknown token '%s' in RELATION file %s.rel.\n", token, BaseName);
-						flag = TRUE;
+						flag = true;
 					}
 				}
 				free(token);
@@ -741,12 +741,12 @@ int main(int argc, char *argv[])
 			{
 				token = NULL;
 				memory = 0;
-				flag = FALSE;
+				flag = false;
 
 				if (fscanf(stream, "%d %d", &r, &i)<2 || i != initialsystem->Variables || r != 1)
 				{
 					printf("SIGN file %s.sign must start with '1 %d'.\n", BaseName, initialsystem->Variables);
-					flag = TRUE;
+					flag = true;
 				}
 
 				for (i=0; i<initialsystem->Variables; i++)
@@ -754,29 +754,29 @@ int main(int argc, char *argv[])
 					if (readTokenFromFile(stream, "0123456789-abcdefghijklmnopqrstuvwxyz", &token, &memory) == 0)
 					{
 						printf("SIGN file %s.sign ends unexpectedly.\n", BaseName);
-						flag = TRUE;
+						flag = true;
 					}
 					if (!strcmp(token, "0") || !strcmp(token, "free") || !strcmp(token, "f"))
-						setLinearSystemLimit(initialsystem, i, -MAXINT, MAXINT, TRUE);
+						setLinearSystemLimit(initialsystem, i, -MAXINT, MAXINT, true);
 					else if (!strcmp(token, "1") || !strcmp(token, "hil") || !strcmp(token, "h"))
-						setLinearSystemLimit(initialsystem, i, 0, MAXINT, FALSE);
+						setLinearSystemLimit(initialsystem, i, 0, MAXINT, false);
 					else if (!strcmp(token, "-1") || !strcmp(token, "-hil") || !strcmp(token, "-h"))
-						setLinearSystemLimit(initialsystem, i, -MAXINT, 0, FALSE);
+						setLinearSystemLimit(initialsystem, i, -MAXINT, 0, false);
 					else if (!strcmp(token, "2") || !strcmp(token, "graver") || !strcmp(token, "g"))
 					{
 						if (OHilbert)
 						{
 							if (!flag)
 								printf("Input Error: Graver components for `hilbert' executable.\nInput Error: Use the `graver' executable instead.\n");
-							flag = TRUE;
+							flag = true;
 						}
 						else
-							setLinearSystemLimit(initialsystem, i, -MAXINT, MAXINT, FALSE);
+							setLinearSystemLimit(initialsystem, i, -MAXINT, MAXINT, false);
 					}
 					else
 					{
 						printf("Unknown token '%s' in SIGN file %s.sign.\n", token, BaseName);
-						flag = TRUE;
+						flag = true;
 					}
 				}
 				free(token);
@@ -798,12 +798,12 @@ int main(int argc, char *argv[])
 			{
 				token = NULL;
 				memory = 0;
-				flag = FALSE;
+				flag = false;
 	
 				if (fscanf(stream, "%d %d", &r, &i)<2 || i != initialsystem->Variables || r != 1)
 				{
 					printf("UPPER BOUNDS file %s.ub must start with '1 %d'.\n", BaseName, initialsystem->Variables);
-					flag = TRUE;
+					flag = true;
 				}
 
 				for (i=0; i<initialsystem->Variables; i++)
@@ -811,7 +811,7 @@ int main(int argc, char *argv[])
 					if (readTokenFromFile(stream, "0123456789*-", &token, &memory) == 0)
 					{
 						printf("UPPER BOUNDS file %s.ub ends unexpectedly.\n", BaseName);
-						flag = TRUE;
+						flag = true;
 					}
 					if (!strcmp(token, "*"))
 						setLinearSystemBound(initialsystem, i, 'u', MAXINT);
@@ -820,20 +820,20 @@ int main(int argc, char *argv[])
 						if (initialsystem->VarProperties[i].Free)
 						{
 							printf("Upper bound '%s' cannot be set for free variables.\n", token);
-							flag = TRUE;
+							flag = true;
 						}
 						else if (j>=0)
 							setLinearSystemBound(initialsystem, i, 'u', j);
 						else
 						{
 							printf("Negative upper bound '%s' in UPPER BOUNDS file %s.ub.\n", token, BaseName);
-							flag = TRUE;
+							flag = true;
 						}
 					}
 					else
 					{
 						printf("Unknown token '%s' in UPPER BOUNDS file %s.ub.\n", token, BaseName);
-						flag = TRUE;
+						flag = true;
 					}
 				}
 				free(token);
@@ -855,12 +855,12 @@ int main(int argc, char *argv[])
 			{
 				token = NULL;
 				memory = 0;
-				flag = FALSE;
+				flag = false;
 	
 				if (fscanf(stream, "%d %d", &r, &i)<2 || i != initialsystem->Variables || r != 1)
 				{
 					printf("LOWER BOUNDS file %s.lb must start with '1 %d'.\n", BaseName, initialsystem->Variables);
-					flag = TRUE;
+					flag = true;
 				}
 
 				for (i=0; i<initialsystem->Variables; i++)
@@ -868,7 +868,7 @@ int main(int argc, char *argv[])
 					if (readTokenFromFile(stream, "0123456789*-", &token, &memory) == 0)
 					{
 						printf("LOWER BOUNDS file %s.lb ends unexpectedly.\n", BaseName);
-						flag = TRUE;
+						flag = true;
 					}
 					if (!strcmp(token, "*"))
 						setLinearSystemBound(initialsystem, i, 'l', -MAXINT);
@@ -877,20 +877,20 @@ int main(int argc, char *argv[])
 						if (initialsystem->VarProperties[i].Free)
 						{
 							printf("Lower bound '%s' cannot be set for free variables.\n", token);
-							flag = TRUE;
+							flag = true;
 						}
 						else if (j<=0)
 							setLinearSystemBound(initialsystem, i, 'l', j);
 						else
 						{
 							printf("Positive lower bound '%s' in LOWER BOUNDS file %s.lb.\n", token, BaseName);
-							flag = TRUE;
+							flag = true;
 						}
 					}
 					else
 					{
 						printf("Unknown token '%s' in LOWER BOUNDS file %s.lb.\n", token, BaseName);
-						flag = TRUE;
+						flag = true;
 					}
 				}
 				free(token);
@@ -912,7 +912,7 @@ int main(int argc, char *argv[])
 	}
 
 	// DEBUG
-//	printVectorArray(ctx->Lattice, TRUE);
+//	printVectorArray(ctx->Lattice, true);
 
 	zsolveSystem(ctx, !OResume);
 
@@ -928,7 +928,7 @@ int main(int argc, char *argv[])
 		if (stream)
 		{
 			fprintf(stream, "%d %d\n\n", ctx->Graver->Size, ctx->Graver->Variables);
-			fprintVectorArray(stream, ctx->Graver, FALSE);
+			fprintVectorArray(stream, ctx->Graver, false);
 			fclose(stream);
 		}
 	}
@@ -940,9 +940,9 @@ int main(int argc, char *argv[])
 		if (stream)
 		{
 			fprintf(stream, "%d %d\n\n", ctx->Homs->Size + ctx->Frees->Size, ctx->Homs->Variables);
-			fprintVectorArray(stream, ctx->Homs, FALSE);
+			fprintVectorArray(stream, ctx->Homs, false);
 			fprintf(stream, "\n");
-			fprintVectorArray(stream, ctx->Frees, FALSE);
+			fprintVectorArray(stream, ctx->Frees, false);
 			fclose(stream);
 		}
 	}
@@ -954,7 +954,7 @@ int main(int argc, char *argv[])
 		if (stream)
 		{
 			fprintf(stream, "%d %d\n\n", ctx->Inhoms->Size, ctx->Inhoms->Variables);
-			fprintVectorArray(stream, ctx->Inhoms, FALSE);
+			fprintVectorArray(stream, ctx->Inhoms, false);
 			fclose(stream);
 		}
 
@@ -964,7 +964,7 @@ int main(int argc, char *argv[])
 		if (stream)
 		{
 			fprintf(stream, "%d %d\n\n", ctx->Homs->Size, ctx->Homs->Variables);
-			fprintVectorArray(stream, ctx->Homs, FALSE);
+			fprintVectorArray(stream, ctx->Homs, false);
 			fclose(stream);
 		}
 
@@ -976,25 +976,11 @@ int main(int argc, char *argv[])
 			if (stream)
 			{
 				fprintf(stream, "%d %d\n\n", ctx->Frees->Size, ctx->Frees->Variables);
-				fprintVectorArray(stream, ctx->Frees, FALSE);
+				fprintVectorArray(stream, ctx->Frees, false);
 				fclose(stream);
 			}
 		}
 	}
-    if (OMaxNorm)
-    {
-	    printf("\nMaximum norm of solution is %d\n", ctx->MaxNorm);
-
-		strcat(BaseName, ".maxnorm");
-		stream = fopen(BaseName, "w");
-		BaseName[BaseLength] = '\0';
-		if (stream)
-		{
-			fprintf(stream, "%d %d\n\n", ctx->MaxNormVectors->Size, ctx->MaxNormVectors->Variables);
-			fprintVectorArray(stream, ctx->MaxNormVectors, FALSE);
-			fclose(stream);
-		}
-    }
 
 
 	printf("\n4ti2 Total Time: ");
@@ -1006,7 +992,7 @@ int main(int argc, char *argv[])
 		fprintf(LogFile, "\n");
 	}
 
-	deleteZSolveContext(ctx, TRUE);
+	deleteZSolveContext(ctx, true);
 
 	if (BaseName!=NULL)
 		free(BaseName);

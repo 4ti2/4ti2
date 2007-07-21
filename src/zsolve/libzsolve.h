@@ -43,7 +43,6 @@ typedef struct zsolvecontext_t
 	VectorArray Inhoms;
 	VectorArray Frees;
 	VectorArray Graver;
-    VectorArray MaxNormVectors;
 
 	int MaxNorm;
 	void **Norm;
@@ -51,7 +50,7 @@ typedef struct zsolvecontext_t
 	Vector Second;
 	Vector Sum;
 
-	BOOL Symmetric;
+	bool Symmetric;
 
 	FILE *LogFile;
 	int LogLevel;
@@ -108,10 +107,10 @@ ZSolveContext createZSolveContextFromLattice(VectorArray, FILE *, int, int, ZSol
 ZSolveContext createZSolveContextFromBackup(FILE *, ZSolveLogCallback, ZSolveBackupCallback);
 /* (open backup file, custom log callback or zsolveLogCallbackDefault, backup callback) */
 
-void zsolveSystem(ZSolveContext, BOOL);
+void zsolveSystem(ZSolveContext, bool);
 /* (context created by createZSolveContext or resumeZSolveContext, append negatives? should be true for system/lattice, false for resume) */
 
-void deleteZSolveContext(ZSolveContext, BOOL);
+void deleteZSolveContext(ZSolveContext, bool);
 /* (context, delete Hom and Inhom?) */
 
 #endif

@@ -120,7 +120,7 @@ void fprintMatrix(FILE *stream, Matrix matrix)
 
 //                                                                            //
 
-void printMatrix(Matrix matrix)
+inline void printMatrix(Matrix matrix)
 {
 	assert(matrix);
 	
@@ -205,20 +205,20 @@ void combineMatrixColumns(Matrix matrix, int dest, int factor, int src)
 
 Matrix copyMatrix(Matrix old)
 {
-	Matrix mat;
+	Matrix new;
 	int i;
 
 	assert(old);
 
-	mat = createMatrix(old->Width, old->Height);
+	new = createMatrix(old->Width, old->Height);
 
-	assert(mat);
+	assert(new);
 
 	i = old->Width*old->Height;
 	while (i--)
-		mat->Data[i] = old->Data[i];
+		new->Data[i] = old->Data[i];
 
-	return mat;
+	return new;
 }
 
 //                                                                            //

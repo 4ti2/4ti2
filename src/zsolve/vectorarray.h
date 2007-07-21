@@ -45,10 +45,10 @@ VectorArray createVectorArray(int);
 void deleteVectorArray(VectorArray);
 /* Free memory and all vectors (array) */
 
-void fprintVectorArray(FILE *, VectorArray, BOOL);
+void fprintVectorArray(FILE *, VectorArray, bool);
 /* Print to stream with or without header (stream, array, header) */
 
-void printVectorArray(VectorArray, BOOL);
+void printVectorArray(VectorArray, bool);
 /* Print to stdout with or without header (stream, array, header) */
 
 void appendToVectorArray(VectorArray, Vector);
@@ -68,7 +68,7 @@ typedef int (*ColumnCompare)(int, int);
 void sortVectorArrayColumns(VectorArray, ColumnCompare);
 /* sort columns by order in Properties */
 
-VectorArray readVectorArray(FILE *, BOOL);
+VectorArray readVectorArray(FILE *, bool);
 /* read vectorarray from a stream, optionally with header (stream, header?) */
 
 #endif

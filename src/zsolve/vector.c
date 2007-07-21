@@ -57,7 +57,7 @@ Vector createZeroVector(int size)
 
 //                                                                            //
 
-void deleteVector(Vector vector)
+inline void deleteVector(Vector vector)
 {
 	free(vector);
 }
@@ -66,18 +66,18 @@ void deleteVector(Vector vector)
 
 Vector copyVector(Vector old, int size)
 {
-	Vector vec = (Vector)malloc(size*sizeof(vector_t));
+	Vector new = (Vector)malloc(size*sizeof(vector_t));
 
-	if (vec==NULL)
+	if (new==NULL)
 	{
 		fprintf(stderr, "Fatal Error (%s/%d): Could not allocate memory for Vector!\n", __FILE__, __LINE__);
 		exit(1);
 	}
 
 	while (size--)
-		vec[size] = old[size];
+		new[size] = old[size];
 
-	return vec;
+	return new;
 }
 
 //                                                                            //
@@ -96,7 +96,7 @@ void fprintVector(FILE *stream, Vector vector, int size)
 
 //                                                                            //
 
-void printVector(Vector vector, int size)
+inline void printVector(Vector vector, int size)
 {
 	assert(vector);
 
