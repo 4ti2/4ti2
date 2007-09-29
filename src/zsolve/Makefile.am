@@ -1,4 +1,3 @@
-#						-*- Makefile -*-
 # 4ti2 -- A software package for algebraic, geometric and combinatorial
 # problems on linear spaces.
 # 
@@ -19,47 +18,59 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 
-AM_CFLAGS = -DNDEBUG
+bin_PROGRAMS = zsolve 
 
 lib_LTLIBRARIES = libzsolve.la
 
-libzsolve_la_SOURCES =				\
-	defs.c 					\
-	vector.c 				\
-	vectorarray.c 				\
-	linearsystem.c 				\
-	indexarray.c				\
-	lattice.c 				\
-	matrix.c 				\
-	varproperties.c 			\
-	valuetrees.c 				\
-	cputime.c 				\
-	libzsolve.c
+AM_CXXFLAGS =
 
-include_HEADERS =				\
-	cputime.h				\
-	defs.h					\
-	indexarray.h				\
-	lattice.h				\
-	libzsolve.h				\
-	linearsystem.h				\
-	matrix.h				\
-	opts.h					\
-	valuetrees.h				\
-	varproperties.h				\
-	vectorarray.h				\
-	vector.h
+# 4ti2 needs the next option to access maximum values of integer types.
+AM_CXXFLAGS += -D__STDC_LIMIT_MACROS
+# The optimisation flags.
+#AM_CXXFLAGS += -DNDEBUG
+# Uncomment the next line for debugging.
+#AM_CXXFLAGS += -g
+# Uncomment the next line for profiling.
+#AM_CXXFLAGS += -pg
 
-bin_PROGRAMS = zsolve
+libzsolvesources = \
+	BitSet.cpp \
+	Timer.cpp
 
-zsolve_SOURCES = 				\
-	solve.c					\
-	opts.c
+include_HEADERS = \
+	Integer.h \
+	BitSet.h \
+	Vector.hpp \
+	VectorArray.hpp \
+	Variables.hpp \
+	Relation.hpp \
+	LinearSystem.hpp \
+	Lattice.hpp \
+	Algorithm.hpp \
+	Controller.hpp \
+	DefaultController.hpp \
+	Options.h \
+	Timer.h \
+    Exception.h 
 
+zsolvesources =	\
+	Options.cpp \
+	main.cpp
+
+#noinst_HEADERS = 
+
+# 32 bit precision flags.
+libzsolve_la_SOURCES = $(libzsolvesources)
+zsolve_SOURCES = $(zsolvesources)
 zsolve_LDADD = libzsolve.la
+libzsolve_la_CPPFLAGS =
+zsolve_CPPFLAGS = 
+if HAVE_GMP_WITH_CXX
+libzsolve_la_CPPFLAGS += -D_4ti2_GMP_ ${GMP_CFLAGS}
+zsolve_CPPFLAGS += -D_4ti2_GMP_ ${GMP_CFLAGS}
+zsolve_LDADD += ${GMP_LIBS}
+endif
 
-# For out-of-source builds, make sure we have a copy of the script in
-# the build directory, so that the script finds the binary.
 bin_SCRIPTS = hilbert graver
 DISTCLEANFILES = hilbert graver
 

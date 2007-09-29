@@ -20,28 +20,45 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2_zsolve__INDEXARRAY_H
-#define _4ti2_zsolve__INDEXARRAY_H
+#ifndef _4ti2__Options_
+#define _4ti2__Options_
 
-#include <stdio.h>
+#include <iostream>
 
-typedef struct indexarray_t
+class Options
 {
-	int Size;
-	int *Data;
-} indexarray_t;
-typedef indexarray_t *IndexArray;
+protected:
+    std::string m_project;
+    int m_verbosity;
+    int m_loglevel;
+    int m_backup_frequency;
+    bool m_resume;
+    bool m_hilbert;
+    bool m_graver;
+    bool m_maxnorm;
+    int m_precision;
 
-IndexArray createIndexArray();
-/* create an indexarray */
+public:
 
-void deleteIndexArray(IndexArray);
-/* delete an indexarray (array) */
+    Options (int argc, char ** argv);
 
-void appendToIndexArray(IndexArray, int);
-/* append an index at the end of the array (array, index) */
+    static void print_banner ();
+    void print_usage () const;
+    void print_precision () const;
 
-void fprintIndexArray(FILE *, IndexArray);
-/* print indexarray to a stream (stream, array) */
+    std::string project () const;
+    int verbosity () const;
+    int loglevel () const;
+    int backup_frequency () const;
+    bool resume () const;
+    bool hilbert () const;
+    bool graver () const;
+    bool maxnorm () const;
+    int precision () const;
+
+    friend std::istream& operator>>(std::istream& in, Options& options);
+};
+
+std::istream& operator>>(std::istream& in, Options& options);
 
 #endif

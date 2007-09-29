@@ -3,7 +3,7 @@
 problems on linear spaces.
 
 Copyright (C) 2006 4ti2 team.
-Main author(s): Matthias Walter.
+Main author(s): Peter Malkin.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -20,9 +20,29 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2_zsolve__OPTS_H
-#define _4ti2_zsolve__OPTS_H
+#ifndef _4ti2__Timer_
+#define _4ti2__Timer_
 
-void getopts(int, char **);
+#include <iostream>
+
+class Timer
+{
+public:
+    Timer();
+    void reset();
+    double get_elapsed_time() const;
+    
+    static Timer global;
+    
+
+private:
+    static double get_time();
+    double start_time;
+
+    friend std::istream& operator>> (std::istream& in, Timer& t);
+};
+
+std::ostream& operator<< (std::ostream& out, const Timer& t);
+std::istream& operator>> (std::istream& in, Timer& t);
 
 #endif
