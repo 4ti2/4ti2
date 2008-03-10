@@ -23,8 +23,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2__RayMatrixAlgorithm_
 #define _4ti2__RayMatrixAlgorithm_
 
-#include "RayImplementation.h"
-#include "VectorArray.h"
+#include "groebner/RayImplementation.h"
+#include "groebner/VectorArray.h"
 
 namespace _4ti2_
 {
@@ -89,6 +89,6 @@ protected:
 } // namespace _4ti2_
 
 // Definitions of template class functions.
-#include "RayMatrixAlgorithm.tpp"
+#include "groebner/RayMatrixAlgorithm.tpp"
 
 #endif

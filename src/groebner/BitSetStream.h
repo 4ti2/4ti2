@@ -23,9 +23,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2__BitSetStream_
 #define _4ti2__BitSetStream_
 
-#include "BitSet.h"
-#include "LongDenseIndexSetStream.h"
-#include "ShortDenseIndexSetStream.h"
+#include "groebner/BitSet.h"
+#include "groebner/LongDenseIndexSetStream.h"
+#include "groebner/ShortDenseIndexSetStream.h"
 
 namespace _4ti2_
 {

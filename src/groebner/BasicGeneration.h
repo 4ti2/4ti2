@@ -23,9 +23,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2__BasicGeneration_
 #define _4ti2__BasicGeneration_
 
-#include "Generation.h"
-#include "BinomialSet.h"
-#include "WeightedBinomialSet.h"
+#include "groebner/Generation.h"
+#include "groebner/BinomialSet.h"
+#include "groebner/WeightedBinomialSet.h"
 
 namespace _4ti2_
 {

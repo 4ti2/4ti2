@@ -23,8 +23,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2__OrderedCompletion_
 #define _4ti2__OrderedCompletion_
 
-#include "Algorithm.h"
-#include "WeightedBinomialSet.h"
+#include "groebner/Algorithm.h"
+#include "groebner/WeightedBinomialSet.h"
 
 namespace _4ti2_
 {

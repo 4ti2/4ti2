@@ -22,7 +22,8 @@ bin_PROGRAMS = zsolve
 
 lib_LTLIBRARIES = libzsolve.la
 
-AM_CXXFLAGS =
+# Allow accessing zsolve's header files as "zsolve/HEADER.h"
+AM_CXXFLAGS = -I$(srcdir)/..
 
 # 4ti2 needs the next option to access maximum values of integer types.
 AM_CXXFLAGS += -D__STDC_LIMIT_MACROS
@@ -37,7 +38,9 @@ libzsolvesources = \
 	BitSet.cpp \
 	Timer.cpp
 
-include_HEADERS = \
+zsolveincludedir = $(includedir)/zsolve
+
+zsolveinclude_HEADERS = \
 	Integer.h \
 	BitSet.h \
 	Vector.hpp \
@@ -51,7 +54,7 @@ include_HEADERS = \
 	DefaultController.hpp \
 	Options.h \
 	Timer.h \
-    Exception.h 
+	Exception.h 
 
 zsolvesources =	\
 	Options.cpp \

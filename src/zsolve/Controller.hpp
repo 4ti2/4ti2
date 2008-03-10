@@ -23,9 +23,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2__Controller_
 #define _4ti2__Controller_
 
-#include "LinearSystem.hpp"
-#include "Lattice.hpp"
-#include "Timer.h"
+#include "zsolve/LinearSystem.hpp"
+#include "zsolve/Lattice.hpp"
+#include "zsolve/Timer.h"
 
 template <typename T> class Controller
 {

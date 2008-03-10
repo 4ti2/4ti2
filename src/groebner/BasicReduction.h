@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2__BasicReduction_
 #define _4ti2__BasicReduction_
 
-#include "Binomial.h"
+#include "groebner/Binomial.h"
 #include <vector>
 
 namespace _4ti2_

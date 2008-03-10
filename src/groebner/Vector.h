@@ -23,11 +23,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2__Vector_
 #define _4ti2__Vector_
 
-#include "Permutation.h"
-#include "DataType.h"
+#include "groebner/Permutation.h"
+#include "groebner/DataType.h"
 #include <cassert>
-#include "Index.h"
-#include "Size.h"
+#include "groebner/Index.h"
+#include "groebner/Size.h"
 
 #include <iostream>
 

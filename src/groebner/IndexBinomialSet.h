@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #define _4ti2__IndexBinomialSet_
 
 #include <vector>
-#include "Binomial.h"
+#include "groebner/Binomial.h"
 
 namespace _4ti2_
 {

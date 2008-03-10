@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2_FilterReduction_
 #define _4ti2_FilterReduction_
 
-#include "Binomial.h"
+#include "groebner/Binomial.h"
 
 class FilterNode;
 

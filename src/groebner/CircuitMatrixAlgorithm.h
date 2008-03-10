@@ -23,9 +23,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2__CircuitMatrixAlgorithm_
 #define _4ti2__CircuitMatrixAlgorithm_
 
-#include "CircuitImplementation.h"
-#include "VectorArray.h"
-#include "Timer.h"
+#include "groebner/CircuitImplementation.h"
+#include "groebner/VectorArray.h"
+#include "groebner/Timer.h"
 
 namespace _4ti2_
 {
@@ -93,6 +93,6 @@ protected:
 } // namespace _4ti2_
 
 // Include the template definitions.
-#include "CircuitMatrixAlgorithm.tpp"
+#include "groebner/CircuitMatrixAlgorithm.tpp"
 
 #endif

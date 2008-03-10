@@ -109,6 +109,6 @@ private:
 
 } // namespace _4ti2_
 
-#include "OnesTree.tpp"
+#include "groebner/OnesTree.tpp"
 
 #endif

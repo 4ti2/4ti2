@@ -19,22 +19,22 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#include "RaySupportAlgorithm.h"
-#include "DiagonalAlgorithm.h"
-#include "HermiteAlgorithm.h"
-#include "Euclidean.h"
-#include "SupportTree.h"
-#include "OnesTree.h"
-#include "Globals.h"
-#include "Timer.h"
+#include "groebner/RaySupportAlgorithm.h"
+#include "groebner/DiagonalAlgorithm.h"
+#include "groebner/HermiteAlgorithm.h"
+#include "groebner/Euclidean.h"
+#include "groebner/SupportTree.h"
+#include "groebner/OnesTree.h"
+#include "groebner/Globals.h"
+#include "groebner/Timer.h"
 
-#include "VectorArrayStream.h"
-#include "VectorStream.h"
-#include "VectorArrayStream.h"
+#include "groebner/VectorArrayStream.h"
+#include "groebner/VectorStream.h"
+#include "groebner/VectorArrayStream.h"
 #include <iostream>
 #include <iomanip>
 
-#include "Debug.h"
+#include "groebner/Debug.h"
 
 #define TREE SupportTree
 

@@ -23,8 +23,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2__Truncate_
 #define _4ti2__Truncate_
 
-#include "Feasible.h"
-#include "VectorArray.h"
+#include "groebner/Feasible.h"
+#include "groebner/VectorArray.h"
 
 namespace _4ti2_
 {

@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2__GroebnerBasis_
 #define _4ti2__GroebnerBasis_
 
-#include "GeneratingSet.h"
+#include "groebner/GeneratingSet.h"
 
 namespace _4ti2_
 {

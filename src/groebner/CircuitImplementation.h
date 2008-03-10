@@ -23,8 +23,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2__CircuitImplementation_
 #define _4ti2__CircuitImplementation_
 
-#include "VectorArray.h"
-#include "Timer.h"
+#include "groebner/VectorArray.h"
+#include "groebner/Timer.h"
 
 namespace _4ti2_
 {
@@ -111,6 +111,6 @@ protected:
 } // namespace _4ti2_
 
 // Include template definitions.
-#include "CircuitImplementation.tpp"
+#include "groebner/CircuitImplementation.tpp"
 
 #endif

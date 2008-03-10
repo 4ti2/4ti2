@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2__RayImplementation_
 #define _4ti2__RayImplementation_
 
-#include "VectorArray.h"
+#include "groebner/VectorArray.h"
 
 namespace _4ti2_
 {
@@ -130,6 +130,6 @@ protected:
 } // namespace _4ti2_
 
 // Definitions of template class functions.
-#include "RayImplementation.tpp"
+#include "groebner/RayImplementation.tpp"
 
 #endif

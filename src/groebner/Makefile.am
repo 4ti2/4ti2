@@ -25,9 +25,12 @@ endif
 
 lib_LTLIBRARIES = lib4ti2int32.la lib4ti2int64.la lib4ti2gmp.la
 
+# Allow accessing groebner's header files as "groebner/HEADER.h"
+AM_CXXFLAGS = -I$(srcdir)/..
+
 # 4ti2 uses the glpk linear programming library (GLPL).
 # Add include path to the file glpk.h if necessary.
-AM_CXXFLAGS = $(GLPK_CFLAGS)
+AM_CXXFLAGS += $(GLPK_CFLAGS)
 # Add library include path for the library libglpk if necessary.
 LIBS += $(GLPK_LIBS)
 
@@ -103,7 +106,9 @@ lib4ti2sources =				\
 	WeightedBinomialSet.cpp			\
 	WeightedReduction.cpp
 
-include_HEADERS = 				\
+groebnerincludedir=$(includedir)/groebner
+
+groebnerinclude_HEADERS =			\
 	Algorithm.h				\
 	BasicCompletion.h			\
 	BasicGeneration.h			\

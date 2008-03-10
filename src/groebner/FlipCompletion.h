@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2__FlipCompletion_
 #define _4ti2__FlipCompletion_
 
-#include "BinomialSet.h"
+#include "groebner/BinomialSet.h"
 
 namespace _4ti2_
 {

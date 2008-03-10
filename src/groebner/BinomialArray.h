@@ -23,13 +23,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2__BinomialArray_
 #define _4ti2__BinomialArray_
 
-#include "Binomial.h"
-#include "VectorArray.h"
-#include "BinomialCollection.h"
-#include "BitSet.h"
+#include "groebner/Binomial.h"
+#include "groebner/VectorArray.h"
+#include "groebner/BinomialCollection.h"
+#include "groebner/BitSet.h"
 
 #include <iostream>
-#include "BitSetStream.h"
+#include "groebner/BitSetStream.h"
 
 namespace _4ti2_
 {

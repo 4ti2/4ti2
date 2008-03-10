@@ -23,9 +23,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2__SaturationGenSet_
 #define _4ti2__SaturationGenSet_
 
-#include "VectorArray.h"
-#include "BitSet.h"
-#include "Feasible.h"
+#include "groebner/VectorArray.h"
+#include "groebner/BitSet.h"
+#include "groebner/Feasible.h"
 
 namespace _4ti2_
 {

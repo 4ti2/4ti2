@@ -23,10 +23,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2__Reduction_
 #define _4ti2__Reduction_
 
-#include "BasicReduction.h"
-#include "OnesReduction.h"
-#include "WeightedReduction.h"
-#include "FilterReduction.h"
+#include "groebner/BasicReduction.h"
+#include "groebner/OnesReduction.h"
+#include "groebner/WeightedReduction.h"
+#include "groebner/FilterReduction.h"
 
 namespace _4ti2_
 {

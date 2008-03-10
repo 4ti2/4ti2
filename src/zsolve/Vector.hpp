@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <cassert>
 #include <iostream>
 
-#include "Integer.h"
+#include "zsolve/Integer.h"
 
 template <typename T> T* create_vector (size_t size)
 {

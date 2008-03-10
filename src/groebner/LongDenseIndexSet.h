@@ -24,8 +24,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #define _4ti2__LongDenseIndexSet_
 
 #include <cassert>
-#include "Size.h"
-#include "Index.h"
+#include "groebner/Size.h"
+#include "groebner/Index.h"
 #include <inttypes.h>
 
 #include <iostream>

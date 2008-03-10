@@ -23,12 +23,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2__ShortDenseIndexSetStream_
 #define _4ti2__ShortDenseIndexSetStream_
 
-#include "LongDenseIndexSetStream.h"
-#include "ShortDenseIndexSetStream.h"
+#include "groebner/LongDenseIndexSetStream.h"
+#include "groebner/ShortDenseIndexSetStream.h"
 
 #include <iostream>
 #include <fstream>
-#include "ShortDenseIndexSet.h"
+#include "groebner/ShortDenseIndexSet.h"
 
 namespace _4ti2_
 {

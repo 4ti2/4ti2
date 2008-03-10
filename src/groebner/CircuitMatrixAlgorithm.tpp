@@ -19,17 +19,17 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#include "CircuitMatrixAlgorithm.h"
-#include "RayMatrixAlgorithm.h"
-#include "DiagonalAlgorithm.h"
-#include "HermiteAlgorithm.h"
-#include "Debug.h"
-#include "Globals.h"
-#include "Timer.h"
+#include "groebner/CircuitMatrixAlgorithm.h"
+#include "groebner/RayMatrixAlgorithm.h"
+#include "groebner/DiagonalAlgorithm.h"
+#include "groebner/HermiteAlgorithm.h"
+#include "groebner/Debug.h"
+#include "groebner/Globals.h"
+#include "groebner/Timer.h"
 
-#include "VectorArrayStream.h"
-#include "VectorStream.h"
-#include "VectorArrayStream.h"
+#include "groebner/VectorArrayStream.h"
+#include "groebner/VectorStream.h"
+#include "groebner/VectorArrayStream.h"
 #include <iostream>
 #include <iomanip>
 

@@ -26,9 +26,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
-#include "Options.h"
-#include "Controller.hpp"
-#include "Timer.h"
+#include "zsolve/Options.h"
+#include "zsolve/Controller.hpp"
+#include "zsolve/Timer.h"
 
 template <typename T> class DefaultController : public Controller <T>
 {

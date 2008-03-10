@@ -27,11 +27,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <vector>
 #include <cassert>
 
-#include "Integer.h"
-#include "VectorArray.hpp"
-#include "Variables.hpp"
-#include "Relation.hpp"
-#include "Vector.hpp"
+#include "zsolve/Integer.h"
+#include "zsolve/VectorArray.hpp"
+#include "zsolve/Variables.hpp"
+#include "zsolve/Relation.hpp"
+#include "zsolve/Vector.hpp"
 
 template <typename T> class LinearSystem : public VariableProperties <T>
 {

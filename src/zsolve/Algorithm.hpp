@@ -24,10 +24,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #define _4ti2__Algorithm_
 
 #include <map>
-#include "BitSet.h"
-#include "LinearSystem.hpp"
-#include "Controller.hpp"
-#include "Timer.h"
+#include "zsolve/BitSet.h"
+#include "zsolve/LinearSystem.hpp"
+#include "zsolve/Controller.hpp"
+#include "zsolve/Timer.h"
 
 template <typename T> class Algorithm
 {

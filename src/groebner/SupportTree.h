@@ -162,6 +162,6 @@ SupportTree<IndexSet>::find_diff(
 } // namespace _4ti2_
 
 // Include template defitinions.
-#include "SupportTree.tpp"
+#include "groebner/SupportTree.tpp"
 
 #endif

@@ -23,19 +23,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2__Binomial_
 #define _4ti2__Binomial_
 
-#include "Vector.h"
-#include "VectorArray.h"
-#include "DataType.h"
-#include "Statistics.h"
-#include "BitSet.h"
-#include "Weight.h"
-#include "Grading.h"
-#include "Permutation.h"
-#include "VectorStream.h"
-#include "Index.h"
-#include "Size.h"
-#include "Bounded.h"
-#include "Filter.h"
+#include "groebner/Vector.h"
+#include "groebner/VectorArray.h"
+#include "groebner/DataType.h"
+#include "groebner/Statistics.h"
+#include "groebner/BitSet.h"
+#include "groebner/Weight.h"
+#include "groebner/Grading.h"
+#include "groebner/Permutation.h"
+#include "groebner/VectorStream.h"
+#include "groebner/Index.h"
+#include "groebner/Size.h"
+#include "groebner/Bounded.h"
+#include "groebner/Filter.h"
 #include <iostream>
 
 namespace _4ti2_

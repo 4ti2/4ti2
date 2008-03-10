@@ -23,8 +23,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2__Feasible_
 #define _4ti2__Feasible_
 
-#include "VectorArray.h"
-#include "BitSet.h"
+#include "groebner/VectorArray.h"
+#include "groebner/BitSet.h"
 
 namespace _4ti2_
 {

@@ -19,14 +19,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#include "RayImplementation.h"
-#include "CircuitOptions.h"
-#include "Globals.h"
-#include "HermiteAlgorithm.h"
-#include "VectorStream.h"
+#include "groebner/RayImplementation.h"
+#include "groebner/CircuitOptions.h"
+#include "groebner/Globals.h"
+#include "groebner/HermiteAlgorithm.h"
+#include "groebner/VectorStream.h"
 
-#include "ShortDenseIndexSet.h"
-#include "LongDenseIndexSet.h"
+#include "groebner/ShortDenseIndexSet.h"
+#include "groebner/LongDenseIndexSet.h"
 
 using namespace _4ti2_;
 

@@ -23,11 +23,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2__VectorArray_
 #define _4ti2__VectorArray_
 
-#include "Vector.h"
+#include "groebner/Vector.h"
 #include <vector>
-#include "Permutation.h"
-#include "Index.h"
-#include "Size.h"
+#include "groebner/Permutation.h"
+#include "groebner/Index.h"
+#include "groebner/Size.h"
 
 namespace _4ti2_
 {
