@@ -51,26 +51,4 @@ std::ostream& operator<< (std::ostream& out, const IOException& exception)
     return out;
 }
 
-
-// Calc
-
-class CalcException
-{
-protected:
-    std::string m_message;
-public:
-    CalcException (std::string msg = "Unknown reason.")
-    {
-        m_message = msg;
-    }
-
-    friend std::ostream& operator<< (std::ostream& out, const CalcException& exception);
-};
-
-std::ostream& operator<< (std::ostream& out, const CalcException& exception)
-{
-    out << "Calculation error: " << exception.m_message << std::endl;
-    return out;
-}
-
 #endif

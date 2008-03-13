@@ -191,6 +191,11 @@ template <typename T> Algorithm <T>* prepare_matrix (const Options& options, Con
     LinearSystem <T> * system = new LinearSystem <T> (matrix, rhs, !(options.graver() || options.hilbert ()), options.hilbert () ? 0 : 1, -1);
     
     delete_vector (rhs);
+    
+    if (system->cancel_down ())
+    {
+        std::cout << "Canceled down linear system!\n" << std::endl;
+    }
 
     read_relations <T> (options, options.project () + ".rel", system);
     read_signs <T> (options, options.project () + ".sign", system);
@@ -311,8 +316,7 @@ template <typename T> int zsolve_main (Options& options)
     if (options.maxnorm ())
     {
         VectorArray <T> maxnorm (algorithm->get_result_variables ());
-        T norm = algorithm->extract_maxnorm_results (maxnorm);
-        controller->log_maxnorm (norm, maxnorm.vectors ());
+        controller->log_maxnorm (algorithm, maxnorm.vectors ());
         maxnorm.save (options.project () + ".maxnorm");
     }
 
@@ -381,11 +385,6 @@ int main (int argc, char **argv)
         if (e.print ())
             options.print_usage ();
         return 2;
-    }
-    catch (CalcException e)
-    {
-        std::cout << e;
-        return 3;
     }
 
     return result;

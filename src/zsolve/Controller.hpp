@@ -26,6 +26,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "zsolve/LinearSystem.hpp"
 #include "zsolve/Lattice.hpp"
 #include "zsolve/Timer.h"
+#include "zsolve/Algorithm.hpp"
+
+template <typename T> class Algorithm;
 
 template <typename T> class Controller
 {
@@ -42,6 +45,7 @@ public:
     virtual void log_result (size_t inhoms, size_t homs, size_t free) = 0;
     virtual void log_status (size_t variable, const T& sum, const T& max_sum, const T& norm, size_t vectors, int backup_frequency, Timer& timer) = 0;
     virtual void log_resume (size_t variables, size_t variable, const T& sum, const T& norm, size_t vectors) = 0;
+    virtual void log_maxnorm (Algorithm <T> * algorithm, bool final) = 0;
 
     virtual void save_lattice (Lattice <T> * system) = 0;
     virtual void backup_data (Lattice <T> & lattice, size_t current, const T& sum, const T& norm, bool symmetric) = 0;

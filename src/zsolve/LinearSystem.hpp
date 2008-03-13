@@ -103,6 +103,28 @@ public:
         return true;
     }
     
+    bool cancel_down ()
+    {
+        bool result = false;
+
+        for (size_t i = 0; i < m_relations; i++)
+        {
+            T g = m_matrix->gcd_row (i, 0, variables ());
+            g = gcd (g, m_rhs[i]);
+            if (g > 1)
+            {
+                m_rhs[i] /= g;
+                for (size_t j = 0; j < variables (); j++)
+                {
+                    (*m_matrix)[i][j] /= g;
+                }
+                result = true;
+            }
+        }
+
+        return result;
+    }
+    
     bool check_consistency () const
     {
         if (!m_matrix->check_consistency ())

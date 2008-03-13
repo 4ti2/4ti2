@@ -258,6 +258,8 @@ template <typename T> Lattice <T>* generate_lattice (LinearSystem <T>* system)
     assert (system->is_homogeneous ());
     assert (system->is_equality_system ());
 
+    //std::cerr << "generate_lattice" << std::endl;
+
     size_t n,e;
     size_t identities = 0;
     VectorArray <T> H (system->matrix ());
@@ -303,6 +305,16 @@ template <typename T> Lattice <T>* generate_lattice (LinearSystem <T>* system)
     n -= identities;
     e -= identities;
 
+    //std::cerr << "removed " << identities << " identities" << std::endl;
+    /*for (int i = 0; i < e; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            std::cerr << H[i][j] << " ";
+        }
+        std::cerr << std::endl;
+    }*/
+
     if (n == 0)
         return result;
 
@@ -329,46 +341,64 @@ template <typename T> Lattice <T>* generate_lattice (LinearSystem <T>* system)
         }
         if (best_value == 0)
             break;
-
+        
         H.swap_rows (best_index, i);
+        
+        //std::cerr << "After swapping Best row to " << i << "\n\n" << H << std::endl;
 
-        // find a reducer
-        best_index = i;
-        best_value = 0;
-        for (current_index = i; current_index < n; current_index++)
+        bool reduced;
+        do
         {
-            current_value = abs (H[i][current_index]);
-            if (current_value != 0 && (best_value <= 0 || current_value < best_value))
+            reduced = false;
+
+            // find a reducer
+            best_index = i;
+            best_value = 0;
+            for (current_index = i; current_index < n; current_index++)
             {
-                best_index = current_index;
-                best_value = current_value;
+                current_value = abs (H[i][current_index]);
+                if (current_value != 0 && (best_value <= 0 || current_value < best_value))
+                {
+                    best_index = current_index;
+                    best_value = current_value;
+                }
             }
-        }
-        assert (best_value != 0);
+            assert (best_value != 0);
+        
+            //std::cerr << "Reducer is column " << best_index << " with value " << H[i][best_index] << std::endl;
 
-        // negative?
-        if (H[i][best_index] < 0)
-        {
-            H.negate_column (best_index);
-            I.negate_column (best_index);
-        }
-
-        // reduce others
-        for (size_t j = 0; j < n; j++)
-        {
-            if (j != best_index)
+            // negative?
+            if (H[i][best_index] < 0)
             {
-                if (H[i][j] % best_value != 0 && j > i)
-                    throw CalcException ("Linear system cannot be transformed into lattice.");
-                T factor = - H[i][j] / best_value;
-                H.combine_columns (j, factor, best_index);
-                I.combine_columns (j, factor, best_index);
+                H.negate_column (best_index);
+                I.negate_column (best_index);
             }
-        }
 
-        // swap
-        H.swap_columns (i, best_index);
-        I.swap_columns (i, best_index);
+            // reduce others
+            for (size_t j = 0; j < n; j++)
+            {
+                if (j != best_index)
+                {
+                    //if (H[i][j] % best_value != 0 && j > i)
+                    //    throw CalcException ("Linear system cannot be transformed into lattice.");
+                    // BUG bbb.mat needs this loop, because integer gaussian may have modulus on division!
+                    T factor = - H[i][j] / best_value;
+                    if (factor != 0)
+                    {
+                        H.combine_columns (j, factor, best_index);
+                        I.combine_columns (j, factor, best_index);
+                        reduced = true;
+                    }
+                }
+            }
+
+            // swap
+            H.swap_columns (i, best_index);
+            I.swap_columns (i, best_index);
+        }
+        while (reduced);
+        
+        //std::cerr << "After reduction and column swap:\n" << H << std::endl;
     }
 
     // fill vector array

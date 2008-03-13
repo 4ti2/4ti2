@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "zsolve/Options.h"
 #include "zsolve/Controller.hpp"
 #include "zsolve/Timer.h"
+#include "zsolve/Algorithm.hpp"
 
 template <typename T> class DefaultController : public Controller <T>
 {
@@ -40,12 +41,16 @@ protected:
     Timer m_var_timer;
     Timer m_sum_timer;
     Timer m_norm_timer;
+    T m_last_maxnorm;
+    size_t m_last_maxnorm_vectors;
 
 public:
     DefaultController (std::ostream* console, std::ofstream* log, const Options& options) : m_options (options)
     {
         m_console = console;
         m_log = log;
+	m_last_maxnorm = 0;
+	m_last_maxnorm_vectors = 0;
     }
 
     ~DefaultController () {}
@@ -180,7 +185,7 @@ public:
 
     void log_status (size_t variable, const T& sum, const T& max_sum, const T& norm, size_t vectors, int backup_frequency, Timer& timer)
     {
-        static int wrap = 100000;
+        static int wrap = 1000;
         if (m_options.verbosity () < 0)
         {
             static int i = 0;
@@ -202,7 +207,7 @@ public:
 
                 if (m_options.verbosity () == -1)
                 {
-                    ss << "\rVariable: " << variable << ", Sum: " << sum << ", Norm: " << norm << ", Solutions: " << vectors << ", Time: " << m_all_timer << "s" << std::flush;
+                    ss << "\rVariable: " << variable << ", Sum: " << sum << ", Norm: " << norm << ", Max-Norm: " << max_sum << ", Solutions: " << vectors << ", Time: " << m_all_timer << "s" << std::flush;
                 }
                 else if (backup_frequency != 0)
                 {
@@ -216,7 +221,7 @@ public:
                 }
                 else
                 {
-                    ss << "\rVariable: " << variable << ", Sum: " << sum << ", Norm: " << norm << " + " << (sum-norm) << ", Solutions: " << vectors;
+                    ss << "\rVariable: " << variable << ", Sum: " << sum << ", Norm: " << norm << " + " << (sum-norm) << ", Max-Norm: " << max_sum << ", Solutions: " << vectors;
                     ss << ", Time (norm): " << m_norm_timer << "s, Time (sum): " << m_sum_timer << "s, Time (variable): " << m_var_timer << "s, Time: " << m_all_timer << "s" << std::flush;
                 }
                 
@@ -243,12 +248,32 @@ public:
             *m_log << "\n\nResuming backup at variable " << variable << " of " << variables << ", sum " << sum << " (" << norm << " + " << (sum - norm) << ")" << ", with " << vectors << " solutions.\n" << std::endl;
     }
 
-    void log_maxnorm (T norm, size_t vectors)
+    void log_maxnorm (Algorithm <T> * algorithm, bool final)
     {
-        if (m_options.verbosity () != 0)
-            *m_console << "\nFinal basis has " << vectors << " vectors with a maximum norm of " << norm << "." << std::endl;
-        if (m_options.loglevel () != 0)
-            *m_log << "\nFinal basis has " << vectors << " vectors with a maximum norm of " << norm << "." << std::endl;
+        if (m_options.maxnorm () == 1 && final || m_options.maxnorm () == 2)
+        {
+            VectorArray <T> maxnorm (algorithm->get_result_variables ());
+            T norm = algorithm->extract_maxnorm_results (maxnorm);
+
+            if (final)
+            {
+                if (m_options.verbosity () != 0)
+                    *m_console << "\nFinal basis has " << maxnorm.vectors () << " vectors with a maximum norm of " << norm << "." << std::endl;
+                if (m_options.loglevel () != 0)
+                    *m_log << "\nFinal basis has " << maxnorm.vectors () << " vectors with a maximum norm of " << norm << "." << std::endl;
+                maxnorm.save (m_options.project () + ".maxnorm");
+            }
+            else if (norm != m_last_maxnorm || maxnorm.vectors () != m_last_maxnorm_vectors)
+            {
+                m_last_maxnorm_vectors = maxnorm.vectors ();
+                m_last_maxnorm = norm;
+                if (m_options.verbosity () != 0)
+                    *m_console << "\nBasis has " << m_last_maxnorm_vectors << " vectors with a maximum norm of " << norm << "." << std::endl;
+                if (m_options.loglevel () != 0)
+                    *m_log << "\nBasis has " << m_last_maxnorm_vectors << " vectors with a maximum norm of " << norm << "." << std::endl;
+                maxnorm.save (m_options.project () + ".maxnorm");
+            }
+        }
     }
     
     void save_lattice (Lattice <T> * lattice)
