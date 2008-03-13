@@ -20,8 +20,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2__LatticeBasis_
-#define _4ti2__LatticeBasis_
+#ifndef _4ti2_groebner__LatticeBasis_
+#define _4ti2_groebner__LatticeBasis_
 
 #include "groebner/VectorArray.h"
 

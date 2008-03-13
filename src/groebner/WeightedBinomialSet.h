@@ -20,8 +20,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2__WeightedBinomialSet_
-#define _4ti2__WeightedBinomialSet_
+#ifndef _4ti2_groebner__WeightedBinomialSet_
+#define _4ti2_groebner__WeightedBinomialSet_
 
 #include "groebner/Binomial.h"
 #include "groebner/BinomialCollection.h"

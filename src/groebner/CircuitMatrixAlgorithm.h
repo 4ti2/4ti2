@@ -20,8 +20,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2__CircuitMatrixAlgorithm_
-#define _4ti2__CircuitMatrixAlgorithm_
+#ifndef _4ti2_groebner__CircuitMatrixAlgorithm_
+#define _4ti2_groebner__CircuitMatrixAlgorithm_
 
 #include "groebner/CircuitImplementation.h"
 #include "groebner/VectorArray.h"

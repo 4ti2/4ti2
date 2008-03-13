@@ -20,8 +20,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef __4ti2__Integer_
-#define __4ti2__Integer_
+#ifndef __4ti2_zsolve__Integer_
+#define __4ti2_zsolve__Integer_
 
 #ifdef _4ti2_GMP_
 #include <gmpxx.h>
