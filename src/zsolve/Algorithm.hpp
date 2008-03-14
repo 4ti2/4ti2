@@ -27,6 +27,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "zsolve/BitSet.h"
 #include "zsolve/LinearSystem.hpp"
 #include "zsolve/Controller.hpp"
+#include "zsolve/Norms.hpp"
+#include "zsolve/Heuristics.hpp"
 #include "zsolve/Timer.h"
 
 template <typename T> class Algorithm
@@ -79,25 +81,29 @@ protected:
     };
 
 protected:
+    typedef std::map <T, ValueTree <T> *> RootMap;
+    typedef std::map <NormPair <T>, bool> NormMap;
+
     Controller <T> * m_controller;
     Lattice <T> * m_lattice;
 
-    T m_maxnorm;
-    size_t m_current_variable;
-    size_t m_variables;
-    T m_sum_norm;
-    T m_first_norm;
-    T m_second_norm;
+    T m_maxnorm; // current maximum norm
+    size_t m_current_variable; // current component
+    size_t m_variables; // components
+    T m_sum_norm; // ||u||_1
+    T m_first_norm; // ||v||_1
+    T m_second_norm; // ||u+v||_1
 
-    std::map<T, ValueTree <T> *> m_roots;
-    T* m_first_vector;
-    T* m_second_vector;
-    T* m_sum_vector;
+    NormMap m_norms;
+    RootMap m_roots; // roots of valuetrees
+    T* m_first_vector; // u
+    T* m_second_vector; // v
+    T* m_sum_vector; // u+v
 
-    bool m_symmetric;
+    bool m_symmetric; // are 0 .. current symmetric components?
 
-    Timer m_backup_timer;
-    int m_backup_frequency;
+    Timer m_backup_timer; // timer
+    int m_backup_frequency; // frequency for backup
 
 protected:
 
@@ -195,7 +201,15 @@ protected:
         int vid = m_lattice->append_vector (copy_vector (vector, m_variables));
 
         if (m_roots.find (norm) == m_roots.end ())
+        {
             m_roots[norm] = new ValueTree <T> ();
+            
+            for (typename RootMap::iterator i = m_roots.begin (); i != m_roots.end (); i++)
+            {
+                NormPair <T> pair (i->first, norm);
+                m_norms[pair] = true;
+            }
+        }
 
         insert_tree (m_roots[norm], vid, true);
     }
@@ -300,6 +314,7 @@ protected:
                     //std::cout << ") by (";
                     //print_vector (std::cout, reducer, m_current_variable+1);
                     //std::cout << ")" << std::endl;
+                    //count_reduces++;
                     return true;
                 }
             }
@@ -346,6 +361,8 @@ protected:
         if (m_first_vector == m_second_vector)
             return;
 
+        //count_builds++;
+
         if (m_first_vector[m_current_variable] <= 0 && m_second_vector[m_current_variable] <= 0)
             return;
         if (m_first_vector[m_current_variable] >= 0 && m_second_vector[m_current_variable] >= 0)
@@ -359,8 +376,15 @@ protected:
                 return;
         }
 
+        bool flag = false;
         for (size_t i = 0; i < m_variables; i++)
+        {
             m_sum_vector[i] = m_first_vector[i] + m_second_vector[i];
+            if (m_second_vector[i] != 0)
+                flag = true;
+        }
+        if (!flag)
+            std::cerr << "\n\nGENERATED ZERO VECTOR!!!!\n\n" << std::endl;
 
         T norm = norm_vector (m_sum_vector, m_current_variable);
 
@@ -370,7 +394,12 @@ protected:
         m_controller->log_status (m_current_variable+1, m_sum_norm, m_maxnorm, m_first_norm, m_lattice->vectors (), m_backup_frequency, m_backup_timer);
 
         // TODO: norm / 2 ??
-        for (T i = 0; i <= norm/2; i++)
+        for (typename RootMap::iterator iter = m_roots.begin (); iter != m_roots.end() && iter->first <= norm/2; iter++)
+        {
+            if (enum_reducer (iter->second))
+                return;
+        }
+/*        for (T i = 0; i <= norm/2; i++)
         {
             if (i <= m_maxnorm && m_roots.find (i) != m_roots.end())
             {
@@ -378,8 +407,8 @@ protected:
                 if (enum_reducer (m_roots[i]))
                     return;
             }
-        }
-        if (norm <= m_maxnorm && m_roots.find (norm) != m_roots.end ())
+        } */
+        if (m_roots.find (norm) != m_roots.end ())
         {
             //std::cout << "enum_reducer (roots[" << norm << "])" << std::endl;
             if (enum_reducer (m_roots[norm]))
@@ -401,6 +430,8 @@ protected:
         //std::cout << "Inserting [";
         //print_vector (std::cout, m_sum_vector, m_variables);
         //std::cout << "]" << std::endl;
+        
+        //count_insertions++;
         insert_trees (m_sum_vector, norm);
         if (m_symmetric)
         {
@@ -504,9 +535,9 @@ protected:
         m_maxnorm = -1;
     }
 
-    int choose_next_variable ()
+    int chooseNextVariable ()
     {
-        //std::cout << "choose_next_variable " << std::endl;
+        //std::cout << "chooseNextVariable " << std::endl;
         BitSet allowed (m_variables, true);
         BitSet tempset (m_variables, false);
 
@@ -541,6 +572,7 @@ protected:
         T best_gcd = -1;
         tempset.zero ();
 
+
         for (size_t i = 0; i < m_variables; i++)
         {
             if (!allowed[i])
@@ -557,59 +589,56 @@ protected:
         }
         allowed.set_intersection (tempset);
 
-        // count zeros
-        int* zeros = new int[m_variables];
-        for (size_t i = 0; i < m_variables; i++)
-        {
-            zeros[i] = 0;
-            if (!allowed[i])
-                continue;
-            for (size_t j = 0; j < m_lattice->vectors (); j++)
-            {
-                if ((*m_lattice)[j][i] == 0)
-                    zeros[i] ++;
-            }
-        }
-
-        // choose one with most zeros
-        int best_column = -1;
-        for (size_t i = 0; i < m_variables; i++)
-        {
-            if (!allowed[i])
-                continue;
-            if (best_column < 0 || (zeros[i] > zeros[best_column]))
-                best_column = i;
-        }
-        delete[] zeros;
-
-        return best_column;
+        return Heuristics <T> :: chooseNextVariable (*m_lattice, allowed);
     }
     
-    void lift ()
+    void preprocess ()
     {
-        for (size_t reducer_row = 0; reducer_row < m_lattice->vectors (); reducer_row++)
+        T* last_reducer = NULL;
+        bool repeat;
+        do
         {
-            T* reducer = (*m_lattice)[reducer_row];
-            T norm = norm_vector (reducer, m_current_variable);
-            if (norm != 0 || reducer[m_current_variable] == 0)
-                continue;
-
-            for (size_t row = 0; row < m_lattice->vectors (); row++)
+            repeat = false;
+            for (size_t reducer_row = 0; reducer_row < m_lattice->vectors (); reducer_row++)
             {
-                if (row == reducer_row)
+                T* reducer = (*m_lattice)[reducer_row];
+                T norm = norm_vector (reducer, m_current_variable);
+                if (norm != 0 || reducer[m_current_variable] == 0)
                     continue;
-                T* vec = (*m_lattice)[row];
-                if ((vec[m_current_variable] >= reducer[m_current_variable] && reducer[m_current_variable] > 0) || (vec[m_current_variable] <= reducer[m_current_variable] && reducer[m_current_variable] < 0))
+
+                last_reducer = reducer;
+
+                for (size_t row = 0; row < m_lattice->vectors (); row++)
                 {
-                    T factor = - vec[m_current_variable] / reducer[m_current_variable];
-                    m_lattice->combine_rows (row, factor, reducer_row);
+                    if (row == reducer_row)
+                        continue;
+                    T* vec = (*m_lattice)[row];
+                    if (abs(vec[m_current_variable]) >= abs(reducer[m_current_variable]))
+                    {
+                        T factor = abs(vec[m_current_variable]) / abs(reducer[m_current_variable]);
+                        if (factor != 0)
+                        {
+                            repeat = true;
+                            if (vec[m_current_variable] * reducer[m_current_variable] > 0)
+                                factor = -factor;
+                            m_lattice->combine_rows (row, factor, reducer_row);
+                        }
+                    }
                 }
             }
+        }
+        while (repeat);
+        if (last_reducer != NULL)
+        {
+            last_reducer = copy_vector (last_reducer, m_lattice->variables ());
+            negate_vector (last_reducer, m_lattice->variables ());
+            m_lattice->append_vector (last_reducer);
         }
     }
 
     void complete ()
     {
+        m_controller->log_status (m_current_variable+1, m_sum_norm, m_maxnorm, m_first_norm, m_lattice->vectors (), m_backup_frequency, m_backup_timer);
         //std::cout << "Variable: " << m_current_variable+1 << ", Sum: " << m_first_norm << " + " << m_second_norm << " = " << m_sum_norm << ", Solutions = " << m_lattice->vectors () << std::endl;
 
         //dump_trees ();
@@ -670,7 +699,7 @@ public:
         stream >> m_current_variable >> m_sum_norm >> m_first_norm >> m_symmetric;
         int vectors;
         stream >> vectors >> m_variables;
-        
+
         m_maxnorm = -1;
         m_second_norm = m_sum_norm - m_first_norm;
 
@@ -703,78 +732,123 @@ public:
         delete m_lattice;
     }
 
-    void append_negatives ()
-    {
-        m_lattice->append_negatives ();
-    }
-
     void compute (int backup_frequency = 0)
     {
+        m_norms.clear ();
+
         m_backup_frequency = backup_frequency;
         m_backup_timer.reset ();
 
-        //std::cout << "compute ()" << std::endl;
-        if (m_sum_norm > 0)
-            create_trees ();
-
         m_sum_vector = create_vector <T> (m_variables);
 
-        while (m_current_variable < m_variables)
-        {
-            if (backup_frequency != 0 && m_backup_timer.get_elapsed_time () > backup_frequency)
-            {
-                // Backup
-                m_backup_timer.reset ();
-                m_controller->backup_data (*m_lattice, m_current_variable, m_sum_norm, m_first_norm, m_symmetric);
-            }
+	//std::cout << "\n\nSTARTED ON " << m_current_variable << ", " << m_sum_norm << ", " << m_first_norm << std::endl;
 
+        for (; m_current_variable < m_variables; m_current_variable++)
+        {
+            // DEBUG
+            //if (m_current_variable == 3)
+            //    break;
+
+            // first run in this variable
             if (m_sum_norm == 0)
             {
                 //std::cout << "\n\n\nLattice before choose:\n" << (*m_lattice) << "\nvectors = " << m_lattice->vectors () << std::endl;
-                int next = choose_next_variable ();
+                int next = chooseNextVariable ();
                 if (next < 0)
                     break;
+
+                //std::cout << "\n-------------------------------------------" << std::endl;
+                //std::cout << "\nChoice for next component is: " << next << std::endl;
 
                 m_controller->log_variable_start (m_current_variable+1, m_lattice->vectors ());
 
                 m_lattice->swap_columns (m_current_variable, next);
-                lift ();
-                create_trees ();
+                
+                //std::cout << "Lattice after choosing new component:\n" << (*m_lattice) << "\nMaxnorm = " << m_maxnorm << std::endl;
+                preprocess ();
 
-                //std::cout << "Lattice after swap:\n" << (*m_lattice) << "\nMaxnorm = " << m_maxnorm << std::endl;
+                //std::cout << "Lattice after preprocessing it:\n" << (*m_lattice) << "\nMaxnorm = " << m_maxnorm << std::endl;
             }
 
-            if (m_first_norm == 0)
+	    create_trees ();
+
+            // create norms
+            m_norms.clear ();
+            for (typename RootMap::iterator i = m_roots.begin (); i != m_roots.end (); i++)
             {
-                m_controller->log_sum_start (m_current_variable+1, m_sum_norm, m_lattice->vectors ());
-            }
-
-            m_controller->log_norm_start (m_current_variable+1, m_sum_norm, m_first_norm, m_lattice->vectors ());
-
-            complete ();
-
-            m_controller->log_norm_end (m_current_variable+1, m_sum_norm, m_first_norm, m_lattice->vectors ());
-
-            m_first_norm++;
-            if (m_first_norm > m_sum_norm / 2)
-            {
-                m_controller->log_sum_end (m_current_variable+1, m_sum_norm, m_lattice->vectors ());
-                m_sum_norm++;
-                if (m_sum_norm > 2*m_maxnorm)
+                for (typename RootMap::iterator j = m_roots.begin (); j != m_roots.end (); j++)
                 {
-                    delete_trees ();
-                    if (!m_lattice->get_variable (m_current_variable).is_symmetric ())
-                        m_symmetric = false;
-                    m_lattice->filter_bounds (m_current_variable);
-                    m_controller->log_variable_end (m_current_variable+1, m_lattice->vectors ());
-                    m_current_variable++;
-                    m_sum_norm = 0;
+                    NormPair <T> pair (i->first, j->first);
+                    m_norms[pair] = true;
                 }
-                m_first_norm = 0;
             }
-            m_second_norm = m_sum_norm - m_first_norm;
+
+            // norm pairs
+            T old_sum = -1;
+	    typename NormMap::iterator i = m_norms.begin ();
+	    // scroll until old pair is reached
+	    if (m_sum_norm != 0)
+	    {
+		while (i->first.sum != m_sum_norm || i->first.first != m_first_norm)
+		    i++;
+		i++;
+		//std::cout << "Scrolled to " << i->first.first << " + " << (i->first.sum - i->first.first) << std::endl;
+	    }
+
+            for (; i != m_norms.end (); i++)
+            {
+                NormPair <T> pair = i->first;
+
+                m_first_norm = pair.first;
+                m_second_norm = pair.second;
+                m_sum_norm = pair.sum;
+
+                if (old_sum != pair.sum)
+                {
+                    //std::cout << "completes: " << complete_calls << ", builds: " << count_builds << ", reductions: " << count_reduces << ", insertions: " << count_insertions << std::endl;
+                    m_controller->log_sum_start (m_current_variable+1, m_sum_norm, m_lattice->vectors ());
+                }
+
+                m_controller->log_norm_start (m_current_variable+1, m_sum_norm, m_first_norm, m_lattice->vectors ());
+
+                //complete_calls++;
+                complete ();
+                //if (m_backup_timer.get_elapsed_time () > 300)
+                //    exit (2);
+
+                m_controller->log_norm_end (m_current_variable+1, m_sum_norm, m_first_norm, m_lattice->vectors ());
+                
+                if (old_sum != pair.sum)
+                {
+                    m_controller->log_sum_end (m_current_variable+1, m_sum_norm, m_lattice->vectors ());
+                    old_sum = pair.sum;
+                }
+            
+                if (backup_frequency != 0 && m_backup_timer.get_elapsed_time () > backup_frequency)
+                {
+                    // Backup
+                    m_backup_timer.reset ();
+                    m_controller->backup_data (*m_lattice, m_current_variable, m_sum_norm, m_first_norm, m_symmetric);
+                }
+
+            }
+
+            //std::cout << "Lattice after generating minimals:\n" << (*m_lattice) << "\nMaxnorm = " << m_maxnorm << std::endl;
+
+            delete_trees ();
+            if (!m_lattice->get_variable (m_current_variable).is_symmetric ())
+                m_symmetric = false;
+            m_lattice->filter_bounds (m_current_variable);
+            
+            //std::cout << "Lattice after filtering bounds:\n" << (*m_lattice) << "\nMaxnorm = " << m_maxnorm << std::endl;
+
+            m_controller->log_variable_end (m_current_variable+1, m_lattice->vectors ());
+
+	    m_sum_norm = 0;
         }
-        
+
+        //std::cout << "Finished with " << m_lattice->vectors () << " solutions." << std::endl;
+
         delete_vector <T> (m_sum_vector);
 
         m_lattice->sort_columns ();
@@ -801,6 +875,10 @@ public:
             T* vector = (*m_lattice)[i];
             T* result = copy_vector <T> (vector, result_variables);
 
+            //std::cout << "looking at: ";
+            //print_vector (std::cout, result, result_variables);
+            //std::cout << std::endl;
+
             bool is_hom = split < 0 || vector[split] == 0;
 
             bool is_free = true;
@@ -812,15 +890,16 @@ public:
             for (size_t j = 0; j < m_variables; j++)
                 if (!m_lattice->get_variable (j).check_bounds (-vector[j]))
                     has_symmetric = false;
+
+            //std::cout << is_free << std::endl;
             
             assert (!is_free || has_symmetric);
 
-            int lex_cmp = lex_compare_vector_with_negative (vector, result_variables);
+            //int lex_cmp = lex_compare_vector_with_negative (vector, result_variables);
 
             if (is_free)
             {
-                if (!has_symmetric || lex_cmp > 0)
-                    free.append_vector (result);
+                free.append_vector (result);
             }
             else
             {
@@ -903,6 +982,16 @@ public:
     {
         return m_lattice->get_result_variables ();
     }
+
+    void log_maxnorm ()
+    {
+        m_controller->log_maxnorm (this, true);
+    }
+
+    //int count_builds;
+    //int count_reduces;
+    //int count_insertions;
+    //int complete_calls;
 };
 
 #endif

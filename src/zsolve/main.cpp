@@ -307,18 +307,11 @@ template <typename T> int zsolve_main (Options& options)
             else
                 throw IOException ("Neither " + options.project () + ".mat, " + options.project () + ".lat, nor " + options.project () + ".backup found!");
         }
-    
-        algorithm->append_negatives ();
     }
 
     algorithm->compute (options.backup_frequency ());
-    
-    if (options.maxnorm ())
-    {
-        VectorArray <T> maxnorm (algorithm->get_result_variables ());
-        controller->log_maxnorm (algorithm, maxnorm.vectors ());
-        maxnorm.save (options.project () + ".maxnorm");
-    }
+
+    algorithm->log_maxnorm ();
 
     if (options.graver ())
     {

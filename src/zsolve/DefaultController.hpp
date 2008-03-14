@@ -207,12 +207,12 @@ public:
 
                 if (m_options.verbosity () == -1)
                 {
-                    ss << "\rVariable: " << variable << ", Sum: " << sum << ", Norm: " << norm << ", Max-Norm: " << max_sum << ", Solutions: " << vectors << ", Time: " << m_all_timer << "s" << std::flush;
+                    ss << "\rVariable: " << variable << ", Sum: " << sum << ", Norm: " << norm << ", Solutions: " << vectors << ", Time: " << m_all_timer << "s" << std::flush;
                 }
                 else if (backup_frequency != 0)
                 {
                     double next_backup = backup_frequency - timer.get_elapsed_time ();
-                    ss << "\rVariable: " << variable << ", Sum: " << sum << ", Norm: " << norm << " + " << (sum-norm) << ", Solutions: " << vectors;
+                    ss << "\rVariable: " << variable << ", Sum: " << sum << ", Norm: " << norm << " + " << (sum-norm) << ", Max-Norm: " << max_sum << ", Solutions: " << vectors;
                     ss << ", Time (norm): " << m_norm_timer << "s, Time (sum): " << m_sum_timer << "s, Time (variable): " << m_var_timer << "s, Time: " << m_all_timer << "s, Next backup: ";
                     if (next_backup >= 0.0)
                         ss << next_backup << "s" << std::flush;
@@ -243,9 +243,9 @@ public:
     void log_resume (size_t variables, size_t variable, const T& sum, const T& norm, size_t vectors)
     {
         if (m_options.verbosity () != 0)
-            *m_console << "Resuming backup at variable " << variable << " of " << variables << ", sum " << sum << " (" << norm << " + " << (sum - norm) << ")" << ", with " << vectors << " solutions.\n" << std::endl;
+            *m_console << "Resuming backup after variable " << variable << " of " << variables << ", sum " << sum << " (" << norm << " + " << (sum - norm) << ")" << ", with " << vectors << " solutions.\n" << std::endl;
         if (m_options.loglevel () != 0)
-            *m_log << "\n\nResuming backup at variable " << variable << " of " << variables << ", sum " << sum << " (" << norm << " + " << (sum - norm) << ")" << ", with " << vectors << " solutions.\n" << std::endl;
+            *m_log << "\n\nResuming backup after variable " << variable << " of " << variables << ", sum " << sum << " (" << norm << " + " << (sum - norm) << ")" << ", with " << vectors << " solutions.\n" << std::endl;
     }
 
     void log_maxnorm (Algorithm <T> * algorithm, bool final)

@@ -52,6 +52,7 @@ zsolveinclude_HEADERS = \
 	Algorithm.hpp \
 	Controller.hpp \
 	DefaultController.hpp \
+	Norms.hpp \
 	Options.h \
 	Timer.h \
 	Exception.h 
