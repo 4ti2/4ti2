@@ -20,11 +20,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-/* ------------------------------------------------------------------------
-Functions for orbits by Raymond Hemmecke
-Created    : 01-NOV-02
-Last Update: 02-NOV-02
------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------ */
 #include "myheader.h"
 #include "print.h"
 #include "vector.h"
@@ -536,37 +532,67 @@ vector canonicalRepresentativeAndShortNorm(vector v, listVector* permutations,
 listVector* extractSymmetryRepresentatives(listVector *basis,
 					   listVector *permutations, 
 					   int numOfVars) {
-  int numOfVectorsConsidered,lenBasis;
-  vector v, rep;
-  listVector *tmp, *representatives, *endRepresentatives;
+  int i,numOfVectorsConsidered,numOfRepresentatives,lenBasis,maxNorm,norm;
+  vector v;
+  listVector *tmp, *tmp2, *orbitV, *representatives, *endRepresentatives;
+  listVector **arrayBasis;
 
   lenBasis=lengthListVector(basis);
-  printf("basis = %d elements, symmGroup = %d permutations\n\n",lenBasis,
+  printf("basis = %d elements, symmGroup = %d permutations\n",lenBasis,
 	 lengthListVector(permutations));
+
+  maxNorm=maximalNormInListVector(basis,numOfVars);
+  printf("Maximum appearing norm: %d\n\n",maxNorm);
+
+  arrayBasis=createArrayListVector(maxNorm+1);
+  for (i=0;i<maxNorm+1;i++) arrayBasis[i]=0;
+
+  tmp=basis;
+  while (tmp) {
+    v=copyVector(tmp->first,numOfVars);
+    norm=normOfVector(v,numOfVars);
+    tmp2=createListVector(v);
+    tmp2->rest=arrayBasis[norm];
+    arrayBasis[norm]=tmp2;
+    tmp=tmp->rest;
+  }
 
   representatives=createListVector(0);
   endRepresentatives=representatives;
 
   numOfVectorsConsidered=0;
+  numOfRepresentatives=0;
 
-  tmp=basis;
-  while (tmp) {
-    if (numOfVectorsConsidered==100*(numOfVectorsConsidered/100)) {
-      printf("%d / %d considered.   %d representatives found so far.\n",
-	     numOfVectorsConsidered,lenBasis,
-	     lengthListVector(representatives)-1);
+
+  for (i=0;i<maxNorm+1;i++) {
+    printf("Considering norm: %d,   Number of vectors: %d\n",i,
+	   lengthListVector(arrayBasis[i]));
+    tmp=arrayBasis[i];
+    while (tmp) {
+      if (numOfVectorsConsidered==100*(numOfVectorsConsidered/100)) {
+	printf("%d / %d considered.   %d representatives found so far.\n",
+	       numOfVectorsConsidered,lenBasis,numOfRepresentatives);
+      }
+      v=tmp->first;
+      if (v!=0) {
+	numOfRepresentatives++;
+	endRepresentatives->rest=createListVector(v);
+	endRepresentatives=endRepresentatives->rest;
+	orbitV=computeOrbit(v,permutations,numOfVars);
+	tmp2=tmp->rest;
+	while (tmp2) {
+	  if (tmp2->first!=0)
+	    if (isVectorInListVector(tmp2->first,orbitV,numOfVars)==1) {
+	      free(tmp2->first);
+	      tmp2->first=0;
+	    }
+	  tmp2=tmp2->rest;
+	}
+      }
+      numOfVectorsConsidered++;
+      tmp=tmp->rest;
     }
-    v=tmp->first;
-    rep=canonicalRepresentative(v,permutations,numOfVars);
-    if (isVectorInListVector(rep,representatives->rest,numOfVars)==0) {
-      endRepresentatives->rest=createListVector(rep);
-      endRepresentatives=endRepresentatives->rest;
-    } else free(rep);
-
-    numOfVectorsConsidered++;
-   tmp=tmp->rest;
   }
-
   return (representatives->rest);
 }
 /* ----------------------------------------------------------------- */
