@@ -25,6 +25,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #include <map>
 
+namespace _4ti2_zsolve_
+{
+
 template <typename T> class NormPair
 {
 public:
@@ -92,5 +95,7 @@ public:
         pairs.clear ();
     }
 };
+
+} // namespace _4ti2_zsolve_
 
 #endif

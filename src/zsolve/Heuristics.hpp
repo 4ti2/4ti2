@@ -30,6 +30,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "zsolve/Norms.hpp"
 #include "zsolve/Timer.h"
 
+namespace _4ti2_zsolve_
+{
+
 template <typename T> class Heuristics
 {
     static int chooseNextVariableByZeros (Lattice <T> & lattice, BitSet & allowed)
@@ -180,5 +183,7 @@ static int chooseNextVariable (Lattice <T> & lattice, BitSet & allowed)
 }
 
 };
+
+} // namespace _4ti2_zsolve_
 
 #endif

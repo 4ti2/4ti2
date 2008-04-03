@@ -28,6 +28,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #include "zsolve/Integer.h"
 
+namespace _4ti2_zsolve_
+{
+
 template <typename T> T* create_vector (size_t size)
 {
     assert (size > 0);
@@ -199,5 +202,6 @@ template <typename T> int lex_compare_vector_with_negative (T* v, size_t size)
         return 0;
 }
 
+} // namespace _4ti2_zsolve_
 
 #endif

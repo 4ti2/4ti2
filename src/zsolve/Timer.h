@@ -25,6 +25,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #include <iostream>
 
+namespace _4ti2_zsolve_
+{
+
 class Timer
 {
 public:
@@ -45,4 +48,6 @@ private:
 std::ostream& operator<< (std::ostream& out, const Timer& t);
 std::istream& operator>> (std::istream& in, Timer& t);
 
+} // namespace _4ti2_zsolve_
+ 
 #endif

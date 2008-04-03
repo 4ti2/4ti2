@@ -36,6 +36,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "Algorithm.hpp"
 #include "DefaultController.hpp"
 
+using namespace _4ti2_zsolve_;
+
 template <typename T> void read_relations (const Options& options, std::string name, LinearSystem <T>* system)
 {
     std::ifstream file (name.c_str());

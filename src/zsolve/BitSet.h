@@ -26,6 +26,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <cassert>
 #include <iostream>
 
+namespace _4ti2_zsolve_
+{
+
 typedef uint64_t BlockType;
 #define ALL_ZEROS_BLOCK 0
 #define ALL_ONES_BLOCK UINT64_MAX
@@ -61,4 +64,6 @@ public:
     void set_union (const BitSet& other);
 };
 
+} // namespace _4ti2_zsolve_
+ 
 #endif

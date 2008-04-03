@@ -29,6 +29,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #endif
 #include <iomanip>
 
+namespace _4ti2_zsolve_ {
+
 Timer Timer::global;
 
 Timer::Timer()
@@ -80,3 +82,5 @@ std::istream& operator>> (std::istream& in, Timer& t)
 
     return in;
 }
+
+} // namespace _4ti2_zsolve_

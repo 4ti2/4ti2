@@ -33,6 +33,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "zsolve/Relation.hpp"
 #include "zsolve/Vector.hpp"
 
+namespace _4ti2_zsolve_
+{
+
 template <typename T> class LinearSystem : public VariableProperties <T>
 {
 protected:
@@ -333,5 +336,7 @@ template <typename T> LinearSystem <T>* homogenize_linear_system (LinearSystem <
 
     return system;
 }
+
+} // namespace _4ti2_zsolve_
 
 #endif

@@ -29,6 +29,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "zsolve/Exception.h"
 #include "zsolve/LinearSystem.hpp"
 
+namespace _4ti2_zsolve_
+{
+
 template <typename T> class Lattice : public VectorArray <T>, public VariableProperties <T>
 {
 public:
@@ -427,5 +430,7 @@ template <typename T> Lattice <T>* generate_lattice (LinearSystem <T>* system)
 
     return result;
 }
+
+} // namespace _4ti2_zsolve_
 
 #endif

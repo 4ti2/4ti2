@@ -31,6 +31,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "zsolve/Timer.h"
 #include "zsolve/Algorithm.hpp"
 
+namespace _4ti2_zsolve_
+{
+
 template <typename T> class DefaultController : public Controller <T>
 {
 protected:
@@ -357,4 +360,6 @@ public:
     }
 };
 
+} // namespace _4ti2_zsolve_
+  
 #endif

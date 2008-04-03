@@ -25,6 +25,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 // IO
 
+namespace _4ti2_zsolve_
+{
+
 class IOException
 {
 protected:
@@ -50,5 +53,7 @@ std::ostream& operator<< (std::ostream& out, const IOException& exception)
     out << "Input error: " << exception.m_message << std::endl;
     return out;
 }
+
+} // namespace _4ti2_zsolve_
 
 #endif

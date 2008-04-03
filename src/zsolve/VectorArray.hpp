@@ -30,6 +30,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "zsolve/Integer.h"
 #include "zsolve/Vector.hpp"
 
+namespace _4ti2_zsolve_
+{
+
 template <typename T> class VectorArray
 {
 protected:
@@ -265,5 +268,6 @@ template <typename T> std::istream& operator>> (std::istream& in, VectorArray <T
     return in;    
 }
 
+} // namespace _4ti2_zsolve_
 
 #endif

@@ -29,6 +29,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #include <sstream>
 
+namespace _4ti2_zsolve_
+{
+
 // sign 
 
 inline int sgn (int64_t a)
@@ -135,5 +138,7 @@ template <typename T> int integer_space (const T& number)
     oss << number;
     return oss.str ().size ();
 }
+
+} // namespace _4ti2_zsolve_
 
 #endif

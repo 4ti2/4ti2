@@ -25,6 +25,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #include <iostream>
 
+namespace _4ti2_zsolve_
+{
+
 class Options
 {
 protected:
@@ -61,4 +64,6 @@ public:
 
 std::istream& operator>>(std::istream& in, Options& options);
 
+} // namespace _4ti2_zsolve_
+ 
 #endif

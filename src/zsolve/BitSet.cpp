@@ -22,6 +22,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #include "BitSet.h"
 
+namespace _4ti2_zsolve_ {
+
 BitSet::BitSet (const size_t size, bool value)
 {
     m_size = size;
@@ -139,3 +141,4 @@ void BitSet::set_union (const BitSet& other)
         m_data[i] |= other.m_data[i];
 }
 
+}

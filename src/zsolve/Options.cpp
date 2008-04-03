@@ -27,6 +27,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #	include <getopt.h>
 #endif
 
+namespace _4ti2_zsolve_ {
+
 Options::Options (int argc, char **argv)
 {
     m_graver = false;
@@ -363,3 +365,5 @@ std::istream& operator>>(std::istream& in, Options& options)
 
     return in;
 }
+
+} // namespace _4ti2_zsolve_
