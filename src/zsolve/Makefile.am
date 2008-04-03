@@ -36,7 +36,8 @@ AM_CXXFLAGS += -D__STDC_LIMIT_MACROS
 
 libzsolvesources = \
 	BitSet.cpp \
-	Timer.cpp
+	Timer.cpp \
+	Options.cpp
 
 zsolveincludedir = $(includedir)/zsolve
 
@@ -55,10 +56,10 @@ zsolveinclude_HEADERS = \
 	Norms.hpp \
 	Options.h \
 	Timer.h \
-	Exception.h 
+	Exception.h \
+	Heuristics.hpp
 
 zsolvesources =	\
-	Options.cpp \
 	main.cpp
 
 #noinst_HEADERS = 
