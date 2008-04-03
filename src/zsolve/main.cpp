@@ -364,9 +364,9 @@ int main (int argc, char **argv)
     try
     {
         if (options.precision () == 32)
-            result = zsolve_main <int> (options);
+            result = zsolve_main <int32_t> (options);
         else if (options.precision () == 64)
-            result = zsolve_main <long long> (options);
+            result = zsolve_main <int64_t> (options);
 #ifdef _4ti2_GMP_
         else if (options.precision () == 0)
             result = zsolve_main <mpz_class> (options);
