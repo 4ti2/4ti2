@@ -23,7 +23,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2__Heuristics_
 #define _4ti2__Heuristics_
 
+#include <fstream>
 #include <map>
+
 #include "zsolve/BitSet.h"
 #include "zsolve/LinearSystem.hpp"
 #include "zsolve/Controller.hpp"

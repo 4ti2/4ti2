@@ -395,8 +395,8 @@ protected:
 
         if (norm == 0)
             return;
-
-        m_controller->log_status (m_current_variable+1, m_sum_norm, m_maxnorm, m_first_norm, m_lattice->vectors (), m_backup_frequency, m_backup_timer);
+	if (m_controller != NULL)
+	    m_controller->log_status (m_current_variable+1, m_sum_norm, m_maxnorm, m_first_norm, m_lattice->vectors (), m_backup_frequency, m_backup_timer);
 
         // TODO: norm / 2 ??
         for (typename RootMap::iterator iter = m_roots.begin (); iter != m_roots.end() && iter->first <= norm/2; iter++)
@@ -643,7 +643,8 @@ protected:
 
     void complete ()
     {
-        m_controller->log_status (m_current_variable+1, m_sum_norm, m_maxnorm, m_first_norm, m_lattice->vectors (), m_backup_frequency, m_backup_timer);
+	if (m_controller != NULL)
+	    m_controller->log_status (m_current_variable+1, m_sum_norm, m_maxnorm, m_first_norm, m_lattice->vectors (), m_backup_frequency, m_backup_timer);
         //std::cout << "Variable: " << m_current_variable+1 << ", Sum: " << m_first_norm << " + " << m_second_norm << " = " << m_sum_norm << ", Solutions = " << m_lattice->vectors () << std::endl;
 
         //dump_trees ();
@@ -662,17 +663,22 @@ public:
         m_controller = controller;
 
         // system
-        m_controller->log_system (system);
+	if (m_controller != NULL)
+	    m_controller->log_system (system);
 
         // homogenized system
         LinearSystem <T> * homo = homogenize_linear_system (system);
-        m_controller->log_homogenized_system (homo);
+	if (m_controller != NULL)
+	    m_controller->log_homogenized_system (homo);
 
         // lattice
         m_lattice = generate_lattice (homo);
         delete homo;
-        m_controller->save_lattice (m_lattice);
-        m_controller->log_lattice (m_lattice);
+	if (m_controller != NULL)
+	{
+	    m_controller->save_lattice (m_lattice);
+	    m_controller->log_lattice (m_lattice);
+	}
 
         m_maxnorm = -1;
         m_current_variable = 0;
@@ -765,7 +771,8 @@ public:
                 //std::cout << "\n-------------------------------------------" << std::endl;
                 //std::cout << "\nChoice for next component is: " << next << std::endl;
 
-                m_controller->log_variable_start (m_current_variable+1, m_lattice->vectors ());
+		if (m_controller != NULL)
+		    m_controller->log_variable_start (m_current_variable+1, m_lattice->vectors ());
 
                 m_lattice->swap_columns (m_current_variable, next);
                 
@@ -811,21 +818,25 @@ public:
                 if (old_sum != pair.sum)
                 {
                     //std::cout << "completes: " << complete_calls << ", builds: " << count_builds << ", reductions: " << count_reduces << ", insertions: " << count_insertions << std::endl;
-                    m_controller->log_sum_start (m_current_variable+1, m_sum_norm, m_lattice->vectors ());
+		    if (m_controller != NULL)
+			m_controller->log_sum_start (m_current_variable+1, m_sum_norm, m_lattice->vectors ());
                 }
 
-                m_controller->log_norm_start (m_current_variable+1, m_sum_norm, m_first_norm, m_lattice->vectors ());
+		if (m_controller != NULL)
+		    m_controller->log_norm_start (m_current_variable+1, m_sum_norm, m_first_norm, m_lattice->vectors ());
 
                 //complete_calls++;
                 complete ();
                 //if (m_backup_timer.get_elapsed_time () > 300)
                 //    exit (2);
 
-                m_controller->log_norm_end (m_current_variable+1, m_sum_norm, m_first_norm, m_lattice->vectors ());
+		if (m_controller != NULL)
+		    m_controller->log_norm_end (m_current_variable+1, m_sum_norm, m_first_norm, m_lattice->vectors ());
                 
                 if (old_sum != pair.sum)
                 {
-                    m_controller->log_sum_end (m_current_variable+1, m_sum_norm, m_lattice->vectors ());
+		    if (m_controller != NULL)
+			m_controller->log_sum_end (m_current_variable+1, m_sum_norm, m_lattice->vectors ());
                     old_sum = pair.sum;
                 }
             
@@ -833,7 +844,8 @@ public:
                 {
                     // Backup
                     m_backup_timer.reset ();
-                    m_controller->backup_data (*m_lattice, m_current_variable, m_sum_norm, m_first_norm, m_symmetric);
+		    if (m_controller != NULL)
+			m_controller->backup_data (*m_lattice, m_current_variable, m_sum_norm, m_first_norm, m_symmetric);
                 }
 
             }
@@ -847,7 +859,8 @@ public:
             
             //std::cout << "Lattice after filtering bounds:\n" << (*m_lattice) << "\nMaxnorm = " << m_maxnorm << std::endl;
 
-            m_controller->log_variable_end (m_current_variable+1, m_lattice->vectors ());
+	    if (m_controller != NULL)
+		m_controller->log_variable_end (m_current_variable+1, m_lattice->vectors ());
 
 	    m_sum_norm = 0;
         }
@@ -915,7 +928,8 @@ public:
             }
         }
 
-        m_controller->log_result (inhoms.vectors (), homs.vectors (), free.vectors ());
+	if (m_controller != NULL)
+	    m_controller->log_result (inhoms.vectors (), homs.vectors (), free.vectors ());
     }
     
     void extract_graver_results (VectorArray <T>& graver)
@@ -941,7 +955,8 @@ public:
                 graver.append_vector (result);
         }
 
-        m_controller->log_result (1, m_lattice->vectors (), 0);
+	if (m_controller != NULL)
+	    m_controller->log_result (1, m_lattice->vectors (), 0);
     }
     
     void extract_hilbert_results (VectorArray <T>& hilbert)
@@ -958,7 +973,8 @@ public:
             hilbert.append_vector (result);
         }
 
-        m_controller->log_result (1, m_lattice->vectors (), 0);
+	if (m_controller != NULL)
+	    m_controller->log_result (1, m_lattice->vectors (), 0);
     }
 
     T extract_maxnorm_results (VectorArray <T> & maxnorm)
@@ -990,7 +1006,8 @@ public:
 
     void log_maxnorm ()
     {
-        m_controller->log_maxnorm (this, true);
+	if (m_controller != NULL)
+	    m_controller->log_maxnorm (this, true);
     }
 
     //int count_builds;

@@ -34,7 +34,7 @@ namespace _4ti2_zsolve_
 template <typename T> class Relation
 {
 public:
-    enum RelationType { Equal, Lesser, LesserEqual, Greater, GreaterEqual, Modulo};
+    enum RelationType { Equal = 0, Lesser = 1, LesserEqual = 2, Greater = 3, GreaterEqual = 4, Modulo = 5};
 
 protected:
     RelationType m_relation_type;
