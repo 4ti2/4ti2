@@ -29,11 +29,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 namespace _4ti2_zsolve_
 {
 
-typedef uint64_t BlockType;
+typedef uint32_t BlockType;
 #define ALL_ZEROS_BLOCK 0
-#define ALL_ONES_BLOCK UINT64_MAX
-#define BITS_PER_BLOCK (CHAR_BIT * sizeof (BlockType))
-#define BYTES_PER_BLOCK (sizeof (BlockType))
+#define ALL_ONES_BLOCK UINT32_MAX
+#define BITS_PER_BLOCK 32
+#define BYTES_PER_BLOCK 4
 
 class BitSet
 {
