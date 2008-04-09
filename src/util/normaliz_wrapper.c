@@ -195,6 +195,11 @@ int main(int argc, char *argv[]) {
       } 
   }
   symmGroup=readListVector(&numOfVars,symFileName);
+  if (symmGroup==0) {
+    v=createVector(numOfVars);
+    for (i=0;i<numOfVars;i++) v[i]=i;
+    symmGroup=createListVector(v);
+  }
   if (mainConesInFileName[0]=='\0') {
     strcpy(mainConesInFileName,argv[argc-1]);
     strcat(mainConesInFileName,".mainCones.in");
@@ -223,16 +228,15 @@ int main(int argc, char *argv[]) {
 
   rayToBePulled=0;
   if (strncmp(action,"pullall",7)==0) {
+    if (dimension==0) {
+      printf("Dimension of cone not specified!!!\n");
+      exit(1);
+    }
     while (mainCones) {
       rayToBePulled++;
       printf("\n=======================================================\n");
       printf("\nPulling ray = %d\n",rayToBePulled);
        printf("\n=======================================================\n\n");
-      printListVector(mainCones,numOfVars);
-      if (dimension==0) {
-	printf("Dimension of cone not specified!!!\n");
-	exit(1);
-      }
       maxNorm=maximalNormInListVector(mainCones,numOfVars);
       if (maxNorm==dimension) {
 	tmp=mainCones;
@@ -240,7 +244,13 @@ int main(int argc, char *argv[]) {
 	tmp->rest=simplicialCones;
 	simplicialCones=mainCones;
 	mainCones=0;
+	if (simplicialCones) { 
+	  candidates=checkCones(candidates,simplicialConesFileName,
+				raysFileName,raysFileName,normaliz);
+	  simplicialCones=0;
+	}
       } else {
+	printListVector(mainCones,numOfVars);
 	runNormaliz(mainConesInFileName,mainConesOutFileName,normaliz,
 		    raysFileName,rayToBePulled);
 	mainCones=readListVector(&numOfVars,mainConesOutFileName);
