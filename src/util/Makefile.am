@@ -22,6 +22,7 @@
 bin_PROGRAMS =					\
 	genmodel				\
 	gensymm					\
+	normaliz_wrapper			\
 	output
 
 noinst_LIBRARIES = lib4ti2util.a
@@ -56,3 +57,7 @@ gensymm_LDADD = lib4ti2util.a
 
 output_SOURCES = output_main.c
 output_LDADD = lib4ti2util.a
+
+normaliz_wrapper_SOURCES = normaliz_wrapper.c
+normaliz_wrapper_LDADD = lib4ti2util.a
+
