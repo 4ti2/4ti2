@@ -17,7 +17,6 @@ int main()
   a = 1 << (sizeof(int) * 8 - 2);
   b = 1 << (sizeof(int) * 8 - 2);
   c = a + b;
-  printf("%d", c);
   return 0;
 }
 ], [trapv_int=no], [trapv_int=yes])
