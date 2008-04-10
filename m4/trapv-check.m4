@@ -10,11 +10,14 @@ CXXFLAGS="${CXXFLAGS} ${TRAPV_FLAG}"
 AC_MSG_CHECKING([whether -ftrapv actually seems to work for int])
 trapv_int=no
 AC_TRY_RUN([
+#include<stdio.h>
+volatile int a, b, c;	
 int main()
 {
-  volatile int a = 1 << (sizeof(int) * 8 - 1);
-  volatile int b = 1 << (sizeof(int) * 8 - 1);
-  volatile int c = a + b;
+  a = 1 << (sizeof(int) * 8 - 2);
+  b = 1 << (sizeof(int) * 8 - 2);
+  c = a + b;
+  printf("%d", c);
   return 0;
 }
 ], [trapv_int=no], [trapv_int=yes])
@@ -28,8 +31,8 @@ AC_TRY_RUN([
 volatile long long a, b, c;	
 int main()
 {
-  a = 1 << (sizeof(long long) * 8 - 1);
-  b = 1 << (sizeof(long long) * 8 - 1);
+  a = 1 << (sizeof(long long) * 8 - 2);
+  b = 1 << (sizeof(long long) * 8 - 2);
   c = a + b;
   return 0;
 }
