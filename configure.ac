@@ -68,9 +68,7 @@ AX_CXX_MAXOPT
 # Turn on most compiler warnings
 AX_CXXFLAGS_WARN_ALL
 # The flag -ftrapv means that arithmetic overflow checking is enabled.
-# This only works with the g++ compiler version 3.4 and newer versions.
-AX_CHECK_COMPILER_FLAGS(-ftrapv, TRAPV_FLAG=-ftrapv)
-AC_SUBST(TRAPV_FLAG, ${TRAPV_FLAG})
+CHECK_TRAPV
 
 ### Taken from GMP's configure.in:
 # The dead hand of AC_REQUIRE makes AC_PROG_LIBTOOL expand and execute
