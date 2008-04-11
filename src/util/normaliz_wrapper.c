@@ -119,7 +119,9 @@ listVector* checkCones(listVector *candidates,char *simplicialConesFileName,
   char hilFileName[127],command[1000];
 
   strcpy(command,normaliz);
-  strcat(command," --quiet --reduction=cplex --reduction-rays-file=");
+  strcat(command," --quiet --no-triang-file --reduction=cplex");
+  strcat(command," --max-determinant-for-enumeration=10000");
+  strcat(command," --reduction-rays-file=");
   strcat(command,raysFileName);
   strcat(command," --subcones=");
   strcat(command,simplicialConesFileName);
@@ -148,6 +150,8 @@ listVector* checkCones(listVector *candidates,char *simplicialConesFileName,
 
   return (candidates);
 }
+/* ----------------------------------------------------------------- */
+
 /* ----------------------------------------------------------------- */
 int main(int argc, char *argv[]) {
   int i,rayToBePulled,localRayToBePulled,dimension,numOfVars,threshold,
@@ -256,57 +260,57 @@ int main(int argc, char *argv[]) {
 	mainCones=readListVector(&numOfVars,mainConesOutFileName);
 	threshold=maximalNormInListVector(mainCones,numOfVars);
 	smallCones=extractSmallCones(&mainCones,threshold,numOfVars);
-	printf("main cones = %d, small cones = %d\n",
-	       lengthListVector(mainCones),lengthListVector(smallCones));
-	printListVectorToFile(mainConesInFileName,mainCones,numOfVars);
-    
-	mainOrbits=expandRepresentativeIntoFullOrbits(mainCones,symmGroup,
-						      numOfVars,10);
-	printf("mainOrbits = %d,   ",lengthListVector(mainOrbits));
-      
-	smallCones=extractNonDominatedVectors(smallCones,mainOrbits,
-					      numOfVars);
-	printf("uncovered smallCones = %d -> ",lengthListVector(smallCones));
-	
-	printf("simplicial = %d\n",lengthListVector(simplicialCones));
-	simplicialCones=extractSimplicialCones(simplicialCones,&smallCones,
-					     dimension,numOfVars);
-	printf("simplicialCones = %d\n",lengthListVector(simplicialCones));
-    
-	localRayToBePulled=0;
-	strcpy(smallConesInFileName,mainConesInFileName);
-	strcat(smallConesInFileName,".smallcones.in");
-	strcpy(smallConesOutFileName,mainConesInFileName);
-	strcat(smallConesOutFileName,".smallcones.out");
-      
-	while (smallCones) {
-	  printListVectorToFile(smallConesInFileName,smallCones,numOfVars);
-	  localRayToBePulled++;
-	  if (localRayToBePulled==rayToBePulled) localRayToBePulled++;
+	if (smallCones) {
+	  printf("main cones = %d, small cones = %d\n",
+		 lengthListVector(mainCones),lengthListVector(smallCones));
+	  printListVectorToFile(mainConesInFileName,mainCones,numOfVars);
 	  
-	  printf("Locally pulling ray = %d\n",localRayToBePulled);
-	  runNormaliz(smallConesInFileName,smallConesOutFileName,normaliz,
-		      raysFileName,localRayToBePulled);
-	  smallCones=readListVector(&numOfVars,smallConesOutFileName);
-	  printf("smallCones = %d -> ",lengthListVector(smallCones));
-	  smallCones=extractNonDominatedVectors(smallCones,mainOrbits,numOfVars);
-	  printf("uncovered = %d -> ",lengthListVector(smallCones));
+	  mainOrbits=expandRepresentativeIntoFullOrbits(mainCones,symmGroup,
+							numOfVars,10);
+	  printf("mainOrbits = %d,   ",lengthListVector(mainOrbits));
+      
+	  smallCones=extractNonDominatedVectors(smallCones,mainOrbits,
+						numOfVars);
+	  printf("uncovered smallCones = %d -> ",lengthListVector(smallCones));
+	
+	  printf("simplicial = %d\n",lengthListVector(simplicialCones));
 	  simplicialCones=extractSimplicialCones(simplicialCones,&smallCones,
 						 dimension,numOfVars);
-	  printf("nonsimplicial = %d and ",lengthListVector(smallCones));
-	  printf("simplicial = %d\n",lengthListVector(simplicialCones));
-	  printListVectorToFile(simplicialConesFileName,simplicialCones,
-				numOfVars);
-	  if (simplicialCones) { 
-	    candidates=checkCones(candidates,simplicialConesFileName,
-				  raysFileName,raysFileName,normaliz);
-	    simplicialCones=0;
+	  printf("simplicialCones = %d\n",lengthListVector(simplicialCones));
+    
+	  /* Replace by a vector hasBeedPulled to make order of pulling 
+	     more flexible. */
+	  localRayToBePulled=rayToBePulled;
+	  strcpy(smallConesInFileName,mainConesInFileName);
+	  strcat(smallConesInFileName,".smallcones.in");
+	  strcpy(smallConesOutFileName,mainConesInFileName);
+	  strcat(smallConesOutFileName,".smallcones.out");
+      
+	  while (smallCones) {
+	    printListVectorToFile(smallConesInFileName,smallCones,numOfVars);
+	    localRayToBePulled++;
+	    if (localRayToBePulled==rayToBePulled) localRayToBePulled++;
+	    
+	    printf("Locally pulling ray = %d\n",localRayToBePulled);
+	    runNormaliz(smallConesInFileName,smallConesOutFileName,normaliz,
+			raysFileName,localRayToBePulled);
+	    smallCones=readListVector(&numOfVars,smallConesOutFileName);
+	    printf("smallCones = %d -> ",lengthListVector(smallCones));
+	    smallCones=extractNonDominatedVectors(smallCones,mainOrbits,
+						  numOfVars);
+	    printf("uncovered = %d -> ",lengthListVector(smallCones));
+	    simplicialCones=extractSimplicialCones(simplicialCones,&smallCones,
+						   dimension,numOfVars);
+	    printf("nonsimplicial = %d and ",lengthListVector(smallCones));
+	    printf("simplicial = %d\n",lengthListVector(simplicialCones));
+	    printListVectorToFile(simplicialConesFileName,simplicialCones,
+				  numOfVars);
+	    if (simplicialCones) { 
+	      candidates=checkCones(candidates,simplicialConesFileName,
+				    raysFileName,raysFileName,normaliz);
+	      simplicialCones=0;
+	    }
 	  }
-/*  	  tmp=smallCones; */
-/*  	  while (tmp) { */
-/*  	    printf("norm = %d\n",normOfVector(tmp->first,numOfVars)); */
-/*  	    tmp=tmp->rest; */
-/*  	  } */
 	}
       }
     }  

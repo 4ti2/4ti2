@@ -243,7 +243,7 @@ listVector* extractNonDominatedVectors(listVector *basis, listVector *dom,
 
   while (basis) {
     count ++;
-    if (count==(1000*(count/1000))) 
+    if (count==(100000*(count/100000))) 
       printf("Considering vector %d/%d\n",count,lenBasis);
     if (isVectorDominatedByListVector(basis->first,dom,numOfVars)==0) {
       endF->rest=createListVector(basis->first);
