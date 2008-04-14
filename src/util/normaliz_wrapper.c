@@ -267,8 +267,22 @@ int main(int argc, char *argv[]) {
 		 lengthListVector(mainCones),lengthListVector(smallCones));
 	  printListVectorToFile(mainConesInFileName,mainCones,numOfVars);
 	  
+	  if (strncmp(mainConesInFileName,"346",3)==0) {
+	    (mainCones->first)[2]=1;
+	  }
+	  if (strncmp(mainConesInFileName,"355",3)==0) {
+	    (mainCones->first)[2]=1;
+	    (mainCones->first)[5]=1;
+	  }
 	  mainOrbits=expandRepresentativeIntoFullOrbits(mainCones,symmGroup,
 							numOfVars,10);
+	  if (strncmp(mainConesInFileName,"346",3)==0) {
+	    (mainCones->first)[2]=0;
+	  }
+	  if (strncmp(mainConesInFileName,"355",3)==0) {
+	    (mainCones->first)[2]=0;
+	    (mainCones->first)[5]=0;
+	  }
 	  printf("mainOrbits = %d,   ",lengthListVector(mainOrbits));
       
 	  smallCones=extractNonDominatedVectors(smallCones,mainOrbits,
