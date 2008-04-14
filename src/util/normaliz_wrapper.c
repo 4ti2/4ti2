@@ -251,6 +251,8 @@ int main(int argc, char *argv[]) {
 	if (simplicialCones) { 
 	  candidates=checkCones(candidates,simplicialConesFileName,
 				raysFileName,raysFileName,normaliz);
+
+	  freeAllOfListVector(simplicialCones);
 	  simplicialCones=0;
 	}
       } else {
@@ -308,13 +310,13 @@ int main(int argc, char *argv[]) {
 	    if (simplicialCones) { 
 	      candidates=checkCones(candidates,simplicialConesFileName,
 				    raysFileName,raysFileName,normaliz);
+	      freeAllOfListVector(simplicialCones);
 	      simplicialCones=0;
 	    }
 	  }
 	}
       }
     }  
-    printListVectorToFile(simplicialConesFileName,simplicialCones,numOfVars);
   }
 
   return(0);
