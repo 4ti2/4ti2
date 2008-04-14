@@ -61,13 +61,18 @@ int main(int argc, char** argv)
 
 #if defined(_4ti2_INT32_) || defined(_4ti2_INT64_)
     std::cout << "Using " << sizeof(IntegerType)*CHAR_BIT << " bit integers.\n";
+# if !defined(HAVE_TRAPV_LONG_LONG)
+    std::cout << "WARNING: Overflow detection is not available on this architecture/compiler.\n"
+	      << "WARNING: To guarantee correct results, run 4ti2 with arbitrary precision\n"
+	      << "WARNING: by using the option `-parb'\n";
+# endif
 #elif defined(_4ti2_GMP_)
     std::cout << "Using arbitrary precision integers.\n";
 #endif
  
 try
 {
-#ifdef _4ti2_INT64_
+#if defined(_4ti2_INT32_) || defined(_4ti2_INT64_)
     // Set the signal handler to catch arithmetic signals.
     // TODO: Unfortunately, arithmetic overflow exceptions send a generic
     // SIGABRT signal.
