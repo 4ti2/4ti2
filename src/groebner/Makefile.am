@@ -287,3 +287,10 @@ EXTRA_DIST = script.template
 $(WRAPPERSCRIPTS): script.template
 	cp $< $@
 
+# Test and profiling
+if HAVE_GMP_WITH_CXX
+noinst_PROGRAMS = profile_qsolve
+profile_qsolve_LDADD = lib4ti2gmp.la
+profile_qsolve_CPPFLAGS = -D_4ti2_GMP_ $(GMP_CFLAGS)
+profile_qsolve_SOURCES = profile_qsolve.cpp
+endif
