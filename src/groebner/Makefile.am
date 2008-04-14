@@ -255,8 +255,10 @@ DISTCLEANFILES = $(WRAPPERSCRIPTS)
 # 32 bit precision flags.
 4ti2int32_LDADD = lib4ti2int32.la
 4ti2int32_CPPFLAGS = -D_4ti2_INT32_
+4ti2int32_CXXFLAGS = $(TRAPV) $(AM_CXXFLAGS)
 4ti2int32_SOURCES = $(4ti2sources)
 lib4ti2int32_la_CPPFLAGS = -D_4ti2_INT32_
+lib4ti2int32_la_CXXFLAGS = $(TRAPV) $(AM_CXXFLAGS)
 lib4ti2int32_la_SOURCES = $(lib4ti2sources)
 
 # 64 bit precision flags.
