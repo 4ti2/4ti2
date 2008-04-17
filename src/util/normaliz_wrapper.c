@@ -226,6 +226,7 @@ int main(int argc, char *argv[]) {
   printf("normaliz = %s\n",normaliz);
 
   mainCones=readListVector(&numOfVars,mainConesInFileName);
+  mainOrbits=0;
   smallCones=0;
   simplicialCones=0;
   candidates=0;
@@ -269,19 +270,24 @@ int main(int argc, char *argv[]) {
 	  
 	  if (strncmp(mainConesInFileName,"346",3)==0) {
 	    (mainCones->first)[2]=1;
+	    (mainCones->first)[5]=1;
 	  }
 	  if (strncmp(mainConesInFileName,"355",3)==0) {
 	    (mainCones->first)[2]=1;
 	    (mainCones->first)[5]=1;
+	    (mainCones->first)[8]=1;
 	  }
+	  if (mainOrbits) freeAllOfListVector(mainOrbits);
 	  mainOrbits=expandRepresentativeIntoFullOrbits(mainCones,symmGroup,
 							numOfVars,10);
 	  if (strncmp(mainConesInFileName,"346",3)==0) {
 	    (mainCones->first)[2]=0;
+	    (mainCones->first)[5]=0;
 	  }
 	  if (strncmp(mainConesInFileName,"355",3)==0) {
 	    (mainCones->first)[2]=0;
 	    (mainCones->first)[5]=0;
+	    (mainCones->first)[8]=0;
 	  }
 	  printf("mainOrbits = %d,   ",lengthListVector(mainOrbits));
       
@@ -289,10 +295,9 @@ int main(int argc, char *argv[]) {
 						numOfVars);
 	  printf("uncovered smallCones = %d -> ",lengthListVector(smallCones));
 	
-	  printf("simplicial = %d\n",lengthListVector(simplicialCones));
 	  simplicialCones=extractSimplicialCones(simplicialCones,&smallCones,
 						 dimension,numOfVars);
-	  printf("simplicialCones = %d\n",lengthListVector(simplicialCones));
+	  printf("simplicial = %d\n",lengthListVector(simplicialCones));
     
 	  /* Replace by a vector hasBeedPulled to make order of pulling 
 	     more flexible. */

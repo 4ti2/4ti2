@@ -248,6 +248,8 @@ listVector* extractNonDominatedVectors(listVector *basis, listVector *dom,
     if (isVectorDominatedByListVector(basis->first,dom,numOfVars)==0) {
       endF->rest=createListVector(basis->first);
       endF=endF->rest;
+    } else {
+      free(basis->first);
     }
     tmp=basis;
     basis=basis->rest;
