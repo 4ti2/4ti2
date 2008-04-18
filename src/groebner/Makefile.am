@@ -194,8 +194,8 @@ groebnerinclude_HEADERS =			\
 	WeightedReduction.h			\
 	Weight.h
 
-# These files are #include'd C++ files.
-noinst_HEADERS = 				\
+# These files are C++ files #include'd in one of the above headers
+groebnerinclude_HEADERS +=			\
 	CircuitImplementation.tpp		\
 	CircuitMatrixAlgorithm.tpp		\
 	CircuitSupportAlgorithm.tpp		\
@@ -220,7 +220,7 @@ noinst_HEADERS = 				\
 	main.cpp
 
 # These headers are not installed
-noinst_HEADERS += 				\
+noinst_HEADERS = 				\
 	circuits_main.h				\
 	groebner_main.h				\
 	markov_main.h				\
