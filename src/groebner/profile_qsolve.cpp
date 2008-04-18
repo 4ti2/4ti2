@@ -163,8 +163,9 @@ main(int argc, char **argv)
     VectorArray* circuits = NULL;
     
     int i;
+    out = new std::ofstream;
     for (i = 0; i<10000; i++) {
-
+      if (i%100==0) { std::cout << "\r" << i << "/" << "10000" << std::flush; }
       VectorArray *matrix_copy = new VectorArray(*matrix);
       
       if (rays) delete rays;
@@ -190,6 +191,7 @@ main(int argc, char **argv)
 
       delete matrix_copy;
     }
+    std::cout << std::endl;
 
     std::string output_filename(project_filename);
     if (Globals::exec == "rays")
