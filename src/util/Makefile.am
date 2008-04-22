@@ -22,17 +22,17 @@
 bin_PROGRAMS =					\
 	genmodel				\
 	gensymm					\
-	normaliz_wrapper			\
 	output
+#	normaliz_wrapper
 
-noinst_LIBRARIES = lib4ti2util.a
+lib_LTLIBRARIES = lib4ti2util.la
 
 # The output.c file contains C++-isms (or C99-isms), 
 # so compile with the C++ compiler. --mkoeppe
-CC = $(CXX)
-CFLAGS = $(CXXFLAGS)
+# CC = $(CXX)
+# CFLAGS = $(CXXFLAGS)
 
-lib4ti2util_a_SOURCES =				\
+lib4ti2util_la_SOURCES =			\
 	genmodel.c				\
 	gensymm.c				\
 	orbit.c					\
@@ -40,7 +40,9 @@ lib4ti2util_a_SOURCES =				\
 	print.c					\
 	vector.c
 
-noinst_HEADERS = 				\
+utilincludedir=$(includedir)/util
+
+utilinclude_HEADERS = 				\
 	genmodel.h				\
 	gensymm.h				\
 	myheader.h				\
@@ -50,14 +52,14 @@ noinst_HEADERS = 				\
 	vector.h
 
 genmodel_SOURCES = genmodel_main.c
-genmodel_LDADD = lib4ti2util.a
+genmodel_LDADD = lib4ti2util.la
 
 gensymm_SOURCES = gensymm_main.c
-gensymm_LDADD = lib4ti2util.a
+gensymm_LDADD = lib4ti2util.la
 
 output_SOURCES = output_main.c
-output_LDADD = lib4ti2util.a
+output_LDADD = lib4ti2util.la
 
-normaliz_wrapper_SOURCES = normaliz_wrapper.c
-normaliz_wrapper_LDADD = lib4ti2util.a
+# normaliz_wrapper_SOURCES = normaliz_wrapper.c
+# normaliz_wrapper_LDADD = lib4ti2util.la
 
