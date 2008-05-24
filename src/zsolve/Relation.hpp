@@ -60,6 +60,11 @@ public:
         m_modulus = 0;
     }
 
+    RelationType get ()
+    {
+	return m_relation_type;
+    }
+
     void set (const T& modulus)
     {
         m_relation_type = Modulo;

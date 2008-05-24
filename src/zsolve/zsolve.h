@@ -30,6 +30,10 @@ typedef int int32_t;
 typedef long long int64_t;
 #endif
 
+#ifdef _4ti2_GMP_
+#include <gmp.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" 
 {
@@ -41,37 +45,30 @@ extern "C"
 #define ZSOLVE_RELATION_GREATER 3
 #define ZSOLVE_RELATION_GREATER_EQUAL 4
 
-    typedef void* ZSolveSystem32;
+    typedef void* ZSolveMatrix;
+    typedef void* ZSolveState;
 
-    ZSolveSystem32 zsolve_system_create_32 (int height, int width);
-    void zsolve_system_set_matrix_32 (ZSolveSystem32 system, int column, int row, int32_t value);
-    void zsolve_system_set_rhs_32 (ZSolveSystem32 system, int row, int32_t value);
-    void zsolve_system_set_rel_32 (ZSolveSystem32 system, int row, int relation);
-    void zsolve_system_set_free_32 (ZSolveSystem32 system, int column);
-    void zsolve_system_set_hilbert_32 (ZSolveSystem32 system, int column);
-    void zsolve_system_set_graver_32 (ZSolveSystem32 system, int column);
-    void zsolve_system_set_bounded_32 (ZSolveSystem32 system, int column, int32_t lower, int32_t upper);
-    void zsolve_system_delete_32 (ZSolveSystem32 system);
-    void zsolve_system_print_32 (ZSolveSystem32 system);
+    ZSolveState zsolve_state_create (int height, int width, int precision); // creates a height x width system with precision 32 = 32bit, 64 = 64bit or GMP else.
+    void zsolve_state_delete (ZSolveState state); // deletes a system with all its associates matrices! Any matrix returned by zsolve_state_matrix is invalid after this call.
+    void zsolve_state_compute (ZSolveState state); // computes the solutions for the system.
+    ZSolveMatrix zsolve_state_matrix (ZSolveState state, char* name); // returns a matrix. name can be one of ("mat", "rhs", "rel", "sign", "lb", "ub", "zinhom", "zhom", "zfree").
 
-    typedef void* ZSolveMatrix32;
+    int zsolve_matrix_width (ZSolveMatrix matrix); // returns the width of a matrix.
+    int zsolve_matrix_height (ZSolveMatrix matrix); // returns the height of a matrix.
+    int zsolve_matrix_read_only (ZSolveMatrix matrix); // returns, whether the matrix is read-only.
+    void zsolve_matrix_delete (ZSolveMatrix matrix); // deletes a matrix. should be called before zsolve_state_delete!
+    int zsolve_matrix_set_32 (ZSolveMatrix matrix, int r, int c, int32_t value); // sets the entry at r,c to the 32bit value.
+    int zsolve_matrix_set_64 (ZSolveMatrix matrix, int r, int c, int64_t value); // sets the entry at r,c to the 64bit value.
+    int32_t zsolve_matrix_get_32 (ZSolveMatrix matrix, int r, int c); // returns the 32bit entry at r,c.
+    int64_t zsolve_matrix_get_64 (ZSolveMatrix matrix, int r, int c); // returns the 64bit entry at r,c.
+    void zsolve_matrix_print_32 (ZSolveMatrix matrix); // prints the matrix with 32bit values.
+    void zsolve_matrix_print_64 (ZSolveMatrix matrix); // prints the matrix with 64bit values.
 
-    ZSolveMatrix32 zsolve_matrix_create_32 (int height, int width);
-    int zsolve_matrix_width_32 (ZSolveMatrix32 matrix);
-    int zsolve_matrix_height_32 (ZSolveMatrix32 matrix);
-    void zsolve_matrix_set_32 (ZSolveMatrix32 matrix, int column, int row, int32_t value);
-    int32_t zsolve_matrix_get_32 (ZSolveMatrix32 matrix, int column, int row);
-    void zsolve_matrix_delete_32 (ZSolveMatrix32 matrix);
-    void zsolve_matrix_print_32 (ZSolveMatrix32 matrix);
-
-    typedef void* ZSolveState32;
-
-    ZSolveState32 zsolve_state_create_32 (ZSolveSystem32 system);
-    void zsolve_state_compute_32 (ZSolveState32 state, ZSolveMatrix32* inhom, ZSolveMatrix32* hom, ZSolveMatrix32* free);
-    ZSolveMatrix32 zsolve_state_extract_inhom_32 (ZSolveState32 state);
-    ZSolveMatrix32 zsolve_state_extract_hom_32 (ZSolveState32 state);
-    ZSolveMatrix32 zsolve_state_extract_free_32 (ZSolveState32 state);
-    void zsolve_state_delete_32 (ZSolveState32 state);
+#ifdef _4ti2_GMP_
+    int zsolve_matrix_set_gmp (ZSolveMatrix matrix, int r, int c, mpz_srcptr value); // sets the entry at r,c to the mpz_t value.
+    void zsolve_matrix_get_gmp (ZSolveMatrix matrix, mpz_ptr result, int r, int c); // returns the mpz_t entry at r,c.
+    void zsolve_matrix_print_gmp (ZSolveMatrix matrix); // prints the matrix with gmp values.
+#endif
 
 #ifdef __cplusplus
 }

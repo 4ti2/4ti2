@@ -666,6 +666,8 @@ public:
 	if (m_controller != NULL)
 	    m_controller->log_system (system);
 
+	//std::cout << *system << std::endl;
+
         // homogenized system
         LinearSystem <T> * homo = homogenize_linear_system (system);
 	if (m_controller != NULL)

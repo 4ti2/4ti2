@@ -85,8 +85,61 @@ public:
     {
         m_is_free = free;
         m_lower_bound = lower;
+        m_upper_bound = upper;        
+    }
+
+    void setSign (int sign)
+    {
+	if (sign == 2)
+	{
+	    m_is_free = false;
+	    if (m_lower_bound == 0)
+		m_lower_bound = 1;
+	    if (m_upper_bound == 0)
+		m_upper_bound = -1;
+	}
+	else if (sign == 1)
+	{
+	    m_is_free = false;
+	    m_lower_bound = 0;
+	    if (m_upper_bound == 0)
+		m_upper_bound = -1;
+	}
+	else if (sign == -1)
+	{
+	    m_is_free = false;
+	    m_upper_bound = 0;
+	    if (m_lower_bound == 0)
+		m_lower_bound = 1;
+	}
+	else
+	    set (true, 1, -1);
+    }
+
+    int sign ()
+    {
+	if (m_is_free)
+	    return 0;
+	if ((m_lower_bound == 0 && m_upper_bound == 0) || (m_lower_bound != 0 && m_upper_bound != 0))
+	    return 2;
+	else if (m_lower_bound == 0)
+	    return 1;
+	else
+	    return -1;
+    }
+
+    void setLower (const T& lower)
+    {
+	if (lower <= 0)
+	    m_is_free = false;
+	m_lower_bound = lower;
+    }
+
+    void setUpper (const T& upper)
+    {
+        if (upper >= 0)
+            m_is_free = false;
         m_upper_bound = upper;
-        
     }
     
     bool free () const
