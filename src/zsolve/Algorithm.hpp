@@ -381,15 +381,23 @@ protected:
                 return;
         }
 
-        bool flag = false;
+        //bool flag = false;
         for (size_t i = 0; i < m_variables; i++)
         {
             m_sum_vector[i] = m_first_vector[i] + m_second_vector[i];
-            if (m_second_vector[i] != 0)
-                flag = true;
+            //if (m_second_vector[i] != 0)
+            //    flag = true;
+
+	    int current_precision = calcPrecision (m_sum_vector[i]);
+	    int max_precision = maxPrecision (m_sum_vector[i]);
+	    if (max_precision > 0 && current_precision + 1 >= max_precision)
+	    {
+		throw PrecisionException (max_precision);
+	    }
         }
-        if (!flag)
-            std::cerr << "\n\nGENERATED ZERO VECTOR!!!!\n\n" << std::endl;
+        //if (!flag)
+        //    std::cerr << "\n\nGENERATED ZERO VECTOR!!!!\n\n" << std::endl;
+
 
         T norm = norm_vector (m_sum_vector, m_current_variable);
 

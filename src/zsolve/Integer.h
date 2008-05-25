@@ -99,6 +99,58 @@ inline mpz_class gcd (const mpz_class& a, const mpz_class& b)
 }
 #endif
 
+inline int calcPrecision (int32_t n)
+{
+    if (n < 0)
+	n = -n;
+    int result = 0;
+    while (n != 0)
+    {
+	result++;
+	n /= 2;
+    }
+    return result;
+}
+
+inline int calcPrecision (int64_t n)
+{
+    if (n < 0)
+        n = -n;
+    int result = 0;
+    while (n != 0)
+	{
+	    result++;
+	    n /= 2;
+	}
+    return result;
+}
+
+#ifdef _4ti2_GMP_
+inline int calcPrecision (const mpz_class& n)
+{
+    return mpz_sizeinbase (n.get_mpz_t (), 2);
+}
+#endif
+
+inline int maxPrecision (int32_t n)
+{
+    return 32;
+}
+
+inline int maxPrecision (int64_t n)
+{
+    return 64;
+}
+
+#ifdef _4ti2_GMP_
+inline int maxPrecision (const mpz_class& n)
+{
+    return -1;
+}
+#endif
+
+
+
 // maximum
 
 template <typename T> T max (T a, T b)

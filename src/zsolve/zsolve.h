@@ -50,7 +50,7 @@ extern "C"
 
     ZSolveState zsolve_state_create (int height, int width, int precision); // creates a height x width system with precision 32 = 32bit, 64 = 64bit or GMP else.
     void zsolve_state_delete (ZSolveState state); // deletes a system with all its associates matrices! Any matrix returned by zsolve_state_matrix is invalid after this call.
-    void zsolve_state_compute (ZSolveState state); // computes the solutions for the system.
+    int zsolve_state_compute (ZSolveState state); // computes the solutions for the system. returns 0 for success and 1, if precision is too low.
     ZSolveMatrix zsolve_state_matrix (ZSolveState state, char* name); // returns a matrix. name can be one of ("mat", "rhs", "rel", "sign", "lb", "ub", "zinhom", "zhom", "zfree").
 
     int zsolve_matrix_width (ZSolveMatrix matrix); // returns the width of a matrix.

@@ -28,6 +28,23 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 namespace _4ti2_zsolve_
 {
 
+class PrecisionException
+{
+ protected:
+    int precision_;
+ public:
+    PrecisionException (int prec)
+    {
+	precision_ = prec;
+    }
+
+    int precision ()
+    {
+	return precision_;
+    }
+};
+
+
 class IOException
 {
 protected:

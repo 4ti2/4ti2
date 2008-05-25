@@ -311,7 +311,15 @@ template <typename T> int zsolve_main (Options& options)
         }
     }
 
-    algorithm->compute (options.backup_frequency ());
+    try
+    {
+	algorithm->compute (options.backup_frequency ());
+    }
+    catch (PrecisionException e)
+    {
+	std::cerr << "Results were near maximum precision (" << e.precision () << "bit). Please restart with higher precision!" << std::endl;
+	return 1;
+    }
 
     algorithm->log_maxnorm ();
 
