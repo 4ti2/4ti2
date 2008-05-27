@@ -751,7 +751,6 @@ public:
 #endif
     }
 
-<<<<<<< Library.cpp
     bool compute ()
     {
 	int variables;
@@ -810,43 +809,6 @@ public:
 	}
 #endif
 	return true;
-=======
-    void compute ()
-    {
-	int variables;
-	if (system32_ != NULL)
-	{
-	    algorithm32_ = new Algorithm <int32_t> (system32_, NULL);
-	    algorithm32_->compute ();
-	    variables = algorithm32_->get_result_variables ();
-	    inhoms32_ = new VectorArray <int32_t> (variables);
-	    homs32_ = new VectorArray <int32_t> (variables);
-	    frees32_ = new VectorArray <int32_t> (variables);
-	    algorithm32_->extract_zsolve_results (*inhoms32_, *homs32_, *frees32_);
-	}
-	else if (system64_ != NULL)
-	{
-	    algorithm64_ = new Algorithm <int64_t> (system64_, NULL);
-	    algorithm64_->compute ();
-	    variables = algorithm64_->get_result_variables ();
-            inhoms64_ = new VectorArray <int64_t> (variables);
-            homs64_ = new VectorArray <int64_t> (variables);
-            frees64_ = new VectorArray <int64_t> (variables);
-            algorithm64_->extract_zsolve_results (*inhoms64_, *homs64_, *frees64_);
-	}
-#ifdef _4ti2_GMP_
-	else if (systemGMP_ != NULL)
-	{    
-	    algorithmGMP_ = new Algorithm <mpz_class> (systemGMP_, NULL);
-	    algorithmGMP_->compute ();
-	    variables = algorithmGMP_->get_result_variables ();
-            inhomsGMP_ = new VectorArray <mpz_class> (variables);
-            homsGMP_ = new VectorArray <mpz_class> (variables);
-            freesGMP_ = new VectorArray <mpz_class> (variables);
-            algorithmGMP_->extract_zsolve_results (*inhomsGMP_, *homsGMP_, *freesGMP_);
-	}
-#endif
->>>>>>> 1.2
     }
 
     LibraryMatMatrix* mat ()
@@ -1000,17 +962,9 @@ extern "C"
 	delete ((LibraryState*) state);
     }
 
-<<<<<<< Library.cpp
     int zsolve_state_compute (ZSolveState state)
-=======
-    void zsolve_state_compute (ZSolveState state)
->>>>>>> 1.2
     {
-<<<<<<< Library.cpp
 	return ((LibraryState*) state)->compute () ? 0 : 1;
-=======
-	((LibraryState*) state)->compute ();
->>>>>>> 1.2
     }
 
     ZSolveMatrix zsolve_state_mat (ZSolveState state)
