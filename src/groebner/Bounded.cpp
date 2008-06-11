@@ -177,10 +177,12 @@ _4ti2_::matrix_bounded(
             if (is_matrix_non_negative(matrix[i], urs, bounded))
             {
                 add_positive_support(matrix[i], urs, bounded, grading);
+                grading.normalise();
             }
             if (is_matrix_non_positive(matrix[i], urs, bounded))
             {
                 add_negative_support(matrix[i], urs, bounded, grading);
+                grading.normalise();
             }
         }
         // If nothing changed, then stop.
@@ -318,7 +320,6 @@ _4ti2_::add_positive_support(
         }
     }
     Vector::add(grading, factor, v, 1, grading);
-    grading.normalise();
 }
 
 void
@@ -343,7 +344,6 @@ _4ti2_::add_negative_support(
         }
     }
     Vector::sub(grading, factor, v, 1, grading);
-    grading.normalise();
 }
 
 bool
@@ -528,6 +528,7 @@ _4ti2_::lp_bounded(
     // introduces numerical problems.
     int rows = hermite(lattice, rs);
     lattice.remove(rows, lattice.get_number());
+    DEBUG_4ti2(*out << "Hermite Normal Form:\n" << lattice << "\n";)
 
     LPX *lp = lpx_create_prob();
     lpx_set_int_parm(lp,LPX_K_MSGLEV,0);
@@ -658,6 +659,7 @@ _4ti2_::lp_bounded(
         {
             reconstruct_primal_integer_solution(lattice,basic,ones,solution);
             add_positive_support(solution, urs, bounded, grading);
+            grading.normalise();
         }
     }
     lpx_delete_prob(lp);
