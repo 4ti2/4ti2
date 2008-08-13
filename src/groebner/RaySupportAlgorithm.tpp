@@ -27,14 +27,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "groebner/OnesTree.h"
 #include "groebner/Globals.h"
 #include "groebner/Timer.h"
+#include "groebner/Debug.h"
 
 #include "groebner/VectorArrayStream.h"
 #include "groebner/VectorStream.h"
 #include "groebner/VectorArrayStream.h"
 #include <iostream>
 #include <iomanip>
-
-#include "groebner/Debug.h"
 
 #define TREE SupportTree
 
@@ -91,7 +90,6 @@ RaySupportAlgorithm<IndexSet>::compute0(
     int num_cols = vs.get_size();
     IndexSet urs(rs); // The variables that are unrestricted in sign.
     urs.set_complement();
-    int urs_count = urs.count();
 
     DEBUG_4ti2(*out << "RS\n" << rs << "\n";)
     DEBUG_4ti2(*out << "URS\n" << urs << "\n";)
@@ -123,6 +121,11 @@ RaySupportAlgorithm<IndexSet>::compute0(
     IndexSet remaining(rs);
     remaining.set_difference(diagonals);
     int num_remaining = remaining.count();
+
+    // The columns with relaxed non-negativity constraints.
+    IndexSet relaxed(remaining);
+    relaxed.set_union(urs);
+    int num_relaxed = relaxed.count();
 
     // Temporary variables.
     IndexSet temp_supp(num_cols);
@@ -199,7 +202,7 @@ RaySupportAlgorithm<IndexSet>::compute0(
         {
             r1_supp = supports[r1];
             int r1_count = r1_supp.count();
-            if (r1_count == codim-num_remaining+1)
+            if (r1_count == codim-num_relaxed+1)
             {
                 for (Index r2 = r2_start; r2 < r2_finish; ++r2)
                 {
@@ -218,9 +221,8 @@ RaySupportAlgorithm<IndexSet>::compute0(
                 for (Index r2 = r2_start; r2 < r2_finish; ++r2)
                 {
                     IndexSet::set_difference(supports[r2],supports[r1],temp_supp);
-                    //*out << " " << codim-remaining-r1_count+2;
-                    //if (temp_supp.count() <= codim-remaining-urs_count-r1_count+2) 
-                    if (temp_supp.less_than_equal(codim-num_remaining-urs_count-r1_count+2))
+                    //if (temp_supp.count() <= codim-num_relaxed-r1_count+2) 
+                    if (temp_supp.less_than_equal(codim-num_relaxed-r1_count+2))
                     {
                         IndexSet::set_union(r1_supp,supports[r2],temp_supp);
                         ++num_support_checks;
@@ -259,6 +261,8 @@ RaySupportAlgorithm<IndexSet>::compute0(
 
         remaining.unset(next_col);
         --num_remaining;
+        relaxed.unset(next_col);
+        --num_relaxed;
 
         *out << "\r" << buffer;
         *out << "  Size = " << std::setw(8) << vs.get_number() << ",";
@@ -287,7 +291,6 @@ RaySupportAlgorithm<IndexSet>::compute1(
     int num_cols = vs.get_size();
     IndexSet urs(rs); // The variables that are unrestricted in sign.
     urs.set_complement();
-    int urs_count = urs.count();
 
     DEBUG_4ti2(*out << "The dimension is " << vs.get_number() << "\n";)
 
@@ -317,6 +320,11 @@ RaySupportAlgorithm<IndexSet>::compute1(
     IndexSet remaining(rs);
     remaining.set_difference(diagonals);
     int num_remaining = remaining.count();
+
+    // The columns with relaxed non-negativity constraints.
+    IndexSet relaxed(remaining);
+    relaxed.set_union(urs);
+    int num_relaxed = relaxed.count();
 
     // Temporary variables.
     IndexSet temp_supp(num_cols);
@@ -397,7 +405,7 @@ RaySupportAlgorithm<IndexSet>::compute1(
         {
             r1_supp = supports[r1];
             int r1_count = r1_supp.count();
-            if (r1_count == codim-num_remaining+1)
+            if (r1_count == codim-num_relaxed+1)
             {
                 for (Index r2 = r2_start; r2 < r2_finish; ++r2)
                 {
@@ -435,9 +443,8 @@ RaySupportAlgorithm<IndexSet>::compute1(
                 {
                     if (!IndexSet::set_disjoint(zero_supp, supports[r2])) { continue; }
                     IndexSet::set_difference(supports[r2],supports[r1],temp_supp);
-                    //*out << " " << codim-remaining-r1_count+2;
-                    //if (temp_supp.count() <= codim-remaining-urs_count-r1_count+2) 
-                    if (temp_supp.less_than_equal(codim-num_remaining-urs_count-r1_count+2))
+                    //if (temp_supp.count() <= codim-num_relaxed-r1_count+2) 
+                    if (temp_supp.less_than_equal(codim-num_relaxed-r1_count+2))
                     {
                         IndexSet::set_union(r1_supp,supports[r2],temp_supp);
                         ++num_support_checks;
@@ -475,6 +482,8 @@ RaySupportAlgorithm<IndexSet>::compute1(
 
         remaining.unset(next_col);
         --num_remaining;
+        relaxed.unset(next_col);
+        --num_relaxed;
 
         *out << "\r" << buffer;
         *out << "  Size = " << std::setw(8) << vs.get_number() << ",";
@@ -503,7 +512,6 @@ RaySupportAlgorithm<IndexSet>::compute2(
     int num_cols = vs.get_size();
     IndexSet urs(rs); // The variables that are unrestricted in sign.
     urs.set_complement();
-    int urs_count = urs.count();
 
     DEBUG_4ti2(*out << "The dimension is " << vs.get_number() << "\n";)
 
@@ -533,6 +541,11 @@ RaySupportAlgorithm<IndexSet>::compute2(
     IndexSet remaining(rs);
     remaining.set_difference(diagonals);
     int num_remaining = remaining.count();
+
+    // The columns with relaxed non-negativity constraints.
+    IndexSet relaxed(remaining);
+    relaxed.set_union(urs);
+    int num_relaxed = relaxed.count();
 
     // Temporary variables.
     IndexSet temp_supp(num_cols);
@@ -612,7 +625,7 @@ RaySupportAlgorithm<IndexSet>::compute2(
         {
             r1_supp = supports[r1];
             int r1_count = r1_supp.count();
-            if (r1_count == codim-num_remaining+1)
+            if (r1_count == codim-num_relaxed+1)
             {
                 for (Index r2 = r2_start; r2 < r2_finish; ++r2)
                 {
@@ -647,15 +660,14 @@ RaySupportAlgorithm<IndexSet>::compute2(
                 zero_supp.set_difference(r1_supp);
                 indices.clear();
                 IndexSet::set_complement(r1_supp, temp_supp);
-                small_tree.find_diff(indices, zero_supp, 0, temp_supp, codim-num_remaining-r1_count+2);
+                small_tree.find_diff(indices, zero_supp, 0, temp_supp, codim-num_relaxed-r1_count+2);
                 //*out << " " << indices.size();
                 for (unsigned int i = 0; i < indices.size(); ++i)
                 {
                     int r2 = indices[i];
                     //IndexSet::set_difference(supports[r2],supports[r1],temp_supp);
-                    //*out << " " << codim-remaining-r1_count+2;
-                    //if (temp_supp.count() <= codim-remaining-urs_count-r1_count+2) 
-                    if (temp_supp.less_than_equal(codim-num_remaining-urs_count-r1_count+2))
+                    //if (temp_supp.count() <= codim-num_relaxed-r1_count+2) 
+                    if (temp_supp.less_than_equal(codim-num_relaxed-r1_count+2))
                     {
                         IndexSet::set_union(r1_supp,supports[r2],temp_supp);
                         ++num_support_checks;
@@ -694,6 +706,8 @@ RaySupportAlgorithm<IndexSet>::compute2(
 
         remaining.unset(next_col);
         --num_remaining;
+        relaxed.unset(next_col);
+        --num_relaxed;
 
         *out << "\r" << buffer;
         *out << "  Size = " << std::setw(8) << vs.get_number() << ",";
@@ -722,7 +736,6 @@ RaySupportAlgorithm<IndexSet>::compute3(
     int num_cols = vs.get_size();
     IndexSet urs(rs); // The variables that are unrestricted in sign.
     urs.set_complement();
-    int urs_count = urs.count();
 
     DEBUG_4ti2(*out << "The dimension is " << vs.get_number() << "\n";)
 
@@ -752,6 +765,11 @@ RaySupportAlgorithm<IndexSet>::compute3(
     IndexSet remaining(rs);
     remaining.set_difference(diagonals);
     int num_remaining = remaining.count();
+
+    // The columns with relaxed non-negativity constraints.
+    IndexSet relaxed(remaining);
+    relaxed.set_union(urs);
+    int num_relaxed = relaxed.count();
 
     // Temporary variables.
     IndexSet temp_supp(num_cols);
@@ -820,11 +838,11 @@ RaySupportAlgorithm<IndexSet>::compute3(
             r2_finish = negative_start;
             index_max = next_negative_count;
         }
-        // We sort the r2's into vectors where r2_supp.count()==codim-num_remaining+1.
+        // We sort the r2's into vectors where r2_supp.count()==codim-num_relaxed+1.
         int r2_index = r2_start;
         for (int r2 = r2_start; r2 < r2_finish; ++r2)
         {
-            if (supports[r2].count() == codim-num_remaining+1)
+            if (supports[r2].count() == codim-num_relaxed+1)
             {
                 vs.swap_vectors(r2, r2_index);
                 IndexSet::swap(supports[r2], supports[r2_index]);
@@ -845,7 +863,7 @@ RaySupportAlgorithm<IndexSet>::compute3(
         {
             r1_supp = supports[r1];
             int r1_count = r1_supp.count();
-            if (r1_count == codim-num_remaining+1)
+            if (r1_count == codim-num_relaxed+1)
             {
                 for (Index r2 = r2_start; r2 < r2_finish; ++r2)
                 {
@@ -869,7 +887,6 @@ RaySupportAlgorithm<IndexSet>::compute3(
                         create_new_vector(vs, supports, r1, r2, next_col,
                                             next_positive_count, next_negative_count,
                                             temp, temp_supp);
-                        DEBUG_4ti2(++num_one_diff_added;)
                         DEBUG_4ti2(++num_added;)
                     }
                 }
@@ -897,9 +914,8 @@ RaySupportAlgorithm<IndexSet>::compute3(
                 {
                     if (!IndexSet::set_disjoint(zero_supp, supports[r2])) { continue; }
                     IndexSet::set_difference(supports[r2],r1_supp,temp_supp);
-                    //*out << " " << codim-remaining-r1_count+2;
-                    //if (temp_supp.count() <= codim-remaining-urs_count-r1_count+2) 
-                    if (temp_supp.less_than_equal(codim-num_remaining-urs_count-r1_count+2))
+                    //if (temp_supp.count() <= codim-num_relaxed-r1_count+2) 
+                    if (temp_supp.less_than_equal(codim-num_relaxed-r1_count+2))
                     {
 #if 1
                         IndexSet::set_difference(r1_supp, supports[r2], temp_diff2);
@@ -908,7 +924,6 @@ RaySupportAlgorithm<IndexSet>::compute3(
                             create_new_vector(vs, supports, r1, r2, next_col,
                                     next_positive_count, next_negative_count,
                                     temp, temp_supp);
-                            DEBUG_4ti2(++num_one_diff_added;)
                             DEBUG_4ti2(++num_added;)
                             continue;
                         }
@@ -947,6 +962,8 @@ RaySupportAlgorithm<IndexSet>::compute3(
 
         remaining.unset(next_col);
         --num_remaining;
+        relaxed.unset(next_col);
+        --num_relaxed;
 
         *out << "\r" << buffer;
         *out << "  Size = " << std::setw(8) << vs.get_number() << ",";
@@ -979,7 +996,6 @@ RaySupportAlgorithm<IndexSet>::compute4(
     int num_cols = vs.get_size();
     IndexSet urs(rs); // The variables that are unrestricted in sign.
     urs.set_complement();
-    int urs_count = urs.count();
 
     DEBUG_4ti2(*out << "The dimension is " << vs.get_number() << "\n";)
 
@@ -1009,6 +1025,11 @@ RaySupportAlgorithm<IndexSet>::compute4(
     IndexSet remaining(rs);
     remaining.set_difference(diagonals);
     int num_remaining = remaining.count();
+
+    // The columns with relaxed non-negativity constraints.
+    IndexSet relaxed(remaining);
+    relaxed.set_union(urs);
+    int num_relaxed = relaxed.count();
 
     // Temporary variables.
     IndexSet temp_supp(num_cols);
@@ -1078,11 +1099,11 @@ RaySupportAlgorithm<IndexSet>::compute4(
             index_max = next_negative_count;
         }
 #if 1
-        // We sort the r2's into vectors where r2_supp.count()==codim-num_remaining+1.
+        // We sort the r2's into vectors where r2_supp.count()==codim-num_relaxed+1.
         int r2_index = r2_start;
         for (int r2 = r2_start; r2 < r2_finish; ++r2)
         {
-            if (supports[r2].count() == codim-num_remaining+1)
+            if (supports[r2].count() == codim-num_relaxed+1)
             {
                 vs.swap_vectors(r2, r2_index);
                 IndexSet::swap(supports[r2], supports[r2_index]);
@@ -1107,7 +1128,7 @@ RaySupportAlgorithm<IndexSet>::compute4(
         {
             r1_supp = supports[r1];
             int r1_count = r1_supp.count();
-            if (r1_count == codim-num_remaining+1)
+            if (r1_count == codim-num_relaxed+1)
             {
                 for (Index r2 = r2_start; r2 < r2_finish; ++r2)
                 {
@@ -1151,7 +1172,6 @@ RaySupportAlgorithm<IndexSet>::compute4(
                         create_new_vector(vs, supports, r1, r2, next_col,
                                             next_positive_count, next_negative_count,
                                             temp, temp_supp);
-                        DEBUG_4ti2(++num_one_diff_added;)
                         DEBUG_4ti2(++num_added;)
                     }
                 }
@@ -1160,9 +1180,8 @@ RaySupportAlgorithm<IndexSet>::compute4(
                 {
                     if (!IndexSet::set_disjoint(zero_supp, supports[r2])) { continue; }
                     IndexSet::set_difference(supports[r2],supports[r1],temp_supp);
-                    //*out << " " << codim-remaining-r1_count+2;
-                    //if (temp_supp.count() <= codim-remaining-urs_count-r1_count+2) 
-                    if (temp_supp.less_than_equal(codim-num_remaining-urs_count-r1_count+2))
+                    //if (temp_supp.count() <= codim-num_relaxed-r1_count+2) 
+                    if (temp_supp.less_than_equal(codim-num_relaxed-r1_count+2))
                     {
 #if 1
                         IndexSet::set_difference(r1_supp, supports[r2], temp_diff2);
@@ -1171,7 +1190,6 @@ RaySupportAlgorithm<IndexSet>::compute4(
                             create_new_vector(vs, supports, r1, r2, next_col,
                                     next_positive_count, next_negative_count,
                                     temp, temp_supp);
-                            DEBUG_4ti2(++num_one_diff_added;)
                             DEBUG_4ti2(++num_added;)
                             continue;
                         }
@@ -1241,6 +1259,8 @@ RaySupportAlgorithm<IndexSet>::compute4(
 
         remaining.unset(next_col);
         --num_remaining;
+        relaxed.unset(next_col);
+        --num_relaxed;
 
         *out << "\r" << buffer;
         *out << "  Size = " << std::setw(8) << vs.get_number() << ",";
@@ -1248,4 +1268,3 @@ RaySupportAlgorithm<IndexSet>::compute4(
     }
     return remaining;
 }
-

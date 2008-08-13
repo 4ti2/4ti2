@@ -73,6 +73,9 @@ CircuitMatrixAlgorithm<IndexSet>::compute1(
 
     t.reset();
     Index num_cols = vs.get_size();
+    IndexSet urs(rs); // The variables that are unrestricted in sign.
+    urs.set_union(cirs);
+    urs.set_complement();
 
     DEBUG_4ti2(*out << "Dimension = " << vs.get_number() << "\n";)
 
@@ -111,6 +114,8 @@ CircuitMatrixAlgorithm<IndexSet>::compute1(
     RayMatrixAlgorithm<IndexSet> ray_algorithm;
     ray_algorithm.compute(ray_matrix, vs, supps, rs);
 
+    DEBUG_4ti2(*out << "Rays computed thus far ...\n" << vs << "\n";)
+
     // If there are no circuit components, then there is nothing to do.
     if (cirs.empty()) { return; }
     *out << "Circuit Matrix Algorithm.\n";
@@ -134,10 +139,17 @@ CircuitMatrixAlgorithm<IndexSet>::compute1(
     }
     VectorArray::transfer(circuits, vs);
 
+    DEBUG_4ti2(*out << "Added circuits ...\n" << vs << "\n";)
+
     // The remaining columns to process.
     IndexSet remaining(cirs);
     remaining.set_difference(diagonals);
     int num_remaining = remaining.count();
+
+    // The columns with relaxed non-negativity constraints.
+    IndexSet relaxed(remaining);
+    relaxed.set_union(urs);
+    int num_relaxed = relaxed.count();
 
     while (vs.get_number() > 0 && num_remaining > 0)
     {
@@ -147,12 +159,13 @@ CircuitMatrixAlgorithm<IndexSet>::compute1(
                 *out << "VS[" << i << "]" << "\n";
                 *out << vs[i] << "\n" << supps[i] << "\n";
                 *out << pos_supps[i] << "\n" << neg_supps[i] << "\n";
-                check(vs[i], supps[i], pos_supps[i], neg_supps[i], remaining);
+                check(vs[i], supps[i], pos_supps[i], neg_supps[i], relaxed);
             }
         )
 
         // Find the next column.
         Index next_col = next_column(vs, remaining);
+        DEBUG_4ti2(*out << "\nNext column is " << next_col << "\n";)
 
         int start = 0; int end = vs.get_number(); int middle;
         // We sort the vectors into nonzeros and then zeros.
@@ -188,25 +201,24 @@ CircuitMatrixAlgorithm<IndexSet>::compute1(
         switch_supports(neg_ray_start, neg_ray_end, pos_supps, neg_supps);
         switch_supports(neg_cir_start, neg_cir_end, pos_supps, neg_supps);
 
-        matrix = orig_matrix;
-        int remaining_row = upper_triangle(matrix, remaining, 0);
-        DEBUG_4ti2(*out << "Remaining row " << remaining_row << "\n";)
+        int relaxed_row = upper_triangle(matrix, relaxed, 0);
+        DEBUG_4ti2(*out << "Relaxed row " << relaxed_row << "\n";)
         int previous_size = vs.get_number();
         // Positive ray combinations.
         DEBUG_4ti2(*out << "+r\n";)
-        compute(matrix, vs, next_col, num_remaining, remaining, remaining_row,
+        compute(matrix, vs, next_col, num_remaining, num_relaxed, relaxed_row,
                         pos_ray_start, pos_ray_end, neg_ray_start, cir_end,
                         supps, pos_supps, neg_supps);
         // Negative ray combinations.
         DEBUG_4ti2(*out << "-r\n";)
-        compute(matrix, vs, next_col, num_remaining, remaining, remaining_row,
+        compute(matrix, vs, next_col, num_remaining, num_relaxed, relaxed_row,
                         neg_ray_start, neg_ray_end, cir_start, cir_end,
                         supps, pos_supps, neg_supps);
         rays.insert(rays.end(), vs.get_number()-previous_size, true);
         previous_size = vs.get_number();
         // circuit combinations.
         DEBUG_4ti2(*out << "c\n";)
-        compute(matrix, vs, next_col, num_remaining, remaining, remaining_row,
+        compute(matrix, vs, next_col, num_remaining, num_relaxed, relaxed_row,
                         cir_start, cir_end, cir_start, cir_end,
                         supps, pos_supps, neg_supps);
         rays.insert(rays.end(), vs.get_number()-previous_size, false);
@@ -230,6 +242,8 @@ CircuitMatrixAlgorithm<IndexSet>::compute1(
 
         remaining.unset(next_col);
         --num_remaining;
+        relaxed.unset(next_col);
+        --num_relaxed;
     }
 
     CircuitImplementation<IndexSet>::split_rays(vs, rays, circuits);
@@ -249,8 +263,8 @@ CircuitMatrixAlgorithm<IndexSet>::compute(
                 VectorArray& vs,
                 int next_col,
                 int num_remaining,
-                IndexSet remaining,
-                int remaining_row,
+                int num_relaxed,
+                int relaxed_row,
                 int r1_start, int r1_end,
                 int r2_start, int r2_end,
                 std::vector<IndexSet>& supps,
@@ -286,8 +300,8 @@ CircuitMatrixAlgorithm<IndexSet>::compute(
         r1_neg_supp = neg_supps[r1];
         if (r2_start == r1) { ++r2_start; }
 
-        //if (r1_supp.count() == codim-num_remaining+1)
-        if (!r1_supp.less_than_equal(codim-num_remaining))
+        //if (r1_supp.count() == codim-num_relaxed+1)
+        if (!r1_supp.less_than_equal(codim-num_relaxed))
         {
             for (Index r2 = r2_start; r2 < r2_end; ++r2)
             {
@@ -296,6 +310,7 @@ CircuitMatrixAlgorithm<IndexSet>::compute(
                 if (IndexSet::set_disjoint(r1_pos_supp, pos_supps[r2]) &&
                     IndexSet::set_disjoint(r1_neg_supp, neg_supps[r2]))
                 {
+                    DEBUG_4ti2(*out << "1 supp diff: " << r1 << " " << r2 << "\n";)
                     create(vs, next_col, supps, pos_supps, neg_supps,
                                     r1, r2, temp, temp_supp);
                 }
@@ -305,10 +320,11 @@ CircuitMatrixAlgorithm<IndexSet>::compute(
         {
             // TODO: Avoid unnecessary copying of rows.
             matrix = orig_matrix;
-            int r1_rows = upper_triangle(matrix, r1_supp, remaining_row);
+            int r1_rows = upper_triangle(matrix, r1_supp, relaxed_row);
             // Find the columns in the matrix which are zero.
             zero_cols(matrix, r1_supp, zero_cols_supp, r1_rows);
             // Positive and Positive combinations.
+            DEBUG_4ti2(*out << "codim-r1_rows+1 = " << codim-r1_rows+1 << "\n";)
             for (Index r2 = r2_start; r2 < r2_end; ++r2)
             {
                 IndexSet::set_intersection(supps[r2], zero_cols_supp, temp_supp);
@@ -352,8 +368,8 @@ CircuitMatrixAlgorithm<IndexSet>::compute(
                 VectorArray& vs,
                 int next_col,
                 int num_remaining,
-                IndexSet remaining,
-                int remaining_row,
+                int num_relaxed,
+                int relaxed_row,
                 int r1_start, int r1_end,
                 int r2_start, int r2_end,
                 std::vector<IndexSet>& supps,
@@ -389,8 +405,8 @@ CircuitMatrixAlgorithm<IndexSet>::compute(
         r1_neg_supp = neg_supps[r1];
         if (r2_start == r1) { ++r2_start; }
 
-        //if (r1_supp.count() == codim-num_remaining+1)
-        if (!r1_supp.less_than_equal(codim-num_remaining))
+        //if (r1_supp.count() == codim-num_relaxed+1)
+        if (!r1_supp.less_than_equal(codim-num_relaxed))
         {
             for (Index r2 = r2_start; r2 < r2_end; ++r2)
             {
@@ -408,7 +424,7 @@ CircuitMatrixAlgorithm<IndexSet>::compute(
         {
             // TODO: Avoid unnecessary copying of rows.
             matrix = orig_matrix;
-            int r1_rows = upper_triangle(matrix, r1_supp, remaining_row);
+            int r1_rows = upper_triangle(matrix, r1_supp, relaxed_row);
             // Find the columns in the matrix which are zero.
             zero_cols(matrix, r1_supp, zero_cols_supp, r1_rows);
             // Positive and Positive combinations.

@@ -125,6 +125,11 @@ RayMatrixAlgorithm<IndexSet>::compute1(
     remaining.set_difference(diagonals);
     int num_remaining = remaining.count();
 
+    // The columns with relaxed non-negativity constraints.
+    IndexSet relaxed(remaining);
+    relaxed.set_union(urs);
+    int num_relaxed = relaxed.count();
+
     // Temporary variables.
     IndexSet temp_supp(num_cols);
     IndexSet temp_diff(num_cols);
@@ -165,9 +170,7 @@ RayMatrixAlgorithm<IndexSet>::compute1(
                         next_negative_count);
 
         matrix = orig_matrix;
-        temp_supp = remaining;
-        temp_supp.set_union(urs);
-        int remaining_row = upper_triangle(matrix, temp_supp, 0);
+        int relaxed_row = upper_triangle(matrix, relaxed, 0);
         VectorArray test_matrix(matrix);
 
         int original_size = vs.get_number();
@@ -206,7 +209,7 @@ RayMatrixAlgorithm<IndexSet>::compute1(
             r1_supp = supports[r1];
             // TODO: Avoid unnecessary copying of rows.
             matrix = test_matrix;
-            int r1_rows = upper_triangle(matrix, r1_supp, remaining_row);
+            int r1_rows = upper_triangle(matrix, r1_supp, relaxed_row);
             // Find the columns in the matrix which are zero.
             for (Index r2 = r2_start; r2 < r2_finish; ++r2)
             {
@@ -265,11 +268,13 @@ RayMatrixAlgorithm<IndexSet>::compute1(
         supports.erase(supports.begin()+negative_start,
                         supports.begin()+original_size);
 
-        //DEBUG_4ti2(*out << "Rank Checks " << num_rank_checks << "\n";)
+        DEBUG_4ti2(*out << "Rank Checks " << num_rank_checks << "\n";)
         //*out << "Size = " << vs.get_number() << "\n" << std::endl;
 
         remaining.unset(next_col);
         --num_remaining;
+        relaxed.unset(next_col);
+        --num_relaxed;
 
         *out << "\r" << buffer;
         *out << "  Size = " << std::setw(8) << vs.get_number() << ", ";
@@ -334,6 +339,11 @@ RayMatrixAlgorithm<IndexSet>::compute0(
     remaining.set_difference(diagonals);
     int num_remaining = remaining.count();
 
+    // The columns with relaxed non-negativity constraints.
+    IndexSet relaxed(remaining);
+    relaxed.set_union(urs);
+    int num_relaxed = relaxed.count();
+
     // Temporary variables.
     IndexSet temp_supp(num_cols);
     IndexSet temp_diff(num_cols);
@@ -370,9 +380,7 @@ RayMatrixAlgorithm<IndexSet>::compute0(
                         next_negative_count);
 
         matrix = orig_matrix;
-        temp_supp = remaining;
-        temp_supp.set_union(urs);
-        int remaining_row = upper_triangle(matrix, temp_supp, 0);
+        int relaxed_row = upper_triangle(matrix, relaxed, 0);
         VectorArray test_matrix(matrix);
 
         int original_size = vs.get_number();
@@ -409,7 +417,7 @@ RayMatrixAlgorithm<IndexSet>::compute0(
         for (int r1 = r1_start; r1 < r1_finish; ++r1)
         {
             r1_supp = supports[r1];
-            if (r1_supp.count() == codim-num_remaining+1)
+            if (r1_supp.count() == codim-num_relaxed+1)
             {
                 for (Index r2 = r2_start; r2 < r2_finish; ++r2)
                 {
@@ -427,7 +435,7 @@ RayMatrixAlgorithm<IndexSet>::compute0(
             {
                 // TODO: Avoid unnecessary copying of rows.
                 matrix = test_matrix;
-                int r1_rows = upper_triangle(matrix, r1_supp, remaining_row);
+                int r1_rows = upper_triangle(matrix, r1_supp, relaxed_row);
                 // Find the columns in the matrix which are zero.
                 zero_cols(matrix, r1_supp, temp_zero_cols, r1_rows);
                 for (Index r2 = r2_start; r2 < r2_finish; ++r2)
@@ -501,6 +509,8 @@ RayMatrixAlgorithm<IndexSet>::compute0(
 
         remaining.unset(next_col);
         --num_remaining;
+        relaxed.unset(next_col);
+        --num_relaxed;
 
         *out << "\r" << buffer;
         *out << "  Size = " << std::setw(8) << vs.get_number() << ", ";
@@ -578,6 +588,11 @@ RayMatrixAlgorithm<IndexSet>::compute2(
     remaining.set_difference(diagonals);
     int num_remaining = remaining.count();
 
+    // The columns with relaxed non-negativity constraints.
+    IndexSet relaxed(remaining);
+    relaxed.set_union(urs);
+    int num_relaxed = relaxed.count();
+
     // Temporary variables.
     IndexSet temp_supp(num_cols);
     IndexSet temp_diff(num_cols);
@@ -619,9 +634,7 @@ RayMatrixAlgorithm<IndexSet>::compute2(
                         next_negative_count);
 
         matrix = orig_matrix;
-        temp_supp = remaining;
-        temp_supp.set_union(urs);
-        int remaining_row = upper_triangle(matrix, temp_supp, 0);
+        int relaxed_row = upper_triangle(matrix, relaxed, 0);
         VectorArray test_matrix(matrix);
 
         int original_size = vs.get_number();
@@ -658,7 +671,7 @@ RayMatrixAlgorithm<IndexSet>::compute2(
         for (int r1 = r1_start; r1 < r1_finish; ++r1)
         {
             r1_supp = supports[r1];
-            if (r1_supp.count() == codim-num_remaining+1)
+            if (r1_supp.count() == codim-num_relaxed+1)
             {
                 for (Index r2 = r2_start; r2 < r2_finish; ++r2)
                 {
@@ -677,7 +690,7 @@ RayMatrixAlgorithm<IndexSet>::compute2(
                 // TODO: Avoid unnecessary copying of rows.
                 r1_zero = zeros[r1];
                 matrix = test_matrix;
-                int r1_rows = upper_triangle(matrix, r1_supp, remaining_row);
+                int r1_rows = upper_triangle(matrix, r1_supp, relaxed_row);
                 // Find the columns in the matrix which are zero.
                 zero_cols(matrix, r1_supp, temp_zero_cols, r1_rows);
                 for (Index r2 = r2_start; r2 < r2_finish; ++r2)
@@ -780,6 +793,8 @@ RayMatrixAlgorithm<IndexSet>::compute2(
 
         remaining.unset(next_col);
         --num_remaining;
+        relaxed.unset(next_col);
+        --num_relaxed;
 
         *out << "\r" << buffer;
         *out << "  Size = " << std::setw(8) << vs.get_number() << ", ";
@@ -788,7 +803,7 @@ RayMatrixAlgorithm<IndexSet>::compute2(
         //*out << "Added     " << num_added << "\n";
         //*out << "One diff  " << num_one_diff_added << "\n";
         //*out << "Dominated " << num_dominated << "\n";
-        //DEBUG_4ti2(*out << "Rank Checks " << num_rank_checks << "\n";)
+        DEBUG_4ti2(*out << "Rank Checks " << num_rank_checks << "\n";)
         //*out << "Num high dim " << num_high_dim << "\n";
         //*out << "Size = " << vs.get_number() << "\n" << std::endl;
     }
@@ -846,6 +861,11 @@ RayMatrixAlgorithm<IndexSet>::compute3(
     remaining.set_difference(diagonals);
     int num_remaining = remaining.count();
 
+    // The columns with relaxed non-negativity constraints.
+    IndexSet relaxed(remaining);
+    relaxed.set_union(urs);
+    int num_relaxed = relaxed.count();
+
     // Temporary variables.
     IndexSet temp_supp(num_cols);
     IndexSet temp_diff(num_cols);
@@ -857,12 +877,10 @@ RayMatrixAlgorithm<IndexSet>::compute3(
 
     DEBUG_4ti2(unsigned long long int num_dominated = 0;)
     DEBUG_4ti2(unsigned long long int num_added = 0;)
-    DEBUG_4ti2(unsigned long long int num_one_diff_checks = 0;)
+    DEBUG_4ti2(unsigned long long int num_checks = 0;)
     DEBUG_4ti2(unsigned long long int num_one_diff_added = 0;)
-    DEBUG_4ti2(unsigned long long int num_total = 0;)
     while (vs.get_number() > 0 && num_remaining > 0)
     {
-        DEBUG_4ti2(unsigned long long int num_checks = 0;)
         // Find the next column.
         int next_positive_count, next_negative_count, next_zero_count;
         Index next_col = next_column(vs, remaining,
@@ -886,9 +904,7 @@ RayMatrixAlgorithm<IndexSet>::compute3(
         DEBUG_4ti2(*out << "Rays:\n" << vs << "\n";)
 
         matrix = orig_matrix;
-        temp_supp = remaining;
-        temp_supp.set_union(urs);
-        int remaining_row = upper_triangle(matrix, temp_supp, 0);
+        int relaxed_row = upper_triangle(matrix, relaxed, 0);
         VectorArray test_matrix(matrix);
 
         int original_size = vs.get_number();
@@ -920,11 +936,11 @@ RayMatrixAlgorithm<IndexSet>::compute3(
             r2_finish = negative_start;
             index_max = next_negative_count;
         }
-        // We sort the r2's into vectors where r2_supp.count()==codim-num_remaining+1.
+        // We sort the r2's into vectors where r2_supp.count()==codim-num_relaxed+1.
         int r2_index = r2_start;
         for (int r2 = r2_start; r2 < r2_finish; ++r2)
         {
-            if (supports[r2].count() == codim-num_remaining+1)
+            if (supports[r2].count() == codim-num_relaxed+1)
             {
                 vs.swap_vectors(r2, r2_index);
                 IndexSet::swap(supports[r2], supports[r2_index]);
@@ -937,7 +953,7 @@ RayMatrixAlgorithm<IndexSet>::compute3(
         for (int r1 = r1_start; r1 < r1_finish; ++r1)
         {
             r1_supp = supports[r1];
-            if (r1_supp.count() == codim-num_remaining+1)
+            if (r1_supp.count() == codim-num_relaxed+1)
             {
                 for (Index r2 = r2_start; r2 < r2_finish; ++r2)
                 {
@@ -969,7 +985,7 @@ RayMatrixAlgorithm<IndexSet>::compute3(
 
                 // TODO: Avoid unnecessary copying of rows.
                 matrix = test_matrix;
-                int r1_rows = upper_triangle(matrix, r1_supp, remaining_row);
+                int r1_rows = upper_triangle(matrix, r1_supp, relaxed_row);
                 // Find the columns in the matrix which are zero.
                 zero_cols(matrix, r1_supp, temp_zero_cols, r1_rows);
                 for (Index r2 = r2_index; r2 < r2_finish; ++r2)
@@ -1042,6 +1058,8 @@ RayMatrixAlgorithm<IndexSet>::compute3(
 
         remaining.unset(next_col);
         --num_remaining;
+        relaxed.unset(next_col);
+        --num_relaxed;
 
         *out << "\r" << buffer;
         *out << "  Size = " << std::setw(8) << vs.get_number() << ", ";
@@ -1051,8 +1069,6 @@ RayMatrixAlgorithm<IndexSet>::compute3(
         DEBUG_4ti2(*out << "Dominated  " << num_dominated << "\n";)
         DEBUG_4ti2(*out << "Num Checks " << num_checks << "\n";)
         DEBUG_4ti2(*out << "One diff   " << num_one_diff_added << "\n";)
-        DEBUG_4ti2(num_one_diff_checks += next_positive_count + next_negative_count;)
-       DEBUG_4ti2( *out << "One Checks " << num_one_diff_checks << "\n";)
     }
     return remaining;
 }
