@@ -2,7 +2,7 @@
 4ti2 -- A software package for algebraic, geometric and combinatorial
 problems on linear spaces.
 
-Copyright (C) 2006 4ti2 team.
+Copyright (C) 2008 4ti2 team.
 Main author(s): Peter Malkin.
 
 This program is free software; you can redistribute it and/or
@@ -20,37 +20,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2_groebner__CircuitAlgorithm_
-#define _4ti2_groebner__CircuitAlgorithm_
-
-#include "groebner/VectorArray.h"
-#include "groebner/BitSet.h"
+#ifndef _4ti2_groebner__QSolveVariant_
+#define _4ti2_groebner__QSolveVariant_
 
 namespace _4ti2_
 {
 
-class CircuitAlgorithm
-{
-public:
-    CircuitAlgorithm();
-    virtual ~CircuitAlgorithm();
+enum QSolveVariant { MATRIX, SUPPORT };
 
-    virtual void compute(
-                    VectorArray& matrix,
-                    VectorArray& vs,
-                    VectorArray& circuits,
-                    VectorArray& subspace,
-                    const BitSet& rs,
-                    const BitSet& cirs);
-protected:
-    void linear_subspace(
-                    VectorArray& matrix,
-                    VectorArray& vs,
-                    const BitSet& rs,
-                    const BitSet& cirs,
-                    VectorArray& subspace);
-};
-
-} // namespace _4ti2_
+} // namespace 4ti2
 
 #endif

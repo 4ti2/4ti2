@@ -37,12 +37,12 @@ CircuitOptions* CircuitOptions::o = new CircuitOptions;
 CircuitOptions::CircuitOptions()
 {
 #ifdef _4ti2_GMP_
-    algorithm = SUPPORT;
+    alg_variant = SUPPORT;
 #else
-    algorithm = MATRIX;
+    alg_variant = MATRIX;
 #endif
-    //next_column = MAXINTER;
-    next_column = MAXCUTOFF;
+    //cons_order = MAXINTER;
+    cons_order = MAXCUTOFF;
     output = VERBOSE;
 }
 
@@ -80,20 +80,20 @@ CircuitOptions::process_options(int argc, char** argv)
 
         switch (c) {
         case 'm':
-            algorithm = MATRIX;
+            alg_variant = MATRIX;
             break;
         case 's':
-            algorithm = SUPPORT;
+            alg_variant = SUPPORT;
             break;
         case 'o':
             if (std::string("maxinter").find(optarg) == 0)
-            { next_column = MAXINTER; }
+            { cons_order = MAXINTER; }
             else if (std::string("minindex").find(optarg) == 0)
-            { next_column = MININDEX; }
+            { cons_order = MININDEX; }
             else if (std::string("maxcutoff").find(optarg) == 0)
-            { next_column = MAXCUTOFF; }
+            { cons_order = MAXCUTOFF; }
             else if (std::string("mincutoff").find(optarg) == 0)
-            { next_column = MINCUTOFF; }
+            { cons_order = MINCUTOFF; }
             else { unrecognised_option_argument("-o, --order"); }
             break;
         case 'q':

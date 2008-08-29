@@ -59,7 +59,6 @@ lib4ti2sources =				\
 	BinomialStream.cpp			\
 	BitSetStream.cpp			\
 	Bounded.cpp				\
-	CircuitAlgorithm.cpp			\
 	CircuitOptions.cpp			\
 	Completion.cpp				\
 	DiagonalAlgorithm.cpp			\
@@ -87,7 +86,7 @@ lib4ti2sources =				\
 	Options.cpp				\
 	OrderedCompletion.cpp			\
 	ProjectLiftGenSet.cpp			\
-	RayAlgorithm.cpp			\
+	QSolveAlgorithm.cpp 		\
 	SaturationGenSet.cpp			\
 	ShortDenseIndexSet.cpp			\
 	ShortDenseIndexSetStream.cpp		\
@@ -125,7 +124,6 @@ groebnerinclude_HEADERS =			\
 	BitSet.h				\
 	BitSetStream.h				\
 	Bounded.h				\
-	CircuitAlgorithm.h			\
 	CircuitImplementation.h			\
 	CircuitMatrixAlgorithm.h		\
 	CircuitOptions.h			\
@@ -166,7 +164,9 @@ groebnerinclude_HEADERS =			\
 	OrderedCompletion.h			\
 	Permutation.h				\
 	ProjectLiftGenSet.h			\
-	RayAlgorithm.h				\
+	QSolveAlgorithm.h		\
+	QSolveConsOrder.h		\
+	QSolveVariant.h			\
 	RayImplementation.h			\
 	RayMatrixAlgorithm.h			\
 	RaySupportAlgorithm.h			\

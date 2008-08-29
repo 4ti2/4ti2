@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #include "groebner/RayImplementation.h"
 #include "groebner/VectorArray.h"
+#include "groebner/QSolveConsOrder.h"
 
 namespace _4ti2_
 {
@@ -34,6 +35,7 @@ class RaySupportAlgorithm : public RayImplementation<IndexSet>
 {
 public:
     RaySupportAlgorithm();
+    RaySupportAlgorithm(QSolveConsOrder o);
     virtual ~RaySupportAlgorithm();
 
     virtual IndexSet compute(

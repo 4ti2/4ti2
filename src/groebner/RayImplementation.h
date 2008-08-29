@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #define _4ti2_groebner__RayImplementation_
 
 #include "groebner/VectorArray.h"
+#include "groebner/QSolveConsOrder.h"
 
 namespace _4ti2_
 {
@@ -36,7 +37,10 @@ class RayImplementation
 {
 public:
     RayImplementation();
+    RayImplementation(QSolveConsOrder o);
     virtual ~RayImplementation();
+
+    void set_constraint_order(QSolveConsOrder o);
 
     virtual IndexSet compute(
                     VectorArray& matrix,
@@ -125,6 +129,8 @@ protected:
                     int r1, int r2, int next_col,
                     int next_positive_count, int next_negative_count,
                     Vector& temp, IndexSet& temp_supp);
+
+    QSolveConsOrder order;
 };
 
 } // namespace _4ti2_

@@ -45,6 +45,12 @@ RaySupportAlgorithm<IndexSet>::RaySupportAlgorithm()
 }
 
 template <class IndexSet>
+RaySupportAlgorithm<IndexSet>::RaySupportAlgorithm(QSolveConsOrder o)
+    : RayImplementation<IndexSet>(o)
+{
+}
+
+template <class IndexSet>
 RaySupportAlgorithm<IndexSet>::~RaySupportAlgorithm()
 {
 }

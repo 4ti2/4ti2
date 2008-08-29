@@ -27,8 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "VectorArrayStream.h"
 #include "BitSet.h"
 #include "BitSetStream.h"
-#include "CircuitAlgorithm.h"
-#include "RayAlgorithm.h"
+#include "QSolveAlgorithm.h"
 #include "LatticeBasis.h"
 #include "CircuitOptions.h"
 
@@ -178,14 +177,15 @@ main(int argc, char **argv)
       subspace = new VectorArray(0, matrix_copy->get_size());
       circuits = new VectorArray(0, matrix_copy->get_size());
 
+      QSolveAlgorithm algorithm;
+      algorithm.set_constraint_order(CircuitOptions::instance()->cons_order);
+      algorithm.set_variant(CircuitOptions::instance()->alg_variant);
       if (!cirs->empty())
 	{
-	  CircuitAlgorithm algorithm;
 	  algorithm.compute(*matrix_copy, *rays, *circuits, *subspace, *rs, *cirs);
 	}
       else
 	{
-	  RayAlgorithm algorithm;
 	  algorithm.compute(*matrix_copy, *rays, *subspace, *rs);
 	}
 

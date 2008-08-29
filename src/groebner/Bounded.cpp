@@ -28,7 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "VectorArrayStream.h"
 #include "LatticeBasis.h"
 #include "HermiteAlgorithm.h"
-#include "RayAlgorithm.h"
+#include "QSolveAlgorithm.h"
 
 //#define DEBUG_4ti2(X) X
 #include "Debug.h"
@@ -792,7 +792,7 @@ _4ti2_::bounded_projection(
     // Is this what we really want?
     std::ostream* tmp_out = out;
     out = new std::ofstream;
-    RayAlgorithm ray_algorithm;
+    QSolveAlgorithm ray_algorithm;
     proj = ray_algorithm.compute(matrix, rays, subspace, rs);
     rays.clear();
     delete out; out = tmp_out;
@@ -837,7 +837,7 @@ _4ti2_::lp_weight_l2(
     BitSet rs(urs);
     rs.set_complement();
     VectorArray subspace(0,basis.get_size());
-    RayAlgorithm algorithm;
+    QSolveAlgorithm algorithm;
     algorithm.compute(matrix, basis, subspace, rs);
     DEBUG_4ti2(*out << "Rays\n" << basis << "\n";)
 

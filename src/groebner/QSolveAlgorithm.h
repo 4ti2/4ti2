@@ -20,34 +20,72 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2_groebner__RayAlgorithm_
-#define _4ti2_groebner__RayAlgorithm_
+#ifndef _4ti2_groebner__QSolveAlgorithm_
+#define _4ti2_groebner__QSolveAlgorithm_
 
 #include "groebner/VectorArray.h"
 #include "groebner/BitSet.h"
+#include "groebner/QSolveConsOrder.h"
+#include "groebner/QSolveVariant.h"
 
 namespace _4ti2_
 {
 
-class RayAlgorithm
+class QSolveAlgorithm
 {
 public:
-    RayAlgorithm();
-    ~RayAlgorithm();
+    QSolveAlgorithm();
+    QSolveAlgorithm(QSolveConsOrder o, QSolveVariant v);
+    ~QSolveAlgorithm();
+
+    void set_constraint_order(QSolveConsOrder o);
+    void set_variant(QSolveVariant v);
 
     BitSet compute(
                     VectorArray& matrix,
                     VectorArray& vs,
                     VectorArray& subspace,
                     const BitSet& rs);
+
+    void compute(
+                    VectorArray& matrix,
+                    VectorArray& vs,
+                    VectorArray& circuits,
+                    VectorArray& subspace,
+                    const BitSet& rs,
+                    const BitSet& cirs);
+
 protected:
     void linear_subspace(
                     VectorArray& matrix,
                     VectorArray& vs,
                     const BitSet& rs,
+                    const BitSet& cirs,
                     VectorArray& subspace);
+
+    void linear_subspace(
+                    VectorArray& matrix,
+                    VectorArray& vs,
+                    const BitSet& rs,
+                    VectorArray& subspace);
+
+    QSolveConsOrder order;
+    QSolveVariant variant;
 };
 
+inline
+void
+QSolveAlgorithm::set_constraint_order(QSolveConsOrder o) 
+{
+    order = o;
+}
+
+inline
+void
+QSolveAlgorithm::set_variant(QSolveVariant v)
+{
+    variant = v;
+}
 
 } // namespace _4ti2_
 

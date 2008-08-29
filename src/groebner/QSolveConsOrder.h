@@ -2,7 +2,7 @@
 4ti2 -- A software package for algebraic, geometric and combinatorial
 problems on linear spaces.
 
-Copyright (C) 2006 4ti2 team.
+Copyright (C) 2008 4ti2 team.
 Main author(s): Peter Malkin.
 
 This program is free software; you can redistribute it and/or
@@ -20,36 +20,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2_groebner__CircuitOptions_
-#define _4ti2_groebner__CircuitOptions_
-#include <string>
-#include "groebner/QSolveConsOrder.h"
-#include "groebner/QSolveVariant.h"
+#ifndef _4ti2_groebner__QSolveConsOrder_
+#define _4ti2_groebner__QSolveConsOrder_
 
 namespace _4ti2_
 {
 
-class CircuitOptions
-{
-public:
-    typedef enum {VERBOSE, SILENT} Output;
+enum QSolveConsOrder { MAXINTER, MININDEX, MAXCUTOFF, MINCUTOFF};
 
-    QSolveVariant alg_variant;
-    QSolveConsOrder cons_order;
-    Output output;
-    std::string filename;
-
-    void process_options(int argc, char **argv);
-
-    static CircuitOptions* instance();
-
-protected:
-    CircuitOptions();
-    void unrecognised_option_argument(const char* option);
-    static CircuitOptions* o;
-    void print_usage();
-};
-
-} // namespace _4ti2_
+} // namespace 4ti2
 
 #endif

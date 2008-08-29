@@ -47,6 +47,12 @@ RayMatrixAlgorithm<IndexSet>::RayMatrixAlgorithm()
 }
 
 template <class IndexSet>
+RayMatrixAlgorithm<IndexSet>::RayMatrixAlgorithm(QSolveConsOrder o)
+    : RayImplementation<IndexSet>(o)
+{
+}
+
+template <class IndexSet>
 RayMatrixAlgorithm<IndexSet>::~RayMatrixAlgorithm()
 {
 }

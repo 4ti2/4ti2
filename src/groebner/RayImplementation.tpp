@@ -20,7 +20,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 #include "groebner/RayImplementation.h"
-#include "groebner/CircuitOptions.h"
 #include "groebner/Globals.h"
 #include "groebner/HermiteAlgorithm.h"
 #include "groebner/VectorStream.h"
@@ -33,18 +32,37 @@ using namespace _4ti2_;
 template <class IndexSet>
 RayImplementation<IndexSet>::RayImplementation()
 {
-    switch (CircuitOptions::instance()->next_column)
+    // The default constraint ordering is MAXCUTOFF.
+    compare = &maxcutoff;
+}
+
+template <class IndexSet>
+RayImplementation<IndexSet>::RayImplementation(QSolveConsOrder o)
+{
+    set_constraint_order(o);
+}
+
+template <class IndexSet>
+RayImplementation<IndexSet>::~RayImplementation()
+{
+}
+
+template <class IndexSet>
+void
+RayImplementation<IndexSet>::set_constraint_order(QSolveConsOrder o)
+{
+    switch (o)
     {
-    case CircuitOptions::MININDEX:
+    case MININDEX:
         compare = &minindex;
         break;
-    case CircuitOptions::MAXCUTOFF:
+    case MAXCUTOFF:
         compare = &maxcutoff;
         break;
-    case CircuitOptions::MINCUTOFF:
+    case MINCUTOFF:
         compare = &mincutoff;
         break;
-    case CircuitOptions::MAXINTER:
+    case MAXINTER:
         compare = &maxinter;
         break;
     default:
@@ -52,11 +70,6 @@ RayImplementation<IndexSet>::RayImplementation()
         compare = &maxcutoff;
         break;
     }
-}
-
-template <class IndexSet>
-RayImplementation<IndexSet>::~RayImplementation()
-{
 }
 
 template <class IndexSet>
