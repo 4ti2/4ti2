@@ -20,28 +20,27 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#include "ProjectLiftGenSet.h"
-#include "SaturationGenSet.h"
-#include "Statistics.h"
-#include "Bounded.h"
-#include "Globals.h"
-#include "RayAlgorithm.h"
-#include "BasicCompletion.h"
-#include "SyzygyCompletion.h"
-#include "HermiteAlgorithm.h"
-#include "Completion.h"
-#include "Timer.h"
-#include "Markov.h"
+#include "groebner/ProjectLiftGenSet.h"
+#include "groebner/SaturationGenSet.h"
+#include "groebner/Statistics.h"
+#include "groebner/Bounded.h"
+#include "groebner/Globals.h"
+#include "groebner/BasicCompletion.h"
+#include "groebner/SyzygyCompletion.h"
+#include "groebner/HermiteAlgorithm.h"
+#include "groebner/Completion.h"
+#include "groebner/Timer.h"
+#include "groebner/Markov.h"
 
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-#include "BitSetStream.h"
-#include "VectorArrayStream.h"
-#include "FeasibleStream.h"
+#include "groebner/BitSetStream.h"
+#include "groebner/VectorArrayStream.h"
+#include "groebner/FeasibleStream.h"
 
 //#define DEBUG_4ti2(X) X
-#include "Debug.h"
+#include "groebner/Debug.h"
 
 using namespace _4ti2_;
 

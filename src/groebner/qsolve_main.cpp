@@ -20,20 +20,20 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#include "qsolve_main.h"
-#include "Vector.h"
-#include "VectorStream.h"
-#include "VectorArray.h"
-#include "VectorArrayStream.h"
-#include "BitSet.h"
-#include "BitSetStream.h"
-#include "QSolveAlgorithm.h"
-#include "LatticeBasis.h"
-#include "CircuitOptions.h"
+#include "groebner/qsolve_main.h"
+#include "groebner/Vector.h"
+#include "groebner/VectorStream.h"
+#include "groebner/VectorArray.h"
+#include "groebner/VectorArrayStream.h"
+#include "groebner/BitSet.h"
+#include "groebner/BitSetStream.h"
+#include "groebner/QSolveAlgorithm.h"
+#include "groebner/LatticeBasis.h"
+#include "groebner/CircuitOptions.h"
 
 //#define DEBUG_4ti2(X) X
-#include "Debug.h"
-#include "Globals.h"
+#include "groebner/Debug.h"
+#include "groebner/Globals.h"
 
 #include <iostream>
 #include <fstream>
