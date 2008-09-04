@@ -53,6 +53,7 @@ src/zsolve/hilbert
 src/zsolve/libzsolve.la
 src/zsolve/zsolve
 swig/Makefile.in
+swig/allegrocommonlisp/Makefile.in
 swig/autom4te.cache
 swig/configure
 test/Makefile.in
