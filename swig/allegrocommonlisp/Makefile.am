@@ -19,10 +19,17 @@
 
 # 4ti2 Makefile
 
-ACLOCAL_AMFLAGS = -I m4
+lib_LTLIBRARIES=
 
-SUBDIRS = src m4 test
-if ENABLE_SWIG
-SUBDIRS += swig
-endif
+# Allegro Common Lisp interface
+commonlispdir=$(datadir)/common-lisp/source/4ti2
+commonlisp_DATA=
 
+lib_LTLIBRARIES += liballegrocl-4ti2.la
+liballegrocl_4ti2_la_SOURCES = allegrocl-4ti2.c
+liballegrocl_4ti2_la_LIBADD = 
+
+allegrocl-4ti2.c 4ti2.cl: allegrocl-4ti2.i
+	@SWIG@ $(SWIGDEFS) \
+	-allegrocl -outdir . -cwrap -o allegrocl-4ti2.c \
+	$<

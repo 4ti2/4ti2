@@ -52,6 +52,9 @@ src/zsolve/graver
 src/zsolve/hilbert
 src/zsolve/libzsolve.la
 src/zsolve/zsolve
+swig/Makefile.in
+swig/autom4te.cache
+swig/configure
 test/Makefile.in
 test/circuits/Makefile.in
 test/genmodel/Makefile.in

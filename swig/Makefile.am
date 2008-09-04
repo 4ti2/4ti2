@@ -19,10 +19,12 @@
 
 # 4ti2 Makefile
 
-ACLOCAL_AMFLAGS = -I m4
+ACLOCAL_AMFLAGS = -I ../m4
 
-SUBDIRS = src m4 test
-if ENABLE_SWIG
-SUBDIRS += swig
+SUBDIRS =
+
+if ENABLE_SWIG_ALLEGROCOMMONLISP
+SUBDIRS += allegrocommonlisp
 endif
+
 
