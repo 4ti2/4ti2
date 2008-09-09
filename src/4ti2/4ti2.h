@@ -48,13 +48,13 @@ typedef struct _4ti2_state _4ti2_state;
 typedef struct _4ti2_matrix _4ti2_matrix;
 
 // Create a QSolve 4ti2 state object.
-_4ti2_state* _4ti2_qsolve_create_state(_4ti2_precision prec);
+_4ti2_status _4ti2_qsolve_create_state(_4ti2_precision prec, _4ti2_state** state);
 
 // Create a QSolve 4ti2 rays object.
-_4ti2_state* _4ti2_rays_create_state(_4ti2_precision prec);
+_4ti2_status _4ti2_rays_create_state(_4ti2_precision prec, _4ti2_state** state);
 
 // Create a QSolve 4ti2 circuits object.
-_4ti2_state* _4ti2_circuits_create_state(_4ti2_precision prec);
+_4ti2_status _4ti2_circuits_create_state(_4ti2_precision prec, _4ti2_state** state);
 
 // Read in options for the 4ti2 state object.
 // These options are exactly the same as the command line options without the project filename at the end.
@@ -67,48 +67,44 @@ void _4ti2_state_delete(_4ti2_state* state);
 // Runs the main algorithm of the 4ti2 state object.
 _4ti2_status _4ti2_state_compute(_4ti2_state* state);
 
-// Create a 4ti2 matrix. Previous matrix is deleted if it exists.  Returns 0 if "name" is not valid.
-_4ti2_matrix* _4ti2_state_create_matrix(_4ti2_state* state, int num_rows, int num_cols, const char* name);
+// Create a 4ti2 matrix. Previous matrix is deleted if it exists.  Pointer is 0 if "name" is not valid.
+_4ti2_status _4ti2_state_create_matrix(_4ti2_state* state, int num_rows, int num_cols, const char* name, _4ti2_matrix** matrix);
 
 // Read a 4ti2 matrix from a file.  Previous matrix is deleted if it exists. Returns 0 if "name" is not valid.
-_4ti2_matrix* _4ti2_state_read_matrix(_4ti2_state* state, const char* filename, const char* name);
+_4ti2_status _4ti2_state_read_matrix(_4ti2_state* state, const char* filename, const char* name, _4ti2_matrix** matrix);
 
 // Get a 4ti2 matrix.  Returns 0 if "name" is not valid or if matrix has not been created.
-_4ti2_matrix* _4ti2_state_get_matrix(_4ti2_state* state, const char* name);
+_4ti2_status _4ti2_state_get_matrix(_4ti2_state* state, const char* name, _4ti2_matrix** matrix);
 
 // Returns the number of rows of the matrix.
-int _4ti2_matrix_get_num_rows(_4ti2_matrix*  matrix);
+int _4ti2_matrix_get_num_rows(const _4ti2_matrix*  matrix);
 
 // Returns the number of columns of the matrix.
-int _4ti2_matrix_get_num_cols(_4ti2_matrix*  matrix);
+int _4ti2_matrix_get_num_cols(const _4ti2_matrix*  matrix);
 
 // Write the 4ti2 matrix to stdout.
-void _4ti2_matrix_write_to_stdout(_4ti2_matrix*  matrix);
+void _4ti2_matrix_write_to_stdout(const _4ti2_matrix*  matrix);
 
 // Write the 4ti2 matrix to sterr.
-void _4ti2_matrix_write_to_stderr(_4ti2_matrix*  matrix);
+void _4ti2_matrix_write_to_stderr(const _4ti2_matrix*  matrix);
 
 // Write the 4ti2 matrix to the file called "filename".
-void _4ti2_matrix_write_to_file(_4ti2_matrix*  matrix, const char* filename);
+void _4ti2_matrix_write_to_file(const _4ti2_matrix*  matrix, const char* filename);
 
 // Operations on the matrix.
 _4ti2_status _4ti2_matrix_set_entry_int32_t(_4ti2_matrix*  matrix, int r, int c, int32_t value);
 
-_4ti2_status _4ti2_matrix_get_entry_int32_t(_4ti2_matrix*  matrix, int r, int c, int32_t* value);
+_4ti2_status _4ti2_matrix_get_entry_int32_t(const _4ti2_matrix*  matrix, int r, int c, int32_t* value);
 
 _4ti2_status _4ti2_matrix_set_entry_int64_t(_4ti2_matrix*  matrix, int r, int c, int64_t value);
 
-_4ti2_status _4ti2_matrix_get_entry_int64_t(_4ti2_matrix*  matrix, int r, int c, int64_t* value);
+_4ti2_status _4ti2_matrix_get_entry_int64_t(const _4ti2_matrix*  matrix, int r, int c, int64_t* value);
 
 #ifdef _4ti2_GMP_
 _4ti2_status _4ti2_matrix_set_entry_mpz_ptr(_4ti2_matrix*  matrix, int r, int c, mpz_ptr value);
 
-_4ti2_status _4ti2_matrix_get_entry_mpz_ptr(_4ti2_matrix*  matrix, int r, int c, mpz_ptr value);
+_4ti2_status _4ti2_matrix_get_entry_mpz_ptr(const _4ti2_matrix*  matrix, int r, int c, mpz_ptr value);
 #endif
-
-// Returns the status of the last 4ti2 API call.
-// Every 4ti2 API call updates the errno with the exception of this call.
-_4ti2_status _4ti2_get_errno();
 
 #ifdef __cplusplus
 } // extern "C"
