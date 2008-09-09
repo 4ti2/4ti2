@@ -35,11 +35,26 @@ class QSolveAlgorithm
 {
 public:
     QSolveAlgorithm();
-    QSolveAlgorithm(QSolveConsOrder o, QSolveVariant v);
+    QSolveAlgorithm(QSolveVariant v, QSolveConsOrder o);
     ~QSolveAlgorithm();
 
     void set_constraint_order(QSolveConsOrder o);
     void set_variant(QSolveVariant v);
+
+    BitSet compute(
+                    VectorArray& matrix,
+                    VectorArray& vs,
+                    VectorArray& subspace,
+                    Vector& rels,
+                    Vector& sign);
+
+    void compute(
+                    VectorArray& matrix,
+                    VectorArray& vs,
+                    VectorArray& circuits,
+                    VectorArray& subspace,
+                    Vector& rels,
+                    Vector& sign);
 
     BitSet compute(
                     VectorArray& matrix,
@@ -69,8 +84,10 @@ protected:
                     const BitSet& rs,
                     VectorArray& subspace);
 
-    QSolveConsOrder order;
+    void convert_sign(const Vector& sign, BitSet& rs, BitSet& cirs);
+
     QSolveVariant variant;
+    QSolveConsOrder order;
 };
 
 inline

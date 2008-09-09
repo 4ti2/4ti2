@@ -44,6 +44,7 @@ AM_CXXFLAGS += -DNDEBUG
 #AM_CXXFLAGS += -pg
 
 lib4ti2sources =				\
+	4ti2API.cpp				\
 	Algorithm.cpp				\
 	BasicCompletion.cpp			\
 	BasicGeneration.cpp			\
@@ -59,6 +60,7 @@ lib4ti2sources =				\
 	BinomialStream.cpp			\
 	BitSetStream.cpp			\
 	Bounded.cpp				\
+	CircuitsAPI.cpp				\
 	CircuitOptions.cpp			\
 	Completion.cpp				\
 	DiagonalAlgorithm.cpp			\
@@ -87,6 +89,8 @@ lib4ti2sources =				\
 	OrderedCompletion.cpp			\
 	ProjectLiftGenSet.cpp			\
 	QSolveAlgorithm.cpp 		\
+	QSolveAPI.cpp			\
+	RaysAPI.cpp				\
 	SaturationGenSet.cpp			\
 	ShortDenseIndexSet.cpp			\
 	ShortDenseIndexSetStream.cpp		\
@@ -96,6 +100,7 @@ lib4ti2sources =				\
 	Timer.cpp				\
 	Truncated.cpp				\
 	VectorArray.cpp				\
+	VectorArrayAPI.cpp				\
 	VectorArrayStream.cpp			\
 	Vector.cpp				\
 	VectorStream.cpp			\
@@ -108,6 +113,7 @@ lib4ti2sources =				\
 groebnerincludedir=$(includedir)/groebner
 
 groebnerinclude_HEADERS =			\
+	4ti2API.h				\
 	Algorithm.h				\
 	BasicCompletion.h			\
 	BasicGeneration.h			\
@@ -124,6 +130,7 @@ groebnerinclude_HEADERS =			\
 	BitSet.h				\
 	BitSetStream.h				\
 	Bounded.h				\
+	CircuitsAPI.h				\
 	CircuitImplementation.h			\
 	CircuitMatrixAlgorithm.h		\
 	CircuitOptions.h			\
@@ -167,8 +174,10 @@ groebnerinclude_HEADERS =			\
 	QSolveAlgorithm.h		\
 	QSolveConsOrder.h		\
 	QSolveVariant.h			\
+	QSolveAPI.h				\
 	RayImplementation.h			\
 	RayMatrixAlgorithm.h			\
+	RaysAPI.h				\
 	RaySupportAlgorithm.h			\
 	Reduction.h				\
 	SaturationGenSet.h			\
@@ -184,6 +193,7 @@ groebnerinclude_HEADERS =			\
 	Timer.h					\
 	Truncate.h				\
 	VectorArray.h				\
+	VectorArrayAPI.h			\
 	VectorArrayStream.h			\
 	Vector.h				\
 	VectorStream.h				\

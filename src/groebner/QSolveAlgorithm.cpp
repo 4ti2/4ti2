@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "groebner/LongDenseIndexSet.h"
 #include "groebner/ShortDenseIndexSet.h"
 #include "groebner/IndexSetConverter.h"
+#include "groebner/LatticeBasis.h"
 #include "groebner/Globals.h"
 
 #include "groebner/Debug.h"
@@ -36,21 +37,178 @@ using namespace _4ti2_;
 
 QSolveAlgorithm::QSolveAlgorithm()
 {
-    order = MAXCUTOFF;
 #ifdef _4ti2_GMP_
     variant = SUPPORT;
 #else
     variant = MATRIX; 
 #endif
+    order = MAXCUTOFF;
 }
 
-QSolveAlgorithm::QSolveAlgorithm(QSolveConsOrder o, QSolveVariant v)
-    : order(o), variant(v)
+QSolveAlgorithm::QSolveAlgorithm(QSolveVariant v, QSolveConsOrder o)
+    : variant(v), order(o)
 {
 }
 
 QSolveAlgorithm::~QSolveAlgorithm()
 {
+}
+
+BitSet
+QSolveAlgorithm::compute(
+                VectorArray& matrix,
+                VectorArray& vs,
+                VectorArray& subspace,
+                Vector& rel,
+                Vector& sign)
+{
+    Index extra_cols = 0;
+    for (Index i = 0; i < rel.get_size(); ++i) { if (rel[i] != 0 && rel[i] != 3) { ++extra_cols; } }
+    if (extra_cols == 0) {
+        BitSet rs(sign.get_size(), false);
+        BitSet cirs(sign.get_size(), false);
+        convert_sign(sign, rs, cirs);
+        if (!cirs.empty()) {
+            std::cerr << "ERROR: Circuits components not supported.\n;";
+            exit(1);
+        }
+        return compute(matrix, vs, subspace, rs);      
+    }
+    else {
+        VectorArray ext_matrix(matrix.get_number(),matrix.get_size()+extra_cols,0);
+        VectorArray ext_vs(0,vs.get_size()+extra_cols,0);
+        VectorArray ext_subspace(0,subspace.get_size()+extra_cols,0);
+        Vector ext_sign(matrix.get_size()+extra_cols,0);
+
+        VectorArray::lift(matrix, 0, matrix.get_size(), ext_matrix);
+        Vector::lift(sign, 0, sign.get_size(), ext_sign);
+        Index ext = matrix.get_size();
+        for (Index i = 0; i < matrix.get_number(); ++i) {
+            if (rel[i] == 1) {
+                ext_matrix[i][ext] = -1;
+                ext_sign[ext] = 1;
+                ++ext;
+            }
+            else if (rel[i] == -1) {
+                ext_matrix[i][ext] = 1;
+                ext_sign[ext] = 1;
+                ++ext;
+            }
+            else if (rel[i] == 2) {
+                std::cerr << "ERROR: Circuit components not supported.\n";
+                exit(1);
+            }
+        }
+
+        // TODO: There is a better more direct way of doing this without
+        // recomputing the lattice basis of the matrix, but for the moment this
+        // will do.
+        lattice_basis(ext_matrix, ext_vs);
+
+        BitSet ext_rs(ext_sign.get_size(), false);
+        BitSet ext_cirs(ext_sign.get_size(), false);
+        convert_sign(ext_sign, ext_rs, ext_cirs);
+        if (!ext_cirs.empty()) {
+                std::cerr << "ERROR: Circuit components not supported.\n";
+                exit(1);
+        }
+        BitSet ext_result(ext_matrix.get_size(), false);
+        ext_result = compute(ext_matrix, ext_vs, ext_subspace, ext_rs);
+        BitSet result(matrix.get_size(), false);
+        BitSet::shrink(ext_result, result);
+
+        vs.renumber(ext_vs.get_number());
+        VectorArray::project(ext_vs, 0, vs.get_size(), vs);
+        subspace.renumber(ext_subspace.get_number());
+        VectorArray::project(ext_subspace, 0, subspace.get_size(), subspace);
+
+        return result;
+    }
+}
+
+
+// TODO: This function is essentially a copy of the one above. 
+// The code should be refactored.
+void
+QSolveAlgorithm::compute(
+                VectorArray& matrix,
+                VectorArray& vs,
+                VectorArray& circuits,
+                VectorArray& subspace,
+                Vector& rel,
+                Vector& sign)
+{
+    Index extra_cols = 0;
+    for (Index i = 0; i < rel.get_size(); ++i) { if (rel[i] != 0 && rel[i] != 3) { ++extra_cols; } }
+    if (extra_cols == 0) {
+        BitSet rs(sign.get_size(), false);
+        BitSet cirs(sign.get_size(), false);
+        convert_sign(sign, rs, cirs);
+        compute(matrix, vs, circuits, subspace, rs, cirs);      
+    }
+    else {
+        VectorArray ext_matrix(matrix.get_number(),matrix.get_size()+extra_cols,0);
+        VectorArray ext_vs(0,vs.get_size()+extra_cols,0);
+        VectorArray ext_circuits(0,circuits.get_size()+extra_cols,0);
+        VectorArray ext_subspace(0,subspace.get_size()+extra_cols,0);
+        Vector ext_sign(matrix.get_size()+extra_cols,0);
+
+        VectorArray::lift(matrix, 0, matrix.get_size(), ext_matrix);
+        Vector::lift(sign, 0, sign.get_size(), ext_sign);
+        Index ext = matrix.get_size();
+        for (Index i = 0; i < matrix.get_number(); ++i) {
+            if (rel[i] == 1) {
+                ext_matrix[i][ext] = -1;
+                ext_sign[ext] = 1;
+                ++ext;
+            }
+            else if (rel[i] == 2) {
+                ext_matrix[i][ext] = -1;
+                ext_sign[ext] = 2;
+                ++ext;
+            }
+            else if (rel[i] == -1) {
+                ext_matrix[i][ext] = 1;
+                ext_sign[ext] = 1;
+                ++ext;
+            }
+        }
+
+        // TODO: There is a better more direct way of doing this without
+        // recomputing the lattice basis of the matrix, but for the moment this
+        // will do.
+        lattice_basis(ext_matrix, ext_vs);
+
+        BitSet ext_rs(ext_sign.get_size(), false);
+        BitSet ext_cirs(ext_sign.get_size(), false);
+        convert_sign(ext_sign, ext_rs, ext_cirs);
+
+        std::cout << "MATRIX:\n" << matrix << "\n";
+        std::cout << "EXT MATRIX:\n" << ext_matrix << "\n";
+
+        compute(ext_matrix, ext_vs, ext_circuits, ext_subspace, ext_rs, ext_cirs);
+
+        vs.renumber(ext_vs.get_number());
+        VectorArray::project(ext_vs, 0, vs.get_size(), vs);
+        subspace.renumber(ext_subspace.get_number());
+        VectorArray::project(ext_subspace, 0, subspace.get_size(), subspace);
+        circuits.renumber(ext_circuits.get_number());
+        VectorArray::project(ext_circuits, 0, circuits.get_size(), circuits);
+    }
+}
+
+void
+QSolveAlgorithm::convert_sign(const Vector& sign, BitSet& rs, BitSet& cirs)
+{
+    assert(sign.get_size() == rs.get_size() && sign.get_size() == cirs.get_size());
+    for (Index i = 0; i < sign.get_size(); ++i) {
+        if (sign[i] == 1) { rs.set(i); }
+        else if (sign[i] == 2) { cirs.set(i); }
+        else if (sign[i] == -1) {
+            std::cerr << "ERROR: non-positive variables not yet supported.\n";
+            exit(1);
+        }
+    }
 }
 
 BitSet
