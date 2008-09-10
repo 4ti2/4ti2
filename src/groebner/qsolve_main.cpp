@@ -34,7 +34,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "groebner/BitSetStream.h"
 #include "groebner/QSolveAlgorithm.h"
 #include "groebner/LatticeBasis.h"
-#include "groebner/CircuitOptions.h"
 
 #include "groebner/QSolveAPI.h"
 #include "groebner/RaysAPI.h"
