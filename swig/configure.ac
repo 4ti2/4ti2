@@ -32,4 +32,5 @@ AC_ARG_ENABLE(swig-allegrocommonlisp,
     [  --enable-swig-allegrocommonlisp    Enable build of Allegro Common Lisp FFI])
 AM_CONDITIONAL(ENABLE_SWIG_ALLEGROCOMMONLISP, test x$enable_swig_allegrocommonlisp = xyes)
 
+AC_CONFIG_FILES(allegrocommonlisp/4ti2.asd)
 AC_OUTPUT

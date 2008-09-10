@@ -1,0 +1,20 @@
+;;; -*- Lisp -*-
+
+;; Load these systems now, as already our defsystem depends on it!
+#-asdf-component-shared-unix-library
+(asdf:operate 'asdf:load-op :asdf-component-shared-unix-library)
+
+(defpackage #:4ti2.system
+  (:use #:cl
+	#:asdf
+	#:asdf-component-shared-unix-library-system
+	))
+
+(in-package #:4ti2.system)
+
+(defsystem #:4ti2
+  :components (
+	       (:shared-unix-library "liballegrocl-4ti2"
+				     :pathname "@prefix@/lib/liballegrocl-4ti2.so.0")
+	       (:file "4ti2" :pathname "4ti2.cl")))
+

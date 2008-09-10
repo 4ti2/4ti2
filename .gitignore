@@ -12,6 +12,7 @@ m4/Makefile
 m4/Makefile.in
 /missing
 /obj
+src/4ti2/Makefile.in
 src/Makefile
 src/Makefile.in
 src/config.h.in
