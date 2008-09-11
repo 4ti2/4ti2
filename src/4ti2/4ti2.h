@@ -2,8 +2,8 @@
 4ti2 -- A software package for algebraic, geometric and combinatorial
 problems on linear spaces.
 
-Copyright(C) 2006 4ti2 team.
-Main author(s): Matthias Walter.
+Copyright(C) 2008 4ti2 team.
+Main author(s): Peter Malkin
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
