@@ -8,6 +8,6 @@
 into conditions of type 4TI2-ERROR."))
 
 (defun check-4ti2-status (status)
-  (unless (= status *-4ti2-ok*)
+  (unless (= status 0 #||*-4ti2-ok*||#)
     (error '4ti2-error :status status)))
 
