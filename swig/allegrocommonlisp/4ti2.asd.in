@@ -1,23 +1,23 @@
 ;;; -*- Lisp -*-
 
 ;; Load these systems now, as already our defsystem depends on it!
-;; #-asdf-component-shared-unix-library
-;; (asdf:operate 'asdf:load-op :asdf-component-shared-unix-library)
+#-asdf-component-shared-unix-library
+(asdf:operate 'asdf:load-op :asdf-component-shared-unix-library)
 
-(load "@prefix@/lib/liballegrocl-4ti2.so.0" :foreign t)
+;;(load "@prefix@/lib/liballegrocl-4ti2.so.0" :foreign t)
 
 (defpackage #:4ti2.system
   (:use #:cl
 	#:asdf
-;; 	#:asdf-component-shared-unix-library-system
+ 	#:asdf-component-shared-unix-library-system
 	))
 
 (in-package #:4ti2.system)
 
 (defsystem #:4ti2
   :components (
-;; 	       (:shared-unix-library "liballegrocl-4ti2"
-;; 				     :pathname "@prefix@/lib/liballegrocl-4ti2.so.0")
+ 	       (:shared-unix-library "liballegrocl-4ti2"
+ 				     :pathname "@prefix@/lib/liballegrocl-4ti2.so.0")
 	       (:file "common-wrapper-macros")
 	       (:file "4ti2-package" :depends-on ("common-wrapper-macros"))
 	       (:file "4ti2-base" :depends-on ("4ti2-package"))
