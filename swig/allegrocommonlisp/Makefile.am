@@ -23,16 +23,17 @@ lib_LTLIBRARIES=
 
 # Allegro Common Lisp interface
 commonlispdir=$(datadir)/common-lisp/source/4ti2
-commonlisp_DATA=4ti2.asd 4ti2.cl
+commonlisp_DATA=4ti2.asd 4ti2-package.lisp common-wrapper-macros.lisp 4ti2-base.lisp 4ti2.cl
 
 lib_LTLIBRARIES += liballegrocl-4ti2.la
 liballegrocl_4ti2_la_SOURCES = allegrocl-4ti2.c
 #liballegrocl_4ti2_la_LIBADD =
-liballegrocl_4ti2_la_LDFLAGS = -L$(libdir) -R$(libdir) -l4ti2int64
+liballegrocl_4ti2_la_LDFLAGS = -L$(top_builddir)/../src/groebner -R$(libdir) -l4ti2int64
 
 AM_CFLAGS = -I$(top_srcdir)/../src 
 
 allegrocl-4ti2.c 4ti2.cl: allegrocl-4ti2.i
 	@SWIG@ $(SWIGDEFS) -I$(top_srcdir)/../src \
 	-allegrocl -outdir . -cwrap -o allegrocl-4ti2.c \
+	-identifier-converter lispify \
 	$<
