@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2_groebner__VectorArrayAPI_
 #define _4ti2_groebner__VectorArrayAPI_
 
-#include "groebner/4ti2API.h"
+#include "4ti2/4ti2xx.h"
 #include "groebner/VectorArray.h"
 
 namespace _4ti2_ {
