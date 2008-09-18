@@ -112,7 +112,6 @@ lib4ti2sources =				\
 groebnerincludedir=$(includedir)/groebner
 
 groebnerinclude_HEADERS =			\
-	4ti2API.h				\
 	Algorithm.h				\
 	BasicCompletion.h			\
 	BasicGeneration.h			\
