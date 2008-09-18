@@ -48,13 +48,13 @@ typedef struct _4ti2_state _4ti2_state;
 typedef struct _4ti2_matrix _4ti2_matrix;
 
 // Create a QSolve 4ti2 state object.
-_4ti2_status _4ti2_qsolve_create_state(_4ti2_precision prec, _4ti2_state** state);
+_4ti2_state* _4ti2_qsolve_create_state(_4ti2_precision prec);
 
 // Create a QSolve 4ti2 rays object.
-_4ti2_status _4ti2_rays_create_state(_4ti2_precision prec, _4ti2_state** state);
+_4ti2_state* _4ti2_rays_create_state(_4ti2_precision prec);
 
 // Create a QSolve 4ti2 circuits object.
-_4ti2_status _4ti2_circuits_create_state(_4ti2_precision prec, _4ti2_state** state);
+_4ti2_state* _4ti2_circuits_create_state(_4ti2_precision prec);
 
 // Read in options for the 4ti2 state object.
 // These options are exactly the same as the command line options without the project filename at the end.
