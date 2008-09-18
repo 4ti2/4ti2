@@ -20,4 +20,4 @@
 
 fortytwoincludedir = $(includedir)/4ti2
 
-fortytwoinclude_HEADERS = 4ti2.h
+fortytwoinclude_HEADERS = 4ti2.h 4ti2xx.h
