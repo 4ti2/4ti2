@@ -4,6 +4,7 @@
 
 %include "pointer-in-out.i"
 %include "list-vector.i"
+%include "typemaps.i"
 
 typedef int int32_t;
 typedef long int int64_t;
