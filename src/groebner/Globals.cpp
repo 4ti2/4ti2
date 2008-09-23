@@ -33,6 +33,7 @@ int Globals::output_freq = 1000;
 int Globals::auto_reduce_freq = 2500;
 Globals::Truncation Globals::truncation = Globals::WEIGHT;
 std::ostream* _4ti2_::out = &std::cout;
+std::ostream* _4ti2_::err = &std::cerr;
 bool Globals::minimal = true;
 bool Globals::criteria = false;
 int Globals::norm = 1;

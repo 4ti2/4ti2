@@ -50,6 +50,7 @@ public:
 };
 
 extern std::ostream* out;
+extern std::ostream* err;
 
 } // namespace _4ti2_
 

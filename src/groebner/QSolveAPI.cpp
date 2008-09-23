@@ -30,7 +30,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "groebner/VectorArrayStream.h"
 #include "groebner/LatticeBasis.h"
 
-#include "Globals.h"
+#include "groebner/Globals.h"
+#include "groebner/Debug.h"
 #include <unistd.h>
 
 #ifdef _GNU_SOURCE
@@ -141,14 +142,14 @@ QSolveAPI::compute()
     assert(sign->get_number() == 1);
     assert(matrix->get_num_cols() == sign->get_num_cols());
 
-    std::cout << "Matrix:\n";
-    matrix->write(std::cout);
-    std::cout << "Sign:\n";
-    sign->write(std::cout);
-    std::cout << "Rel:\n";
-    rel->write(std::cout);
-    std::cout << "Lat:\n";
-    lat->write(std::cout);
+    DEBUG_4ti2(std::cout << "Matrix:\n";)
+    DEBUG_4ti2(matrix->write(std::cout);)
+    DEBUG_4ti2(std::cout << "Sign:\n";)
+    DEBUG_4ti2(sign->write(std::cout);)
+    DEBUG_4ti2(std::cout << "Rel:\n";)
+    DEBUG_4ti2(rel->write(std::cout);)
+    DEBUG_4ti2(std::cout << "Lat:\n";)
+    DEBUG_4ti2(lat->write(std::cout);)
 
     // Delete previous computation.
     delete ray; delete cir; delete qhom; delete qfree;
@@ -217,6 +218,7 @@ QSolveAPI::set_options(int argc, char** argv)
             break;
         case 'q':
             out = new std::ofstream;
+            err = new std::ofstream;
             break;
         case 'f':
             if (sscanf(optarg, "%d", &Globals::output_freq) != 1)
@@ -337,8 +339,8 @@ QSolveAPI::read(const char* basename_c_str)
     if (matrix == 0) {
         create_matrix(basename.c_str(), "mat");
         if (matrix != 0) {
-            std::cout << "WARNING: Please specify the matrix in '" << matrix_filename;
-            std::cout << "' instead of '" << basename << "'.\n";
+            *err << "WARNING: Please specify the matrix in '" << matrix_filename;
+            *err << "' instead of '" << basename << "'.\n";
         }
     }
 
