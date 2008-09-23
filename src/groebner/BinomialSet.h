@@ -58,6 +58,8 @@ public:
                     Binomial& b,
                     bool& zero,
                     Binomial* ptr = 0) const;
+    void reducers(  const Binomial& b,
+                    std::vector<const Binomial*>& reducers) const;
 
     bool minimize(Binomial& b) const;
 

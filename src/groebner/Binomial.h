@@ -61,6 +61,7 @@ public:
                     const Binomial& b2);
     void reduce(const Binomial& b);
     void reduce_once(const Binomial& b);
+    static void reduce_once(const Binomial& b1, const Binomial& b2, Binomial& b);
     static bool reduces_negative(
                     const Binomial& b1,
                     const Binomial& b2);
@@ -212,16 +213,24 @@ Binomial::reduce_once(
 
 inline
 void
+Binomial::reduce_once(
+                const Binomial& b1,
+                const Binomial& b2,
+                Binomial& b)
+{
+    for (Index i = 0; i < size; ++i) { b.data[i] = b1.data[i] - b2.data[i]; }
+}
+
+inline
+void
 Binomial::reduce(
                 const Binomial& b)
 {
     IntegerType factor = reduction_factor(b);
-    if (factor == 1)
-    {
+    if (factor == 1) {
         for (Index i = 0; i < size; ++i) { data[i] -= b.data[i]; }
     }
-    else
-    {
+    else {
         for (Index i = 0; i < size; ++i) { data[i] -= factor*b.data[i]; }
     }
     //Statistics::incr_num_reductions();
@@ -233,8 +242,7 @@ Binomial::reduces_negative(
                 const Binomial& b1,
                 const Binomial& b2)
 {
-    for (Index i = 0; i < rs_end; ++i)
-    {
+    for (Index i = 0; i < rs_end; ++i) {
         if (b1.data[i] > 0 && b1.data[i] > -b2.data[i]) { return false; }
     }
     return true;
@@ -247,8 +255,7 @@ Binomial::reduces_negative(
                 const Filter& filter,
                 const Binomial& b2)
 {
-    for (Index i = 0; i < (int) filter.size(); ++i)
-    {
+    for (Index i = 0; i < (int) filter.size(); ++i) {
         if (b1.data[filter[i]] > -b2.data[filter[i]]) { return false; }
     }
     return true;
@@ -269,12 +276,10 @@ Binomial::reduce_negative(
                 const Binomial& b)
 {
     IntegerType factor = reduction_negative_factor(b);
-    if (factor == -1)
-    {
+    if (factor == -1) {
         for (Index i = 0; i < size; ++i) { data[i] += b.data[i]; }
     }
-    else
-    {
+    else {
         for (Index i = 0; i < size; ++i) { data[i] -= factor*b.data[i]; }
     }
     //Statistics::incr_num_reductions();
@@ -462,8 +467,7 @@ Binomial::orientate()
 {
     Index i = cost_start;
     while (i < cost_end && data[i] == 0) { ++i; }
-    if (i == cost_end)
-    {
+    if (i == cost_end) {
         i = 0;
         while (i < rs_end && data[i] == 0) { ++i; }
         if (i == rs_end) { return false; } // the binomial is zero.

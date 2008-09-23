@@ -24,11 +24,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #define _4ti2_FilterReduction_
 
 #include "groebner/Binomial.h"
+#include <vector>
 
 class FilterNode;
 
 namespace _4ti2_
 {
+
+typedef std::vector<const Binomial*> BinomialList;
 
 class FilterReduction
 {
@@ -46,6 +49,8 @@ public:
     const Binomial* reducable_negative(
                     const Binomial& b,
                     const Binomial* b1 = 0) const;
+    void reducable( const Binomial& b,
+                    BinomialList& reducers) const;
 
     void print() const;
 
@@ -58,6 +63,10 @@ protected:
                     const Binomial& b,
                     const Binomial* b1,
                     const FilterNode* node) const;
+    void reducable( const Binomial& b,
+                    BinomialList& reducers,
+                    const FilterNode* node) const;
+
     void print(const FilterNode* node) const;
 
     FilterNode* root;

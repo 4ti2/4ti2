@@ -202,6 +202,14 @@ BinomialSet::reduce_negative(
     return changed;
 }
 
+void
+BinomialSet::reducers(
+                const Binomial& b,
+                std::vector<const Binomial*>& reducers) const
+{
+    reduction.reducable(b, reducers);
+}
+
 bool
 BinomialSet::reducable(const Binomial& b)
 {
