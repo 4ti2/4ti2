@@ -32,7 +32,7 @@ liballegrocl_4ti2_la_LDFLAGS = -L$(top_builddir)/../src/groebner -R$(libdir) -l4
 
 AM_CFLAGS = -I$(top_srcdir)/../src 
 
-allegrocl-4ti2.c 4ti2.cl: allegrocl-4ti2.i
+allegrocl-4ti2.c 4ti2.cl: allegrocl-4ti2.i $(top_srcdir)/../src/4ti2/4ti2.h
 	@SWIG@ $(SWIGDEFS) -I$(top_srcdir)/../src \
 	-allegrocl -outdir . -cwrap -o allegrocl-4ti2.c \
 	-identifier-converter lispify \
