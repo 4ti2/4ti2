@@ -33,6 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "groebner/GroebnerBasis.h"
 #include "groebner/Minimize.h"
 #include "groebner/BasicOptions.h"
+#include "groebner/Globals.h"
 
 #include <string>
 #include <iostream>
@@ -44,6 +45,8 @@ int
 _4ti2_::normalform_main(int argc, char **argv)
 {
     BasicOptions::instance()->process_options(argc, argv);
+
+    print_banner();
 
     // Read in the sets of fibers.
     Feasible* feasible = input_Feasible(BasicOptions::instance()->filename.c_str());

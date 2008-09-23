@@ -34,6 +34,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "groebner/Minimize.h"
 #include "groebner/MinimizeOptions.h"
 #include "groebner/Optimise.h"
+#include "groebner/Globals.h"
 
 #include <string>
 #include <iostream>
@@ -45,6 +46,8 @@ int
 _4ti2_::minimize_main(int argc, char **argv)
 {
     MinimizeOptions::instance()->process_options(argc, argv);
+
+    print_banner();
 
     // Read in the sets of fibers.
     Feasible* feasible = input_Feasible(MinimizeOptions::instance()->filename.c_str());

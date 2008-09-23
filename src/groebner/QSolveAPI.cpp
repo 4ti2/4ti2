@@ -118,6 +118,8 @@ QSolveAPI::get_matrix(const char* name)
 void
 QSolveAPI::compute()
 {
+    print_banner();
+
     // Consistency and default value checking.
     if (!matrix && !lat) {
         std::cerr << "ERROR: No matrix or lattice specified.\n";

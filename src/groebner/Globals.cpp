@@ -20,7 +20,9 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#include "Globals.h"
+#include "groebner/DataType.h"
+#include "groebner/Globals.h"
+#include "banner.h"
 #include <iostream>
 
 using namespace _4ti2_;
@@ -37,3 +39,20 @@ std::ostream* _4ti2_::err = &std::cerr;
 bool Globals::minimal = true;
 bool Globals::criteria = false;
 int Globals::norm = 1;
+
+void
+_4ti2_::print_banner()
+{
+    *out << FORTY_TWO_BANNER;
+
+#if defined(_4ti2_INT32_) || defined(_4ti2_INT64_)
+    *out << "Using " << sizeof(IntegerType)*CHAR_BIT << " bit integers.\n";
+# if !defined(HAVE_TRAPV_LONG_LONG)
+    *err << "WARNING: Overflow detection is not available on this architecture/compiler.\n"
+	      << "WARNING: To guarantee correct results, run 4ti2 with arbitrary precision\n"
+	      << "WARNING: by using the option `-parb'\n";
+# endif
+#elif defined(_4ti2_GMP_)
+    *out << "Using arbitrary precision integers.\n";
+#endif
+}

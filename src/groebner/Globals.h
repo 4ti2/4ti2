@@ -49,6 +49,8 @@ public:
     static int norm;
 };
 
+void print_banner();
+
 extern std::ostream* out;
 extern std::ostream* err;
 

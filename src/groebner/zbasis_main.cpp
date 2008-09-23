@@ -20,11 +20,12 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#include "zbasis_main.h"
-#include "VectorArray.h"
-#include "VectorArrayStream.h"
-#include "LatticeBasis.h"
-#include "BasicOptions.h"
+#include "groebner/zbasis_main.h"
+#include "groebner/VectorArray.h"
+#include "groebner/VectorArrayStream.h"
+#include "groebner/LatticeBasis.h"
+#include "groebner/BasicOptions.h"
+#include "groebner/Globals.h"
 
 #include <string>
 #include <iostream>
@@ -36,6 +37,8 @@ int
 _4ti2_::zbasis_main(int argc, char **argv)
 {
     BasicOptions::instance()->process_options(argc, argv);
+
+    print_banner();
 
     // Read in the file with the matrix.
     std::string project_filename(BasicOptions::instance()->filename);

@@ -20,15 +20,16 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#include "walk_main.h"
-#include "Vector.h"
-#include "VectorStream.h"
-#include "VectorArray.h"
-#include "VectorArrayStream.h"
-#include "WalkOptions.h"
-#include "WalkAlgorithm.h"
-#include "Feasible.h"
-#include "FeasibleStream.h"
+#include "groebner/walk_main.h"
+#include "groebner/Vector.h"
+#include "groebner/VectorStream.h"
+#include "groebner/VectorArray.h"
+#include "groebner/VectorArrayStream.h"
+#include "groebner/WalkOptions.h"
+#include "groebner/WalkAlgorithm.h"
+#include "groebner/Feasible.h"
+#include "groebner/FeasibleStream.h"
+#include "groebner/Globals.h"
 
 #include <iostream>
 #include <fstream>
@@ -42,6 +43,8 @@ int
 _4ti2_::walk_main(int argc, char **argv)
 {
     WalkOptions::instance()->process_options(argc, argv);
+
+    print_banner();
 
     // Read in the sets of fibers.
     Feasible* feasible = input_Feasible(WalkOptions::instance()->filename.c_str());

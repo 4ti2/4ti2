@@ -20,18 +20,19 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#include "markov_main.h"
-#include "Vector.h"
-#include "VectorStream.h"
-#include "VectorArray.h"
-#include "VectorArrayStream.h"
-#include "BitSet.h"
-#include "BitSetStream.h"
-#include "Feasible.h"
-#include "FeasibleStream.h"
-#include "GeneratingSet.h"
-#include "GroebnerBasis.h"
-#include "Options.h"
+#include "groebner/markov_main.h"
+#include "groebner/Vector.h"
+#include "groebner/VectorStream.h"
+#include "groebner/VectorArray.h"
+#include "groebner/VectorArrayStream.h"
+#include "groebner/BitSet.h"
+#include "groebner/BitSetStream.h"
+#include "groebner/Feasible.h"
+#include "groebner/FeasibleStream.h"
+#include "groebner/GeneratingSet.h"
+#include "groebner/GroebnerBasis.h"
+#include "groebner/Options.h"
+#include "groebner/Globals.h"
 
 #include <iostream>
 #include <fstream>
@@ -44,6 +45,8 @@ int
 _4ti2_::markov_main(int argc, char **argv)
 {
     Options::instance()->process_options(argc, argv);
+
+    print_banner();
 
     Feasible* feasible = input_Feasible(Options::instance()->filename.c_str());
 

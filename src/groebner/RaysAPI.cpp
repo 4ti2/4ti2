@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "groebner/VectorArrayStream.h"
 #include "groebner/LatticeBasis.h"
 #include "groebner/RaysAPI.h"
+#include "groebner/Globals.h"
 
 using namespace _4ti2_;
 
@@ -42,6 +43,8 @@ RaysAPI::~RaysAPI()
 void
 RaysAPI::compute()
 {
+    print_banner();
+
     // Consistency and default value checking.
     if (!matrix && !lat) {
         std::cerr << "ERROR: No matrix specified.\n";
