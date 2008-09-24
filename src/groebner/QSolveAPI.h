@@ -60,10 +60,9 @@ protected:
 
     void unrecognised_option_argument(const char* option);
 
-    VectorArrayAPI* matrix;
+    VectorArrayAPI* mat;
     VectorArrayAPI* sign;
     VectorArrayAPI* rel;
-    VectorArrayAPI* lat;
     VectorArrayAPI* ray;
     VectorArrayAPI* cir;
     VectorArrayAPI* qhom;

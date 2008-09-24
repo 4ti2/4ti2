@@ -72,6 +72,7 @@ QSolveAlgorithm::compute(
             std::cerr << "ERROR: Circuits components not supported.\n;";
             exit(1);
         }
+        lattice_basis(matrix, vs);
         return compute(matrix, vs, subspace, rs);      
     }
     else {
@@ -100,9 +101,6 @@ QSolveAlgorithm::compute(
             }
         }
 
-        // TODO: There is a better more direct way of doing this without
-        // recomputing the lattice basis of the matrix, but for the moment this
-        // will do.
         lattice_basis(ext_matrix, ext_vs);
 
         BitSet ext_rs(ext_sign.get_size(), false);
@@ -144,6 +142,7 @@ QSolveAlgorithm::compute(
         BitSet rs(sign.get_size(), false);
         BitSet cirs(sign.get_size(), false);
         convert_sign(sign, rs, cirs);
+        lattice_basis(matrix, vs);
         compute(matrix, vs, circuits, subspace, rs, cirs);      
     }
     else {
@@ -174,9 +173,6 @@ QSolveAlgorithm::compute(
             }
         }
 
-        // TODO: There is a better more direct way of doing this without
-        // recomputing the lattice basis of the matrix, but for the moment this
-        // will do.
         lattice_basis(ext_matrix, ext_vs);
 
         BitSet ext_rs(ext_sign.get_size(), false);

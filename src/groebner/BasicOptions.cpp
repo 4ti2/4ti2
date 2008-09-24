@@ -76,6 +76,7 @@ BasicOptions::process_options(int argc, char** argv)
         case 'q':
             output = SILENT;
             out = new std::ofstream;
+            err = new std::ofstream;
             break;
         case 'h': case '?': case ':':
             print_usage();

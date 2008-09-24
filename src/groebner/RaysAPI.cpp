@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "groebner/LatticeBasis.h"
 #include "groebner/RaysAPI.h"
 #include "groebner/Globals.h"
+#include "groebner/Debug.h"
 
 using namespace _4ti2_;
 
@@ -46,46 +47,38 @@ RaysAPI::compute()
     print_banner();
 
     // Consistency and default value checking.
-    if (!matrix && !lat) {
-        std::cerr << "ERROR: No matrix specified.\n";
+    // TODO: More consistency checking.
+    if (!mat) {
+        std::cerr << "ERROR: No constraint matrix specified.\n";
         exit(1);
     }
-    if (!matrix) {
-        matrix = new VectorArrayAPI(0, lat->get_num_cols());
-        lattice_basis(lat->data, matrix->data);
-    }
-    if (!lat) {
-        lat = new VectorArrayAPI(0, matrix->get_num_cols());
-        lattice_basis(matrix->data, lat->data);
-    }
     if (!sign) {
-        sign = new VectorArrayAPI(1, matrix->get_num_cols());
+        sign = new VectorArrayAPI(1, mat->get_num_cols());
         for (Index i = 0; i < sign->get_num_cols(); ++i) { sign->data[0][i] = 1; }
     }
     if (!rel) {
-        rel = new VectorArrayAPI(1, matrix->get_num_cols());
+        rel = new VectorArrayAPI(1, mat->get_num_cols());
         for (Index i = 0; i < rel->get_num_cols(); ++i) { rel->data[0][i] = 0; }
     }
     assert(sign->get_number() == 1);
-    assert(matrix->get_num_cols() == sign->get_num_cols());
+    assert(mat->get_num_cols() == sign->get_num_cols());
 
-    std::cout << "Matrix:\n";
-    matrix->write(std::cout);
-    std::cout << "Sign:\n";
-    sign->write(std::cout);
-    std::cout << "Rel:\n";
-    rel->write(std::cout);
-    std::cout << "Lat:\n";
-    lat->write(std::cout);
+    DEBUG_4ti2(std::cout << "Matrix:\n";)
+    DEBUG_4ti2(mat->write(std::cout);)
+    DEBUG_4ti2(std::cout << "Sign:\n";)
+    DEBUG_4ti2(sign->write(std::cout);)
+    DEBUG_4ti2(std::cout << "Rel:\n";)
+    DEBUG_4ti2(rel->write(std::cout);)
 
     // Delete previous computation.
-    delete ray; delete qfree;
-    ray = new VectorArrayAPI(0, matrix->get_num_cols());
-    ray->data.insert(lat->data);
-    qfree = new VectorArrayAPI(0, matrix->get_num_cols());
+    delete ray; delete cir; delete qhom; delete qfree;
+    ray = new VectorArrayAPI(0, mat->get_num_cols());
+    cir = new VectorArrayAPI(0, mat->get_num_cols());
+    qhom = new VectorArrayAPI(0, mat->get_num_cols());
+    qfree = new VectorArrayAPI(0, mat->get_num_cols());
 
     QSolveAlgorithm alg(algorithm, order);
-    alg.compute(matrix->data, ray->data, qfree->data, rel->data[0], sign->data[0]); 
+    alg.compute(mat->data, ray->data, qfree->data, rel->data[0], sign->data[0]); 
 
     ray->data.sort();
     qfree->data.sort();
@@ -99,6 +92,21 @@ RaysAPI::write_usage()
     write_input_files();
     write_output_files();
     write_options();
+}
+
+void
+RaysAPI::write_input_files()
+{
+    std::cerr << "\
+Input Files:\n\
+  PROJECT.mat         A matrix (compulsory).\n\
+  PROJECT.sign        The sign constraints of the variables ('1' means\n\
+                      non-negative, '0' means a free variable, and '2' means\n\
+                      both non-negative and non-positive).\n\
+                      It is optional, and the default is all non-negative.\n\
+  PROJECT.rel         The relations on the matrix rows ('<','>','=').\n\
+                      It is optional and the default is all '='.\n\
+                      The mat must be given with this file.\n";
 }
 
 void

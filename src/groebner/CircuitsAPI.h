@@ -37,6 +37,7 @@ public:
 
 protected:
     virtual void write_usage();
+    virtual void write_input_files();
     virtual void write_output_files();
 };
 

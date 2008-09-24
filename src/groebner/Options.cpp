@@ -112,6 +112,7 @@ Options::process_options(int argc, char** argv)
         case 'q':
             output = SILENT;
             out = new std::ofstream;
+            err = new std::ofstream;
             break;
         case 't':
             if (std::string("ip").find(optarg) == 0)

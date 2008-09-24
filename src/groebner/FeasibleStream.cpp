@@ -20,10 +20,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#include "FeasibleStream.h"
-#include "VectorStream.h"
-#include "VectorArrayStream.h"
-#include "BitSetStream.h"
+#include "groebner/FeasibleStream.h"
+#include "groebner/VectorStream.h"
+#include "groebner/VectorArrayStream.h"
+#include "groebner/BitSetStream.h"
+#include "groebner/Globals.h"
 
 using namespace _4ti2_;
 
@@ -68,9 +69,9 @@ _4ti2_::input_Feasible(const char* filename)
     }
     if (project != 0)
     {
-        std::cout << "WARNING: Please specify the matrix in the file '";
-        std::cout << matrix_filename << "' instead of '";
-        std::cout << project_filename << "'.\n";
+        *err << "WARNING: Please specify the matrix in the file '";
+        *err << matrix_filename << "' instead of '";
+        *err << project_filename << "'.\n";
         matrix = project;
     }
 
