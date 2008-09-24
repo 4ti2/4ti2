@@ -5,5 +5,6 @@ EXTRA_DIST = 					\
 
 check-local:
 	@../check.template $(srcdir) "" src/groebner/rays -q -m 
+	@../check.template $(srcdir) "" src/groebner/rays -q -s 
 
 CLEANFILES = .num_failures
