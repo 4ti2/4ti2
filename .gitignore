@@ -91,6 +91,7 @@ test/ppi/ppi5.gra.srt
 test/ppi/ppi5.gra.srt.chk
 test/ppi/ppi5.mat
 test/qsolve/Makefile.in
+test/qsolve/api/Makefile.in
 test/qsolve/gmp/Makefile.in
 test/rays/Makefile.in
 test/walk/Makefile.in
