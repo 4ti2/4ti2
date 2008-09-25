@@ -1,3 +1,4 @@
+/INSTALL
 /Makefile
 /Makefile.in
 /aclocal.m4
@@ -6,6 +7,7 @@
 /config.log
 /config.status
 /configure
+/depcomp
 /install-sh
 /libtool
 m4/Makefile
@@ -54,6 +56,7 @@ src/zsolve/hilbert
 src/zsolve/libzsolve.la
 src/zsolve/zsolve
 swig/Makefile.in
+swig/aclocal.m4
 swig/allegrocommonlisp/Makefile.in
 swig/autom4te.cache
 swig/configure
