@@ -39,50 +39,50 @@ public:
     virtual ~RayMatrixAlgorithm();
 
     virtual IndexSet compute(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     const IndexSet& rs);
     virtual IndexSet compute(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
                     const IndexSet& rs);
 
 protected:
-    IndexSet compute0(VectorArray& matrix,
+    IndexSet compute0(const VectorArray& matrix,
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
                     const IndexSet& rs);
-    IndexSet compute1(VectorArray& matrix,
+    IndexSet compute1(const VectorArray& matrix,
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
                     const IndexSet& rs);
-    IndexSet compute2(VectorArray& matrix,
+    IndexSet compute2(const VectorArray& matrix,
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
                     const IndexSet& rs);
-    IndexSet compute3(VectorArray& matrix,
+    IndexSet compute3(const VectorArray& matrix,
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
                     const IndexSet& rs);
-    IndexSet compute4(VectorArray& matrix,
+    IndexSet compute4(const VectorArray& matrix,
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
                     const IndexSet& rs);
-    IndexSet compute5(VectorArray& matrix,
+    IndexSet compute5(const VectorArray& matrix,
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
                     const IndexSet& rs);
-    IndexSet compute6(VectorArray& matrix,
+    IndexSet compute6(const VectorArray& matrix,
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
                     const IndexSet& rs);
 
-    bool rank_check(VectorArray& matrix,
+    bool rank_check(const VectorArray& matrix,
                     VectorArray& temp_matrix,
                     IndexSet& temp_diff,
                     int r1_rows);
-    void zero_cols( VectorArray& matrix,
+    void zero_cols( const VectorArray& matrix,
                     IndexSet& r1_supp,
                     IndexSet& temp_zero_cols,
                     int r1_rows);

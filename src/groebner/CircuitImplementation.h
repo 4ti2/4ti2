@@ -37,7 +37,7 @@ public:
     virtual ~CircuitImplementation() {}
 
     virtual void compute(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     const IndexSet& rs,
                     const IndexSet& cirs);

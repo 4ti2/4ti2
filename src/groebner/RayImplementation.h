@@ -43,11 +43,11 @@ public:
     void set_constraint_order(QSolveConsOrder o);
 
     virtual IndexSet compute(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     const IndexSet& rs) = 0;
     virtual IndexSet compute(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
                     const IndexSet& rs) = 0;

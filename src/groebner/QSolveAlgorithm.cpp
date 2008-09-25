@@ -56,11 +56,11 @@ QSolveAlgorithm::~QSolveAlgorithm()
 
 BitSet
 QSolveAlgorithm::compute(
-                VectorArray& matrix,
+                const VectorArray& matrix,
                 VectorArray& vs,
                 VectorArray& subspace,
-                Vector& rel,
-                Vector& sign)
+                const Vector& rel,
+                const Vector& sign)
 {
     Index extra_cols = 0;
     for (Index i = 0; i < rel.get_size(); ++i) { if (rel[i] != 0 && rel[i] != 3) { ++extra_cols; } }
@@ -129,12 +129,12 @@ QSolveAlgorithm::compute(
 // The code should be refactored.
 void
 QSolveAlgorithm::compute(
-                VectorArray& matrix,
+                const VectorArray& matrix,
                 VectorArray& vs,
                 VectorArray& circuits,
                 VectorArray& subspace,
-                Vector& rel,
-                Vector& sign)
+                const Vector& rel,
+                const Vector& sign)
 {
     Index extra_cols = 0;
     for (Index i = 0; i < rel.get_size(); ++i) { if (rel[i] != 0 && rel[i] != 3) { ++extra_cols; } }
@@ -209,13 +209,31 @@ QSolveAlgorithm::convert_sign(const Vector& sign, BitSet& rs, BitSet& cirs)
 
 BitSet
 QSolveAlgorithm::compute(
-                VectorArray& matrix,
+                const VectorArray& matrix,
                 VectorArray& vs,
                 VectorArray& subspace,
                 const BitSet& rs)
 {
-    // We remove the linear subspace if there is one.
+    // Remove the linear subspace if there is one.
     linear_subspace(matrix, vs, rs, subspace);
+    if (!subspace.get_number()) {
+        return compute(matrix, vs, rs);
+    }
+    else {
+        // We insert the linear subspace into the matrix to make the cone
+        // pointed.
+        VectorArray ext_matrix(matrix);
+        ext_matrix.insert(subspace);
+        return compute(ext_matrix, vs, rs);
+    }
+}
+
+BitSet
+QSolveAlgorithm::compute(
+                const VectorArray& matrix,
+                VectorArray& vs,
+                const BitSet& rs)
+{
     BitSet result(rs.get_size());
     if (variant == SUPPORT) {
         if  (rs.get_size() <= ShortDenseIndexSet::max_size) {
@@ -252,7 +270,7 @@ QSolveAlgorithm::compute(
 
 void
 QSolveAlgorithm::linear_subspace(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     const BitSet& rs,
                     VectorArray& subspace)
@@ -262,19 +280,15 @@ QSolveAlgorithm::linear_subspace(
     Index rows = upper_triangle(vs, rs);
     VectorArray::transfer(vs, rows, vs.get_number(), subspace, 0);
     rows = upper_triangle(subspace);
-    if (rows != 0)
-    {
+    if (rows != 0) {
         *out << "Cone is not pointed.\n";
         subspace.remove(rows, subspace.get_number());
-        // We insert the linear subspace into the matrix to make the cone
-        // pointed.
-        matrix.insert(subspace);
     }
 }
 
 void
 QSolveAlgorithm::compute(
-                VectorArray& matrix,
+                const VectorArray& matrix,
                 VectorArray& vs,
                 VectorArray& circuits,
                 VectorArray& subspace,
@@ -283,6 +297,26 @@ QSolveAlgorithm::compute(
 {
     // Remove the linear subspace if there is one.
     linear_subspace(matrix, vs, rs, cirs, subspace);
+    if (!subspace.get_number()) {
+        compute(matrix, vs, circuits, rs, cirs);
+    }
+    else {
+        // We insert the linear subspace into the matrix to make the cone
+        // pointed.
+        VectorArray ext_matrix(matrix);
+        ext_matrix.insert(subspace);
+        compute(ext_matrix, vs, circuits, rs, cirs);
+    }
+}
+
+void
+QSolveAlgorithm::compute(
+                const VectorArray& matrix,
+                VectorArray& vs,
+                VectorArray& circuits,
+                const BitSet& rs,
+                const BitSet& cirs)
+{
     if (variant == SUPPORT) {
         if (cirs.get_size()+cirs.count() <= ShortDenseIndexSet::max_size) {
             DEBUG_4ti2(*out << "Using Short BitSet.\n";)
@@ -319,7 +353,7 @@ QSolveAlgorithm::compute(
 
 void
 QSolveAlgorithm::linear_subspace(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     const BitSet& rs,
                     const BitSet& cirs,
@@ -332,13 +366,9 @@ QSolveAlgorithm::linear_subspace(
     subspace.renumber(0);
     VectorArray::transfer(vs, cirs_rows, vs.get_number(), subspace, 0);
     Index rows = upper_triangle(subspace);
-    if (rows != 0)
-    {
+    if (rows != 0) {
         *out << "Cone is not pointed.\n";
         subspace.remove(rows, subspace.get_number());
-        // We insert the linear subspace into the matrix to make the cone
-        // pointed.
-        matrix.insert(subspace);
     }
 }
 

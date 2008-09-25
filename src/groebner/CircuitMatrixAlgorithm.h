@@ -38,37 +38,38 @@ public:
     virtual ~CircuitMatrixAlgorithm();
 
     virtual void compute(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     VectorArray& circuits,
                     const IndexSet& rs,
                     const IndexSet& cirs);
 
 protected:
-    void compute0(  VectorArray& matrix,
+    void compute0(  const VectorArray& matrix,
                     VectorArray& vs,
                     VectorArray& circuits,
                     const IndexSet& rs,
                     const IndexSet& cirs);
-    void compute1(  VectorArray& matrix,
+    void compute1(  const VectorArray& matrix,
                     VectorArray& vs,
                     VectorArray& circuits,
                     const IndexSet& rs,
                     const IndexSet& cirs);
 
-    bool rank_check(VectorArray& matrix,
+    bool rank_check(const VectorArray& matrix,
                     VectorArray& temp_matrix,
                     IndexSet& temp_diff,
                     int r1_rows);
 
-    void zero_cols( VectorArray& matrix,
+    void zero_cols( const VectorArray& matrix,
                     IndexSet& r1_supp,
                     IndexSet& temp_zero_cols,
                     int r1_rows);
 
     void compute(
-                VectorArray& matrix,
+                const VectorArray& matrix,
                 VectorArray& vs,
+                int codim,
                 int next_col,
                 int num_remaining,
                 int num_relaxed,

@@ -38,14 +38,14 @@ public:
     virtual ~CircuitSupportAlgorithm();
 
     virtual void compute(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     VectorArray& circuits,
                     const IndexSet& rs,
                     const IndexSet& cirs);
 
 protected:
-    void compute1(  VectorArray& matrix,
+    void compute1(  const VectorArray& matrix,
                     VectorArray& vs,
                     VectorArray& circuits,
                     const IndexSet& rs,

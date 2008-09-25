@@ -48,7 +48,7 @@ CircuitMatrixAlgorithm<IndexSet>::~CircuitMatrixAlgorithm()
 template <class IndexSet>
 void
 CircuitMatrixAlgorithm<IndexSet>::compute(
-                VectorArray& matrix,
+                const VectorArray& matrix,
                 VectorArray& vs,
                 VectorArray& circuits,
                 const IndexSet& rs,
@@ -62,13 +62,13 @@ CircuitMatrixAlgorithm<IndexSet>::compute(
 template <class IndexSet>
 void
 CircuitMatrixAlgorithm<IndexSet>::compute1(
-                VectorArray& matrix,
+                const VectorArray& orig_matrix,
                 VectorArray& vs,
                 VectorArray& circuits,
                 const IndexSet& rs,
                 const IndexSet& cirs)
 {
-    assert(matrix.get_size() == vs.get_size());
+    assert(orig_matrix.get_size() == vs.get_size());
     assert(cirs.get_size() == vs.get_size());
 
     t.reset();
@@ -79,19 +79,17 @@ CircuitMatrixAlgorithm<IndexSet>::compute1(
 
     DEBUG_4ti2(*out << "Dimension = " << vs.get_number() << "\n";)
 
-    int codim = upper_triangle(matrix);
-    matrix.remove(codim, matrix.get_number());
-    DEBUG_4ti2(*out << "Codimension = " << codim << "\n";)
-    VectorArray orig_matrix(matrix);
-
     Index ray_rows = diagonal(vs, rs); // Compute ray diagonal normal form.
     Index cir_rows = diagonal(vs, cirs, ray_rows); // Compute circuit diagonal normal form.
     vs.remove(cir_rows, vs.get_number()); // Remove unwanted rows.
 
+    int codim = vs.get_size() - vs.get_number();
+    std::cout << "Codimension is " << codim << ".\n";
+
     circuits.renumber(0);
     VectorArray::transfer(vs, ray_rows, vs.get_number(), circuits, 0);
 
-    VectorArray ray_matrix(matrix);
+    VectorArray ray_matrix(orig_matrix);
     // We find the entries on the diagonal for the circuits.
     // Add unit vectors to the ray matrix for the circuit diagonals.
     IndexSet diagonals(num_cols);
@@ -151,6 +149,8 @@ CircuitMatrixAlgorithm<IndexSet>::compute1(
     relaxed.set_union(urs);
     int num_relaxed = relaxed.count();
 
+    VectorArray matrix(orig_matrix);
+
     while (vs.get_number() > 0 && num_remaining > 0)
     {
         DEBUG_4ti2(
@@ -201,24 +201,30 @@ CircuitMatrixAlgorithm<IndexSet>::compute1(
         switch_supports(neg_ray_start, neg_ray_end, pos_supps, neg_supps);
         switch_supports(neg_cir_start, neg_cir_end, pos_supps, neg_supps);
 
+        matrix = orig_matrix;
         int relaxed_row = upper_triangle(matrix, relaxed, 0);
         DEBUG_4ti2(*out << "Relaxed row " << relaxed_row << "\n";)
+        // Next, we remove any linearly dependent rows from the matrix.
+        IndexSet unrelaxed(relaxed); unrelaxed.set_complement();
+        int num_rows = upper_triangle(matrix, unrelaxed, relaxed_row);
+        matrix.remove(num_rows, matrix.get_number());
+
         int previous_size = vs.get_number();
         // Positive ray combinations.
         DEBUG_4ti2(*out << "+r\n";)
-        compute(matrix, vs, next_col, num_remaining, num_relaxed, relaxed_row,
+        compute(matrix, vs, codim, next_col, num_remaining, num_relaxed, relaxed_row,
                         pos_ray_start, pos_ray_end, neg_ray_start, cir_end,
                         supps, pos_supps, neg_supps);
         // Negative ray combinations.
         DEBUG_4ti2(*out << "-r\n";)
-        compute(matrix, vs, next_col, num_remaining, num_relaxed, relaxed_row,
+        compute(matrix, vs, codim, next_col, num_remaining, num_relaxed, relaxed_row,
                         neg_ray_start, neg_ray_end, cir_start, cir_end,
                         supps, pos_supps, neg_supps);
         rays.insert(rays.end(), vs.get_number()-previous_size, true);
         previous_size = vs.get_number();
         // circuit combinations.
         DEBUG_4ti2(*out << "c\n";)
-        compute(matrix, vs, next_col, num_remaining, num_relaxed, relaxed_row,
+        compute(matrix, vs, codim, next_col, num_remaining, num_relaxed, relaxed_row,
                         cir_start, cir_end, cir_start, cir_end,
                         supps, pos_supps, neg_supps);
         rays.insert(rays.end(), vs.get_number()-previous_size, false);
@@ -259,8 +265,9 @@ CircuitMatrixAlgorithm<IndexSet>::compute1(
 template <class IndexSet>
 void
 CircuitMatrixAlgorithm<IndexSet>::compute(
-                VectorArray& matrix,
+                const VectorArray& orig_matrix,
                 VectorArray& vs,
+                int codim,
                 int next_col,
                 int num_remaining,
                 int num_relaxed,
@@ -272,6 +279,7 @@ CircuitMatrixAlgorithm<IndexSet>::compute(
                 std::vector<IndexSet>& neg_supps)
 {
     if (r1_start == r1_end || r2_start == r2_end) { return; }
+    VectorArray matrix(orig_matrix.get_number(), orig_matrix.get_size());
 
     char buffer[256];
     sprintf(buffer, "  Left = %3d  Col = %3d", num_remaining, next_col);
@@ -280,7 +288,6 @@ CircuitMatrixAlgorithm<IndexSet>::compute(
     DEBUG_4ti2(*out << "R2 [" << r2_start << "..." << r2_end << "]\n";)
 
     int num_cols = matrix.get_size();
-    int codim = matrix.get_number();
 
     IndexSet temp_supp(num_cols);
     IndexSet r1_supp(num_cols);
@@ -289,7 +296,6 @@ CircuitMatrixAlgorithm<IndexSet>::compute(
     IndexSet zero_cols_supp(num_cols);
 
     Vector temp(num_cols);
-    VectorArray orig_matrix(matrix);
     VectorArray temp_matrix(matrix.get_number(), matrix.get_size(), 0);
 
     int index_count = 0;
@@ -364,8 +370,9 @@ CircuitMatrixAlgorithm<IndexSet>::compute(
 template <class IndexSet>
 void
 CircuitMatrixAlgorithm<IndexSet>::compute(
-                VectorArray& matrix,
+                const VectorArray& orig_matrix,
                 VectorArray& vs,
+                int codim,
                 int next_col,
                 int num_remaining,
                 int num_relaxed,
@@ -377,6 +384,7 @@ CircuitMatrixAlgorithm<IndexSet>::compute(
                 std::vector<IndexSet>& neg_supps)
 {
     if (r1_start == r1_end || r2_start == r2_end) { return; }
+    VectorArray matrix(orig_matrix);
 
     char buffer[256];
     sprintf(buffer, "  Left = %3d  Col = %3d", num_remaining, next_col);
@@ -385,7 +393,6 @@ CircuitMatrixAlgorithm<IndexSet>::compute(
     DEBUG_4ti2(*out << "R2 [" << r2_start << "..." << r2_end << "]\n";)
 
     int num_cols = matrix.get_size();
-    int codim = matrix.get_number();
 
     IndexSet temp_supp(num_cols);
     IndexSet r1_supp(num_cols);
@@ -394,7 +401,6 @@ CircuitMatrixAlgorithm<IndexSet>::compute(
     IndexSet zero_cols_supp(num_cols);
 
     Vector temp(num_cols);
-    VectorArray orig_matrix(matrix);
     VectorArray temp_matrix(matrix.get_number(), matrix.get_size(), 0);
 
     int index_count = 0;
@@ -480,7 +486,7 @@ CircuitMatrixAlgorithm<IndexSet>::compute(
 template <class IndexSet>
 bool
 CircuitMatrixAlgorithm<IndexSet>::rank_check(
-                VectorArray& matrix,
+                const VectorArray& matrix,
                 VectorArray& _temp_matrix,
                 IndexSet& temp_diff,
                 int r1_rows)
@@ -507,7 +513,7 @@ CircuitMatrixAlgorithm<IndexSet>::rank_check(
 template <class IndexSet>
 void
 CircuitMatrixAlgorithm<IndexSet>::zero_cols(
-                VectorArray& matrix,
+                const VectorArray& matrix,
                 IndexSet& r1_supp,
                 IndexSet& temp_zero_cols,
                 int r1_rows)

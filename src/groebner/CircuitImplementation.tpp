@@ -32,7 +32,7 @@ using namespace _4ti2_;
 template <class IndexSet>
 void
 CircuitImplementation<IndexSet>::compute(
-                VectorArray& matrix,
+                const VectorArray& matrix,
                 VectorArray& vs,
                 const IndexSet& rs,
                 const IndexSet& cirs)

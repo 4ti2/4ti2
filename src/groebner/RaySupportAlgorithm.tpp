@@ -58,7 +58,7 @@ RaySupportAlgorithm<IndexSet>::~RaySupportAlgorithm()
 template <class IndexSet>
 IndexSet
 RaySupportAlgorithm<IndexSet>::compute(
-                VectorArray& matrix,
+                const VectorArray& matrix,
                 VectorArray& vs,
                 std::vector<IndexSet>& supps,
                 const IndexSet& rs)
@@ -69,7 +69,7 @@ RaySupportAlgorithm<IndexSet>::compute(
 template <class IndexSet>
 IndexSet
 RaySupportAlgorithm<IndexSet>::compute(
-                VectorArray& matrix,
+                const VectorArray& matrix,
                 VectorArray& vs,
                 const IndexSet& rs)
 {
@@ -81,7 +81,7 @@ RaySupportAlgorithm<IndexSet>::compute(
 template <class IndexSet>
 IndexSet
 RaySupportAlgorithm<IndexSet>::compute0(
-                VectorArray& matrix,
+                const VectorArray& matrix,
                 VectorArray& vs,
                 std::vector<IndexSet>& supports,
                 const IndexSet& rs)
@@ -118,10 +118,8 @@ RaySupportAlgorithm<IndexSet>::compute0(
         ++col;
     }
 
-    int codim = upper_triangle(matrix);
-    matrix.remove(codim, matrix.get_number());
+    int codim = matrix.get_size() - vs.get_number();
     DEBUG_4ti2(*out << "The codimension is " << codim << "\n";)
-    VectorArray orig_matrix(matrix);
 
     // The remaining columns to compute rays for.
     IndexSet remaining(rs);
@@ -282,7 +280,7 @@ RaySupportAlgorithm<IndexSet>::compute0(
 template <class IndexSet>
 IndexSet
 RaySupportAlgorithm<IndexSet>::compute1(
-                VectorArray& matrix,
+                const VectorArray& matrix,
                 VectorArray& vs,
                 std::vector<IndexSet>& supports,
                 const IndexSet& rs)
@@ -317,10 +315,8 @@ RaySupportAlgorithm<IndexSet>::compute1(
         ++col;
     }
 
-    int codim = upper_triangle(matrix);
-    matrix.remove(codim, matrix.get_number());
+    int codim = matrix.get_size() - vs.get_number();
     DEBUG_4ti2(*out << "The codimension is " << codim << "\n";)
-    VectorArray orig_matrix(matrix);
 
     // The remaining columns to compute rays for.
     IndexSet remaining(rs);
@@ -503,7 +499,7 @@ RaySupportAlgorithm<IndexSet>::compute1(
 template <class IndexSet>
 IndexSet
 RaySupportAlgorithm<IndexSet>::compute2(
-                VectorArray& matrix,
+                const VectorArray& matrix,
                 VectorArray& vs,
                 std::vector<IndexSet>& supports,
                 const IndexSet& rs)
@@ -538,10 +534,8 @@ RaySupportAlgorithm<IndexSet>::compute2(
         ++col;
     }
 
-    int codim = upper_triangle(matrix);
-    matrix.remove(codim, matrix.get_number());
+    int codim = matrix.get_size() - vs.get_number();
     DEBUG_4ti2(*out << "The codimension is " << codim << "\n";)
-    VectorArray orig_matrix(matrix);
 
     // The remaining columns to compute rays for.
     IndexSet remaining(rs);
@@ -727,7 +721,7 @@ RaySupportAlgorithm<IndexSet>::compute2(
 template <class IndexSet>
 IndexSet
 RaySupportAlgorithm<IndexSet>::compute3(
-                VectorArray& matrix,
+                const VectorArray& matrix,
                 VectorArray& vs,
                 std::vector<IndexSet>& supports,
                 const IndexSet& rs)
@@ -762,10 +756,9 @@ RaySupportAlgorithm<IndexSet>::compute3(
         ++col;
     }
 
-    int codim = upper_triangle(matrix);
-    matrix.remove(codim, matrix.get_number());
+    int codim = matrix.get_size() - vs.get_number();
     DEBUG_4ti2(*out << "The codimension is " << codim << "\n";)
-    VectorArray orig_matrix(matrix);
+    *out << "The codimension is " << codim << "\n";
 
     // The remaining columns to compute rays for.
     IndexSet remaining(rs);
@@ -987,7 +980,7 @@ RaySupportAlgorithm<IndexSet>::compute3(
 template <class IndexSet>
 IndexSet
 RaySupportAlgorithm<IndexSet>::compute4(
-                VectorArray& matrix,
+                const VectorArray& matrix,
                 VectorArray& vs,
                 std::vector<IndexSet>& supports,
                 const IndexSet& rs)
@@ -1022,10 +1015,8 @@ RaySupportAlgorithm<IndexSet>::compute4(
         ++col;
     }
 
-    int codim = upper_triangle(matrix);
-    matrix.remove(codim, matrix.get_number());
+    int codim = matrix.get_size() - vs.get_number();
     DEBUG_4ti2(*out << "The codimension is " << codim << "\n";)
-    VectorArray orig_matrix(matrix);
 
     // The remaining columns to compute rays for.
     IndexSet remaining(rs);

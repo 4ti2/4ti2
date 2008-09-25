@@ -776,7 +776,7 @@ _4ti2_::bounded(const VectorArray& matrix,
 // programming instead of ray computation because of numerical stability.
 void
 _4ti2_::bounded_projection(
-                const VectorArray& _matrix,
+                const VectorArray& matrix,
                 const VectorArray& lattice,
                 const BitSet& urs,
                 const Vector& rhs,
@@ -784,7 +784,6 @@ _4ti2_::bounded_projection(
 {
 #if 1
     VectorArray rays(lattice);
-    VectorArray matrix(_matrix);
     VectorArray subspace(0,rays.get_size());
     BitSet rs(urs);
     rs.set_complement();

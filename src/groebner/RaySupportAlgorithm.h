@@ -39,33 +39,33 @@ public:
     virtual ~RaySupportAlgorithm();
 
     virtual IndexSet compute(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     const IndexSet& rs);
     virtual IndexSet compute(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
                     const IndexSet& rs);
 
 protected:
-    IndexSet compute0(VectorArray& matrix,
+    IndexSet compute0(const VectorArray& matrix,
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
                     const IndexSet& rs);
-    IndexSet compute1(VectorArray& matrix,
+    IndexSet compute1(const VectorArray& matrix,
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
                     const IndexSet& rs);
-    IndexSet compute2(VectorArray& matrix,
+    IndexSet compute2(const VectorArray& matrix,
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
                     const IndexSet& rs);
-    IndexSet compute3(VectorArray& matrix,
+    IndexSet compute3(const VectorArray& matrix,
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
                     const IndexSet& rs);
-    IndexSet compute4(VectorArray& matrix,
+    IndexSet compute4(const VectorArray& matrix,
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
                     const IndexSet& rs);

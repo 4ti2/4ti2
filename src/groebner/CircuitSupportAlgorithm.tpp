@@ -56,7 +56,7 @@ CircuitSupportAlgorithm<IndexSet>::~CircuitSupportAlgorithm()
 template <class IndexSet>
 void
 CircuitSupportAlgorithm<IndexSet>::compute(
-                VectorArray& matrix,
+                const VectorArray& matrix,
                 VectorArray& vs,
                 VectorArray& circuits,
                 const IndexSet& rs,
@@ -69,7 +69,7 @@ CircuitSupportAlgorithm<IndexSet>::compute(
 template <class IndexSet>
 void
 CircuitSupportAlgorithm<IndexSet>::compute1(
-                VectorArray& matrix,
+                const VectorArray& matrix,
                 VectorArray& vs,
                 VectorArray& circuits,
                 const IndexSet& rs,
@@ -100,13 +100,12 @@ CircuitSupportAlgorithm<IndexSet>::compute1(
 
     DEBUG_4ti2(*out << "Dimension = " << vs.get_number() << "\n";)
 
-    int codim = upper_triangle(matrix);
-    matrix.remove(codim, matrix.get_number());
-    DEBUG_4ti2(*out << "Codimension = " << codim << "\n";)
-
     Index ray_rows = diagonal(vs, rs); // Compute ray diagonal normal form.
     Index cir_rows = diagonal(vs, cirs, ray_rows); // Compute circuit diagonal normal form.
     vs.remove(cir_rows, vs.get_number()); // Remove unwanted rows.
+
+    int codim = vs.get_size() - vs.get_number();
+    DEBUG_4ti2(*out << "Codimension = " << codim << "\n";)
 
     circuits.renumber(0);
     VectorArray::transfer(vs, ray_rows, vs.get_number(), circuits, 0);

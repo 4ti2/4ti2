@@ -42,28 +42,28 @@ public:
     void set_variant(QSolveVariant v);
 
     BitSet compute(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     VectorArray& subspace,
-                    Vector& rels,
-                    Vector& sign);
+                    const Vector& rels,
+                    const Vector& sign);
 
     void compute(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     VectorArray& circuits,
                     VectorArray& subspace,
-                    Vector& rels,
-                    Vector& sign);
+                    const Vector& rels,
+                    const Vector& sign);
 
     BitSet compute(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     VectorArray& subspace,
                     const BitSet& rs);
 
     void compute(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     VectorArray& circuits,
                     VectorArray& subspace,
@@ -71,15 +71,27 @@ public:
                     const BitSet& cirs);
 
 protected:
+    BitSet compute(
+                    const VectorArray& matrix,
+                    VectorArray& vs,
+                    const BitSet& rs);
+
+    void compute(
+                    const VectorArray& matrix,
+                    VectorArray& vs,
+                    VectorArray& circuits,
+                    const BitSet& rs,
+                    const BitSet& cirs);
+
     void linear_subspace(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     const BitSet& rs,
                     const BitSet& cirs,
                     VectorArray& subspace);
 
     void linear_subspace(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     const BitSet& rs,
                     VectorArray& subspace);
