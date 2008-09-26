@@ -179,8 +179,8 @@ QSolveAlgorithm::compute(
         BitSet ext_cirs(ext_sign.get_size(), false);
         convert_sign(ext_sign, ext_rs, ext_cirs);
 
-        std::cout << "MATRIX:\n" << matrix << "\n";
-        std::cout << "EXT MATRIX:\n" << ext_matrix << "\n";
+        DEBUG_4ti2(*out << "MATRIX:\n" << matrix << "\n";)
+        DEBUG_4ti2(*out std::cout << "EXT MATRIX:\n" << ext_matrix << "\n";)
 
         compute(ext_matrix, ext_vs, ext_circuits, ext_subspace, ext_rs, ext_cirs);
 

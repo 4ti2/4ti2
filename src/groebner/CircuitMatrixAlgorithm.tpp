@@ -84,7 +84,7 @@ CircuitMatrixAlgorithm<IndexSet>::compute1(
     vs.remove(cir_rows, vs.get_number()); // Remove unwanted rows.
 
     int codim = vs.get_size() - vs.get_number();
-    std::cout << "Codimension is " << codim << ".\n";
+    DEBUG_4ti2(std::cout << "Codimension is " << codim << ".\n";)
 
     circuits.renumber(0);
     VectorArray::transfer(vs, ray_rows, vs.get_number(), circuits, 0);
