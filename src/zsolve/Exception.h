@@ -65,6 +65,7 @@ public:
     friend std::ostream& operator<< (std::ostream& out, const IOException& exception);
 };
 
+inline
 std::ostream& operator<< (std::ostream& out, const IOException& exception)
 {
     out << "Input error: " << exception.m_message << std::endl;

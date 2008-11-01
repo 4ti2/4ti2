@@ -61,6 +61,15 @@ public:
             m_data[i] = create_vector <T> (width);
     }
 
+    VectorArray (const size_t height, const size_t width, T value)
+    {
+        m_vectors = height;
+        m_variables = width;
+        m_data.resize (height);
+        for (size_t i = 0; i < height; i++)
+            m_data[i] = create_vector <T> (width, value);
+    }
+
     VectorArray (const VectorArray& other)
     {
         m_vectors = other.m_vectors;
@@ -241,30 +250,40 @@ public:
         file << *this;
     }
 
+    void write (std::ostream& out, bool with_dims = true) const
+    {
+        if (with_dims) { out << m_vectors << ' ' << m_variables << '\n'; }
+        for (size_t i = 0; i < m_vectors; i++) {
+            print_vector <T> (out, m_data[i], m_variables);
+            out << '\n';
+        }
+    }
+
+    void read (std::istream& in, bool with_dims = true)
+    {
+        if (with_dims) {
+            clear ();
+            in >> m_vectors >> m_variables;
+            m_data.resize (m_vectors);
+        }
+        for (size_t i = 0; i < m_vectors; ++i) {
+            m_data[i] = read_vector <T> (in, m_variables);   
+        }
+    }
+
     template <typename X> friend std::ostream& operator<< (std::ostream& out, const VectorArray <X>& va);
     template <typename X> friend std::istream& operator>> (std::istream& in, VectorArray <X>& va);
 };
     
 template <typename T> std::ostream& operator<< (std::ostream& out, const VectorArray <T>& va)
 {
-    out << va.m_vectors << ' ' << va.m_variables << '\n';
-    for (size_t i = 0; i < va.m_vectors; i++)
-    {
-        print_vector <T> (out, va.m_data[i], va.m_variables);
-        out << '\n';
-    }
+    va.write (out);
     return out;
 }
 
 template <typename T> std::istream& operator>> (std::istream& in, VectorArray <T>& va)
 {
-    va.clear ();
-    in >> va.m_vectors >> va.m_variables;
-    va.m_data.resize (va.m_vectors);
-    for (size_t i = 0; i < va.m_vectors; ++i)
-    {
-        va.m_data[i] = read_vector <T> (in, va.m_variables);   
-    }
+    va.read (in);
     return in;    
 }
 

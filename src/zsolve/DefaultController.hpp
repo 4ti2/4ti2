@@ -23,7 +23,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2_zsolve__DefaultController_
 #define _4ti2_zsolve__DefaultController_
 
-#include <stdio.h>
 #include <iostream>
 #include <fstream>
 #include "zsolve/Options.h"

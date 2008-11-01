@@ -35,10 +35,12 @@ AM_CXXFLAGS += -D__STDC_LIMIT_MACROS
 #AM_CXXFLAGS += -pg
 
 libzsolvesources = \
+	4ti2API.cpp \
 	BitSet.cpp \
 	Timer.cpp \
 	Options.cpp \
-	Library.cpp
+	RelAPI.cpp \
+	SignAPI.cpp
 
 zsolveincludedir = $(includedir)/zsolve
 
@@ -59,7 +61,14 @@ zsolveinclude_HEADERS = \
 	Timer.h \
 	Exception.h \
 	Heuristics.hpp \
-	zsolve.h 
+	zsolve.h \
+	VectorArrayAPI.hpp \
+	BoundAPI.hpp \
+	RelAPI.h \
+	SignAPI.h \
+	ZSolveAPI.hpp \
+	HilbertAPI.hpp \
+	GraverAPI.hpp
 
 zsolvesources =	\
 	main.cpp

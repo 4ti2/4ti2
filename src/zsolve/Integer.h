@@ -56,7 +56,8 @@ inline int sgn (int32_t a)
 
 // absolute value
 
-inline int64_t abs (int64_t a)
+template <typename T>
+inline T abs (T a)
 {
     if (a >= 0)
         return a;
@@ -64,21 +65,10 @@ inline int64_t abs (int64_t a)
         return -a;
 }
 
-inline int32_t gcd (int32_t a, int32_t b)
+template <typename T>
+inline T gcd (T a, T b)
 {
-    int32_t tmp;
-    while (b != 0)
-    {
-        tmp = a % b;
-        a = b;
-        b = tmp;
-    }
-    return a < 0 ? -a : a;
-}
-
-inline int64_t gcd (int64_t a, int64_t b)
-{
-    int64_t tmp;
+    T tmp;
     while (b != 0)
     {
         tmp = a % b;

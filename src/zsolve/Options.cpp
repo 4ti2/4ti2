@@ -29,17 +29,35 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 namespace _4ti2_zsolve_ {
 
+Options::Options ()
+{
+    set_defaults ();
+}
+
 Options::Options (int argc, char **argv)
 {
+    set_defaults();
+
+    process_options(argc, argv);
+}
+
+void
+Options::set_defaults ()
+{
+    m_project = "zsolve";
     m_graver = false;
     m_hilbert = false;
-    m_precision = 32;
+    m_precision = _4ti2_PREC_INT_32;
     m_verbosity = -1;
     m_loglevel = 0;
     m_backup_frequency = 0;
     m_resume = false;
     m_maxnorm = false;
+}
 
+void
+Options::process_options (int argc, char** argv)
+{
     int c;
 
 #ifdef __GNU_LIBRARY__
@@ -160,12 +178,12 @@ Options::Options (int argc, char **argv)
 			break;
 			case 'p':
                 if (optarg == NULL || !strcmp (optarg, "32"))
-                    m_precision = 32;
+                    m_precision = _4ti2_PREC_INT_32;
                 else if (!strcmp (optarg, "64"))
-                    m_precision = 64;
+                    m_precision = _4ti2_PREC_INT_64;
                 else if (!strcmp (optarg, "gmp") || !strcmp (optarg, "arbitrary"))
                 {
-                    m_precision = 0;
+                    m_precision = _4ti2_PREC_INT_ARB;
 #ifndef _4ti2_GMP_
                     std::cout << "This binary was compiled without GMP support!" << std::endl;
                     exit (1);
@@ -271,9 +289,9 @@ void Options::print_usage () const
     
 void Options::print_precision () const
 {
-    if (m_precision == 32)
+    if (m_precision == _4ti2_PREC_INT_32)
         std::cout << "Using 32 bit integers.\n" << std::endl;
-    else if (m_precision == 64)
+    else if (m_precision == _4ti2_PREC_INT_64)
         std::cout << "Using 64 bit integers.\n" << std::endl;
     else
         std::cout << "Using arbitrary precision integers.\n" << std::endl;
@@ -319,7 +337,7 @@ bool Options::maxnorm () const
     return m_maxnorm;
 }
 
-int Options::precision () const
+_4ti2_precision Options::precision () const
 {
     return m_precision;
 }
@@ -352,7 +370,7 @@ std::istream& operator>>(std::istream& in, Options& options)
         exit (1);
         
     }
-    if ((prec == "32" && options.m_precision != 32) || (prec == "64" && options.m_precision != 64) || (prec == "gmp" && options.m_precision == 0))
+    if ((prec == "32" && options.m_precision != _4ti2_PREC_INT_32) || (prec == "64" && options.m_precision != _4ti2_PREC_INT_64) || (prec == "gmp" && options.m_precision == _4ti2_PREC_INT_ARB))
     {
         std::cout << "Option error: Precision from backup file, line 6 (" << prec << ") and command line option (";
         if (options.precision () == 0)

@@ -938,10 +938,10 @@ public:
             }
         }
 
-	if (m_controller != NULL)
-	    m_controller->log_result (inhoms.vectors (), homs.vectors (), free.vectors ());
+	    if (m_controller != NULL)
+	        m_controller->log_result (inhoms.vectors (), homs.vectors (), free.vectors ());
     }
-    
+
     void extract_graver_results (VectorArray <T>& graver)
     {
         assert (m_lattice->get_splitter () == -1);
@@ -965,8 +965,8 @@ public:
                 graver.append_vector (result);
         }
 
-	if (m_controller != NULL)
-	    m_controller->log_result (1, m_lattice->vectors (), 0);
+	    if (m_controller != NULL)
+	        m_controller->log_result (1, m_lattice->vectors (), 0);
     }
     
     void extract_hilbert_results (VectorArray <T>& hilbert)
@@ -983,8 +983,8 @@ public:
             hilbert.append_vector (result);
         }
 
-	if (m_controller != NULL)
-	    m_controller->log_result (1, m_lattice->vectors (), 0);
+	    if (m_controller != NULL)
+	        m_controller->log_result (1, m_lattice->vectors (), 0);
     }
 
     T extract_maxnorm_results (VectorArray <T> & maxnorm)

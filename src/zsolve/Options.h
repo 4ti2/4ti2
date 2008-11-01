@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2_zsolve__Options_
 #define _4ti2_zsolve__Options_
 
+#include "4ti2/4ti2.h"
 #include <iostream>
 
 namespace _4ti2_zsolve_
@@ -39,11 +40,15 @@ protected:
     bool m_hilbert;
     bool m_graver;
     bool m_maxnorm;
-    int m_precision;
+    _4ti2_precision m_precision;
 
 public:
 
+    Options ();
     Options (int argc, char ** argv);
+
+    void process_options (int argc, char** argv);
+    void set_defaults ();
 
     static void print_banner ();
     void print_usage () const;
@@ -57,7 +62,7 @@ public:
     bool hilbert () const;
     bool graver () const;
     bool maxnorm () const;
-    int precision () const;
+    _4ti2_precision precision () const;
 
     friend std::istream& operator>>(std::istream& in, Options& options);
 };

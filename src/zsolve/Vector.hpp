@@ -38,6 +38,16 @@ template <typename T> T* create_vector (size_t size)
     return new T [size];
 }
 
+template <typename T> T* create_vector (size_t size, T value)
+{
+    assert (size > 0);
+
+    T* result = new T [size];
+    for (size_t i = 0; i < size; i++)
+        result[i] = value;
+    return result;
+}
+
 template <typename T> T* create_zero_vector (size_t size)
 {
     assert (size > 0);
