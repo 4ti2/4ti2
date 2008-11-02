@@ -56,10 +56,25 @@ _4ti2_state* _4ti2_rays_create_state(_4ti2_precision prec);
 // Create a QSolve 4ti2 circuits object.
 _4ti2_state* _4ti2_circuits_create_state(_4ti2_precision prec);
 
+// Create a ZSolve 4ti2 state object.
+_4ti2_state* _4ti2_zsolve_create_state(_4ti2_precision prec);
+
+// Create a ZSolve 4ti2 state object.
+_4ti2_state* _4ti2_hilbert_create_state(_4ti2_precision prec);
+
+// Create a ZSolve 4ti2 state object.
+_4ti2_state* _4ti2_graver_create_state(_4ti2_precision prec);
+
 // Read in options for the 4ti2 state object.
 // These options are exactly the same as the command line options without the project filename at the end.
 // Note that argv[0] is ignored!
 _4ti2_status _4ti2_state_set_options(_4ti2_state* state, int argc, char** argv);
+
+// Read in the state object from "project"
+_4ti2_status _4ti2_state_read(_4ti2_state* state, const char* project);
+
+// Write out the state object to "project"
+_4ti2_status _4ti2_state_write(_4ti2_state* state, const char* project);
 
 // Deletes a 4ti2 state object.
 void _4ti2_state_delete(_4ti2_state* state);
