@@ -1,7 +1,12 @@
-SUBDIRS = api
+# Subdirs where we run our test machinery
+CHECKLOCAL_SUBDIRS =
+
 if HAVE_GMP_WITH_CXX
-SUBDIRS += gmp
+CHECKLOCAL_SUBDIRS += gmp
 endif
+
+# All subdirs
+SUBDIRS = $(CHECKLOCAL_SUBDIRS) api
 
 EXTRA_DIST = 								\
 	33.1 33.1.qhom.chk 33.1.sign					\
@@ -26,7 +31,7 @@ check-maxinter:
 
 check-local: check-maxcutoff check-maxinter
 	@../flavorsum "-maxcutoff" "-maxinter"
-	@../subdirsum $(SUBDIRS)
+	@../subdirsum $(CHECKLOCAL_SUBDIRS)
 
 CLEANFILES = .num_failures .num_failures-maxcutoff .num_failures-maxinter
 
