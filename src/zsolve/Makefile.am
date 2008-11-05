@@ -75,7 +75,6 @@ zsolvesources =	\
 
 #noinst_HEADERS = 
 
-# 32 bit precision flags.
 libzsolve_la_SOURCES = $(libzsolvesources)
 zsolve_SOURCES = $(zsolvesources)
 zsolve_LDADD = libzsolve.la
@@ -86,6 +85,8 @@ libzsolve_la_CPPFLAGS += -D_4ti2_GMP_ ${GMP_CFLAGS}
 zsolve_CPPFLAGS += -D_4ti2_GMP_ ${GMP_CFLAGS}
 zsolve_LDADD += ${GMP_LIBS}
 endif
+# Link in the "common" 4ti2 functions
+libzsolve_la_LDFLAGS = -L$(builddir)/../4ti2 -R$(libdir) -l4ti2common
 
 bin_SCRIPTS = hilbert graver
 DISTCLEANFILES = hilbert graver

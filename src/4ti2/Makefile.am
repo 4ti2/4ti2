@@ -21,3 +21,15 @@
 fortytwoincludedir = $(includedir)/4ti2
 
 fortytwoinclude_HEADERS = 4ti2.h 4ti2xx.h
+
+lib_LTLIBRARIES = lib4ti2common.la
+
+# Allow accessing zsolve's header files as "zsolve/HEADER.h"
+AM_CXXFLAGS = -I$(srcdir)/..
+
+lib4ti2common_la_SOURCES = 4ti2API.cpp
+
+if HAVE_GMP_WITH_CXX
+AM_CPPFLAGS = -D_4ti2_GMP_ ${GMP_CFLAGS}
+AM_LDFLAGS = ${GMP_LIBS}
+endif
