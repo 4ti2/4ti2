@@ -52,7 +52,7 @@ main()
 
     _4ti2_state* qsolve_api = _4ti2_qsolve_create_state(_4ti2_PREC_INT_64);
     const int argc = 2;
-    char*argv[2] = { "qsolve", "--quiet" };
+    char*argv[2] = { "qsolve", "-q" };
     _4ti2_state_set_options(qsolve_api, argc, argv);
 
     _4ti2_matrix* cons_matrix;
