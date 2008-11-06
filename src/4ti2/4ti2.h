@@ -70,12 +70,15 @@ _4ti2_state* _4ti2_graver_create_state(_4ti2_precision prec);
 // Note that argv[0] is ignored!
 _4ti2_status _4ti2_state_set_options(_4ti2_state* state, int argc, char** argv);
 
+#if 0
+  /* Implementation does not exist. --mkoeppe */
 // Read in the state object from "project"
 _4ti2_status _4ti2_state_read(_4ti2_state* state, const char* project);
 
 // Write out the state object to "project"
 _4ti2_status _4ti2_state_write(_4ti2_state* state, const char* project);
-
+#endif
+  
 // Deletes a 4ti2 state object.
 void _4ti2_state_delete(_4ti2_state* state);
 
