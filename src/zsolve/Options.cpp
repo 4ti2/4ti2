@@ -116,7 +116,7 @@ Options::process_options (int argc, char** argv)
 			break;
             case 'h':
                 print_usage ();
-                exit (1);
+                exit (0);
             break;
 			case 'l':
 				if (optarg == NULL || !strcmp (optarg, "1"))
@@ -212,11 +212,11 @@ Options::process_options (int argc, char** argv)
 	if (optind >= argc)
     {
         print_usage ();
-        exit (0);
+        exit (1);
     }
 
     if (optind == argc-1) { m_project = argv[optind]; }
-	else if (optind > argc) { print_usage (); exit (0); }
+	else if (optind > argc) { print_usage (); exit (1); }
 	else if (optind < argc-1) 
     {
         std::cerr << "Argument error: Only one project file is possible: You specified '";
