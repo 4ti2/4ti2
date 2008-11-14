@@ -215,9 +215,12 @@ Options::process_options (int argc, char** argv)
         exit (0);
     }
 
-	if (optind < argc-1) 
+    if (optind == argc-1) { m_project = argv[optind]; }
+	else if (optind > argc) { print_usage (); exit (0); }
+	else if (optind < argc-1) 
     {
-        std::cout << "Argument error: Only one project file is possible: You specified '" << argv[optind] << "' and '" << argv[optind+1] << "'!\n" << std::endl;
+        std::cerr << "Argument error: Only one project file is possible: You specified '";
+        std::cerr << argv[optind] << "' and '" << argv[optind+1] << "'!\n";
 		exit(1);
 	}
 
