@@ -38,6 +38,7 @@ AC_CONFIG_FILES([test/rays/Makefile])
 AC_CONFIG_FILES([test/walk/Makefile])
 AC_CONFIG_FILES([test/zbasis/Makefile])
 AC_CONFIG_FILES([test/zsolve/Makefile])
+AC_CONFIG_FILES([test/zsolve/api/Makefile])
 
 AC_CONFIG_FILES([test/check.template], 		[chmod +x test/check.template])
 AC_CONFIG_FILES([test/subdirsum], 		[chmod +x test/subdirsum])

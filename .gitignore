@@ -97,3 +97,4 @@ test/rays/Makefile.in
 test/walk/Makefile.in
 test/zbasis/Makefile.in
 test/zsolve/Makefile.in
+test/zsolve/api/Makefile.in
