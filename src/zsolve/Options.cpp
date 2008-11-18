@@ -209,12 +209,6 @@ Options::process_options (int argc, char** argv)
 		exit(1);
 	}
 
-	if (optind >= argc)
-    {
-        print_usage ();
-        exit (1);
-    }
-
     if (optind == argc-1) { m_project = argv[optind]; }
 	else if (optind > argc) { print_usage (); exit (1); }
 	else if (optind < argc-1) 

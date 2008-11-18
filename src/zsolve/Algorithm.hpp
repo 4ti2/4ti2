@@ -686,7 +686,7 @@ public:
         delete homo;
 	if (m_controller != NULL)
 	{
-	    m_controller->save_lattice (m_lattice);
+	    //m_controller->save_lattice (m_lattice);
 	    m_controller->log_lattice (m_lattice);
 	}
 

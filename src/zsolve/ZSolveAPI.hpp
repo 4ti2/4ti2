@@ -338,7 +338,6 @@ ZSolveAPI<T>::compute()
             }
         }
 
-        std::cout << *system;
         system->cancel_down();
         algorithm = new Algorithm <T> (system, controller);
         delete system;
