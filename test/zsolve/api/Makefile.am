@@ -8,3 +8,5 @@ AM_CXXFLAGS = -I$(top_srcdir)/src/
 test_zsolve_api_SOURCES = test_zsolve_api.cpp
 
 TESTS = test_zsolve_api
+
+$(TESTS): $(top_builddir)/src/zsolve/libzsolve.la
