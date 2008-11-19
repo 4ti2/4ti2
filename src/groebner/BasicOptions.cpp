@@ -49,6 +49,7 @@ void
 BasicOptions::process_options(int argc, char** argv)
 {
     int c;
+    optind = 1;
     while (1) {
 #ifdef _GNU_SOURCE
         int option_index = 0;
