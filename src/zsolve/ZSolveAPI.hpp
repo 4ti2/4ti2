@@ -260,7 +260,6 @@ ZSolveAPI<T>::compute()
         std::string log_name = options.project () + ".log";
         log_file = new std::ofstream (log_name.c_str(), options.resume () ? std::ios::out | std::ios::app : std::ios::out);
     }
-
     controller = new DefaultController <T> (&std::cout, log_file, options);
 
     std::string backup_name = options.project () + ".backup";

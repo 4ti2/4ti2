@@ -45,7 +45,9 @@ protected:
 public:
 
     Options ();
+    Options (const Options& o);
     Options (int argc, char ** argv);
+    Options& operator= (const Options& o);
 
     void process_options (int argc, char** argv);
     void set_defaults ();

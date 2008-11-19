@@ -34,11 +34,29 @@ Options::Options ()
     set_defaults ();
 }
 
+Options::Options (const Options& o)
+{
+    *this = o;
+}
+
 Options::Options (int argc, char **argv)
 {
-    set_defaults();
-
     process_options(argc, argv);
+}
+
+Options&
+Options::operator= (const Options& o)
+{
+    m_project = o.m_project;
+    m_graver = o.m_graver;
+    m_hilbert = o.m_hilbert;
+    m_precision = o.m_precision;
+    m_verbosity = o.m_verbosity;
+    m_loglevel = o.m_loglevel;
+    m_backup_frequency = o.m_backup_frequency;
+    m_resume = o.m_resume;
+    m_maxnorm = o.m_maxnorm;
+    return *this;
 }
 
 void
@@ -58,6 +76,9 @@ Options::set_defaults ()
 void
 Options::process_options (int argc, char** argv)
 {
+    set_defaults();
+    optind = 1;
+
     int c;
 
 #ifdef __GNU_LIBRARY__
@@ -217,8 +238,6 @@ Options::process_options (int argc, char** argv)
         std::cerr << argv[optind] << "' and '" << argv[optind+1] << "'!\n";
 		exit(1);
 	}
-
-    m_project = argv[optind];
 }
 
 void Options::print_banner ()
