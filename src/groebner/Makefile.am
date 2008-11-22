@@ -278,5 +278,6 @@ endif
 EXTRA_DIST = script.template
 
 $(WRAPPERSCRIPTS): script.template
-	cp $< $@
+	$(install_sh_SCRIPT) $< $@
+
 

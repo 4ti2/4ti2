@@ -39,6 +39,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "BitSetStream.h"
 #include "VectorArrayStream.h"
 #include "FeasibleStream.h"
+#include <cstdlib>
 
 //#define DEBUG_4ti2(X) X
 #include "Debug.h"

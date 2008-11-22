@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #define _4ti2__ShortDenseIndexSet_
 
 #include <cassert>
+#include <climits>
 #include "Size.h"
 #include "Index.h"
 #include <inttypes.h>
@@ -459,7 +460,7 @@ ShortDenseIndexSet::count() const
     BlockType const w = block - ((block >> 1) & (BlockType) 0x5555555555555555ULL);  // temp
     BlockType const x = (w & (BlockType) 0x3333333333333333ULL) +
             ((w >> 2) & (BlockType) 0x3333333333333333ULL);     // temp
-    Size c = ((x + (x >> 4) & (BlockType) 0x0F0F0F0F0F0F0F0FULL) * (BlockType) 0x0101010101010101ULL)
+    Size c = (((x + (x >> 4)) & (BlockType) 0x0F0F0F0F0F0F0F0FULL) * (BlockType) 0x0101010101010101ULL)
             >> 56;
     return c;
 #if 0

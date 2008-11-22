@@ -22,6 +22,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #include "ShortDenseIndexSetStream.h"
 
+#include <cstdlib>
+
 using namespace _4ti2_;
 
 std::ostream&
