@@ -71,7 +71,7 @@ inline
 void
 VectorArrayAPI::convert(const int64_t& v1, int32_t& v2)
 {
-    if (v1 < INT32_MIN || v2 > INT32_MAX) {
+    if (v1 < INT32_MIN || v1 > INT32_MAX) {
         std::cerr << "ERROR: number " << v1 << " out of range.\n";
         std::cerr << "ERROR: range is (" << INT32_MIN << "," << INT32_MAX << ").\n";
         exit(1);    
