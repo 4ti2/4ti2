@@ -61,3 +61,10 @@ will need to invoke
 
 If you have gmp but not with c++ support, then ./configure will
 fail with an error saying that the file "gmpxx.h" cannot be found.
+
+
+DOCUMENTATION
+=============
+
+See the website http://www.4ti2.de for information on using 4ti2.
+
