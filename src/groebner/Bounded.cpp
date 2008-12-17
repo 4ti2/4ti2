@@ -179,10 +179,12 @@ _4ti2_::matrix_bounded(
             if (is_matrix_non_negative(matrix[i], urs, bounded))
             {
                 add_positive_support(matrix[i], urs, bounded, grading);
+                grading.normalise();
             }
             if (is_matrix_non_positive(matrix[i], urs, bounded))
             {
                 add_negative_support(matrix[i], urs, bounded, grading);
+                grading.normalise();
             }
         }
         // If nothing changed, then stop.
@@ -320,7 +322,6 @@ _4ti2_::add_positive_support(
         }
     }
     Vector::add(grading, factor, v, 1, grading);
-    grading.normalise();
 }
 
 void
@@ -345,7 +346,6 @@ _4ti2_::add_negative_support(
         }
     }
     Vector::sub(grading, factor, v, 1, grading);
-    grading.normalise();
 }
 
 bool
