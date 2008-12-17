@@ -22,3 +22,5 @@
 ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = src m4 test
+
+EXTRA_DIST = autogen.sh TODO NEWS README README.cvs
