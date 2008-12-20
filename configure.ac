@@ -125,6 +125,35 @@ fi
 
 AM_CONDITIONAL([HAVE_GMP_WITH_CXX], [test -n "${GMP_HAVE_CXX}"])
 
+if test -n "${GMP_HAVE_CXX}" ; then 
+  # Check whether we can convert between int32_t and int64_t and mpz_class (for the API).
+  save_LIBS="${LIBS}"
+  LIBS="${LIBS} ${GMP_LIBS}"
+  AC_MSG_CHECKING(whether we can convert between int32_t and mpz_class)
+  AC_TRY_LINK(
+    [  #include <gmpxx.h>
+    ],
+    [  int32_t x = 815;
+       mpz_class y(x);
+    ],
+    [ HAVE_MPZ_INT32_CONVERSION=yes;
+      AC_DEFINE(HAVE_MPZ_INT32_CONVERSION, 1, [Define if we can convert between int32_t and mpz_class]) ],
+    [ HAVE_MPZ_INT32_CONVERSION=no ])
+  AC_MSG_RESULT(${HAVE_MPZ_INT32_CONVERSION})
+  AC_MSG_CHECKING(whether we can convert between int64_t and mpz_class)
+  AC_TRY_LINK(
+    [  #include <gmpxx.h>
+    ],
+    [  int64_t x = 815;
+       mpz_class y(x);
+    ],
+    [ HAVE_MPZ_INT64_CONVERSION=yes;
+      AC_DEFINE(HAVE_MPZ_INT64_CONVERSION, 1, [Define if we can convert between int64_t and mpz_class]) ],
+    [ HAVE_MPZ_INT64_CONVERSION=no ])
+  AC_MSG_RESULT(${HAVE_MPZ_INT64_CONVERSION})
+  LIBS="${save_LIBS}"
+fi
+
 ## Check whether to build high-level-language interfaces using SWIG
 AC_ARG_ENABLE(swig, AS_HELP_STRING([--enable-swig], [Enable building high-level-language interfaces using SWIG]),
 		    [enable_swig=${enableval}], [enable_swig=no])
