@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <fstream>
 #include <string>
 #include <cstring>
+#include <cstdlib>
 
 #include "groebner/qsolve_main.h"
 #include "groebner/Vector.h"

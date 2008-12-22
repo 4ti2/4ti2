@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "VectorArrayStream.h"
 #include "VectorStream.h"
 #include <fstream>
+#include <cstdlib>
 
 using namespace _4ti2_;
 

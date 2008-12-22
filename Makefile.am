@@ -26,3 +26,4 @@ if ENABLE_SWIG
 SUBDIRS += swig
 endif
 
+EXTRA_DIST = autogen.sh TODO NEWS README README.cvs

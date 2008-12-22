@@ -1,0 +1,37 @@
+News in 4ti2 version 1.3.2, compared to 1.3.1:
+ 
+ * New build system, using GNU Autoconf, Automake, and Libtool.
+
+   This allows 4ti2 to be built using the standard "./configure &&
+   make && make install" sequence.
+
+ * Bug fixes
+
+ * Portability fixes (for GCC versions 4.3.x and 4.4.x)
+
+
+News in 4ti2 version 1.3.1, compared to 1.2:
+
+ * 'groebner' and 'markov' are again heavily improved.
+
+ * 'groebner' and 'markov' allow non-homogeneous lattice ideals.
+
+ * 'groebner' and 'markov' allow truncation.
+
+ * There is a new function 'walk' performing a Gröbner walk.
+
+ * There are new functions 'qsolve' and 'zsolve' for solving linear
+   systems over the reals or the integers, respectively.
+
+ * There are new functions 'rays' and 'circuits' to compute extreme
+   rays and circuits.
+
+ * The functions 'circuits' and 'graver' allow to fix certain
+   orthants.
+
+ * One may compute with projections by specifying variables to be
+   ignored.
+
+ * There is a new function 'minimize' to solve integer linear
+   programs.
+

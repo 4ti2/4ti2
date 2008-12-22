@@ -23,12 +23,15 @@ if HAVE_GMP_WITH_CXX
 bin_PROGRAMS += 4ti2gmp
 endif
 
-lib_LTLIBRARIES = lib4ti2int32.la lib4ti2int64.la lib4ti2gmp.la
+lib_LTLIBRARIES = lib4ti2int32.la lib4ti2int64.la
+if HAVE_GMP_WITH_CXX
+lib_LTLIBRARIES += lib4ti2gmp.la
+endif
 
 # Allow accessing groebner's header files as "groebner/HEADER.h"
 AM_CXXFLAGS = -I$(srcdir)/..
 
-# 4ti2 uses the glpk linear programming library (GLPL).
+# 4ti2 uses the glpk linear programming library (GLPK).
 # Add include path to the file glpk.h if necessary.
 AM_CXXFLAGS += $(GLPK_CFLAGS)
 # Add library include path for the library libglpk if necessary.

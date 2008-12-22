@@ -35,6 +35,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <cstdlib>
+
 #include "groebner/BitSetStream.h"
 #include "groebner/VectorArrayStream.h"
 #include "groebner/FeasibleStream.h"
