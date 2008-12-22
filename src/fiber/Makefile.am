@@ -2,6 +2,7 @@
 # problems on linear spaces.
 # 
 # Copyright (C) 2006 4ti2 team.
+# Main author(s): Matthias Koeppe.
 # 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,15 +18,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 
-SUBDIRS = ppi util 4ti2
-if ENABLE_GROEBNER
-SUBDIRS += groebner
-endif
-if ENABLE_ZSOLVE
-SUBDIRS += zsolve
-endif
-if ENABLE_FIBER
-SUBDIRS += fiber
-endif
+bin_PROGRAMS = 
 
-noinst_HEADERS = banner.h
+lib_LTLIBRARIES = lib4ti2fiber.la
+
+# Allow accessing fiber's header files as "fiber/HEADER.h"
+AM_CXXFLAGS = -I$(srcdir)/..
+
+lib4ti2fiber_la_SOURCES = 

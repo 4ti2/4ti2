@@ -8,6 +8,7 @@ AM_MAINTAINER_MODE
 AC_CONFIG_FILES([Makefile src/Makefile src/4ti2/Makefile
 		 src/groebner/Makefile src/util/Makefile 
 		 src/ppi/Makefile src/zsolve/Makefile
+		 src/fiber/Makefile
 		 m4/Makefile])
 
 AC_CONFIG_HEADERS(src/config.h)
@@ -51,8 +52,11 @@ AC_ARG_ENABLE(groebner, AS_HELP_STRING([--disable-groebner], [Disable building t
 			[enable_groebner=${enableval}], [enable_groebner=yes])
 AC_ARG_ENABLE(zsolve, AS_HELP_STRING([--disable-zsolve], [Disable building the zsolve components]),
 			[enable_zsolve=${enableval}], [enable_zsolve=yes])
+AC_ARG_ENABLE(fiber, AS_HELP_STRING([--enable-fiber], [Disable building the fiber components]),
+			[enable_fiber=${enableval}], [enable_fiber=no])
 AM_CONDITIONAL([ENABLE_GROEBNER], [ test x${enable_groebner} == xyes ])
 AM_CONDITIONAL([ENABLE_ZSOLVE], [ test x${enable_zsolve} == xyes ])
+AM_CONDITIONAL([ENABLE_FIBER], [ test x${enable_fiber} == xyes ])
 
 ## Using the C compiler
 AC_PROG_CC
