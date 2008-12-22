@@ -81,8 +81,8 @@ zsolve_LDADD = libzsolve.la
 libzsolve_la_CPPFLAGS =
 zsolve_CPPFLAGS = 
 if HAVE_GMP_WITH_CXX
-libzsolve_la_CPPFLAGS += -D_4ti2_GMP_ ${GMP_CFLAGS}
-zsolve_CPPFLAGS += -D_4ti2_GMP_ ${GMP_CFLAGS}
+libzsolve_la_CPPFLAGS += ${GMP_CFLAGS}
+zsolve_CPPFLAGS += ${GMP_CFLAGS}
 zsolve_LDADD += ${GMP_LIBS}
 endif
 # Link in the "common" 4ti2 functions

@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef __4ti2_zsolve__Integer_
 #define __4ti2_zsolve__Integer_
 
-#ifdef _4ti2_GMP_
+#ifdef HAVE_GMP
 #include <gmpxx.h>
 #endif
 
@@ -78,7 +78,7 @@ inline T gcd (T a, T b)
     return a < 0 ? -a : a;
 }
 
-#ifdef _4ti2_GMP_
+#ifdef HAVE_GMP
 inline mpz_class gcd (const mpz_class& a, const mpz_class& b)
 {
     mpz_class result;
@@ -115,7 +115,7 @@ inline int calcPrecision (int64_t n)
     return result;
 }
 
-#ifdef _4ti2_GMP_
+#ifdef HAVE_GMP
 inline int calcPrecision (const mpz_class& n)
 {
     return mpz_sizeinbase (n.get_mpz_t (), 2);
@@ -132,7 +132,7 @@ inline int maxPrecision (int64_t n)
     return 64;
 }
 
-#ifdef _4ti2_GMP_
+#ifdef HAVE_GMP
 inline int maxPrecision (const mpz_class& n)
 {
     return -1;
@@ -163,7 +163,7 @@ template <typename T> void parse_integer (const std::string& string, T& result)
     iss >> result;
 }
 
-#ifdef _4ti2_GMP_
+#ifdef HAVE_GMP
 
 template <typename T> void parse_integer (const std::string& string, mpz_class& result)
 {

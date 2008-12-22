@@ -48,7 +48,7 @@ public:
     virtual void set_entry_int64_t(int r, int c, const int64_t& value);
     virtual void get_entry_int64_t(int r, int c, int64_t& value) const;
 
-#ifdef _4ti2_GMP_
+#ifdef HAVE_GMP
     virtual void set_entry_mpz_class(int r, int c, const mpz_class& value);
     virtual void get_entry_mpz_class(int r, int c, mpz_class& value) const;
 #endif
@@ -81,7 +81,7 @@ convert(const int64_t& v1, int32_t& v2)
     v2 = v1;
 }
 
-#ifdef _4ti2_GMP_
+#ifdef HAVE_GMP
 
 template <>
 inline
@@ -186,7 +186,7 @@ VectorArrayAPI<T>::get_entry_int64_t(int r, int c, int64_t& value) const
     convert(data[r][c], value);
 }
 
-#ifdef _4ti2_GMP_
+#ifdef HAVE_GMP
 template <class T>
 void
 VectorArrayAPI<T>::set_entry_mpz_class(int r, int c, const mpz_class& value)

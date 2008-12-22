@@ -30,7 +30,7 @@ typedef int int32_t;
 typedef long long int64_t;
 #endif
 
-#ifdef _4ti2_GMP_
+#ifdef HAVE_GMP
 #include <gmp.h>
 #endif
 
@@ -64,7 +64,7 @@ extern "C"
     void zsolve_matrix_print_32 (ZSolveMatrix matrix); // prints the matrix with 32bit values.
     void zsolve_matrix_print_64 (ZSolveMatrix matrix); // prints the matrix with 64bit values.
 
-#ifdef _4ti2_GMP_
+#ifdef HAVE_GMP
     int zsolve_matrix_set_gmp (ZSolveMatrix matrix, int r, int c, mpz_srcptr value); // sets the entry at r,c to the mpz_t value.
     void zsolve_matrix_get_gmp (ZSolveMatrix matrix, mpz_ptr result, int r, int c); // returns the mpz_t entry at r,c.
     void zsolve_matrix_print_gmp (ZSolveMatrix matrix); // prints the matrix with gmp values.
