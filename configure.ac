@@ -11,7 +11,7 @@ AC_CONFIG_FILES([Makefile src/Makefile src/4ti2/Makefile
 		 src/fiber/Makefile
 		 m4/Makefile])
 
-AC_CONFIG_HEADERS(src/config.h)
+AC_CONFIG_HEADERS([src/config.h src/4ti2/4ti2_config.h])
 
 AC_CONFIG_FILES([test/Makefile])
 AC_CONFIG_FILES([test/circuits/Makefile])
@@ -130,6 +130,10 @@ fi
 AM_CONDITIONAL([HAVE_GMP_WITH_CXX], [test -n "${GMP_HAVE_CXX}"])
 
 if test -n "${GMP_HAVE_CXX}" ; then 
+
+  # Definition for installed header file 4ti2_config.h
+  AC_DEFINE([_4ti2_HAVE_GMP], [], [Define if GMP (with C++ interface) is installed])
+
   # Check whether we can convert between int32_t and int64_t and mpz_class (for the API).
   save_LIBS="${LIBS}"
   LIBS="${LIBS} ${GMP_LIBS}"

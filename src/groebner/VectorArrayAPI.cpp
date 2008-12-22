@@ -90,7 +90,7 @@ VectorArrayAPI::get_entry_int64_t(int r, int c, int64_t& value) const
     convert(data[r][c], value);
 }
 
-#ifdef HAVE_GMP
+#ifdef _4ti2_HAVE_GMP
 void
 VectorArrayAPI::set_entry_mpz_class(int r, int c, const mpz_class& value)
 {

@@ -25,9 +25,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #include <iostream>
 
-#include "config.h"
+#include "4ti2/4ti2_config.h"
 
-#ifdef HAVE_GMP
+#ifdef _4ti2_HAVE_GMP
 #include <gmp.h>
 #include <gmpxx.h>
 #endif
@@ -49,7 +49,7 @@ public:
     virtual void set_entry_int64_t(int r, int c, const int64_t& value) = 0;
     virtual void get_entry_int64_t(int r, int c, int64_t& value) const = 0;
 
-#ifdef HAVE_GMP
+#ifdef _4ti2_HAVE_GMP
     virtual void set_entry_mpz_class(int r, int c, const mpz_class& value) = 0;
     virtual void get_entry_mpz_class(int r, int c, mpz_class& value) const = 0;
 #endif

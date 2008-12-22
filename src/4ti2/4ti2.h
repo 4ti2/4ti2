@@ -25,9 +25,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #include <inttypes.h>
 
-#include "config.h"
+#include "4ti2/4ti2_config.h"
 
-#ifdef HAVE_GMP
+#ifdef _4ti2_HAVE_GMP
 #include <gmp.h>
 #endif
 
@@ -120,7 +120,7 @@ _4ti2_status _4ti2_matrix_set_entry_int64_t(_4ti2_matrix*  matrix, int r, int c,
 
 _4ti2_status _4ti2_matrix_get_entry_int64_t(const _4ti2_matrix*  matrix, int r, int c, int64_t* value);
 
-#ifdef HAVE_GMP
+#ifdef _4ti2_HAVE_GMP
 _4ti2_status _4ti2_matrix_set_entry_mpz_ptr(_4ti2_matrix*  matrix, int r, int c, mpz_ptr value);
 
 _4ti2_status _4ti2_matrix_get_entry_mpz_ptr(const _4ti2_matrix*  matrix, int r, int c, mpz_ptr value);

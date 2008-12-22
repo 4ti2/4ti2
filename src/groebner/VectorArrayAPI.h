@@ -45,7 +45,7 @@ public:
     virtual void set_entry_int64_t(int r, int c, const int64_t& value);
     virtual void get_entry_int64_t(int r, int c, int64_t& value) const;
 
-#ifdef HAVE_GMP
+#ifdef _4ti2_HAVE_GMP
     virtual void set_entry_mpz_class(int r, int c, const mpz_class& value);
     virtual void get_entry_mpz_class(int r, int c, mpz_class& value) const;
 #endif
@@ -87,7 +87,7 @@ VectorArrayAPI::convert(const int32_t& v1, int64_t& v2)
     v2 = v1;
 }
 
-#ifdef HAVE_GMP
+#ifdef _4ti2_HAVE_GMP
 
 template <>
 inline

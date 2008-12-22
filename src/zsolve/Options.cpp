@@ -205,7 +205,7 @@ Options::process_options (int argc, char** argv)
                 else if (!strcmp (optarg, "gmp") || !strcmp (optarg, "arbitrary"))
                 {
                     m_precision = _4ti2_PREC_INT_ARB;
-#ifndef HAVE_GMP
+#ifndef _4ti2_HAVE_GMP
                     std::cout << "This binary was compiled without GMP support!" << std::endl;
                     exit (1);
 #endif
@@ -258,7 +258,7 @@ void Options::print_usage () const
 
     std::cout << "[Basic options]\n\n";
 
-#ifdef HAVE_GMP
+#ifdef _4ti2_HAVE_GMP
     std::cout << " -p=PREC, --precision=PREC  Use precision (32, 64, gmp). Default is 32 bit\n";
 #else
     std::cout << " -p=PREC, --precision=PREC  Use precision (32, 64). Default is 32 bit\n";
