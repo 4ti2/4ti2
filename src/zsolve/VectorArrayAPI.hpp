@@ -107,6 +107,26 @@ convert(const mpz_class& v1, long int& v2)
     v2 = v1.get_si();
 }
 
+#ifndef HAVE_MPZ_INT64_CONVERSION
+template <>
+inline
+void
+convert(const mpz_class& v1, int64_t& v2)
+{
+  std::cerr << "UNIMPLEMENTED: Need to convert from mpz to int64_t" << std::endl;
+  exit(1);
+}
+
+template <>
+inline
+void
+convert(const int64_t& v1, mpz_class &v2)
+{
+  std::cerr << "UNIMPLEMENTED: Need to convert from int64_t to mpz" << std::endl;
+  exit(1);
+}
+#endif
+
 #endif
 
 
