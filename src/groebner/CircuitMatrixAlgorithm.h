@@ -20,12 +20,12 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2__CircuitMatrixAlgorithm_
-#define _4ti2__CircuitMatrixAlgorithm_
+#ifndef _4ti2_groebner__CircuitMatrixAlgorithm_
+#define _4ti2_groebner__CircuitMatrixAlgorithm_
 
-#include "CircuitImplementation.h"
-#include "VectorArray.h"
-#include "Timer.h"
+#include "groebner/CircuitImplementation.h"
+#include "groebner/VectorArray.h"
+#include "groebner/Timer.h"
 
 namespace _4ti2_
 {
@@ -38,41 +38,42 @@ public:
     virtual ~CircuitMatrixAlgorithm();
 
     virtual void compute(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     VectorArray& circuits,
                     const IndexSet& rs,
                     const IndexSet& cirs);
 
 protected:
-    void compute0(  VectorArray& matrix,
+    void compute0(  const VectorArray& matrix,
                     VectorArray& vs,
                     VectorArray& circuits,
                     const IndexSet& rs,
                     const IndexSet& cirs);
-    void compute1(  VectorArray& matrix,
+    void compute1(  const VectorArray& matrix,
                     VectorArray& vs,
                     VectorArray& circuits,
                     const IndexSet& rs,
                     const IndexSet& cirs);
 
-    bool rank_check(VectorArray& matrix,
+    bool rank_check(const VectorArray& matrix,
                     VectorArray& temp_matrix,
                     IndexSet& temp_diff,
                     int r1_rows);
 
-    void zero_cols( VectorArray& matrix,
+    void zero_cols( const VectorArray& matrix,
                     IndexSet& r1_supp,
                     IndexSet& temp_zero_cols,
                     int r1_rows);
 
     void compute(
-                VectorArray& matrix,
+                const VectorArray& matrix,
                 VectorArray& vs,
+                int codim,
                 int next_col,
                 int num_remaining,
-                IndexSet remaining,
-                int remaining_row,
+                int num_relaxed,
+                int relaxed_row,
                 int r1_start, int r1_end,
                 int r2_start, int r2_end,
                 std::vector<IndexSet>& supps,
@@ -93,6 +94,6 @@ protected:
 } // namespace _4ti2_
 
 // Include the template definitions.
-#include "CircuitMatrixAlgorithm.tpp"
+#include "groebner/CircuitMatrixAlgorithm.tpp"
 
 #endif

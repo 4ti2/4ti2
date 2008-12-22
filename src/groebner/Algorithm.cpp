@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "BasicGeneration.h"
 #include "SyzygyGeneration.h"
 #include "Globals.h"
+#include <cstdlib>
 
 using namespace _4ti2_;
 

@@ -19,10 +19,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#include "DiagonalAlgorithm.h"
-#include "Euclidean.h"
-#include "HermiteAlgorithm.h"
-#include "VectorArrayStream.h"
+#include "groebner/DiagonalAlgorithm.h"
+#include "groebner/Euclidean.h"
+#include "groebner/HermiteAlgorithm.h"
+#include "groebner/VectorArrayStream.h"
 
 using namespace _4ti2_;
 

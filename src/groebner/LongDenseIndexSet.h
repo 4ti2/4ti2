@@ -20,12 +20,15 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2__LongDenseIndexSet_
-#define _4ti2__LongDenseIndexSet_
+#ifndef _4ti2_groebner__LongDenseIndexSet_
+#define _4ti2_groebner__LongDenseIndexSet_
 
 #include <cassert>
-#include "Size.h"
-#include "Index.h"
+#include <climits>
+
+#include "groebner/Size.h"
+#include "groebner/Index.h"
+
 #include <inttypes.h>
 
 #include <iostream>
@@ -604,7 +607,7 @@ LongDenseIndexSet::count() const
         BlockType const w = *block - ((*block >> 1) & (BlockType) 0x5555555555555555ULL);  // temp
         BlockType const x = (w & (BlockType) 0x3333333333333333ULL) +
             ((w >> 2) & (BlockType) 0x3333333333333333ULL);     // temp
-        c += ((x + (x >> 4) & (BlockType) 0x0F0F0F0F0F0F0F0FULL) * (BlockType) 0x0101010101010101ULL)
+        c += (((x + (x >> 4)) & (BlockType) 0x0F0F0F0F0F0F0F0FULL) * (BlockType) 0x0101010101010101ULL)
                 >> 56;
         ++block;
     }

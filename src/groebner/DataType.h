@@ -20,8 +20,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2__DataType_
-#define _4ti2__DataType_
+#ifndef _4ti2_groebner__DataType_
+#define _4ti2_groebner__DataType_
 #include <inttypes.h>
 
 #ifdef _4ti2_GMP_

@@ -20,8 +20,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef __4ti2__Size_
-#define __4ti2__Size_
+#ifndef __4ti2_groebner__Size_
+#define __4ti2_groebner__Size_
 
 namespace _4ti2_
 {

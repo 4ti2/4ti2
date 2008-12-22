@@ -20,12 +20,12 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2__EliminateAlgorithm_
-#define _4ti2__EliminateAlgorithm_
+#ifndef _4ti2_groebner__EliminateAlgorithm_
+#define _4ti2_groebner__EliminateAlgorithm_
 
-#include "VectorArray.h"
-#include "BitSet.h"
-#include "Index.h"
+#include "groebner/VectorArray.h"
+#include "groebner/BitSet.h"
+#include "groebner/Index.h"
 
 namespace _4ti2_ {
 

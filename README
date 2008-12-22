@@ -34,10 +34,9 @@ omit the --prefix option, `make install' will install 4ti2 in the
 
 You will need glpk and gmp installed first (see below).
 
-The first command, 'make', compiles all the executables which are placed in the
-4ti2/bin directory. The second command, 'make check', runs a lot of automatic
-checks. This will take a while.  If a check fails, then please notify the 4ti2
-team.
+The first command, 'make', compiles all the executables. The second
+command, 'make check', runs a lot of automatic checks. This will take
+a while.  If a check fails, then please notify the 4ti2 team.
 
 You will need gcc version 3.4 or higher.
 
@@ -62,3 +61,10 @@ will need to invoke
 
 If you have gmp but not with c++ support, then ./configure will
 fail with an error saying that the file "gmpxx.h" cannot be found.
+
+
+DOCUMENTATION
+=============
+
+See the website http://www.4ti2.de for information on using 4ti2.
+

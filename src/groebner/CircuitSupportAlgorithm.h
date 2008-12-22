@@ -20,12 +20,12 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2__CircuitSupportAlgorithm_
-#define _4ti2__CircuitSupportAlgorithm_
+#ifndef _4ti2_groebner__CircuitSupportAlgorithm_
+#define _4ti2_groebner__CircuitSupportAlgorithm_
 
-#include "CircuitImplementation.h"
-#include "VectorArray.h"
-#include "SupportTree.h"
+#include "groebner/CircuitImplementation.h"
+#include "groebner/VectorArray.h"
+#include "groebner/SupportTree.h"
 
 namespace _4ti2_
 {
@@ -38,14 +38,14 @@ public:
     virtual ~CircuitSupportAlgorithm();
 
     virtual void compute(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     VectorArray& circuits,
                     const IndexSet& rs,
                     const IndexSet& cirs);
 
 protected:
-    void compute1(  VectorArray& matrix,
+    void compute1(  const VectorArray& matrix,
                     VectorArray& vs,
                     VectorArray& circuits,
                     const IndexSet& rs,
@@ -63,8 +63,9 @@ protected:
                 SupportTree<IndexSet>& tree,
                 VectorArray& vs,
                 int next_col,
-                const IndexSet& cirs,
-                const IndexSet& remaining,
+                int full_num_cols,
+                int num_remaining,
+                int num_relaxed,
                 int codim,
                 int r1_start, int r1_end,
                 int r2_start, int r2_end,
@@ -78,6 +79,6 @@ protected:
 } // namespace _4ti2_
 
 // Include template definitions.
-#include "CircuitSupportAlgorithm.tpp"
+#include "groebner/CircuitSupportAlgorithm.tpp"
 
 #endif

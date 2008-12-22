@@ -20,13 +20,13 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2__Markov_
-#define _4ti2__Markov_
+#ifndef _4ti2_groebner__Markov_
+#define _4ti2_groebner__Markov_
 
-#include "BinomialSet.h"
-#include "WeightedBinomialSet.h"
-#include "Feasible.h"
-#include "Timer.h"
+#include "groebner/BinomialSet.h"
+#include "groebner/WeightedBinomialSet.h"
+#include "groebner/Feasible.h"
+#include "groebner/Timer.h"
 
 namespace _4ti2_
 {
