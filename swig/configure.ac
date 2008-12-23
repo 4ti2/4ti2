@@ -1,5 +1,5 @@
 AC_PREREQ(2.59)
-AC_INIT(4ti2-swig, 1.3.1+autoconf-0.1)
+AC_INIT(4ti2-swig, 1.3.99+cvs)
 AM_INIT_AUTOMAKE(foreign)
 AM_MAINTAINER_MODE
 AC_CONFIG_FILES([Makefile allegrocommonlisp/Makefile])
