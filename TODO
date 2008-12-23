@@ -31,7 +31,7 @@ NO. STATUS DESCRIPTION
 ----------------------
 1.  FIXED  qsolve prints the file foo.qfree incorrectly. It fails to project
            out the slack variables.
-2.  OPEN   The zsolve executable does not have executable permission in the
+2.  OUTDATED   The zsolve executable does not have executable permission in the
            binary distribution for linux. The other distributions need to be
            checked.
 3.  FIXED  The zsolve source fails to build on some macOSX machines because the
@@ -93,10 +93,10 @@ NEW ITEMS:
 18. OPEN   _4ti2_qsolve_create_state really should fail if a precision is requested
     	   that is not compiled in!  --mkoeppe, Sun Dec 21 22:25:55 PST 2008
 
-19. OPEN   Use an installed file 4ti2/4ti2_config.h rather than a non-installed file config.h
+19. DONE   Use an installed file 4ti2/4ti2_config.h rather than a non-installed file config.h
     	   This is to ensure that the 4ti2 headers are compatible with the 4ti2 libraries
 	   from an application's point of view.  (Think compatible vtables.)
 
-
-
-
+20. OPEN   Fix failures of test-suite entries for correct conversion of data between
+    	   32bit, 64bit, GMP in the API, on 32-bit architectures.
+	   --mkoeppe, Mon Dec 22 17:01:02 PST 2008
