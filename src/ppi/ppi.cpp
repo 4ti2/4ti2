@@ -31,6 +31,8 @@
 
 #include <cstdio>
 #include <cassert>
+#include <cstdlib>
+#include <cstring>
 #include <set>
 #include <vector>
 #include <iostream>

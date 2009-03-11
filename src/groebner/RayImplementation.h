@@ -20,10 +20,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2__RayImplementation_
-#define _4ti2__RayImplementation_
+#ifndef _4ti2_groebner__RayImplementation_
+#define _4ti2_groebner__RayImplementation_
 
-#include "VectorArray.h"
+#include "groebner/VectorArray.h"
+#include "groebner/QSolveConsOrder.h"
 
 namespace _4ti2_
 {
@@ -36,14 +37,17 @@ class RayImplementation
 {
 public:
     RayImplementation();
+    RayImplementation(QSolveConsOrder o);
     virtual ~RayImplementation();
 
+    void set_constraint_order(QSolveConsOrder o);
+
     virtual IndexSet compute(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     const IndexSet& rs) = 0;
     virtual IndexSet compute(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
                     const IndexSet& rs) = 0;
@@ -125,11 +129,13 @@ protected:
                     int r1, int r2, int next_col,
                     int next_positive_count, int next_negative_count,
                     Vector& temp, IndexSet& temp_supp);
+
+    QSolveConsOrder order;
 };
 
 } // namespace _4ti2_
 
 // Definitions of template class functions.
-#include "RayImplementation.tpp"
+#include "groebner/RayImplementation.tpp"
 
 #endif

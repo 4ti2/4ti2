@@ -20,25 +20,26 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#include "../banner.h"
-#include "Globals.h"
-#include "DataType.h"
-#include "Timer.h"
-#include "groebner_main.h"
-#include "markov_main.h"
-#include "qsolve_main.h"
-#include "rays_main.h"
-#include "circuits_main.h"
-#include "zbasis_main.h"
-#include "minimize_main.h"
-#include "normalform_main.h"
-#include "walk_main.h"
+#include "groebner/Globals.h"
+#include "groebner/DataType.h"
+#include "groebner/Timer.h"
+#include "groebner/groebner_main.h"
+#include "groebner/markov_main.h"
+#include "groebner/qsolve_main.h"
+#include "groebner/rays_main.h"
+#include "groebner/circuits_main.h"
+#include "groebner/zbasis_main.h"
+#include "groebner/minimize_main.h"
+#include "groebner/normalform_main.h"
+#include "groebner/walk_main.h"
 
 #include <new>
 #include <iostream>
 #include <string>
 #include <map>
 #include <csignal>
+#include <cstdlib>
+#include <climits>
 
 using namespace _4ti2_;
 
@@ -57,17 +58,9 @@ void signal_handler(int)
 
 int main(int argc, char** argv)
 {
-    std::cout << FORTY_TWO_BANNER;
-
-#if defined(_4ti2_INT32_) || defined(_4ti2_INT64_)
-    std::cout << "Using " << sizeof(IntegerType)*CHAR_BIT << " bit integers.\n";
-#elif defined(_4ti2_GMP_)
-    std::cout << "Using arbitrary precision integers.\n";
-#endif
- 
 try
 {
-#ifdef _4ti2_INT64_
+#if defined(_4ti2_INT32_) || defined(_4ti2_INT64_)
     // Set the signal handler to catch arithmetic signals.
     // TODO: Unfortunately, arithmetic overflow exceptions send a generic
     // SIGABRT signal.
@@ -75,8 +68,7 @@ try
     signal(SIGFPE, &signal_handler);
 #endif
 
-    if (argc == 1)
-    {
+    if (argc == 1) {
         std::cerr << "Usage: 4ti2 <exec> ...\n";
         exit(1);
     }
@@ -102,7 +94,7 @@ try
     }
     int status = (*i->second)(argc-1, argv+1);
 
-    std::cout << "4ti2 Total Time: " << Timer::global << " secs.\n";
+    *out << "4ti2 Total Time: " << Timer::global << " secs.\n";
     return status;
 }
 catch(const std::bad_alloc& x)

@@ -20,11 +20,12 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2__RaySupportAlgorithm_
-#define _4ti2__RaySupportAlgorithm_
+#ifndef _4ti2_groebner__RaySupportAlgorithm_
+#define _4ti2_groebner__RaySupportAlgorithm_
 
-#include "RayImplementation.h"
-#include "VectorArray.h"
+#include "groebner/RayImplementation.h"
+#include "groebner/VectorArray.h"
+#include "groebner/QSolveConsOrder.h"
 
 namespace _4ti2_
 {
@@ -34,36 +35,37 @@ class RaySupportAlgorithm : public RayImplementation<IndexSet>
 {
 public:
     RaySupportAlgorithm();
+    RaySupportAlgorithm(QSolveConsOrder o);
     virtual ~RaySupportAlgorithm();
 
     virtual IndexSet compute(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     const IndexSet& rs);
     virtual IndexSet compute(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
                     const IndexSet& rs);
 
 protected:
-    IndexSet compute0(VectorArray& matrix,
+    IndexSet compute0(const VectorArray& matrix,
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
                     const IndexSet& rs);
-    IndexSet compute1(VectorArray& matrix,
+    IndexSet compute1(const VectorArray& matrix,
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
                     const IndexSet& rs);
-    IndexSet compute2(VectorArray& matrix,
+    IndexSet compute2(const VectorArray& matrix,
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
                     const IndexSet& rs);
-    IndexSet compute3(VectorArray& matrix,
+    IndexSet compute3(const VectorArray& matrix,
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
                     const IndexSet& rs);
-    IndexSet compute4(VectorArray& matrix,
+    IndexSet compute4(const VectorArray& matrix,
                     VectorArray& vs,
                     std::vector<IndexSet>& supports,
                     const IndexSet& rs);
@@ -72,6 +74,6 @@ protected:
 } // namespace _4ti2_
 
 // Definitions of template class functions.
-#include "RaySupportAlgorithm.tpp"
+#include "groebner/RaySupportAlgorithm.tpp"
 
 #endif

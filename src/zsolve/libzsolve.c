@@ -21,7 +21,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 #include <assert.h>
-#include <stdlib.h>
 
 #include "libzsolve.h"
 #include "valuetrees.h"
@@ -462,14 +461,14 @@ void zsolveSystem(ZSolveContext ctx, BOOL appendnegatives)
 
 	while (ctx->Current < ctx->Lattice->Variables)
 	{
-		if (ctx->BackupTime > 0 && ctx->BackupCallback && (getCPUTime() - lastbackup >= (double)ctx->BackupTime))
-		{
-			ctx->BackupCallback(ctx);
-			lastbackup = getCPUTime();			
-		}
-
 		if (ctx->SumNorm == 0) // start of var loop
 		{
+			if (ctx->BackupTime > 0 && ctx->BackupCallback && (getCPUTime() - lastbackup >= (double)ctx->BackupTime))
+			{
+				ctx->BackupCallback(ctx);
+				lastbackup = getCPUTime();			
+			}
+
 			if (ctx->LogCallback)
 				ctx->VarTime = getCPUTime();
 			next = nextVariable(ctx);

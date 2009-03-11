@@ -23,11 +23,17 @@ if HAVE_GMP_WITH_CXX
 bin_PROGRAMS += 4ti2gmp
 endif
 
-lib_LTLIBRARIES = lib4ti2int32.la lib4ti2int64.la lib4ti2gmp.la
+lib_LTLIBRARIES = lib4ti2int32.la lib4ti2int64.la
+if HAVE_GMP_WITH_CXX
+lib_LTLIBRARIES += lib4ti2gmp.la
+endif
 
-# 4ti2 uses the glpk linear programming library (GLPL).
+# Allow accessing groebner's header files as "groebner/HEADER.h"
+AM_CXXFLAGS = -I$(srcdir)/..
+
+# 4ti2 uses the glpk linear programming library (GLPK).
 # Add include path to the file glpk.h if necessary.
-AM_CXXFLAGS = $(GLPK_CFLAGS)
+AM_CXXFLAGS += $(GLPK_CFLAGS)
 # Add library include path for the library libglpk if necessary.
 LIBS += $(GLPK_LIBS)
 
@@ -41,6 +47,7 @@ AM_CXXFLAGS += -DNDEBUG
 #AM_CXXFLAGS += -pg
 
 lib4ti2sources =				\
+	4ti2API.cpp				\
 	Algorithm.cpp				\
 	BasicCompletion.cpp			\
 	BasicGeneration.cpp			\
@@ -56,8 +63,7 @@ lib4ti2sources =				\
 	BinomialStream.cpp			\
 	BitSetStream.cpp			\
 	Bounded.cpp				\
-	CircuitAlgorithm.cpp			\
-	CircuitOptions.cpp			\
+	CircuitsAPI.cpp				\
 	Completion.cpp				\
 	DiagonalAlgorithm.cpp			\
 	EliminateAlgorithm.cpp			\
@@ -84,7 +90,9 @@ lib4ti2sources =				\
 	Options.cpp				\
 	OrderedCompletion.cpp			\
 	ProjectLiftGenSet.cpp			\
-	RayAlgorithm.cpp			\
+	QSolveAlgorithm.cpp 		\
+	QSolveAPI.cpp			\
+	RaysAPI.cpp				\
 	SaturationGenSet.cpp			\
 	ShortDenseIndexSet.cpp			\
 	ShortDenseIndexSetStream.cpp		\
@@ -94,6 +102,7 @@ lib4ti2sources =				\
 	Timer.cpp				\
 	Truncated.cpp				\
 	VectorArray.cpp				\
+	VectorArrayAPI.cpp				\
 	VectorArrayStream.cpp			\
 	Vector.cpp				\
 	VectorStream.cpp			\
@@ -103,7 +112,9 @@ lib4ti2sources =				\
 	WeightedBinomialSet.cpp			\
 	WeightedReduction.cpp
 
-include_HEADERS = 				\
+groebnerincludedir=$(includedir)/groebner
+
+groebnerinclude_HEADERS =			\
 	Algorithm.h				\
 	BasicCompletion.h			\
 	BasicGeneration.h			\
@@ -120,10 +131,9 @@ include_HEADERS = 				\
 	BitSet.h				\
 	BitSetStream.h				\
 	Bounded.h				\
-	CircuitAlgorithm.h			\
+	CircuitsAPI.h				\
 	CircuitImplementation.h			\
 	CircuitMatrixAlgorithm.h		\
-	CircuitOptions.h			\
 	CircuitSupportAlgorithm.h		\
 	Completion.h				\
 	DataType.h				\
@@ -161,9 +171,13 @@ include_HEADERS = 				\
 	OrderedCompletion.h			\
 	Permutation.h				\
 	ProjectLiftGenSet.h			\
-	RayAlgorithm.h				\
+	QSolveAlgorithm.h		\
+	QSolveConsOrder.h		\
+	QSolveVariant.h			\
+	QSolveAPI.h				\
 	RayImplementation.h			\
 	RayMatrixAlgorithm.h			\
+	RaysAPI.h				\
 	RaySupportAlgorithm.h			\
 	Reduction.h				\
 	SaturationGenSet.h			\
@@ -179,6 +193,7 @@ include_HEADERS = 				\
 	Timer.h					\
 	Truncate.h				\
 	VectorArray.h				\
+	VectorArrayAPI.h			\
 	VectorArrayStream.h			\
 	Vector.h				\
 	VectorStream.h				\
@@ -189,8 +204,8 @@ include_HEADERS = 				\
 	WeightedReduction.h			\
 	Weight.h
 
-# These files are #include'd C++ files.
-noinst_HEADERS = 				\
+# These files are C++ files #include'd in one of the above headers
+groebnerinclude_HEADERS +=			\
 	CircuitImplementation.tpp		\
 	CircuitMatrixAlgorithm.tpp		\
 	CircuitSupportAlgorithm.tpp		\
@@ -215,7 +230,7 @@ noinst_HEADERS = 				\
 	main.cpp
 
 # These headers are not installed
-noinst_HEADERS += 				\
+noinst_HEADERS = 				\
 	circuits_main.h				\
 	groebner_main.h				\
 	markov_main.h				\
@@ -240,6 +255,8 @@ WRAPPERSCRIPTS =				\
 nodist_bin_SCRIPTS = $(WRAPPERSCRIPTS)
 DISTCLEANFILES = $(WRAPPERSCRIPTS)
 
+AM_LDFLAGS = -L$(builddir)/../4ti2 -R$(libdir) -l4ti2common
+
 # 16 bit precision flags.
 # 4ti2int16_LDADD = lib4ti2int16.la
 # 4ti2int16_CPPFLAGS = -D_4ti2_INT16_
@@ -250,8 +267,10 @@ DISTCLEANFILES = $(WRAPPERSCRIPTS)
 # 32 bit precision flags.
 4ti2int32_LDADD = lib4ti2int32.la
 4ti2int32_CPPFLAGS = -D_4ti2_INT32_
+4ti2int32_CXXFLAGS = $(TRAPV) $(AM_CXXFLAGS)
 4ti2int32_SOURCES = $(4ti2sources)
 lib4ti2int32_la_CPPFLAGS = -D_4ti2_INT32_
+lib4ti2int32_la_CXXFLAGS = $(TRAPV) $(AM_CXXFLAGS)
 lib4ti2int32_la_SOURCES = $(lib4ti2sources)
 
 # 64 bit precision flags.
@@ -278,5 +297,4 @@ endif
 EXTRA_DIST = script.template
 
 $(WRAPPERSCRIPTS): script.template
-	cp $< $@
-
+	$(install_sh_SCRIPT) $< $@

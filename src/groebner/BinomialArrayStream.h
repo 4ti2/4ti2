@@ -20,10 +20,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2__BinomialArrayStream_
-#define _4ti2__BinomialArrayStream_
+#ifndef _4ti2_groebner__BinomialArrayStream_
+#define _4ti2_groebner__BinomialArrayStream_
 
-#include "BinomialArray.h"
+#include "groebner/BinomialArray.h"
 #include <iostream>
 
 namespace _4ti2_

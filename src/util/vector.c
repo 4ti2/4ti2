@@ -669,6 +669,20 @@ vector transpose(vector mat,int numOfVars,int numOfRows){
   return(transposedMat);
 }
 /* ----------------------------------------------------------------- */
+vector matrixTimesVector(listVector *Mat, vector v, int numOfRows,
+                         int numOfVars) {
+  int i;
+  vector b;
+
+  b=createVector(numOfRows);
+  for (i=0;i<numOfRows;i++) {
+    b[i]=dotProduct(Mat->first,v,numOfVars);
+    Mat=Mat->rest;
+  }
+
+  return (b);
+}
+/* ----------------------------------------------------------------- */
 int hasSmallerSupport(vector u, vector v, int numOfVars) {
   int i;
   for (i=0; i<numOfVars; i++) if ((v[i]==0) && (u[i]!=0)) return (0);
@@ -864,6 +878,23 @@ int minimalNormInListVector(listVector* L, int numOfVars) {
       norm=s;
     } else {
       if (s<norm) norm=s;
+    }
+    L=L->rest;
+  }
+
+  return (norm);
+}
+/* ----------------------------------------------------------------- */
+int maximalNormInListVector(listVector* L, int numOfVars) {
+  int s,norm;
+
+  norm=-1;
+  while (L) {
+    s=normOfVector(L->first,numOfVars);   
+    if (norm==-1) {
+      norm=s;
+    } else {
+      if (s>norm) norm=s;
     }
     L=L->rest;
   }

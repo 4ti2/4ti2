@@ -6,6 +6,7 @@ EXTRA_DIST =					\
 	44 44.cir.chk
 
 check-local:
-	@../check.template $(srcdir) "" src/groebner/circuits -q 
+	@../check.template $(srcdir) "" src/groebner/circuits -q -m
+	@../check.template $(srcdir) "" src/groebner/circuits -q -s
 
 CLEANFILES = .num_failures

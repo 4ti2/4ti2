@@ -2,15 +2,16 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(4ti2, 1.3.1+autoconf-0.1)
+AC_INIT(4ti2, 1.4-prerelease-2009-03-11)
 AM_INIT_AUTOMAKE(foreign)
 AM_MAINTAINER_MODE
-AC_CONFIG_FILES([Makefile src/Makefile 
+AC_CONFIG_FILES([Makefile src/Makefile src/4ti2/Makefile
 		 src/groebner/Makefile src/util/Makefile 
 		 src/ppi/Makefile src/zsolve/Makefile
+		 src/fiber/Makefile
 		 m4/Makefile])
 
-AC_CONFIG_HEADERS(src/config.h)
+AC_CONFIG_HEADERS([src/config.h src/4ti2/4ti2_config.h])
 
 AC_CONFIG_FILES([test/Makefile])
 AC_CONFIG_FILES([test/circuits/Makefile])
@@ -32,11 +33,13 @@ AC_CONFIG_FILES([test/output/maple/Makefile])
 AC_CONFIG_FILES([test/output/positive/Makefile])
 AC_CONFIG_FILES([test/ppi/Makefile])
 AC_CONFIG_FILES([test/qsolve/Makefile])
+AC_CONFIG_FILES([test/qsolve/api/Makefile])
 AC_CONFIG_FILES([test/qsolve/gmp/Makefile])
 AC_CONFIG_FILES([test/rays/Makefile])
 AC_CONFIG_FILES([test/walk/Makefile])
 AC_CONFIG_FILES([test/zbasis/Makefile])
 AC_CONFIG_FILES([test/zsolve/Makefile])
+AC_CONFIG_FILES([test/zsolve/api/Makefile])
 
 AC_CONFIG_FILES([test/check.template], 		[chmod +x test/check.template])
 AC_CONFIG_FILES([test/subdirsum], 		[chmod +x test/subdirsum])
@@ -49,8 +52,11 @@ AC_ARG_ENABLE(groebner, AS_HELP_STRING([--disable-groebner], [Disable building t
 			[enable_groebner=${enableval}], [enable_groebner=yes])
 AC_ARG_ENABLE(zsolve, AS_HELP_STRING([--disable-zsolve], [Disable building the zsolve components]),
 			[enable_zsolve=${enableval}], [enable_zsolve=yes])
+AC_ARG_ENABLE(fiber, AS_HELP_STRING([--enable-fiber], [Disable building the fiber components]),
+			[enable_fiber=${enableval}], [enable_fiber=no])
 AM_CONDITIONAL([ENABLE_GROEBNER], [ test x${enable_groebner} == xyes ])
 AM_CONDITIONAL([ENABLE_ZSOLVE], [ test x${enable_zsolve} == xyes ])
+AM_CONDITIONAL([ENABLE_FIBER], [ test x${enable_fiber} == xyes ])
 
 ## Using the C compiler
 AC_PROG_CC
@@ -68,9 +74,7 @@ AX_CXX_MAXOPT
 # Turn on most compiler warnings
 AX_CXXFLAGS_WARN_ALL
 # The flag -ftrapv means that arithmetic overflow checking is enabled.
-# This only works with the g++ compiler version 3.4 and newer versions.
-AX_CHECK_COMPILER_FLAGS(-ftrapv, TRAPV_FLAG=-ftrapv)
-AC_SUBST(TRAPV_FLAG, ${TRAPV_FLAG})
+CHECK_TRAPV
 
 ### Taken from GMP's configure.in:
 # The dead hand of AC_REQUIRE makes AC_PROG_LIBTOOL expand and execute
@@ -124,5 +128,49 @@ To just build the zsolve component use --disable-groebner.])])
 fi
 
 AM_CONDITIONAL([HAVE_GMP_WITH_CXX], [test -n "${GMP_HAVE_CXX}"])
+
+if test -n "${GMP_HAVE_CXX}" ; then 
+
+  # Definition for installed header file 4ti2_config.h
+  AC_DEFINE([_4ti2_HAVE_GMP], [], [Define if GMP (with C++ interface) is installed])
+
+  # Check whether we can convert between int32_t and int64_t and mpz_class (for the API).
+  save_LIBS="${LIBS}"
+  LIBS="${LIBS} ${GMP_LIBS}"
+  AC_MSG_CHECKING(whether we can convert between int32_t and mpz_class)
+  AC_TRY_LINK(
+    [  #include <gmpxx.h>
+    ],
+    [  int32_t x = 815;
+       mpz_class y(x);
+    ],
+    [ HAVE_MPZ_INT32_CONVERSION=yes;
+      AC_DEFINE(HAVE_MPZ_INT32_CONVERSION, 1, [Define if we can convert between int32_t and mpz_class]) ],
+    [ HAVE_MPZ_INT32_CONVERSION=no ])
+  AC_MSG_RESULT(${HAVE_MPZ_INT32_CONVERSION})
+  AC_MSG_CHECKING(whether we can convert between int64_t and mpz_class)
+  AC_TRY_LINK(
+    [  #include <gmpxx.h>
+    ],
+    [  int64_t x = 815;
+       mpz_class y(x);
+    ],
+    [ HAVE_MPZ_INT64_CONVERSION=yes;
+      AC_DEFINE(HAVE_MPZ_INT64_CONVERSION, 1, [Define if we can convert between int64_t and mpz_class]) ],
+    [ HAVE_MPZ_INT64_CONVERSION=no ])
+  AC_MSG_RESULT(${HAVE_MPZ_INT64_CONVERSION})
+  LIBS="${save_LIBS}"
+fi
+
+## Check whether to build high-level-language interfaces using SWIG
+AC_ARG_ENABLE(swig, AS_HELP_STRING([--enable-swig], [Enable building high-level-language interfaces using SWIG]),
+		    [enable_swig=${enableval}], [enable_swig=no])
+if test "$enable_swig" = yes; then
+  # Call configure separately in this subdirectory.
+  AC_CONFIG_SUBDIRS(swig)
+  # If we use SWIG, we definitely want shared libraries.
+  AC_ENABLE_SHARED
+fi
+AM_CONDITIONAL([ENABLE_SWIG], [ test x${enable_swig} == xyes ])
 
 AC_OUTPUT

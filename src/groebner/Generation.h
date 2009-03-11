@@ -20,11 +20,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2__Generation_
-#define _4ti2__Generation_
+#ifndef _4ti2_groebner__Generation_
+#define _4ti2_groebner__Generation_
 
-#include "BinomialSet.h"
-#include "BinomialCollection.h"
+#include "groebner/BinomialSet.h"
+#include "groebner/BinomialCollection.h"
 
 namespace _4ti2_
 {

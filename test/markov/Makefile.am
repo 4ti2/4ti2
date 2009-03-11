@@ -27,7 +27,8 @@ EXTRA_DIST = 									\
 	prob14 prob14.mar.chk							\
 	prob16 prob16.lat prob16.mar.chk					\
 	prob18 prob18.mar.chk							\
-	prob20 prob20.mar.chk
+	prob20 prob20.mar.chk							\
+	normalize-bug.lat normalize-bug.mar.chk
 
 check-hybrid:
 	@../check.template $(srcdir) "-hybrid" src/groebner/markov -q -ghybrid
