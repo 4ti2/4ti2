@@ -15,7 +15,14 @@ m4/Makefile
 m4/Makefile.in
 /missing
 /obj
+src/4ti2/.deps
+src/4ti2/.libs
+src/4ti2/4ti2API.lo
+src/4ti2/4ti2_config.h
+src/4ti2/Makefile
 src/4ti2/Makefile.in
+src/4ti2/lib4ti2common.la
+src/4ti2/stamp-h2
 src/Makefile
 src/Makefile.in
 src/config.h.in
