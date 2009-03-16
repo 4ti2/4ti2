@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #include <cstring>
 #include <iostream>
+#include <cstdlib>
 #include "4ti2/4ti2.h"
 #include "groebner/QSolveAlgorithm.h"
 #include "groebner/VectorArrayAPI.h"

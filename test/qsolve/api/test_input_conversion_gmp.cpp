@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <cstdlib>
 
 #include "4ti2/4ti2.h"
 #include "4ti2/4ti2xx.h"

@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "groebner/Globals.h"
 #include "banner.h"
 #include <iostream>
+#include <climits>
 
 using namespace _4ti2_;
 
