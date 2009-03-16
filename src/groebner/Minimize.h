@@ -20,13 +20,13 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2__Minimize_
-#define _4ti2__Minimize_
+#ifndef _4ti2_groebner__Minimize_
+#define _4ti2_groebner__Minimize_
 
-#include "VectorArray.h"
-#include "BitSet.h"
-#include "Minimize.h"
-#include "Feasible.h"
+#include "groebner/VectorArray.h"
+#include "groebner/BitSet.h"
+#include "groebner/Minimize.h"
+#include "groebner/Feasible.h"
 
 namespace _4ti2_
 {

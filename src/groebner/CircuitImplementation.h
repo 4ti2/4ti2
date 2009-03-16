@@ -20,11 +20,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2__CircuitImplementation_
-#define _4ti2__CircuitImplementation_
+#ifndef _4ti2_groebner__CircuitImplementation_
+#define _4ti2_groebner__CircuitImplementation_
 
-#include "VectorArray.h"
-#include "Timer.h"
+#include "groebner/VectorArray.h"
+#include "groebner/Timer.h"
 
 namespace _4ti2_
 {
@@ -37,7 +37,7 @@ public:
     virtual ~CircuitImplementation() {}
 
     virtual void compute(
-                    VectorArray& matrix,
+                    const VectorArray& matrix,
                     VectorArray& vs,
                     const IndexSet& rs,
                     const IndexSet& cirs);
@@ -111,6 +111,6 @@ protected:
 } // namespace _4ti2_
 
 // Include template definitions.
-#include "CircuitImplementation.tpp"
+#include "groebner/CircuitImplementation.tpp"
 
 #endif

@@ -33,33 +33,42 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 // Inputs a matrix and outputs a lattice basis in the same set.
 void
-_4ti2_::lattice_basis(const VectorArray& matrix, VectorArray& temp)
+_4ti2_::lattice_basis(const VectorArray& matrix, VectorArray& basis)
 {
-    DEBUG_4ti2(*out << "Computing Lattice basis ...\n";)
-    VectorArray trans(matrix.get_size(), matrix.get_number());
-    VectorArray::transpose(matrix, trans);
-    DEBUG_4ti2(*out << "Transpose:\n" << trans << "\n";)
+    Index n = matrix.get_size();
+    Index m = matrix.get_number();
+    VectorArray temp(n, n + m);
+    // We transpose the matrix.
+    for (Index i = 0; i < n; ++i) {
+        Vector& tempi = temp[i];
+        for (Index j = 0; j < m; ++j) {
+            tempi[j] = matrix[j][i];
+        }
+    }
+    // We append an identity matrix.
+    for (Index i = 0; i < n; ++i) {
+        Vector& tempi = temp[i];
+        for (Index j = m; j < n+m; ++j) {
+            tempi[j] = 0;
+        }
+    }
+    for (Index i = 0; i < n; ++i) { temp[i][i+m] = 1; }
+    DEBUG_4ti2(*out << "Transpose + Identity:\n" << temp << "\n";)
 
-    VectorArray basis(matrix.get_size(), matrix.get_size(), 0);
-    for (Index i = 0; i < basis.get_number(); ++i) { basis[i][i] = 1; }
-    DEBUG_4ti2(*out << "Identity:\n" << basis << "\n";)
+    Index r = upper_triangle(temp, n, m);
+    DEBUG_4ti2(*out << "Full Hermite:\n" << temp << "\n";)
 
-    VectorArray trans_basis(trans.get_number(),
-                        trans.get_size()+basis.get_size());
-    VectorArray::concat(trans, basis, trans_basis);
-    DEBUG_4ti2(
-        *out << "Transpose + Identity:\n" << trans_basis << "\n";)
-
-    Index rows = upper_triangle(trans_basis, trans_basis.get_number(), trans.get_size());
-    DEBUG_4ti2(
-        *out << "Full Hermite:\n" << trans_basis << "\n";)
-
-    VectorArray::project(trans_basis, trans.get_size(),
-                    trans_basis.get_size(), basis);
-    basis.remove(0,rows);
+    // We now extract the submatrix that gives the lattice basis.
+    // The submatrix is from rows r to n-1, and columns m to n+m-1.
+    basis.renumber(n-r);
+    for (Index i = r; i < n; ++i) {
+        Vector& tempi = temp[i];
+        Vector& basisir = basis[i-r];
+        for (Index j = m; j < n+m; ++j) {
+            basisir[j-m] = tempi[j];
+        }
+    }
     DEBUG_4ti2(*out << "Basis:\n" << basis << "\n";)
-
-    temp = basis;
 }
 
 // Inputs a matrix and outputs a lattice basis in the same set.

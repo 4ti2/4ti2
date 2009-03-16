@@ -20,10 +20,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2__BinomialCollection_
-#define _4ti2__BinomialCollection_
+#ifndef _4ti2_groebner__BinomialCollection_
+#define _4ti2_groebner__BinomialCollection_
 
-#include "Binomial.h"
+#include "groebner/Binomial.h"
 #include <iostream>
 
 namespace _4ti2_

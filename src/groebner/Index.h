@@ -20,8 +20,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef __4ti2__Index_
-#define __4ti2__Index_
+#ifndef __4ti2_groebner__Index_
+#define __4ti2_groebner__Index_
 
 namespace _4ti2_
 {

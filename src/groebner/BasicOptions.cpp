@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
+#include <cstdlib>
 
 #ifdef _GNU_SOURCE
 #include <getopt.h>
@@ -49,6 +50,7 @@ void
 BasicOptions::process_options(int argc, char** argv)
 {
     int c;
+    optind = 1;
     while (1) {
 #ifdef _GNU_SOURCE
         int option_index = 0;
@@ -76,6 +78,7 @@ BasicOptions::process_options(int argc, char** argv)
         case 'q':
             output = SILENT;
             out = new std::ofstream;
+            err = new std::ofstream;
             break;
         case 'h': case '?': case ':':
             print_usage();

@@ -31,8 +31,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 using namespace _4ti2_;
 
-typedef std::vector<const Binomial*> BinomialList;
-
 class FilterNode {
 public:
     FilterNode() { binomials = 0; filter = 0; }
@@ -61,26 +59,21 @@ FilterReduction::add(const Binomial& b)
 {
     FilterNode* current = root;
     Index end = END;
-    for (Index i = 0; i < end; ++i)
-    {
-        if (b[i] > 0)
-        {
+    for (Index i = 0; i < end; ++i) {
+        if (b[i] > 0) {
             int j = 0;
             while (j < (int) current->nodes.size() && current->nodes[j].first != i) { ++j; }
-            if (j < (int) current->nodes.size())
-            {
+            if (j < (int) current->nodes.size()) {
                 current = current->nodes[j].second;
             }
-            else
-            {
+            else {
                 FilterNode* next = new FilterNode;
                 current->nodes.push_back(std::pair<int,FilterNode*>(i,next));
                 current = next;
             }
         }
     }
-    if (!current->binomials)
-    {
+    if (!current->binomials) {
         current->binomials = new BinomialList;
         current->filter = new Filter;
         b.get_filter(*current->filter);
@@ -94,28 +87,22 @@ FilterReduction::remove(const Binomial& b)
 {
     FilterNode* current = root;
     Index end = END;
-    for (Index i = 0; i < end; ++i)
-    {
-        if (b[i] > 0)
-        {
+    for (Index i = 0; i < end; ++i) {
+        if (b[i] > 0) {
             int j = 0;
             while (j < (int) current->nodes.size() && current->nodes[j].first != i) { ++j; }
-            if (j < (int) current->nodes.size())
-            {
+            if (j < (int) current->nodes.size()) {
                 current = current->nodes[j].second;
             }
-            else
-            {
+            else {
                 assert(false); // If we got to here, then we did not find the point.
             }
         }
     }
     assert(current->binomials); // If this assert is false, the point does not exist.
     for (BinomialList::iterator i = current->binomials->begin();
-                    i != current->binomials->end(); ++i)
-    {
-        if ((*i) == &b)
-        {
+                    i != current->binomials->end(); ++i) {
+        if ((*i) == &b) {
             current->binomials->erase(i);
             return;
         }
@@ -148,6 +135,14 @@ FilterReduction::reducable_negative(
     return reducable_negative(b, b1, root);
 }
 
+void
+FilterReduction::reducable(
+                    const Binomial& b,
+                    BinomialList& reducers) const
+{
+    reducable(b, reducers, root);
+}
+
 const Binomial*
 FilterReduction::reducable(
                     const Binomial& b,
@@ -156,24 +151,19 @@ FilterReduction::reducable(
 {
     assert(node != 0);
 
-    for (int i = 0; i < (int) node->nodes.size(); ++i)
-    {
-        if (b[node->nodes[i].first] > 0)
-        {
+    for (int i = 0; i < (int) node->nodes.size(); ++i) {
+        if (b[node->nodes[i].first] > 0) {
             const Binomial* bi = reducable(b, b1, node->nodes[i].second);
             if (bi != 0) { return bi; }
         }
     }
 
-    if (node->binomials)
-    {
+    if (node->binomials) {
         Filter& f = *node->filter;
         for (BinomialList::iterator i = node->binomials->begin();
-                        i != node->binomials->end(); ++i)
-        {
+                        i != node->binomials->end(); ++i) {
             const Binomial& bi = *(*i);
-            if (Binomial::reduces(bi, f, b))
-            {
+            if (Binomial::reduces(bi, f, b)) {
                 if (&bi != &b && &bi != b1) { return &bi; }
             }
         }
@@ -190,10 +180,8 @@ FilterReduction::reducable_negative(
 {
     assert(node != 0);
 
-    for (int i = 0; i < (int) node->nodes.size(); ++i)
-    {
-        if (b[node->nodes[i].first] < 0)
-        {
+    for (int i = 0; i < (int) node->nodes.size(); ++i) {
+        if (b[node->nodes[i].first] < 0) {
             const Binomial* bi = reducable_negative(b, b1, node->nodes[i].second);
             if (bi != 0) { return bi; }
         }
@@ -203,17 +191,41 @@ FilterReduction::reducable_negative(
     {
         Filter& f = *node->filter;
         for (BinomialList::iterator i = node->binomials->begin();
-                        i != node->binomials->end(); ++i)
-        {
+                        i != node->binomials->end(); ++i) {
             const Binomial& bi = *(*i);
-            if (Binomial::reduces_negative(bi, f, b))
-            {
+            if (Binomial::reduces_negative(bi, f, b)) {
                 if (&bi != &b && &bi != b1) { return &bi; }
             }
         }
     }
 
     return 0;
+}
+
+void
+FilterReduction::reducable(
+                    const Binomial& b,
+                    BinomialList& reducers,
+                    const FilterNode* node) const
+{
+    assert(node != 0);
+
+    for (int i = 0; i < (int) node->nodes.size(); ++i) {
+        if (b[node->nodes[i].first] > 0) {
+            reducable(b, reducers, node->nodes[i].second);
+        }
+    }
+
+    if (node->binomials) {
+        Filter& f = *node->filter;
+        for (BinomialList::iterator i = node->binomials->begin();
+                        i != node->binomials->end(); ++i) {
+            const Binomial& bi = *(*i);
+            if (Binomial::reduces(bi, f, b)) {
+                reducers.push_back(&bi);
+            }
+        }
+    }
 }
 
 void
@@ -226,23 +238,19 @@ void
 FilterReduction::print(const FilterNode* node) const
 {
     assert(node != 0);
-    if (node->binomials)
-    {
+    if (node->binomials) {
         *out << "Num binomials = " << node->binomials->size() << std::endl;
-        for (int i = 0; i < (int) node->filter->size(); ++i)
-        {
+        for (int i = 0; i < (int) node->filter->size(); ++i) {
             *out << (*node->filter)[i] << " ";
         }
         *out << "\n";
         for (BinomialList::iterator i = node->binomials->begin();
-              i != node->binomials->end(); ++i)
-        {
+              i != node->binomials->end(); ++i) {
             *out << *(*i) << "\n";
         }
     }
 
-    for (int i = 0; i < (int) node->nodes.size(); ++i)
-    {
+    for (int i = 0; i < (int) node->nodes.size(); ++i) {
         print(node->nodes[i].second);
     }
 }

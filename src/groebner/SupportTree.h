@@ -20,8 +20,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2__SupportTree_
-#define _4ti2__SupportTree_
+#ifndef _4ti2_groebner__SupportTree_
+#define _4ti2_groebner__SupportTree_
 
 #include <vector>
 
@@ -162,6 +162,6 @@ SupportTree<IndexSet>::find_diff(
 } // namespace _4ti2_
 
 // Include template defitinions.
-#include "SupportTree.tpp"
+#include "groebner/SupportTree.tpp"
 
 #endif

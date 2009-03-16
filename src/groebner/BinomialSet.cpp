@@ -26,6 +26,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "Globals.h"
 
 #include <iostream>
+#include <cstdlib>
+
 #include "BitSetStream.h"
 
 //#define DEBUG_4ti2(X) X
@@ -200,6 +202,14 @@ BinomialSet::reduce_negative(
         exit(1);
     }
     return changed;
+}
+
+void
+BinomialSet::reducers(
+                const Binomial& b,
+                std::vector<const Binomial*>& reducers) const
+{
+    reduction.reducable(b, reducers);
 }
 
 bool
