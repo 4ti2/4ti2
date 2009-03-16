@@ -32,7 +32,7 @@ liballegrocl_4ti2_la_LDFLAGS = -L$(top_builddir)/../src/groebner -R$(libdir) -l4
 	-L$(top_builddir)/../src/zsolve -lzsolve ${GMP_LIBS} \
 	-L$(top_builddir)/../src/4ti2 -l4ti2common
 
-AM_CFLAGS = -I$(top_srcdir)/../src 
+AM_CFLAGS = -I$(top_srcdir)/../src -I$(top_builddir)/../src
 
 allegrocl-4ti2.c 4ti2.cl: allegrocl-4ti2.i $(top_srcdir)/../src/4ti2/4ti2.h
 	@SWIG@ $(SWIGDEFS) -I$(top_srcdir)/../src \
