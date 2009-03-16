@@ -102,7 +102,7 @@ inline
 void
 VectorArrayAPI::convert(const int64_t& v1, mpz_class& v2)
 {
-#ifdef HAVE_MPZ_INT64_CONVERSION
+#ifdef _4ti2_HAVE_MPZ_INT64_CONVERSION
     v2 = v1;
 #else
     std::cerr << "UNIMPLEMENTED: Need to do int64_t -> mpz_class conversion" << std::endl;
@@ -136,7 +136,7 @@ VectorArrayAPI::convert(const mpz_class& v1, long int& v2)
     v2 = v1.get_si();
 }
 
-#ifndef HAVE_MPZ_INT64_CONVERSION
+#ifndef _4ti2_HAVE_MPZ_INT64_CONVERSION
 template <>
 inline
 void

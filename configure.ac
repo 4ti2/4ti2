@@ -145,7 +145,7 @@ if test -n "${GMP_HAVE_CXX}" ; then
        mpz_class y(x);
     ],
     [ HAVE_MPZ_INT32_CONVERSION=yes;
-      AC_DEFINE(HAVE_MPZ_INT32_CONVERSION, 1, [Define if we can convert between int32_t and mpz_class]) ],
+      AC_DEFINE(_4ti2_HAVE_MPZ_INT32_CONVERSION, 1, [Define if we can convert between int32_t and mpz_class]) ],
     [ HAVE_MPZ_INT32_CONVERSION=no ])
   AC_MSG_RESULT(${HAVE_MPZ_INT32_CONVERSION})
   AC_MSG_CHECKING(whether we can convert between int64_t and mpz_class)
@@ -156,7 +156,7 @@ if test -n "${GMP_HAVE_CXX}" ; then
        mpz_class y(x);
     ],
     [ HAVE_MPZ_INT64_CONVERSION=yes;
-      AC_DEFINE(HAVE_MPZ_INT64_CONVERSION, 1, [Define if we can convert between int64_t and mpz_class]) ],
+      AC_DEFINE(_4ti2_HAVE_MPZ_INT64_CONVERSION, 1, [Define if we can convert between int64_t and mpz_class]) ],
     [ HAVE_MPZ_INT64_CONVERSION=no ])
   AC_MSG_RESULT(${HAVE_MPZ_INT64_CONVERSION})
   LIBS="${save_LIBS}"

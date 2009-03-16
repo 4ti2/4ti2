@@ -107,7 +107,7 @@ convert(const mpz_class& v1, long int& v2)
     v2 = v1.get_si();
 }
 
-#ifndef HAVE_MPZ_INT64_CONVERSION
+#ifndef _4ti2_HAVE_MPZ_INT64_CONVERSION
 template <>
 inline
 void
