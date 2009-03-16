@@ -14,4 +14,6 @@ test_input_conversion_gmp_to_64_LDADD = $(top_builddir)/src/groebner/lib4ti2int6
 
 TESTS = qsolve_main test_input_conversion_64_to_gmp.sh test_input_conversion_gmp_to_64.sh
 
+EXTRA_DIST = test_input_conversion_64_to_gmp.sh test_input_conversion_gmp_to_64.sh
+
 $(TESTS): $(top_builddir)/src/groebner/lib4ti2int64.la 
