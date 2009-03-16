@@ -86,7 +86,7 @@ zsolve_CPPFLAGS += ${GMP_CFLAGS}
 zsolve_LDADD += ${GMP_LIBS}
 endif
 # Link in the "common" 4ti2 functions
-libzsolve_la_LDFLAGS = -L$(builddir)/../4ti2 -R$(libdir) -l4ti2common
+libzsolve_la_LDFLAGS = -L../4ti2 -R$(libdir) -l4ti2common
 
 bin_SCRIPTS = hilbert graver
 DISTCLEANFILES = hilbert graver
