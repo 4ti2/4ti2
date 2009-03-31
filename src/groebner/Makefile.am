@@ -64,6 +64,7 @@ lib4ti2sources =				\
 	BitSetStream.cpp			\
 	Bounded.cpp				\
 	CircuitsAPI.cpp				\
+	CircuitOptions.cpp				\
 	Completion.cpp				\
 	DiagonalAlgorithm.cpp			\
 	EliminateAlgorithm.cpp			\
@@ -92,6 +93,7 @@ lib4ti2sources =				\
 	ProjectLiftGenSet.cpp			\
 	QSolveAlgorithm.cpp 		\
 	QSolveAPI.cpp			\
+	RayAlgorithm.cpp				\
 	RaysAPI.cpp				\
 	SaturationGenSet.cpp			\
 	ShortDenseIndexSet.cpp			\
@@ -132,6 +134,7 @@ groebnerinclude_HEADERS =			\
 	BitSetStream.h				\
 	Bounded.h				\
 	CircuitsAPI.h				\
+	CircuitOptions.h				\
 	CircuitImplementation.h			\
 	CircuitMatrixAlgorithm.h		\
 	CircuitSupportAlgorithm.h		\
@@ -177,6 +180,7 @@ groebnerinclude_HEADERS =			\
 	QSolveAPI.h				\
 	RayImplementation.h			\
 	RayMatrixAlgorithm.h			\
+	RayAlgorithm.h 			\
 	RaysAPI.h				\
 	RaySupportAlgorithm.h			\
 	Reduction.h				\
