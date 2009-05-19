@@ -252,7 +252,7 @@ public:
 
     void log_maxnorm (Algorithm <T> * algorithm, bool final)
     {
-        if (m_options.maxnorm () == 1 && final || m_options.maxnorm () == 2)
+        if ((m_options.maxnorm () == 1 && final) || m_options.maxnorm () == 2)
         {
             VectorArray <T> maxnorm (algorithm->get_result_variables ());
             T norm = algorithm->extract_maxnorm_results (maxnorm);

@@ -23,6 +23,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #ifndef _4ti2_zsolve__ZSolveAPI_
 #define _4ti2_zsolve__ZSolveAPI_
 
+#include <cstring>
+
 #include "4ti2/4ti2xx.h"
 #include "zsolve/VectorArrayAPI.hpp"
 #include "zsolve/RelAPI.h"
