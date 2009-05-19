@@ -135,6 +135,8 @@ if test -n "${GMP_HAVE_CXX}" ; then
   AC_DEFINE([_4ti2_HAVE_GMP], [], [Define if GMP (with C++ interface) is installed])
 
   # Check whether we can convert between int32_t and int64_t and mpz_class (for the API).
+  save_CXXFLAGS=${CXXFLAGS}
+  CXXFLAGS="${CXXFLAGS} ${GMP_CFLAGS}"
   save_LIBS="${LIBS}"
   LIBS="${LIBS} ${GMP_LIBS}"
   AC_MSG_CHECKING(whether we can convert between int32_t and mpz_class)
@@ -160,6 +162,7 @@ if test -n "${GMP_HAVE_CXX}" ; then
     [ HAVE_MPZ_INT64_CONVERSION=no ])
   AC_MSG_RESULT(${HAVE_MPZ_INT64_CONVERSION})
   LIBS="${save_LIBS}"
+  CXXFLAGS="${save_CXXFLAGS}"
 fi
 
 ## Check whether to build high-level-language interfaces using SWIG
