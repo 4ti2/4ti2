@@ -3,6 +3,7 @@
 
 AC_PREREQ(2.59)
 AC_INIT(4ti2, 1.4-prerelease-2009-03-15)
+AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE(foreign)
 AM_MAINTAINER_MODE
 AC_CONFIG_FILES([Makefile src/Makefile src/4ti2/Makefile

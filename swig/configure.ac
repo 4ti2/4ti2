@@ -2,6 +2,7 @@ AC_PREREQ(2.59)
 AC_INIT(4ti2-swig, 1.3.99+cvs)
 AM_INIT_AUTOMAKE(foreign)
 AM_MAINTAINER_MODE
+AC_CONFIG_MACRO_DIR([../m4])
 AC_CONFIG_FILES([Makefile allegrocommonlisp/Makefile])
 
 # Only build shared libraries.
