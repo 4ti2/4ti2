@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "zsolve/VectorArray.hpp"
 #include "zsolve/Exception.h"
 #include <fstream>
+#include <cstdlib>
 
 namespace _4ti2_zsolve_ {
 
@@ -114,7 +115,7 @@ void
 convert(const mpz_class& v1, int64_t& v2)
 {
   std::cerr << "UNIMPLEMENTED: Need to convert from mpz to int64_t" << std::endl;
-  exit(1);
+  std::exit(1);
 }
 
 template <>
@@ -123,7 +124,7 @@ void
 convert(const int64_t& v1, mpz_class &v2)
 {
   std::cerr << "UNIMPLEMENTED: Need to convert from int64_t to mpz" << std::endl;
-  exit(1);
+  std::exit(1);
 }
 #endif
 
