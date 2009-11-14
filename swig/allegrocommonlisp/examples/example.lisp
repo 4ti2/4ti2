@@ -1,3 +1,4 @@
+(asdf:oos 'asdf:load-op :4ti2)
 (use-package :4ti2)
 
 (let* ((state (-4ti2-rays-create-state *-4ti2-prec-int-32*))
@@ -43,3 +44,26 @@
   ;; FIXME: Does not signal an error!!
   nil)
 
+
+;;; ZSolve test
+
+(let* ((state (-4ti2-zsolve-create-state *-4ti2-prec-int-32*))
+       (mat (-4ti2-state-create-matrix state 
+				       #|numrows:|# 2 
+						    #|numcols:|# 3
+								 "mat"))
+       (rel (-4ti2-state-create-matrix state 1 2 "rel")))
+  (-4ti2-matrix-set-entry-int32-t mat 0 2 47)
+  (-4ti2-matrix-write-to-stdout mat)
+  (-4ti2-matrix-write-to-stdout rel)
+  (-4ti2-state-set-options state '("IGNORED-ARG" "-q"))
+  (-4ti2-state-compute state)
+;;   (let ((hom (-4ti2-state-get-matrix state "zhom")))
+;;     ;;(-4ti2-matrix-write-to-stdout hom)
+;;     (format t "Numrows: ~D Numcols: ~D~%" 
+;; 	    (-4ti2-matrix-get-num-rows hom)
+;; 	    (-4ti2-matrix-get-num-cols hom))
+;;     (dotimes (i (-4ti2-matrix-get-num-rows hom))
+;;       (dotimes (j (-4ti2-matrix-get-num-cols hom))
+;;         (format t "~D " (-4ti2-matrix-get-entry-int32-t i j)))))
+  (-4ti2-state-delete state))
