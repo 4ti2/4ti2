@@ -27,7 +27,7 @@ BACKUP_CXXFLAGS=${CXXFLAGS}
 BACKUP_LIBS=${LIBS}
 BACKUP_CXX=${CXX}
 
-CXX="./libtool --mode=link ${CXX}"
+CXX="./libtool --mode=link --tag=CXX ${CXX}"
 
 AC_MSG_CHECKING(for GLPK)
 
