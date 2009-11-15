@@ -20,12 +20,12 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2__WeightAlgorithm_
-#define _4ti2__WeightAlgorithm_
+#ifndef _4ti2_groebner__WeightAlgorithm_
+#define _4ti2_groebner__WeightAlgorithm_
 
-#include "VectorArray.h"
-#include "BitSet.h"
-#include "Weight.h"
+#include "groebner/VectorArray.h"
+#include "groebner/BitSet.h"
+#include "groebner/Weight.h"
 
 namespace _4ti2_
 {

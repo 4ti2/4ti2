@@ -4,3 +4,4 @@ autoheader
 autoconf
 libtoolize --force
 automake --add-missing
+(cd swig && sh ./autogen.sh)

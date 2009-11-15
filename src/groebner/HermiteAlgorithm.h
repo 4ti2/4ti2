@@ -20,11 +20,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2__HermiteAlgorithm_
-#define _4ti2__HermiteAlgorithm_
+#ifndef _4ti2_groebner__HermiteAlgorithm_
+#define _4ti2_groebner__HermiteAlgorithm_
 
-#include "VectorArray.h"
-#include "Index.h"
+#include "groebner/VectorArray.h"
+#include "groebner/Index.h"
 
 namespace _4ti2_ {
 
@@ -93,6 +93,6 @@ upper_triangle(VectorArray& vs, const ColumnSet& cols)
 } // namespace _4ti2_
 
 // Include template functions.
-#include "HermiteAlgorithm.tpp"
+#include "groebner/HermiteAlgorithm.tpp"
 
 #endif

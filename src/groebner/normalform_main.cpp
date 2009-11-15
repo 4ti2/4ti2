@@ -20,23 +20,25 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#include "normalform_main.h"
-#include "Vector.h"
-#include "VectorStream.h"
-#include "VectorArray.h"
-#include "VectorArrayStream.h"
-#include "BitSet.h"
-#include "BitSetStream.h"
-#include "Feasible.h"
-#include "FeasibleStream.h"
-#include "GeneratingSet.h"
-#include "GroebnerBasis.h"
-#include "Minimize.h"
-#include "BasicOptions.h"
+#include "groebner/normalform_main.h"
+#include "groebner/Vector.h"
+#include "groebner/VectorStream.h"
+#include "groebner/VectorArray.h"
+#include "groebner/VectorArrayStream.h"
+#include "groebner/BitSet.h"
+#include "groebner/BitSetStream.h"
+#include "groebner/Feasible.h"
+#include "groebner/FeasibleStream.h"
+#include "groebner/GeneratingSet.h"
+#include "groebner/GroebnerBasis.h"
+#include "groebner/Minimize.h"
+#include "groebner/BasicOptions.h"
+#include "groebner/Globals.h"
 
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <cstdlib>
 
 using namespace _4ti2_;
 
@@ -44,6 +46,8 @@ int
 _4ti2_::normalform_main(int argc, char **argv)
 {
     BasicOptions::instance()->process_options(argc, argv);
+
+    print_banner();
 
     // Read in the sets of fibers.
     Feasible* feasible = input_Feasible(BasicOptions::instance()->filename.c_str());

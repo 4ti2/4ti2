@@ -19,25 +19,25 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#include "CircuitSupportAlgorithm.h"
-#include "RaySupportAlgorithm.h"
-#include "DiagonalAlgorithm.h"
-#include "HermiteAlgorithm.h"
-#include "Euclidean.h"
-#include "SupportTree.h"
-#include "OnesTree.h"
-#include "Globals.h"
+#include "groebner/CircuitSupportAlgorithm.h"
+#include "groebner/RaySupportAlgorithm.h"
+#include "groebner/DiagonalAlgorithm.h"
+#include "groebner/HermiteAlgorithm.h"
+#include "groebner/Euclidean.h"
+#include "groebner/SupportTree.h"
+#include "groebner/OnesTree.h"
+#include "groebner/Globals.h"
 
-#include "VectorArrayStream.h"
-#include "VectorStream.h"
-#include "VectorArrayStream.h"
-#include "BitSetStream.h"
+#include "groebner/VectorArrayStream.h"
+#include "groebner/VectorStream.h"
+#include "groebner/VectorArrayStream.h"
+#include "groebner/BitSetStream.h"
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
 
 //#define DEBUG_4ti2(X) X
-#include "Debug.h"
+#include "groebner/Debug.h"
 
 #define TREE SupportTree
 
@@ -56,7 +56,7 @@ CircuitSupportAlgorithm<IndexSet>::~CircuitSupportAlgorithm()
 template <class IndexSet>
 void
 CircuitSupportAlgorithm<IndexSet>::compute(
-                VectorArray& matrix,
+                const VectorArray& matrix,
                 VectorArray& vs,
                 VectorArray& circuits,
                 const IndexSet& rs,
@@ -69,7 +69,7 @@ CircuitSupportAlgorithm<IndexSet>::compute(
 template <class IndexSet>
 void
 CircuitSupportAlgorithm<IndexSet>::compute1(
-                VectorArray& matrix,
+                const VectorArray& matrix,
                 VectorArray& vs,
                 VectorArray& circuits,
                 const IndexSet& rs,
@@ -81,6 +81,9 @@ CircuitSupportAlgorithm<IndexSet>::compute1(
     t.reset();
     Index num_cols = vs.get_size();
     Index full_num_cols = vs.get_size()+cirs.count();
+    IndexSet urs(rs); // The variables that are unrestricted in sign.
+    urs.set_union(cirs);
+    urs.set_complement();
 
     // We duplicate the circuit components for the support sets.
     // The col_map maps from a circuit component to its duplicate.
@@ -97,13 +100,12 @@ CircuitSupportAlgorithm<IndexSet>::compute1(
 
     DEBUG_4ti2(*out << "Dimension = " << vs.get_number() << "\n";)
 
-    int codim = upper_triangle(matrix);
-    matrix.remove(codim, matrix.get_number());
-    DEBUG_4ti2(*out << "Codimension = " << codim << "\n";)
-
     Index ray_rows = diagonal(vs, rs); // Compute ray diagonal normal form.
     Index cir_rows = diagonal(vs, cirs, ray_rows); // Compute circuit diagonal normal form.
     vs.remove(cir_rows, vs.get_number()); // Remove unwanted rows.
+
+    int codim = vs.get_size() - vs.get_number();
+    DEBUG_4ti2(*out << "Codimension = " << codim << "\n";)
 
     circuits.renumber(0);
     VectorArray::transfer(vs, ray_rows, vs.get_number(), circuits, 0);
@@ -175,6 +177,11 @@ CircuitSupportAlgorithm<IndexSet>::compute1(
     remaining.set_difference(diagonals);
     int num_remaining = remaining.count();
 
+    // The columns with relaxed non-negativity constraints.
+    IndexSet relaxed(remaining);
+    relaxed.set_union(urs);
+    int num_relaxed = relaxed.count();
+
     while (vs.get_number() > 0 && num_remaining > 0)
     {
         DEBUG_4ti2(
@@ -240,19 +247,19 @@ CircuitSupportAlgorithm<IndexSet>::compute1(
         int previous_size = vs.get_number();
         // Positive ray combinations.
         DEBUG_4ti2(*out << "+r\n";)
-        compute(tree, vs, next_col, cirs, remaining, codim,
+        compute(tree, vs, next_col, full_num_cols, num_remaining, num_relaxed, codim,
                         pos_ray_start, pos_ray_end, neg_ray_start, cir_end,
                         supps, pos_supps, neg_supps);
         // Negative ray combinations;
         DEBUG_4ti2(*out << "-r\n";)
-        compute(tree, vs, next_col, cirs, remaining, codim,
+        compute(tree, vs, next_col, full_num_cols, num_remaining, num_relaxed, codim,
                         neg_ray_start, neg_ray_end, cir_start, cir_end,
                         supps, pos_supps, neg_supps);
         rays.insert(rays.end(), vs.get_number()-previous_size, true);
         previous_size = vs.get_number();
         // Circuit combinations.
         DEBUG_4ti2(*out << "c\n";)
-        compute(tree, vs, next_col, cirs, remaining, codim,
+        compute(tree, vs, next_col, full_num_cols, num_remaining, num_relaxed, codim,
                         cir_start, cir_end, cir_start, cir_end,
                         supps, pos_supps, neg_supps);
         rays.insert(rays.end(), vs.get_number()-previous_size, false);
@@ -280,6 +287,8 @@ CircuitSupportAlgorithm<IndexSet>::compute1(
 
         remaining.unset(next_col);
         --num_remaining;
+        relaxed.unset(next_col);
+        --num_relaxed;
     }
 
     CircuitImplementation<IndexSet>::split_rays(vs, rays, circuits);
@@ -298,8 +307,9 @@ CircuitSupportAlgorithm<IndexSet>::compute(
                 TREE<IndexSet>& tree,
                 VectorArray& vs,
                 int next_col,
-                const IndexSet& cirs,
-                const IndexSet& remaining,
+                int full_num_cols,
+                int num_remaining,
+                int num_relaxed,
                 int codim,
                 int r1_start, int r1_end,
                 int r2_start, int r2_end,
@@ -308,12 +318,9 @@ CircuitSupportAlgorithm<IndexSet>::compute(
                 std::vector<IndexSet>& neg_supps)
 {
     if (r1_start == r1_end || r2_start == r2_end) { return; }
-    //*out << "R1 [" << r1_start << "..." << r1_end << "]\n";
-    //*out << "R2 [" << r2_start << "..." << r2_end << "]\n";
+    DEBUG_4ti2(*out << "R1 [" << r1_start << "..." << r1_end << "]\n";)
+    DEBUG_4ti2(*out << "R2 [" << r2_start << "..." << r2_end << "]\n";)
     int num_cols = vs.get_size();
-    int full_num_cols = num_cols+cirs.count();
-    //int full_num_cols = 2*num_cols;
-    int num_remaining = remaining.count();
 
     char buffer[256];
     sprintf(buffer, "  Left = %3d,  Col = %3d,", num_remaining, next_col);
@@ -334,7 +341,7 @@ CircuitSupportAlgorithm<IndexSet>::compute(
         r1_neg_supp = neg_supps[r1];
         if (r2_start == r1) { ++r2_start; }
 
-        if (!r1_supp.less_than_equal(codim-num_remaining))
+        if (!r1_supp.less_than_equal(codim-num_relaxed))
         {
             for (Index r2 = r2_start; r2 < r2_end; ++r2)
             {
@@ -354,7 +361,7 @@ CircuitSupportAlgorithm<IndexSet>::compute(
             {
                 if (!IndexSet::set_disjoint(r1_pos_supp, pos_supps[r2])) { continue; }
                 IndexSet::set_difference(supps[r2], r1_supp, temp_supp);
-                if (!temp_supp.less_than_equal(codim-num_remaining-r1_count+2)) { continue; }
+                if (!temp_supp.less_than_equal(codim-num_relaxed-r1_count+2)) { continue; }
                 IndexSet::set_union(r1_pos_supp,neg_supps[r2],full_temp_supp);
                 if (!tree.dominated(full_temp_supp, r1, r2))
                 {
@@ -382,8 +389,9 @@ CircuitSupportAlgorithm<IndexSet>::compute(
                 TREE<IndexSet>& tree,
                 VectorArray& vs,
                 int next_col,
-                const IndexSet& cirs,
-                const IndexSet& remaining,
+                int full_num_cols,
+                int num_remaining,
+                int num_relaxed,
                 int codim,
                 int r1_start, int r1_end,
                 int r2_start, int r2_end,
@@ -392,12 +400,9 @@ CircuitSupportAlgorithm<IndexSet>::compute(
                 std::vector<IndexSet>& neg_supps)
 {
     if (r1_start == r1_end || r2_start == r2_end) { return; }
-    //*out << "R1 [" << r1_start << "..." << r1_end << "]\n";
-    //*out << "R2 [" << r2_start << "..." << r2_end << "]\n";
+    DEBUG_4ti2(*out << "R1 [" << r1_start << "..." << r1_end << "]\n";)
+    DEBUG_4ti2(*out << "R2 [" << r2_start << "..." << r2_end << "]\n";)
     int num_cols = vs.get_size();
-    int full_num_cols = num_cols+cirs.count();
-    //int full_num_cols = 2*num_cols;
-    int num_remaining = remaining.count();
 
     char buffer[256];
     sprintf(buffer, "  Left = %3d  Col = %3d", num_remaining, next_col);
@@ -420,8 +425,8 @@ CircuitSupportAlgorithm<IndexSet>::compute(
         r1_neg_supp = neg_supps[r1];
         if (r2_start == r1) { ++r2_start; }
 
-        //if (r1_supp.count() == codim-num_remaining+1)
-        if (!r1_supp.less_than_equal(codim-num_remaining))
+        //if (r1_supp.count() == codim-num_relaxed+1)
+        if (!r1_supp.less_than_equal(codim-num_relaxed))
         {
             for (Index r2 = r2_start; r2 < r2_end; ++r2)
             {
@@ -477,8 +482,7 @@ CircuitSupportAlgorithm<IndexSet>::compute(
                 if (!IndexSet::set_disjoint(zero_supp, neg_supps[r2])) { continue; }
                 //if (!IndexSet::set_disjoint(r1_pos_supp, pos_supps[r2])) { continue; }
                 IndexSet::set_difference(supps[r2], r1_supp, temp_supp);
-                //if (temp_supp.count() > codim-r1_rows+1)
-                if (!temp_supp.less_than_equal(codim-num_remaining-r1_count+2)) { continue; }
+                if (!temp_supp.less_than_equal(codim-num_relaxed-r1_count+2)) { continue; }
                 IndexSet::set_union(r1_pos_supp,neg_supps[r2],full_temp_supp);
                 if (!tree.dominated(full_temp_supp, r1, r2))
                 {

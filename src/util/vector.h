@@ -69,6 +69,7 @@ vector subMultipleVector(vector, int, vector, int);
 vector permuteMatrix(vector, vector, int, int);
 vector permuteTransposedMatrix(vector, vector, int, int);
 vector transpose(vector,int,int);
+vector matrixTimesVector(listVector*, vector, int, int);
 int hasSmallerSupport(vector, vector, int);
 int isCircuit(listVector*, vector, int);
 listVector* extractCircuits(listVector*, int);
@@ -80,6 +81,7 @@ int normOfVector(vector, int);
 int signedNormOfVector(vector, int);
 int weightedNormOfVector(vector, vector, int);
 int minimalNormInListVector(listVector*, int);
+int maximalNormInListVector(listVector*, int);
 listVector* projectListVectorDown(listVector*, int, int);
 listVector* reduceLastComponent(listVector*, vector, int);
 listVector* appendNewComponentToListVector(listVector*, listVector*, 

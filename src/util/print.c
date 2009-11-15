@@ -104,6 +104,113 @@ void printListVectorToFile(char* fileName, listVector* basis, int numOfVars) {
   return ;
 }
 /* ----------------------------------------------------------------- */
+void printSubsetOfListVectorToFile(char* fileName, listVector* basis, 
+				   vector ind, int numOfVars) {
+  int len,len2,j;
+  FILE* out;
+
+  if (!(out = fopen(fileName,"w"))) {
+    printf("Error opening output file!");
+    exit (0);
+  }
+  if (basis==0) {
+    fprintf(out,"0 %d\n",numOfVars);
+    fclose(out);
+    return;
+  }
+
+  len=lengthListVector(basis);
+  len2=normOfVector(ind,len);
+  fprintf(out,"%d %d\n",len2,numOfVars);
+  j=0;
+  while(basis) {
+    if (ind[j]==1) printVectorToFile(out,basis->first,numOfVars);
+    j++;
+    basis = basis->rest;
+  }
+  fprintf(out,"\n");
+  fclose(out);
+  return ;
+}
+/* ----------------------------------------------------------------- */
+void printVectorWithoutColumnToFile(FILE *out, vector v, int ind,
+				    int numOfVars) {
+  int i;
+
+  if (v==0) return;
+  for (i=0; i<ind-1; i++) fprintf(out,"%d ",v[i]);
+  for (i=ind; i<(numOfVars); i++) fprintf(out,"%d ",v[i]);
+  fprintf(out,"\n");
+  return ;
+}
+/* ----------------------------------------------------------------- */
+void printListVectorWithoutColumnToFile(char* fileName, listVector* basis, 
+					int ind, int numOfVars) {
+  int len;
+  FILE* out;
+
+  if (!(out = fopen(fileName,"w"))) {
+    printf("Error opening output file!");
+    exit (0);
+  }
+  if (basis==0) {
+    fprintf(out,"0 %d\n",numOfVars-1);
+    fclose(out);
+    return;
+  }
+
+  len=lengthListVector(basis);
+  fprintf(out,"%d %d\n",len,numOfVars-1);
+  while(basis) {
+    printVectorWithoutColumnToFile(out,basis->first,ind,numOfVars);
+    basis = basis->rest;
+  }
+  fprintf(out,"\n");
+  fclose(out);
+  return ;
+}
+/* ----------------------------------------------------------------- */
+void printVectorWithAddtionalColumnToFile(FILE *out, vector v, int ind,
+					  int val, int numOfVars) {
+  int i;
+
+  if (v==0) return;
+  for (i=0; i<ind-1; i++) fprintf(out,"%d ",v[i]);
+  fprintf(out,"%d ",val);
+  for (i=ind-1; i<(numOfVars); i++) fprintf(out,"%d ",v[i]);
+  fprintf(out,"\n");
+  return ;
+}
+/* ----------------------------------------------------------------- */
+void printListVectorWithAdditionalColumnToFile(char* fileName, 
+				 	      listVector* basis, 
+					      int ind, int val,
+					      int numOfVars) {
+  int len;
+  FILE* out;
+
+  if (!(out = fopen(fileName,"w"))) {
+    printf("Error opening output file!");
+    exit (0);
+  }
+  if (basis==0) {
+    fprintf(out,"0 %d\n",numOfVars-1);
+    fclose(out);
+    return;
+  }
+
+  len=lengthListVector(basis);
+  fprintf(out,"%d %d\n",len,numOfVars+1);
+  while(basis) {
+    printVectorWithAddtionalColumnToFile(out,basis->first,ind,val,
+					 numOfVars);
+    basis = basis->rest;
+  }
+  fprintf(out,"\n");
+  fclose(out);
+  return ;
+}
+/* ----------------------------------------------------------------- */
 void printTransposedListVectorToFile(char* fileName, listVector* basis, 
 				     int numOfVars) {
   int i,len;
@@ -473,9 +580,9 @@ void printL1NormOfListVector(listVector *basis, int numOfVars) {
   return;
 }
 /* ----------------------------------------------------------------- */
-void printListVectorWithGivenDegreeToFile(char *outFileName, 
-					  listVector *basis, int numOfVars,
-					  int degree){
+void printListVectorWithGivenDegreesToFile(char *outFileName, 
+					   listVector *basis, int numOfVars,
+					   int lowdegree, int highdegree){
   int i,s,len;
   listVector *tmp;
   FILE* out;
@@ -495,7 +602,7 @@ void printListVectorWithGivenDegreeToFile(char *outFileName,
   while (tmp) {
     s=0;
     for (i=0; i<numOfVars; i++) s=s+abs((tmp->first)[i]);
-    if (s==degree) len++;
+    if ((s>=lowdegree) && (s<=highdegree)) len++;
     tmp=tmp->rest;
   }
   fprintf(out,"%d %d\n",len,numOfVars);
@@ -504,10 +611,112 @@ void printListVectorWithGivenDegreeToFile(char *outFileName,
   while (tmp) {
     s=0;
     for (i=0; i<numOfVars; i++) s=s+abs((tmp->first)[i]);
-    if (s==degree) printVectorToFile(out,tmp->first,numOfVars);
+    if ((s>=lowdegree) && (s<=highdegree)) printVectorToFile(out,tmp->first,numOfVars);
     tmp=tmp->rest;
   }
   fclose(out);
+
+  return;
+}
+/* ----------------------------------------------------------------- */
+void printSupportsOfListVector(listVector *basis, int numOfVars) {
+  int i,s,maxs;
+  vector sum;
+  listVector* tmp;
+
+  sum=createVector(100000);
+  maxs=0;
+
+  for (i=0; i<100000; i++) sum[i]=0;  
+
+  tmp=basis;
+  while (tmp) {
+    s=0;
+    for (i=0; i<numOfVars; i++) if ((tmp->first)[i]!=0) s++;  
+    sum[s]=sum[s]+1;
+    if (s>maxs) maxs=s;
+    tmp=tmp->rest;
+  }
+
+  for (i=0; i<100000; i++) 
+    if (sum[i]>0) printf("Size of support = %d,   number of elements = %d\n",i,sum[i]); 
+
+  return;
+}
+/* ----------------------------------------------------------------- */
+void printListVectorWithGivenSupportsToFile(char *outFileName, 
+					    listVector *basis, int numOfVars,
+					    int lowdegree, int highdegree){
+  int i,s,len;
+  listVector *tmp;
+  FILE* out;
+
+  if (!(out = fopen(outFileName,"w"))) {
+    printf("Error opening output file!");
+    exit (0);
+  }
+  if (basis==0) {
+    fprintf(out,"0 %d\n",numOfVars);
+    fclose(out);
+    return;
+  }
+
+  len=0;
+  tmp=basis;
+  while (tmp) {
+    s=0;
+    for (i=0; i<numOfVars; i++) if ((tmp->first)[i]!=0) s++;
+    if ((s>=lowdegree) && (s<=highdegree)) len++;
+    tmp=tmp->rest;
+  }
+  fprintf(out,"%d %d\n",len,numOfVars);
+
+  tmp=basis;
+  while (tmp) {
+    s=0;
+    for (i=0; i<numOfVars; i++) s=s+abs((tmp->first)[i]);
+    if ((s>=lowdegree) && (s<=highdegree)) printVectorToFile(out,tmp->first,numOfVars);
+    tmp=tmp->rest;
+  }
+  fclose(out);
+
+  return;
+}
+/* ----------------------------------------------------------------- */
+void printTypesOfListVector(listVector *basis, int sizeOfLayer, 
+			    int numOfVars) {
+  int i,j,found,s,maxType,numOfLayers;
+  vector types;
+  listVector* tmp;
+
+  numOfLayers=numOfVars/sizeOfLayer;
+  if (numOfVars!=numOfLayers*sizeOfLayer) {
+    printf("Number of variables is not divisible by layer size!\n");
+    printf("Exiting.\n");
+    exit(0);
+  }
+
+  types=createVector(1000);
+  maxType=0;
+
+  for (i=0; i<1000; i++) types[i]=0;
+
+  tmp=basis;
+  while (tmp) {
+    s=0;
+    for (i=0; i<numOfLayers; i++) {
+      found=0;
+      for (j=0; j<sizeOfLayer; j++) 
+	if ((tmp->first)[i*sizeOfLayer+j]!=0) found=1;
+      s=s+found;
+    }
+    types[s]=types[s]+1;
+    if (s>maxType) maxType=s;
+    tmp=tmp->rest;
+  }
+
+  for (i=0; i<1000; i++)
+    if (types[i]>0) printf("Type = %d,   number of elements = %d\n",i,types[i]);
 
   return;
 }

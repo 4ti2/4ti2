@@ -20,8 +20,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2__WalkOptions_
-#define _4ti2__WalkOptions_
+#ifndef _4ti2_groebner__WalkOptions_
+#define _4ti2_groebner__WalkOptions_
 #include <string>
 
 namespace _4ti2_

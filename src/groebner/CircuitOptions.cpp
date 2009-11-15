@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <fstream>
 #include <unistd.h>
 #include "Globals.h"
+#include <cstdlib>
 
 #ifdef _GNU_SOURCE
 #include <getopt.h>

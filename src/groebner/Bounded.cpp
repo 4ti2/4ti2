@@ -28,7 +28,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "VectorArrayStream.h"
 #include "LatticeBasis.h"
 #include "HermiteAlgorithm.h"
-#include "RayAlgorithm.h"
+#include "QSolveAlgorithm.h"
+
+#include <cstdlib>
 
 //#define DEBUG_4ti2(X) X
 #include "Debug.h"
@@ -177,10 +179,12 @@ _4ti2_::matrix_bounded(
             if (is_matrix_non_negative(matrix[i], urs, bounded))
             {
                 add_positive_support(matrix[i], urs, bounded, grading);
+                grading.normalise();
             }
             if (is_matrix_non_positive(matrix[i], urs, bounded))
             {
                 add_negative_support(matrix[i], urs, bounded, grading);
+                grading.normalise();
             }
         }
         // If nothing changed, then stop.
@@ -318,7 +322,6 @@ _4ti2_::add_positive_support(
         }
     }
     Vector::add(grading, factor, v, 1, grading);
-    grading.normalise();
 }
 
 void
@@ -343,7 +346,6 @@ _4ti2_::add_negative_support(
         }
     }
     Vector::sub(grading, factor, v, 1, grading);
-    grading.normalise();
 }
 
 bool
@@ -528,6 +530,7 @@ _4ti2_::lp_bounded(
     // introduces numerical problems.
     int rows = hermite(lattice, rs);
     lattice.remove(rows, lattice.get_number());
+    DEBUG_4ti2(*out << "Hermite Normal Form:\n" << lattice << "\n";)
 
     LPX *lp = lpx_create_prob();
     lpx_set_int_parm(lp,LPX_K_MSGLEV,0);
@@ -658,6 +661,7 @@ _4ti2_::lp_bounded(
         {
             reconstruct_primal_integer_solution(lattice,basic,ones,solution);
             add_positive_support(solution, urs, bounded, grading);
+            grading.normalise();
         }
     }
     lpx_delete_prob(lp);
@@ -774,7 +778,7 @@ _4ti2_::bounded(const VectorArray& matrix,
 // programming instead of ray computation because of numerical stability.
 void
 _4ti2_::bounded_projection(
-                const VectorArray& _matrix,
+                const VectorArray& matrix,
                 const VectorArray& lattice,
                 const BitSet& urs,
                 const Vector& rhs,
@@ -782,7 +786,6 @@ _4ti2_::bounded_projection(
 {
 #if 1
     VectorArray rays(lattice);
-    VectorArray matrix(_matrix);
     VectorArray subspace(0,rays.get_size());
     BitSet rs(urs);
     rs.set_complement();
@@ -790,7 +793,7 @@ _4ti2_::bounded_projection(
     // Is this what we really want?
     std::ostream* tmp_out = out;
     out = new std::ofstream;
-    RayAlgorithm ray_algorithm;
+    QSolveAlgorithm ray_algorithm;
     proj = ray_algorithm.compute(matrix, rays, subspace, rs);
     rays.clear();
     delete out; out = tmp_out;
@@ -835,7 +838,7 @@ _4ti2_::lp_weight_l2(
     BitSet rs(urs);
     rs.set_complement();
     VectorArray subspace(0,basis.get_size());
-    RayAlgorithm algorithm;
+    QSolveAlgorithm algorithm;
     algorithm.compute(matrix, basis, subspace, rs);
     DEBUG_4ti2(*out << "Rays\n" << basis << "\n";)
 
