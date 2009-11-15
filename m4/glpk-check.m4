@@ -27,7 +27,8 @@ BACKUP_CXXFLAGS=${CXXFLAGS}
 BACKUP_LIBS=${LIBS}
 BACKUP_CXX=${CXX}
 
-CXX="./libtool --mode=link --tag=CXX ${CXX}"
+# Following does not work because libtool is only created when configure has completed.
+##CXX="./libtool --mode=link --tag=CXX ${CXX}"
 
 AC_MSG_CHECKING(for GLPK)
 
@@ -37,14 +38,19 @@ for GLPK_HOME in ${GLPK_HOME_PATH}
 
 		if test "x$GLPK_HOME" != "xDEFAULT" ; then
 			GLPK_CFLAGS="-I${GLPK_HOME}/include"
-			GLPK_LIBS="-L${GLPK_HOME}/lib -R${GLPK_HOME}/lib -lglpk"	
+			# Use this version during actual build:
+			GLPK_LIBS="-L${GLPK_HOME}/lib -R${GLPK_HOME}/lib -lglpk"
+			# During configure, we don't use libtool, 
+			# so cannot portably use the -R option. 
+			GLPK_LIBS_NOLIBTOOL="-L${GLPK_HOME}/lib -lglpk"
 		else
 			GLPK_CFLAGS=
 			GLPK_LIBS="-lglpk"		
+			GLPK_LIBS_NOLIBTOOL="-lglpk"		
 		fi
 
 		CXXFLAGS="${CXXFLAGS} ${GLPK_CFLAGS}"
-		LIBS="${LIBS} ${GLPK_LIBS}"
+		LIBS="${LIBS} ${GLPK_LIBS_NOLIBTOOL}"
 
 		AC_LINK_IFELSE(AC_LANG_PROGRAM([extern "C" {
 #include <glpk.h>
