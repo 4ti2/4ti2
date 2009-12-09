@@ -87,6 +87,8 @@ swig/configure
 test/Makefile
 test/Makefile.in
 test/check.template
+test/circuits/33.cir
+test/circuits/33.qfree
 test/circuits/Makefile
 test/circuits/Makefile.in
 test/flavorsum
