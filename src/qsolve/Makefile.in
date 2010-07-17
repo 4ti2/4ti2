@@ -74,7 +74,8 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/ax_cc_maxopt.m4 \
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
-CONFIG_HEADER = $(top_builddir)/src/config.h
+CONFIG_HEADER = $(top_builddir)/src/config.h \
+	$(top_builddir)/src/4ti2/4ti2_config.h
 CONFIG_CLEAN_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -89,7 +90,9 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 lib4ti2_la_LIBADD =
 am__objects_1 = lib4ti2_la-Globals.lo lib4ti2_la-IndexSetD.lo \
 	lib4ti2_la-IndexSetDS.lo lib4ti2_la-IndexSetStream.lo \
-	lib4ti2_la-Options.lo lib4ti2_la-Timer.lo
+	lib4ti2_la-QSolveAPI.lo lib4ti2_la-QSolveConsOrder.lo \
+	lib4ti2_la-RaysAPI.lo lib4ti2_la-CircuitsAPI.lo \
+	lib4ti2_la-Timer.lo
 am_lib4ti2_la_OBJECTS = $(am__objects_1)
 lib4ti2_la_OBJECTS = $(am_lib4ti2_la_OBJECTS)
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
@@ -100,7 +103,7 @@ am_4ti2_OBJECTS = $(am__objects_2)
 am__DEPENDENCIES_1 =
 @HAVE_GMP_WITH_CXX_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
 4ti2_DEPENDENCIES = lib4ti2.la $(am__DEPENDENCIES_2)
-DEFAULT_INCLUDES = -I. -I$(top_builddir)/src@am__isrc@
+DEFAULT_INCLUDES = -I. -I$(top_builddir)/src -I$(top_builddir)/src/4ti2@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
@@ -233,13 +236,10 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = lib4ti2.la
 
-# Allow accessing 4ti2's header files as "4ti2/HEADER.h"
-
 # 4ti2 needs the next option to access maximum values of integer types.
 # The optimisation flags.
 # The threaded flags.
-AM_CXXFLAGS = -I$(srcdir)/.. -D__STDC_LIMIT_MACROS -DNDEBUG \
-	-D_PTHREADS -D_REENTRANT
+AM_CXXFLAGS = -D__STDC_LIMIT_MACROS -DNDEBUG -D_PTHREADS -D_REENTRANT
 # Uncomment the next line for debugging.
 #AM_CXXFLAGS += -g
 # Uncomment the next line for profiling.
@@ -252,7 +252,10 @@ lib4ti2sources = \
 	IndexSetD.cpp \
 	IndexSetDS.cpp \
 	IndexSetStream.cpp \
-	Options.cpp \
+	QSolveAPI.cpp \
+	QSolveConsOrder.cpp \
+	RaysAPI.cpp \
+	CircuitsAPI.cpp \
 	Timer.cpp
 
 4ti2includedir = $(includedir)/4ti2
@@ -260,7 +263,6 @@ lib4ti2sources = \
 	QSolveAlgorithm.h \
 	QSolveAlgorithm.hpp \
 	QSolveAPI.h \
-	QSolveAPI.hpp \
 	QSolveConsOrder.h \
 	QSolveVariant.h \
 	TypeConversion.h \
@@ -274,15 +276,17 @@ lib4ti2sources = \
 	IndexSetD.h \
 	IndexSetDS.h \
 	IndexSetStream.h \
-	Options.h \
 	Size.h \
 	Timer.h \
 	Vector.h \
 	VectorD.h \
+	VectorD.hpp \
 	VectorS.h \
 	VectorStream.h \
 	VectorArray.h \
-	VectorArrayStream.h
+	VectorArrayStream.h \
+	MatrixAPI.h \
+	MatrixAPI.hpp
 
 4ti2sources = \
 	main.cpp
@@ -294,8 +298,9 @@ lib4ti2sources = \
 lib4ti2_la_SOURCES = $(lib4ti2sources)
 4ti2_SOURCES = $(4ti2sources)
 4ti2_LDADD = lib4ti2.la $(am__append_3) -lpthread -lm
-lib4ti2_la_CPPFLAGS = $(am__append_1)
-4ti2_CPPFLAGS = $(am__append_2)
+lib4ti2_la_CPPFLAGS = -I$(srcdir)/.. $(am__append_1)
+# Allow accessing 4ti2's header files as "4ti2/HEADER.h"
+4ti2_CPPFLAGS = -I$(srcdir)/.. $(am__append_2)
 all: all-am
 
 .SUFFIXES:
@@ -397,11 +402,14 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/4ti2-main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib4ti2_la-CircuitsAPI.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib4ti2_la-Globals.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib4ti2_la-IndexSetD.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib4ti2_la-IndexSetDS.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib4ti2_la-IndexSetStream.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib4ti2_la-Options.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib4ti2_la-QSolveAPI.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib4ti2_la-QSolveConsOrder.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib4ti2_la-RaysAPI.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib4ti2_la-Timer.Plo@am__quote@
 
 .cpp.o:
@@ -453,12 +461,33 @@ lib4ti2_la-IndexSetStream.lo: IndexSetStream.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(lib4ti2_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o lib4ti2_la-IndexSetStream.lo `test -f 'IndexSetStream.cpp' || echo '$(srcdir)/'`IndexSetStream.cpp
 
-lib4ti2_la-Options.lo: Options.cpp
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(lib4ti2_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT lib4ti2_la-Options.lo -MD -MP -MF $(DEPDIR)/lib4ti2_la-Options.Tpo -c -o lib4ti2_la-Options.lo `test -f 'Options.cpp' || echo '$(srcdir)/'`Options.cpp
-@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/lib4ti2_la-Options.Tpo $(DEPDIR)/lib4ti2_la-Options.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='Options.cpp' object='lib4ti2_la-Options.lo' libtool=yes @AMDEPBACKSLASH@
+lib4ti2_la-QSolveAPI.lo: QSolveAPI.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(lib4ti2_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT lib4ti2_la-QSolveAPI.lo -MD -MP -MF $(DEPDIR)/lib4ti2_la-QSolveAPI.Tpo -c -o lib4ti2_la-QSolveAPI.lo `test -f 'QSolveAPI.cpp' || echo '$(srcdir)/'`QSolveAPI.cpp
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/lib4ti2_la-QSolveAPI.Tpo $(DEPDIR)/lib4ti2_la-QSolveAPI.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='QSolveAPI.cpp' object='lib4ti2_la-QSolveAPI.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(lib4ti2_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o lib4ti2_la-Options.lo `test -f 'Options.cpp' || echo '$(srcdir)/'`Options.cpp
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(lib4ti2_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o lib4ti2_la-QSolveAPI.lo `test -f 'QSolveAPI.cpp' || echo '$(srcdir)/'`QSolveAPI.cpp
+
+lib4ti2_la-QSolveConsOrder.lo: QSolveConsOrder.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(lib4ti2_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT lib4ti2_la-QSolveConsOrder.lo -MD -MP -MF $(DEPDIR)/lib4ti2_la-QSolveConsOrder.Tpo -c -o lib4ti2_la-QSolveConsOrder.lo `test -f 'QSolveConsOrder.cpp' || echo '$(srcdir)/'`QSolveConsOrder.cpp
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/lib4ti2_la-QSolveConsOrder.Tpo $(DEPDIR)/lib4ti2_la-QSolveConsOrder.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='QSolveConsOrder.cpp' object='lib4ti2_la-QSolveConsOrder.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(lib4ti2_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o lib4ti2_la-QSolveConsOrder.lo `test -f 'QSolveConsOrder.cpp' || echo '$(srcdir)/'`QSolveConsOrder.cpp
+
+lib4ti2_la-RaysAPI.lo: RaysAPI.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(lib4ti2_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT lib4ti2_la-RaysAPI.lo -MD -MP -MF $(DEPDIR)/lib4ti2_la-RaysAPI.Tpo -c -o lib4ti2_la-RaysAPI.lo `test -f 'RaysAPI.cpp' || echo '$(srcdir)/'`RaysAPI.cpp
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/lib4ti2_la-RaysAPI.Tpo $(DEPDIR)/lib4ti2_la-RaysAPI.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='RaysAPI.cpp' object='lib4ti2_la-RaysAPI.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(lib4ti2_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o lib4ti2_la-RaysAPI.lo `test -f 'RaysAPI.cpp' || echo '$(srcdir)/'`RaysAPI.cpp
+
+lib4ti2_la-CircuitsAPI.lo: CircuitsAPI.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(lib4ti2_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT lib4ti2_la-CircuitsAPI.lo -MD -MP -MF $(DEPDIR)/lib4ti2_la-CircuitsAPI.Tpo -c -o lib4ti2_la-CircuitsAPI.lo `test -f 'CircuitsAPI.cpp' || echo '$(srcdir)/'`CircuitsAPI.cpp
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/lib4ti2_la-CircuitsAPI.Tpo $(DEPDIR)/lib4ti2_la-CircuitsAPI.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CircuitsAPI.cpp' object='lib4ti2_la-CircuitsAPI.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(lib4ti2_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o lib4ti2_la-CircuitsAPI.lo `test -f 'CircuitsAPI.cpp' || echo '$(srcdir)/'`CircuitsAPI.cpp
 
 lib4ti2_la-Timer.lo: Timer.cpp
 @am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(lib4ti2_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT lib4ti2_la-Timer.lo -MD -MP -MF $(DEPDIR)/lib4ti2_la-Timer.Tpo -c -o lib4ti2_la-Timer.lo `test -f 'Timer.cpp' || echo '$(srcdir)/'`Timer.cpp

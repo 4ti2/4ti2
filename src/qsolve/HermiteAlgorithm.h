@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #define _4ti2_qsolve__HermiteAlgorithm_
 
 #include "qsolve/Index.h"
+#include <cassert>
 
 namespace _4ti2_ {
 

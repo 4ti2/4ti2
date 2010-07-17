@@ -29,7 +29,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "qsolve/QSolveAPI.h"
 #include "qsolve/RaysAPI.h"
 #include "qsolve/CircuitsAPI.h"
-#include "qsolve/Options.h"
 
 //#define DEBUG_4ti2(X) X
 #include "qsolve/Debug.h"
@@ -37,51 +36,32 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 using namespace _4ti2_;
 
-template <template <class> class API>
-_4ti2_state*
-create_state_precision(_4ti2_precision prec)
-{
-    switch (prec) {
-    case _4ti2_PREC_INT_32:
-        return new API<int32_t>();
-    case _4ti2_PREC_INT_64:
-        return new API<int64_t>();
-    case _4ti2_PREC_INT_ARB:
-#ifdef _4ti2_GMP_
-        return new API<mpz_class>();
-#else
-        return 0;
-#endif
-    }
-    return 0;
-}
-
 int
 main(int argc, char **argv)
 {
     if (argc == 1) {
-        std::cerr << "Usage: 4ti2 <exec> ...\n";
+        std::cerr << "Usage: 4ti2 <function> ...\n";
         exit(1);
     }
-    Options options(argc-1, argv+1);
 
     _4ti2_state* state = 0;
     std::string exec_name(argv[1]);
     if (exec_name == "qsolve") {
-        state = create_state_precision<QSolveAPI>(options.precision);
+        state = new QSolveAPI();
     } else if (exec_name == "rays") {
-        state = create_state_precision<RaysAPI>(options.precision);
+        state = new RaysAPI();
     } else if (exec_name == "circuits") {
-        state = create_state_precision<CircuitsAPI>(options.precision);
+        state = new CircuitsAPI();
     } else {
-        std::cerr << "ERROR: Unrecoginized executable name: " << argv[1] << "\n";
+        std::cerr << "ERROR: Unrecognized 4ti2 function name: " << argv[1] << "\n";
         exit(1);
     }
 
     state->set_options(argc-1, argv+1);
-    state->read(options.filename.c_str());
+    // TODO
+    state->read(argv[argc-1]);
     state->compute();
-    state->write(options.filename.c_str());
+    state->write(argv[argc-1]);
 
     delete state;
     return 0;

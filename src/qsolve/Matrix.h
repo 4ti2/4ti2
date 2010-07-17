@@ -139,6 +139,7 @@ template <class T> template <class RowSet, class ColSet> inline
 void
 MatrixT<T>::assign(const VectorArrayT<T>& vs, const RowSet& rows, const ColSet& cols)
 {
+    assert(rows.count() == m && cols.count() == n);
     T* s = start;
     for (typename RowSet::Iter i = rows.begin(); i != rows.end(); ++i) {
         const VectorR<T>& vi = vs[i];

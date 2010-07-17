@@ -32,12 +32,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "qsolve/QSolveAlgorithm.h"
 #include "qsolve/ThreadedAlgorithm.h"
 #include "qsolve/Matrix.h"
+#include "qsolve/ConeC.h"
+#include "qsolve/RayState.h"
 
 namespace _4ti2_
 {
 
-template <class T, class IndexSet>
-class MatrixAlgorithm : public QSolveAlgorithm<T,IndexSet>
+template <class T>
+class MatrixAlgorithm : public QSolveAlgorithm<T>
 {
 public:
     MatrixAlgorithm();
@@ -49,85 +51,84 @@ protected:
                 VectorArrayT<T>& rays, std::vector<Index>& ray_ineqs, 
                 VectorArrayT<T>& cirs, std::vector<Index>& cir_ineqs);
 
+    template <class IndexSet>
     void compute(const ConeT<T>& cone, VectorArrayT<T>& rays, std::vector<IndexSet>& supps, 
                 Index& cons_added, std::vector<int>& ineqs);
+    template <class IndexSet>
     void compute(const ConeT<T>& cone, VectorArrayT<T>& rays, std::vector<IndexSet>& supps,
                 Index& cons_added, VectorArrayT<T>& cirs, std::vector<int>& ineqs);
 
+    template <class IndexSet>
     void check(const ConeT<T>& cone, const IndexSet& rem, const VectorArrayT<T>& rays,
                 const std::vector<IndexSet>& supps,
                 const std::vector<IndexSet>& cir_supps);
 };
 
-template <class T, class IndexSet>
-class MatrixRayAlgorithm : public ThreadedAlgorithm
+
+template <class IndexSet>
+class MatrixSubAlgorithmBase
 {
 public:
-    MatrixRayAlgorithm(const ConeT<T>& cone, const VectorArrayT<T>& rays, const std::vector<IndexSet>& supps, 
-                const IndexSet& rel, const Index& cons_added);
-    virtual ~MatrixRayAlgorithm();
+    MatrixSubAlgorithmBase(RayStateAPI<IndexSet>& helper, std::vector<IndexSet>& supps, std::vector<IndexSet>& cir_supps, 
+                        const IndexSet& rel, const Index& cons_added, const Index& next);
+    virtual ~MatrixSubAlgorithmBase();
 
-    virtual void compute();
-    void compute(Index next, Index r1_start, Index r1_end, Index r2_start, Index r2_index, Index r2_end);
-    void threaded_compute(Index next, Index r1_start, Index r1_end, Index r2_start, Index r2_index, Index r2_end);
-    void transfer(VectorArrayT<T>& rays, std::vector<IndexSet>& supps);
+    void compute_rays(Index r1_start, Index r1_end, Index r2_start, Index r2_index, Index r2_end);
+    void compute_cirs(Index r1_start, Index r1_end, Index r2_start, Index r2_end);
+
+    void transfer();
 
 protected:
-    const ConeT<T>& cone;
-    const VectorArrayT<T>& rays;
-    const std::vector<IndexSet>& supps;
+    RayStateAPI<IndexSet>& helper;
+    std::vector<IndexSet>& supps;
+    //std::vector<IndexSet> new_supps;
+    std::vector<IndexSet>& cir_supps;
+    //std::vector<IndexSet> new_cir_supps;
+
     const IndexSet& rel;
     const Index& cons_added;
+    const Index& next;
 
-    VectorArrayT<T> new_rays;
-    std::vector<IndexSet> new_supps;
+    Index _r1;
 
-    Index _next;
-    Index _r1_start;
-    Index _r1_end;
-    Index _r2_start;
-    Index _r2_index;
-    Index _r2_end;
-
-    VectorT<T> temp;
-    MatrixT<T> matrix;
-
-    void project_cone(
-                const ConeT<T>& cone,
-                const IndexSet& zero_supp,
-                MatrixT<T>& trans,
-                std::vector<Index>& con_map);
-    void zero_cols(
-                const MatrixT<T>& matrix,
-                const std::vector<Index>& con_map,
-                IndexSet& zeros);
-    bool is_two_dimensional_face(
-                const MatrixT<T>& trans,
-                const std::vector<Index>& con_map,
-                const IndexSet& diff);
-
-    void create_ray(Index r1, const T& s1, Index r2);
+#if 0
+    void set_r1_index(Index r1);
+    // The next function is virtual just so the compiler doesn't inline it!!!
+    virtual void create_ray(Index r2);
+    void create_rays(Index r1, std::vector<Index>& r2s);
+    void create_circuit(Index r2);
+#endif
 };
 
-template <class T, class IndexSet>
-class MatrixCirAlgorithm : public MatrixRayAlgorithm<T,IndexSet>
+
+template <class IndexSet>
+class MatrixRayAlgorithm : public MatrixSubAlgorithmBase<IndexSet>, public ThreadedAlgorithm
 {
 public:
-    MatrixCirAlgorithm(const ConeT<T>& cone, const VectorArrayT<T>& rays, 
-                const std::vector<IndexSet>& supps, const std::vector<IndexSet>& cir_supps, 
-                const IndexSet& rel, const Index& cons_added);
-    virtual ~MatrixCirAlgorithm();
+    MatrixRayAlgorithm(RayStateAPI<IndexSet>& helper,
+                std::vector<IndexSet>& supps, const IndexSet& rel, const
+                Index& cons_added, const Index& next, IndexRanges& indices);
 
     virtual void compute();
-    void compute(Index next, Index r1_start, Index r1_end, Index r2_start, Index r2_end);
-    void threaded_compute(Index next, Index r1_start, Index r1_end, Index r2_start, Index r2_end);
-    void transfer(VectorArrayT<T>& rays, std::vector<IndexSet>& supps, std::vector<IndexSet>& cir_supps);
+    MatrixRayAlgorithm* clone();
 
 protected:
-    const std::vector<IndexSet>& cir_supps;
-    std::vector<IndexSet> new_cir_supps;
+    IndexRanges& indices;
+};
 
-    void create_circuit(Index r1, const T& s1, Index r2);
+template <class IndexSet>
+class MatrixCirAlgorithm : public MatrixSubAlgorithmBase<IndexSet>, public ThreadedAlgorithm
+{
+public:
+    MatrixCirAlgorithm(RayStateAPI<IndexSet>& helper,
+                std::vector<IndexSet>& supps, std::vector<IndexSet>& cir_supps, 
+                const IndexSet& rel, const Index& cons_added, const Index& next, IndexRanges& indices);
+
+    virtual void compute();
+    MatrixCirAlgorithm* clone();
+
+protected:
+    IndexRanges& indices;
 };
 
 } // namespace _4ti2_

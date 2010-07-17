@@ -75,6 +75,7 @@ public:
     Size count_union(const IndexSetD& b) const;
     bool count_lte(Size s) const;
     bool count_lte_diff(Size s, const IndexSetD& b) const;
+    bool count_lte_2_diff(const IndexSetD& b) const;
 
     bool operator[](Index index) const;
 
@@ -237,6 +238,23 @@ inline
 bool
 IndexSetD::count_lte_diff(Size s, const IndexSetD& b) const
 {
+    for (Index i = 0; i < num_blocks; ++i) {
+        BlockType tmp = blocks[i] & ~b.blocks[i];
+        while (tmp) {
+            if (s == 0) { return false; }
+            tmp &= tmp-1;
+            --s;
+        }
+    }
+    return true;
+}
+
+inline
+bool
+IndexSetD::count_lte_2_diff(const IndexSetD& b) const
+{
+    // TODO:
+    Size s = 2;
     for (Index i = 0; i < num_blocks; ++i) {
         BlockType tmp = blocks[i] & ~b.blocks[i];
         while (tmp) {

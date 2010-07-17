@@ -27,13 +27,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 namespace _4ti2_ {
 
-template <class T>
-class RaysAPI : public QSolveAPI<T> {
+class RaysAPI : public QSolveAPI {
 public:
     RaysAPI();
     virtual ~RaysAPI();
 
     virtual void write(const char* basename);
+
+    virtual _4ti2_matrix* get_matrix(const char* name);
 
 protected:
     virtual void post_compute();
@@ -43,7 +44,5 @@ protected:
 };
 
 } // namespace _4ti2_
-
-#include "qsolve/RaysAPI.hpp"
 
 #endif

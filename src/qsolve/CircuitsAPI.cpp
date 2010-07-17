@@ -24,7 +24,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <iostream>
 #include "4ti2/4ti2.h"
 #include "qsolve/QSolveAlgorithm.h"
-#include "qsolve/VectorArrayAPI.h"
 #include "qsolve/VectorArrayStream.h"
 #include "qsolve/CircuitsAPI.h"
 #include "qsolve/Globals.h"
@@ -32,48 +31,56 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 using namespace _4ti2_;
 
-template <class T>
-CircuitsAPI<T>::CircuitsAPI()
-    : QSolveAPI<T>()
+CircuitsAPI::CircuitsAPI()
+    : QSolveAPI()
 {
-    QSolveAPI<T>::sign_default = _4ti2_DB;
-    QSolveAPI<T>::rel_default = _4ti2_EQ;
+    QSolveAPI::sign_default = _4ti2_DB;
+    QSolveAPI::rel_default = _4ti2_EQ;
 }
 
-template <class T>
-CircuitsAPI<T>::~CircuitsAPI()
+CircuitsAPI::~CircuitsAPI()
 {
 }
 
-template <class T>
+_4ti2_matrix*
+CircuitsAPI::get_matrix(const char* name)
+{
+    if (!strcmp(name, "mat")) { return mat; }
+    if (!strcmp(name, "sign")) { return sign; }
+    if (!strcmp(name, "rel")) { return rel; }
+    if (!strcmp(name, "ray")) { return ray; } // TODO: Do we output .ray?
+    if (!strcmp(name, "cir")) { return cir; }
+    if (!strcmp(name, "qfree")) { return qfree; }
+    std::cerr << "ERROR: Unrecognised mat type " << name << ".\n";
+    return 0;
+}
+
 void
-CircuitsAPI<T>::post_compute()
+CircuitsAPI::post_compute()
 {
-    QSolveAPI<T>::ray.data.sort();
-    VectorT<T> zero(QSolveAPI<T>::cir.data.get_size(), 0);
-    for (int i = 0; i < QSolveAPI<T>::cir.data.get_number(); ++i) {
-        if (QSolveAPI<T>::cir.data[i] < zero) { QSolveAPI<T>::cir.data[i].muleq(-1); }
-    }
-    QSolveAPI<T>::cir.data.sort();
-    QSolveAPI<T>::qfree.data.sort();
+    //QSolveAPI::ray.data.sort();
+    //VectorT<T> zero(QSolveAPI::cir.data.get_size(), 0);
+    //for (int i = 0; i < QSolveAPI::cir.data.get_number(); ++i) {
+    //    if (QSolveAPI::cir.data[i] < zero) { QSolveAPI::cir.data[i].muleq(-1); }
+    //}
+    //QSolveAPI::cir.data.sort();
+    //QSolveAPI::qfree.data.sort();
     // TODO: Should we transfer the rays into the circuits?
-    QSolveAPI<T>::cir.data.transfer(QSolveAPI<T>::ray.data, 0, QSolveAPI<T>::ray.data.get_number(), 0);
+    //QSolveAPI::cir.data.transfer(QSolveAPI::ray.data, 0, QSolveAPI::ray.data.get_number(), 0);
 }
 
-template <class T>
 void
-CircuitsAPI<T>::write_usage()
+CircuitsAPI::write_usage()
 {
     std::cerr << "Usage: circuits [options] <PROJECT>\n\n";
     std::cerr << "Computes the circuits of a cone.\n";
     write_input_files();
     write_output_files();
-    QSolveAPI<T>::write_options();
+    QSolveAPI::write_options();
 }
 
-template <class T>
 void
-CircuitsAPI<T>::write_input_files()
+CircuitsAPI::write_input_files()
 {
     std::cerr << "\
 Input Files:\n\
@@ -87,9 +94,8 @@ Input Files:\n\
                       The mat must be given with this file.\n";
 }
 
-template <class T>
 void
-CircuitsAPI<T>::write_output_files()
+CircuitsAPI::write_output_files()
 {
     std::cerr << "\
 Output Files:\n\
@@ -99,15 +105,14 @@ Output Files:\n\
                       is trivial.\n\n";
 }
 
-template <class T>
 void
-CircuitsAPI<T>::write(const char* basename_c_str)
+CircuitsAPI::write(const char* basename_c_str)
 {
     std::string basename(basename_c_str);
 
     std::string cir_filename(basename + ".cir");
-    QSolveAPI<T>::cir.write(cir_filename.c_str());
+    QSolveAPI::cir->write(cir_filename.c_str());
 
     std::string qfree_filename(basename + ".qfree");
-    QSolveAPI<T>::qfree.write(qfree_filename.c_str());
+    QSolveAPI::qfree->write(qfree_filename.c_str());
 }

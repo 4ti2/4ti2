@@ -37,7 +37,7 @@ class ConeAPI : public _4ti2_matrix {
 public:
     ConeAPI();
     ConeAPI(Size m, Size n);
-    void init(Size m, Size n);
+    virtual void resize(Size m, Size n);
     virtual ~ConeAPI();
 
     virtual int get_num_rows() const;
@@ -46,16 +46,16 @@ public:
     virtual void write(const char* filename) const;
     virtual void write(std::ostream& out) const; 
     virtual void read(std::istream& in);
+    virtual void assign(const _4ti2_matrix& m) { assert(false); } // TODO
+    virtual void swap(_4ti2_matrix& m) { assert(false); } // TODO
 
-    virtual void set_entry_int32_t(int r, int c, const int32_t& value); 
-    virtual void get_entry_int32_t(int r, int c, int32_t& value) const;
-
-    virtual void set_entry_int64_t(int r, int c, const int64_t& value);
-    virtual void get_entry_int64_t(int r, int c, int64_t& value) const;
-
+    virtual void set_entry(int r, int c, const int32_t& value); 
+    virtual void get_entry(int r, int c, int32_t& value) const;
+    virtual void set_entry(int r, int c, const int64_t& value);
+    virtual void get_entry(int r, int c, int64_t& value) const;
 #ifdef _4ti2_GMP_
-    virtual void set_entry_mpz_class(int r, int c, const mpz_class& value);
-    virtual void get_entry_mpz_class(int r, int c, mpz_class& value) const;
+    virtual void set_entry(int r, int c, const mpz_class& value);
+    virtual void get_entry(int r, int c, mpz_class& value) const;
 #endif
 
 public:
@@ -76,9 +76,9 @@ ConeAPI<T>::ConeAPI(Size m, Size n)
 
 template <class T>
 void
-ConeAPI<T>::init(Size m, Size n)
+ConeAPI<T>::resize(Size m, Size n)
 {
-    cone.init(m, n);
+    cone.resize(m, n);
 }
 
 template <class T>
@@ -124,28 +124,28 @@ ConeAPI<T>::read(std::istream& in)
 
 template <class T>
 void
-ConeAPI<T>::set_entry_int32_t(int r, int c, const int32_t& value)
+ConeAPI<T>::set_entry(int r, int c, const int32_t& value)
 {
     type_conversion(value, cone.get_matrix()[r][c]);
 }
 
 template <class T>
 void
-ConeAPI<T>::get_entry_int32_t(int r, int c, int32_t& value) const
+ConeAPI<T>::get_entry(int r, int c, int32_t& value) const
 {
     type_conversion(cone.get_matrix()[r][c], value);
 }
 
 template <class T>
 void
-ConeAPI<T>::set_entry_int64_t(int r, int c, const int64_t& value)
+ConeAPI<T>::set_entry(int r, int c, const int64_t& value)
 {
     type_conversion(value, cone.get_matrix()[r][c]);
 }
 
 template <class T>
 void
-ConeAPI<T>::get_entry_int64_t(int r, int c, int64_t& value) const
+ConeAPI<T>::get_entry(int r, int c, int64_t& value) const
 {
     type_conversion(cone.get_matrix()[r][c], value);
 }
@@ -153,14 +153,14 @@ ConeAPI<T>::get_entry_int64_t(int r, int c, int64_t& value) const
 #ifdef _4ti2_GMP_
 template <class T>
 void
-ConeAPI<T>::set_entry_mpz_class(int r, int c, const mpz_class& value)
+ConeAPI<T>::set_entry(int r, int c, const mpz_class& value)
 {
     type_conversion(value, cone.get_matrix()[r][c]);
 }
 
 template <class T>
 void
-ConeAPI<T>::get_entry_mpz_class(int r, int c, mpz_class& value) const
+ConeAPI<T>::get_entry(int r, int c, mpz_class& value) const
 {
     type_conversion(cone.get_matrix()[r][c], value);
 }

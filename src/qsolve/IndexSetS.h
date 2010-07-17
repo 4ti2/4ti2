@@ -131,6 +131,7 @@ IndexSetS::empty() const
     return (finish == indices);
 }
 
+#if 0
 inline
 void
 IndexSetS::set(Index index)
@@ -139,6 +140,21 @@ IndexSetS::set(Index index)
     Index* i = indices;
     while (i != finish && *i < index)  { ++i; }
     if (i != finish && *i == index) { return; }
+    for (Index* j = finish; j != i; --j) { *j = *(j-1); }
+    *i = index;
+    ++finish;
+}
+#endif
+
+inline
+void
+IndexSetS::set(Index index)
+{
+    assert(index >= 0 && index < size);
+    Index* i = finish-1;
+    while (i >= indices && *i > index)  { --i; }
+    if (i >= indices && *i == index) { return; }
+    ++i;
     for (Index* j = finish; j != i; --j) { *j = *(j-1); }
     *i = index;
     ++finish;

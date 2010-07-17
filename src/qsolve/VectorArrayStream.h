@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "qsolve/VectorStream.h"
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 namespace _4ti2_
 {
@@ -114,15 +115,22 @@ input_VectorArray(const char* filename)
     if (!file.good()) { return 0; }
     int m,n;
     m = n = 0;
-    file >> m >> n;
+    std::stringstream ss;
+    while (1) {
+        file.get(*ss.rdbuf()); // Read a line.
+        if (!file.good()) { break; } // Stop if not ok.
+        ss >> m >> n; // Extract matrix dimensions.
+        if (ss.good()) { break; } // Stop if ok.
+        ss.str().clear(); // Clear buffer and try again.
+    }
     VectorArrayT<T>* vs_ptr = new VectorArrayT<T>(m,n);
     file >> *vs_ptr;
-    if (file.fail() || file.bad()) {
+    if (!file.good()) {
         std::cerr << "INPUT ERROR: Badly formatted file " << filename << ".\n";
         std::cerr << "INPUT ERROR: Check the number of rows and columns.\n";
         std::cerr << "INPUT ERROR: Check there are only integers.";
         std::cerr << std::endl;
-        exit(1);
+        return 0;
     }
     return vs_ptr;
 }

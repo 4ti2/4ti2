@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 namespace _4ti2_
 {
 
+// TODO: Probably should not have the default case.
 template <class T1, class T2>
 inline
 void

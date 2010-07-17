@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "qsolve/Vector.h"
 #include "qsolve/IndexSetR.h"
 #include <vector>
+#include <algorithm>
 
 namespace _4ti2_
 {
@@ -45,9 +46,10 @@ public:
     void init(Size m, Size n);
     ~VectorArrayT();
 
-
     const VectorR<T>& operator[](Index) const;
     VectorR<T>& operator[](Index);
+    const T& operator()(Index, Index) const;
+    T& operator()(Index, Index);
 
     static void dot(const VectorArrayT<T>& vs1,
                     const VectorR<T>& v2,
@@ -74,6 +76,7 @@ public:
                                                 const RowSet0& rows0, const ColSet0& cols0);
 
     void transfer(VectorArrayT<T>& vs1, Index start1, Index end1, Index pos);
+    void swap(VectorArrayT<T>& vs1);
 
     void mul(T m);
  
@@ -132,6 +135,22 @@ VectorArrayT<T>::operator[](Index index)
 {
     assert(index >= 0 && index < number);
     return vectors[index];
+}
+
+template <class T> inline
+const T&
+VectorArrayT<T>::operator()(Index i, Index j) const
+{
+    assert(i >= 0 && i < number && j >=0 && j <  size);
+    return vectors[i][j];
+}
+
+template <class T> inline
+T&
+VectorArrayT<T>::operator()(Index i, Index j)
+{
+    assert(i >= 0 && i < number && j >=0 && j <  size);
+    return vectors[i][j];
 }
 
 template <class T> inline
@@ -249,6 +268,15 @@ VectorArrayT<T>::transfer(VectorArrayT<T>& vs1, Index start1, Index end1, Index 
 }
 
 template <class T>
+void
+VectorArrayT<T>::swap(VectorArrayT<T>& vs1)
+{
+    vectors.swap(vs1.vectors);
+    std::swap(number, vs1.number);
+    std::swap(size, vs1.size);
+}
+
+template <class T>
 VectorArrayT<T>::VectorArrayT()
     : vectors(0), number(0), size(0)
 {
@@ -285,7 +313,7 @@ VectorArrayT<T>::operator=(const VectorArrayT<T>& vs)
     size = vs.size;
     for (Index i = 0; i < number; i++) {
         vectors.push_back(Row(size));
-        vectors.back.assign(vs[i]);
+        vectors.back().assign(vs[i]);
     }
     return *this;
 }

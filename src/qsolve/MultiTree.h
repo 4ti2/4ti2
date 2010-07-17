@@ -20,8 +20,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#ifndef _4ti2_qsolve__BinaryTree_
-#define _4ti2_qsolve__BinaryTree_
+#ifndef _4ti2_qsolve__MultiTree_
+#define _4ti2_qsolve__MultiTree_
 
 #include <vector>
 
@@ -29,11 +29,11 @@ namespace _4ti2_
 {
 
 template <class IndexSet>
-class BinaryTree
+class MultiTree
 {
 public:
-    BinaryTree();
-    ~BinaryTree();
+    MultiTree();
+    ~MultiTree();
 
     void insert(const IndexSet& support, Index index);
     void insert(const std::vector<IndexSet>& supports);
@@ -41,7 +41,7 @@ public:
     bool dominated(const IndexSet& b, Index index1, Index index2) const;
     void find_singleton_diff(std::vector<Index>& inds, const IndexSet& supp) const;
     void find(std::vector<Index>& inds, const IndexSet& zeros, const IndexSet& supp, Size count) const;
-    void find(std::vector<std::pair<Index,Index> >& inds, const BinaryTree& tree, Size count) const;
+    void find(std::vector<std::pair<Index,Index> >& inds, const MultiTree& tree, Size count) const;
     void clear();
     void dump() const;
 
@@ -60,44 +60,23 @@ private:
         virtual void dump(int level) const = 0;
     };
 
-#if 0
-    class TreeLeaf : public TreeNode {
-    public:
-        TreeLeaf(Index _index, const IndexSet& _is) : i(_index), is(_is) {}
-        ~TreeLeaf() {}
-        TreeNode* insert(const IndexSet& support, Index index);
-        bool dominated(const IndexSet& b, Index index1, Index index2) const;
-        virtual void find_singleton_diff(std::vector<Index>& inds, const IndexSet& supp) const { inds.push_back(i); }
-        virtual void find(std::vector<Index>& inds, const IndexSet& zeros, const IndexSet& supp, Size count) const { inds.push_back(i); }
-        //virtual void find(std::vector<std::pair<Index,Index> >& inds, const IndexSet& supp, const TreeNode* tree, Size count) const;
-        //virtual void find(std::vector<std::pair<Index,Index> >& inds, const IndexSet& supp, Index index, Size count) const;
-        void dump(int level) const;
-    private:
-        Index i;
-        IndexSet is;
-    };
-#endif
-
     class TreeBranch : public TreeNode {
     public:
-        TreeBranch(Index index, const IndexSet& is0, TreeNode* _zero, const IndexSet& is1, TreeNode* _one);
-        ~TreeBranch();
-        TreeNode* insert(const IndexSet& support, Index index);
-        bool dominated(const IndexSet& s, Index index1, Index index2) const;
+        TreeBranch(Index index, const IndexSet& s1, TreeNode* n1, const IndexSet& s0, TreeNode* n0);
+        virtual ~TreeBranch();
+        virtual TreeNode* insert(const IndexSet& s, Index index);
+        virtual bool dominated(const IndexSet& s, Index index1, Index index2) const;
         virtual void find_singleton_diff(std::vector<Index>& inds, const IndexSet& supp) const;
         virtual void find(std::vector<Index>& inds, const IndexSet& zeros, const IndexSet& supp, Size count) const;
         virtual void find(std::vector<std::pair<Index,Index> >& inds, const IndexSet& supp, const TreeNode* tree, Size count) const;
         virtual void find(std::vector<std::pair<Index,Index> >& inds, const IndexSet& supp, Index index, Size count) const;
-        void dump(int level) const;
+        virtual void dump(Index level) const;
     private:
-        Index i;
-        IndexSet is0;
-        IndexSet is1;
-        TreeNode* zero;
-        TreeNode* one;
+        std::vector<IndexSet> supps;
+        std::vector<TreeNode*> nodes;
+        std::vector<Index> indices;
     };
 
-#if 1
     class TreeBucket: public TreeNode {
     public:
         TreeBucket();
@@ -112,9 +91,9 @@ private:
     private:
         std::vector<IndexSet> supps;
         std::vector<Index> indices;
-        static const Size MAX_BUCKET_SIZE;
+        static Size MAX_BUCKET_SIZE;
     };
-#endif
+
     static const int INDENT;
 
     TreeNode* root;
@@ -124,6 +103,6 @@ private:
 } // namespace _4ti2_
 
 // Include template defitinions.
-#include "qsolve/BinaryTree.hpp"
+#include "qsolve/MultiTree.hpp"
 
 #endif

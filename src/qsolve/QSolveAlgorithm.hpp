@@ -26,43 +26,143 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "qsolve/Debug.h"
 #include "qsolve/Stream.h"
 #include "qsolve/IndexSetD.h"
+#include "qsolve/IndexSetStream.h"
+#include "4ti2/4ti2.h"
 
 #undef DEBUG_4ti2
 #define DEBUG_4ti2(X) //X
 
 using namespace _4ti2_;
 
-template <class T, class IndexSet>
-QSolveAlgorithm<T,IndexSet>::QSolveAlgorithm()
-{
-    // The default constraint ordering is MININDEX.
-    // TODO: Is this what we want?
-    compare = &minindex;
-}
-
-template <class T, class IndexSet>
-QSolveAlgorithm<T,IndexSet>::QSolveAlgorithm(QSolveConsOrder o)
-{
-    set_constraint_order(o);
-}
-
-template <class T, class IndexSet>
-QSolveAlgorithm<T,IndexSet>::~QSolveAlgorithm()
+template <class T>
+QSolveAlgorithm<T>::QSolveAlgorithm()
 {
 }
 
-#if 1
-template <class T, class IndexSet>
+template <class T>
+QSolveAlgorithm<T>::QSolveAlgorithm(QSolveConsOrder o)
+{
+    order.set_constraint_order(o);
+}
+
+template <class T>
+QSolveAlgorithm<T>::~QSolveAlgorithm()
+{
+}
+
+template <class T>
 void
-QSolveAlgorithm<T,IndexSet>::compute(
-            const ConeT<T>& cone,
-            VectorArrayT<T>& rays,
-            VectorArrayT<T>& cirs,
-            VectorArrayT<T>& subspace)
+QSolveAlgorithm<T>::compute(
+                            const ConeT<T>& cone,
+                            VectorArrayT<T>& rays,
+                            VectorArrayT<T>& cirs,
+                            VectorArrayT<T>& subspace)
 {
-    DEBUG_4ti2(*out << "MATRIX:\n" << _orig_matrix << "\n";)
-    DEBUG_4ti2(*out << "RELS:\n" << rels << "\n";)
-    DEBUG_4ti2(*out << "SIGN:\n" << sign << "\n";)
+    DEBUG_4ti2(*out << "MATRIX:\n" << cone.get_matrix() << "\n";)
+    //DEBUG_4ti2(*out << "RELS:\n" << rels << "\n";)
+    //DEBUG_4ti2(*out << "SIGN:\n" << sign << "\n";)
+
+    Size n = cone.num_vars();
+    Size m = cone.num_cons();
+    Size num_cons = n+m;
+
+    IndexSetD full_rs(num_cons,0);
+    cone.constraint_set(_4ti2_LB, full_rs);
+    IndexSetD full_cir(num_cons,0);
+    cone.constraint_set(_4ti2_DB, full_cir);
+    IndexSetD full_eq(num_cons,0);
+    cone.constraint_set(_4ti2_EQ, full_eq);
+
+    DEBUG_4ti2(*out << "RS:\n" << full_rs << "\n";)
+    DEBUG_4ti2(*out << "CIR:\n" << full_cir << "\n";)
+    DEBUG_4ti2(*out << "EQ:\n" << full_eq << "\n";)
+
+    // If there are only ray components...
+    // TODO: This could be better.
+    if (full_rs.full()) {
+        // Construct initial rays.
+        std::vector<Index> ray_ineqs;
+        for (Index i = 0; i < cone.num_vars(); ++i) {
+            VectorT<T> ray(n,0);
+            ray.set(i,1);
+            rays.insert(ray);
+            ray_ineqs.push_back(i);
+        }
+        std::vector<Index> cir_ineqs;
+        compute(cone, rays, ray_ineqs, cirs, cir_ineqs);
+        return;
+    }
+
+    // If there are only circuit components...
+    // TODO: This could be better.
+    if (full_cir.full()) {
+        // Construct initial circuits.
+        std::vector<Index> cir_ineqs;
+        for (Index i = 0; i < cone.num_vars(); ++i) {
+            VectorT<T> cir(n,0);
+            cir.set(i,1);
+            cirs.insert(cir);
+            cir_ineqs.push_back(i);
+        }
+        std::vector<Index> ray_ineqs;
+        compute(cone, rays, ray_ineqs, cirs, cir_ineqs);
+        return;
+    }
+
+    ConeT<T> proj_cone;
+    VectorArrayT<T> map;
+    cone.canonize(proj_cone, subspace, map);
+
+    // Construct projected cone and projected initial rays.
+    VectorArrayT<T> proj_rays(0, proj_cone.num_vars());
+    VectorArrayT<T> proj_cirs(0, proj_cone.num_vars());
+    std::vector<Index> proj_ray_ineqs;
+    std::vector<Index> proj_cir_ineqs;
+    for (Index i = 0; i < proj_cone.num_vars(); ++i) {
+        if (proj_cone.get_constraint_type(i) == _4ti2_LB) {
+            VectorT<T> ray(proj_cone.num_vars(),0);
+            ray.set(i,1);
+            proj_rays.insert(ray);
+            proj_ray_ineqs.push_back(i);
+        }
+        else {
+            VectorT<T> cir(proj_cone.num_vars(),0);
+            cir.set(i,1);
+            proj_cirs.insert(cir);
+            proj_cir_ineqs.push_back(i);
+        }
+    }
+    DEBUG_4ti2(*out << "CONE CONS:\n" << proj_cone.get_constraint_types() << "\n";)
+
+    compute(proj_cone, proj_rays, proj_ray_ineqs, proj_cirs, proj_cir_ineqs);
+
+    // Lift rays back to original space.
+    // TODO: This could be done faster.
+    rays.init(proj_rays.get_number(), n);
+    VectorArrayT<T>::dot(map, proj_rays, rays);
+    rays.normalise();
+
+    // Lift circuits back to original space.
+    // TODO: This could be done faster.
+    cirs.init(proj_cirs.get_number(), n);
+    VectorArrayT<T>::dot(map, proj_cirs, cirs);
+    cirs.normalise();
+
+    return;
+}
+
+#if 0
+template <class T>
+void
+QSolveAlgorithm<T>::compute(
+                            const ConeT<T>& cone,
+                            VectorArrayT<T>& rays,
+                            VectorArrayT<T>& cirs,
+                            VectorArrayT<T>& subspace)
+{
+    DEBUG_4ti2(*out << "MATRIX:\n" << cone.get_matrix() << "\n";)
+    //DEBUG_4ti2(*out << "RELS:\n" << rels << "\n";)
+    //DEBUG_4ti2(*out << "SIGN:\n" << sign << "\n";)
 
     Size n = cone.num_vars();
     Size m = cone.num_cons();
@@ -154,6 +254,9 @@ QSolveAlgorithm<T,IndexSet>::compute(
                     IndexSetR(full_rs.count(),full_rs.count()+full_cir.count()), IndexSetR(0,cir_dim));
     proj_matrix.normalise();
     DEBUG_4ti2(*out << "PROJ MATRIX:\n" << proj_matrix << "\n";)
+    //VectorArrayT<T> proj_matrix_trans(proj_matrix.get_size(),proj_matrix.get_number());
+    //proj_matrix_trans.assign_trans(proj_matrix, IndexSetR(0,proj_matrix.get_number()),IndexSetR(0,proj_matrix.get_size()));
+    //*out << "PROJ TRANS MATRIX:\n" << proj_matrix_trans << "\n";
 
     // Construct projected cone and projected initial rays.
     ConeT<T> proj_cone(proj_matrix);
@@ -200,284 +303,14 @@ QSolveAlgorithm<T,IndexSet>::compute(
 
     return;
 }
-#else
-template <class T, class IndexSet>
-void
-QSolveAlgorithm<T,IndexSet>::compute(
-            const ConeT<T>& cone,
-            VectorArrayT<T>& rays,
-            VectorArrayT<T>& cirs,
-            VectorArrayT<T>& subspace)
-{
-    DEBUG_4ti2(*out << "MATRIX:\n" << matrix << "\n";)
-    DEBUG_4ti2(*out << "RELS:\n" << rels << "\n";)
-    DEBUG_4ti2(*out << "SIGN:\n" << sign << "\n";)
-
-    Size n = cone.num_vars();
-    Size m = cone.num_cons();
-    Size num_cons = n+m;
-
-    IndexSetD full_rs(num_cons,0);
-    cone.constraint_set(_4ti2_LB, full_rs);
-    IndexSetD full_cir(num_cons,0);
-    cone.constraint_set(_4ti2_DB, full_cir);
-    IndexSetD full_eq(num_cons,0);
-    cone.constraint_set(_4ti2_EQ, full_eq);
-
-    DEBUG_4ti2(*out << "RS:\n" << full_rs << "\n";)
-    DEBUG_4ti2(*out << "CIR:\n" << full_cir << "\n";)
-    DEBUG_4ti2(*out << "EQ:\n" << full_eq << "\n";)
-
-    // If there are only ray components...
-    // TODO: This could be better.
-    if (full_rs.full()) {
-        // Construct initial rays.
-        std::vector<Index> ray_ineqs;
-        for (Index i = 0; i < n; ++i) {
-            VectorT<T> ray(n,0);
-            ray.set(i,1);
-            rays.insert(ray);
-            ray_ineqs.push_back(i);
-        }
-        std::vector<Index> cir_ineqs;
-        compute(cone, rays, ray_ineqs, cirs, cir_ineqs);
-        return;
-    }
-
-    // If there are only circuit components...
-    // TODO: This could be better.
-    if (full_cir.full()) {
-        // Construct initial circuits.
-        std::vector<Index> cir_ineqs;
-        for (Index i = 0; i < n; ++i) {
-            VectorT<T> cir(n,0);
-            cir.set(i,1);
-            cirs.insert(cir);
-            cir_ineqs.push_back(i);
-        }
-        std::vector<Index> ray_ineqs;
-        compute(cone, rays, ray_ineqs, cirs, cir_ineqs);
-        return;
-    }
-
-    VectorArrayT<T> trans(n, num_cons);
-    // Add an identity matrix at the beginning of the transpose.
-    for (Index i = 0; i < n; ++i) {
-        for (Index j = 0; j < n; ++j) {
-            if (i == j) { trans[i][j] = 1; }
-            else { trans[i][j] = 0; }
-        }
-    } 
-    // Add transpose after the identity matrix.
-    trans.assign_trans(cone.get_matrix(), IndexSetR(0,m), IndexSetR(0,n), IndexSetR(0,n), IndexSetR(n,n+m));
-    DEBUG_4ti2(*out << "TRANS:\n" << trans << "\n";)
-
-    // Process the equality constraints.
-    Index eq_row = upper_triangle(trans, 0, n, full_eq.begin(), full_eq.end());
-    DEBUG_4ti2(*out << "EQ TRANS:\n" << trans << "\n";)
-    trans.remove(0, eq_row);
-
-    // Process the inequality constraints.
-    IndexSetD rs_pivots(num_cons, false);
-    Index rs_dim = diagonal(trans, 0, trans.get_number(), full_rs.begin(), full_rs.end(), rs_pivots);
-    DEBUG_4ti2(*out << "RS PIVOTS:\n" << rs_pivots << "\n";)
-    DEBUG_4ti2(*out << "RS TRANS:\n" << trans << "\n";)
-
-    // Process the circuit constraints.
-    IndexSetD cir_pivots(num_cons, false);
-    Index cir_dim=diagonal(trans, rs_dim, trans.get_number(), full_cir.begin(), full_cir.end(), cir_pivots);
-    DEBUG_4ti2(*out << "CIR PIVOTS:\n" << cir_pivots << "\n";)
-    DEBUG_4ti2(*out << "CIR TRANS:\n" << trans << "\n";)
-
-    // Extract a linear subspace basis.
-    // TODO: Is the subspace basis necessarily independent?
-    subspace.init(trans.get_number()-cir_dim, n);
-    subspace.assign(trans, IndexSetR(cir_dim, trans.get_number()), IndexSetR(0,n));
-    DEBUG_4ti2(*out << "SUB BASIS:\n" << subspace << "\n";)
-
-    // Construct initial rays.
-    rays.init(rs_dim, n);
-    rays.assign(trans, IndexSetR(0,rs_dim), IndexSetR(0,n));
-    DEBUG_4ti2(*out << "RAY BASIS:\n" << rays << "\n";)
-    std::vector<Index> ray_ineqs;
-    for (typename IndexSet::Iter it = rs_pivots.begin(); it != rs_pivots.end(); ++it) {
-        ray_ineqs.push_back(*it);
-    }
-    DEBUG_4ti2(*out << "RAY INEQS:\n" << ray_ineqs << "\n";)
-
-    // Construct initial circuits.
-    cirs.init(cir_dim-rs_dim, n);
-    cirs.assign(trans, IndexSetR(rs_dim,cir_dim), IndexSetR(0,n));
-    DEBUG_4ti2(*out << "CIR BASIS:\n" << cirs << "\n";)
-    std::vector<Index> cir_ineqs;
-    for (typename IndexSet::Iter it = cir_pivots.begin(); it != cir_pivots.end(); ++it) {
-        cir_ineqs.push_back(*it);
-    }
-    DEBUG_4ti2(*out << "CIR INEQS:\n" << cir_ineqs << "\n";)
-
-    compute(cone, rays, ray_ineqs, cirs, cir_ineqs);
-
-    return;
-}
 #endif
 
-
-template <class T, class IndexSet>
-void
-QSolveAlgorithm<T,IndexSet>::set_constraint_order(QSolveConsOrder o)
-{
-    order = o;
-    switch (o)
-    {
-    case MININDEX:
-        compare = &minindex;
-        break;
-    case MAXCUTOFF:
-        compare = &maxcutoff;
-        break;
-    case MINCUTOFF:
-        compare = &mincutoff;
-        break;
-    case MAXINTER:
-        compare = &maxinter;
-        break;
-    default:
-        //compare = &maxinter;
-        compare = &maxcutoff;
-        //compare = &minindex;
-        break;
-    }
-}
-
-
-template <class T, class IndexSet>
-bool
-QSolveAlgorithm<T,IndexSet>::minindex(
-                Index next_pos_count, Index next_neg_count, Index next_zero_count,
-                Index pos_count, Index neg_count, Index zero_count)
-{
-    return false;
-}
-
-template <class T, class IndexSet>
-bool
-QSolveAlgorithm<T,IndexSet>::maxinter(
-                Index next_pos_count, Index next_neg_count, Index next_zero_count,
-                Index pos_count, Index neg_count, Index zero_count)
-{
-    return (zero_count > next_zero_count);
-}
-
-template <class T, class IndexSet>
-bool
-QSolveAlgorithm<T,IndexSet>::maxcutoff(
-                Index next_pos_count, Index next_neg_count, Index next_zero_count,
-                Index pos_count, Index neg_count, Index zero_count)
-{
-    return (neg_count > next_neg_count);
-}
-
-template <class T, class IndexSet>
-bool
-QSolveAlgorithm<T,IndexSet>::mincutoff(
-                Index next_pos_count, Index next_neg_count, Index next_zero_count,
-                Index pos_count, Index neg_count, Index zero_count)
-{
-    return (neg_count < next_neg_count);
-}
-
-// Count how many zero, positive and negative entries there are in a column.
-template <class T, class IndexSet>
-void
-QSolveAlgorithm<T,IndexSet>::slack_count(
-        const ConeT<T>& cone, const VectorArrayT<T>& rays, Index next_con,
-        Index& pos_count, Index& neg_count, Index& zero_count)
-{
-    zero_count = 0; pos_count = 0; neg_count = 0;
-    T slack;
-    for (Index r = 0; r < rays.get_number(); ++r) {
-        cone.get_slack(rays[r], next_con, slack);
-        if (slack == 0) { ++zero_count; }
-        else if (slack > 0) { ++pos_count; }
-        else { ++neg_count; }
-    }
-}
-
-template <class T, class IndexSet>
-Index
-QSolveAlgorithm<T,IndexSet>::next_circuit_constraint(
-                const ConeT<T>& cone,
-                const VectorArrayT<T>& vs,
-                const IndexSet& rem)
-{
-    // Sanity Check
-    assert(vs.get_size() == remaining.get_size());
-
-    Index next_con = *rem.begin();
-    if (order == MININDEX) { return next_con; }
-
-    typename IndexSet::Iter it = rem.begin(); ++it;
-    if (it == rem.end()) { return next_con; }
-
-    Index next_pos_count, next_neg_count, next_zero_count;
-    slack_count(cone, vs, next_con, next_pos_count, next_neg_count, next_zero_count);
-    while (it != rem.end()) {
-        Index pos_count, neg_count, zero_count;
-        slack_count(cone, vs, *it, pos_count, neg_count, zero_count);
-        if (maxinter(next_pos_count, next_neg_count, next_zero_count,
-                        pos_count, neg_count, zero_count)) {
-            next_con = *it;
-            next_pos_count = pos_count;
-            next_neg_count = neg_count;
-            next_zero_count = zero_count;
-        }
-        ++it;
-    }
-    DEBUG_4ti2(*out << "Next Constraint is " << next_con << "\n";)
-    return next_con;
-}
-
-
-template <class T, class IndexSet>
-Index
-QSolveAlgorithm<T,IndexSet>::next_constraint(
-                const ConeT<T>& cone,
-                const VectorArrayT<T>& vs,
-                const IndexSet& rem)
-{
-    // Sanity Check
-    assert(vs.get_size() == remaining.get_size());
-
-    Index next_con = *rem.begin();
-    if (order == MININDEX) { return next_con; }
-
-    typename IndexSet::Iter it = rem.begin(); ++it;
-    if (it == rem.end()) { return next_con; }
-
-    Size next_pos_count, next_neg_count, next_zero_count;
-    slack_count(cone, vs, next_con, next_pos_count, next_neg_count, next_zero_count);
-    while (it != rem.end()) {
-        Size pos_count, neg_count, zero_count;
-        slack_count(cone, vs, *it, pos_count, neg_count, zero_count);
-        if ((*compare)(next_pos_count, next_neg_count, next_zero_count,
-                        pos_count, neg_count, zero_count)) {
-            next_con = *it;
-            next_pos_count = pos_count;
-            next_neg_count = neg_count;
-            next_zero_count = zero_count;
-        }
-        ++it;
-    }
-    DEBUG_4ti2(*out << "Next Constraint is " << next_con << "\n";)
-    return next_con;
-}
-
+#if 0
 // Pushes zeros to the beginning.
-template <class T, class IndexSet>
+template <class T> template <class IndexSet>
 void
-QSolveAlgorithm<T,IndexSet>::sort_nonzeros(
-                const ConeT<T>& cone, 
-                VectorArrayT<T>& rays,
+QSolveAlgorithm<T>::sort_nonzeros(
+                const ConeT<T>& cone, VectorArrayT<T>& rays,
                 std::vector<IndexSet>& supps,
                 Index start, Index end,
                 Index next_col, Index& middle)
@@ -497,11 +330,10 @@ QSolveAlgorithm<T,IndexSet>::sort_nonzeros(
 }
 
 // Pushes positives to the beginning.
-template <class T, class IndexSet>
+template <class T> template <class IndexSet>
 void
-QSolveAlgorithm<T,IndexSet>::sort_positives(
-                const ConeT<T>& cone, 
-                VectorArrayT<T>& rays,
+QSolveAlgorithm<T>::sort_positives(
+                const ConeT<T>& cone, VectorArrayT<T>& rays,
                 std::vector<IndexSet>& supps,
                 Index start, Index end,
                 Index next_col, Index& middle)
@@ -521,11 +353,10 @@ QSolveAlgorithm<T,IndexSet>::sort_positives(
 }
 
 // Pushes positives to the beginning.
-template <class T, class IndexSet>
+template <class T> template <class IndexSet>
 void
-QSolveAlgorithm<T,IndexSet>::sort_negatives(
-                const ConeT<T>& cone, 
-                VectorArrayT<T>& rays,
+QSolveAlgorithm<T>::sort_negatives(
+                const ConeT<T>& cone, VectorArrayT<T>& rays,
                 std::vector<IndexSet>& supps,
                 Index start, Index end,
                 Index next_col, Index& middle)
@@ -545,10 +376,10 @@ QSolveAlgorithm<T,IndexSet>::sort_negatives(
 }
 
 // Pushes rays to the beginning.
-template <class T, class IndexSet>
+template <class T> template <class IndexSet>
 void
-QSolveAlgorithm<T,IndexSet>::sort_rays(
-                VectorArrayT<T>& vs,
+QSolveAlgorithm<T>::sort_rays(
+                VectorArrayT<T>& rays,
                 std::vector<IndexSet>& supps,
                 const IndexSet& ray_mask,
                 Index start, Index end,
@@ -557,7 +388,7 @@ QSolveAlgorithm<T,IndexSet>::sort_rays(
     Index index = start;
     for (Index i = start; i < end; ++i) {
         if (!ray_mask.set_disjoint(supps[i])) {
-            vs.swap_vectors(i,index);
+            rays.swap_vectors(i,index);
             IndexSet::swap(supps[i], supps[index]);
             ++index;
         }
@@ -566,11 +397,10 @@ QSolveAlgorithm<T,IndexSet>::sort_rays(
 }
 
 // Pushes nonzeros to the beginning.
-template <class T, class IndexSet>
+template <class T> template <class IndexSet>
 void
-QSolveAlgorithm<T,IndexSet>::sort_nonzeros(
-                const ConeT<T>& cone, 
-                VectorArrayT<T>& rays,
+QSolveAlgorithm<T>::sort_nonzeros(
+                const ConeT<T>& cone, VectorArrayT<T>& rays,
                 std::vector<IndexSet>& supps,
                 std::vector<IndexSet>& cir_supps,
                 Index start, Index end,
@@ -592,11 +422,10 @@ QSolveAlgorithm<T,IndexSet>::sort_nonzeros(
 }
 
 // Pushes positives to the beginning.
-template <class T, class IndexSet>
+template <class T> template <class IndexSet>
 void
-QSolveAlgorithm<T,IndexSet>::sort_positives(
-                const ConeT<T>& cone, 
-                VectorArrayT<T>& rays,
+QSolveAlgorithm<T>::sort_positives(
+                const ConeT<T>& cone, VectorArrayT<T>& rays,
                 std::vector<IndexSet>& supps,
                 std::vector<IndexSet>& cir_supps,
                 Index start, Index end,
@@ -618,11 +447,10 @@ QSolveAlgorithm<T,IndexSet>::sort_positives(
 }
 
 // Pushes positives to the beginning.
-template <class T, class IndexSet>
+template <class T> template <class IndexSet>
 void
-QSolveAlgorithm<T,IndexSet>::sort_negatives(
-                const ConeT<T>& cone, 
-                VectorArrayT<T>& rays,
+QSolveAlgorithm<T>::sort_negatives(
+                const ConeT<T>& cone, VectorArrayT<T>& rays,
                 std::vector<IndexSet>& supps,
                 std::vector<IndexSet>& cir_supps,
                 int start, int end,
@@ -644,9 +472,9 @@ QSolveAlgorithm<T,IndexSet>::sort_negatives(
 }
 
 // Pushes rays to the beginning.
-template <class T, class IndexSet>
+template <class T> template <class IndexSet>
 void
-QSolveAlgorithm<T,IndexSet>::sort_rays(
+QSolveAlgorithm<T>::sort_rays(
                 VectorArrayT<T>& vs,
                 std::vector<IndexSet>& supps,
                 std::vector<IndexSet>& cir_supps,
@@ -666,9 +494,9 @@ QSolveAlgorithm<T,IndexSet>::sort_rays(
     middle = index;
 }
 
-template <class T, class IndexSet>
+template <class T> template <class IndexSet>
 Index
-QSolveAlgorithm<T,IndexSet>::next_constraint(
+QSolveAlgorithm<T>::next_constraint(
                 const ConeT<T>& cone, VectorArrayT<T>& vs, std::vector<IndexSet>& supps,
                 const IndexSet& rem, const IndexSet& ray_mask,
                 Index& ray_start, Index& ray_end, Index& cir_start, Index& cir_end,
@@ -699,9 +527,9 @@ QSolveAlgorithm<T,IndexSet>::next_constraint(
     return next_col;
 }
 
-template <class T, class IndexSet>
+template <class T> template <class IndexSet>
 Index
-QSolveAlgorithm<T,IndexSet>::next_constraint(
+QSolveAlgorithm<T>::next_constraint(
                 const ConeT<T>& cone, VectorArrayT<T>& vs,
                 std::vector<IndexSet>& supps, std::vector<IndexSet>& cir_supps,
                 const IndexSet& rem, const IndexSet& ray_mask,
@@ -712,7 +540,7 @@ QSolveAlgorithm<T,IndexSet>::next_constraint(
     assert(!rem.empty());
     // First, we choose the next constraint to add.
     Index next_col = next_circuit_constraint(cone, vs, rem);
-    
+
     Index start = 0; Index end = vs.get_number(); Index middle;
     // We sort the vectors into nonzeros and then zeros.
     sort_nonzeros(cone, vs, supps, cir_supps, start, end, next_col, middle);
@@ -733,56 +561,95 @@ QSolveAlgorithm<T,IndexSet>::next_constraint(
     return next_col;
 }
 
-template <class T, class IndexSet>
+template <class T> template <class IndexSet>
+Index
+QSolveAlgorithm<T>::next_constraint(
+                const ConeT<T>& cone,
+                const VectorArrayT<T>& vs,
+                const IndexSet& rem)
+{
+    Index next_con = *rem.begin();
+    if (order.get_constraint_order() == MININDEX) { return next_con; }
+
+    typename IndexSet::Iter it = rem.begin(); ++it;
+    if (it == rem.end()) { return next_con; }
+
+    Size next_pos_count, next_neg_count, next_zero_count;
+    cone.slack_count(vs, next_con, next_pos_count, next_neg_count, next_zero_count);
+    while (it != rem.end()) {
+        Size pos_count, neg_count, zero_count;
+        cone.slack_count(vs, *it, pos_count, neg_count, zero_count);
+        if ((*order.compare)(next_pos_count, next_neg_count, next_zero_count,
+                        pos_count, neg_count, zero_count)) {
+            next_con = *it;
+            next_pos_count = pos_count;
+            next_neg_count = neg_count;
+            next_zero_count = zero_count;
+        }
+        ++it;
+    }
+    DEBUG_4ti2(*out << "Next Constraint is " << next_con << "\n";)
+    return next_con;
+}
+
+template <class T> template <class IndexSet>
+Index
+QSolveAlgorithm<T>::next_circuit_constraint(
+                const ConeT<T>& cone,
+                const VectorArrayT<T>& vs,
+                const IndexSet& rem)
+{
+    Index next_con = *rem.begin();
+    if (order.get_constraint_order() == MININDEX) { return next_con; }
+
+    typename IndexSet::Iter it = rem.begin(); ++it;
+    if (it == rem.end()) { return next_con; }
+
+    Size next_pos_count, next_neg_count, next_zero_count;
+    cone.slack_count(vs, next_con, next_pos_count, next_neg_count, next_zero_count);
+    while (it != rem.end()) {
+        Size pos_count, neg_count, zero_count;
+        cone.slack_count(vs, *it, pos_count, neg_count, zero_count);
+        if ((*order.circuit_compare)(next_pos_count, next_neg_count, next_zero_count,
+                        pos_count, neg_count, zero_count)) {
+            next_con = *it;
+            next_pos_count = pos_count;
+            next_neg_count = neg_count;
+            next_zero_count = zero_count;
+        }
+        ++it;
+    }
+    DEBUG_4ti2(*out << "Next Constraint is " << next_con << "\n";)
+    return next_con;
+}
+
+template <class T> template <class IndexSet>
 void
-QSolveAlgorithm<T,IndexSet>::flip(std::vector<IndexSet>& supps, int start, int end)
+QSolveAlgorithm<T>::flip(std::vector<IndexSet>& supps, int start, int end)
 {
     for (Index i = start; i < end; ++i) { supps[i].swap_odd_n_even(); }
 }
 
-// Splits rays into rays and circuits.
-// NOTE: Does not update supports.
-// TODO: cannot assume anything about the size of the supports.
-template <class T, class IndexSet>
+template <class T> template <class IndexSet>
 void
-QSolveAlgorithm<T,IndexSet>::split_rays(
-                const ConeT<T>& cone,
-                const std::vector<IndexSet>& supps,
-                VectorArrayT<T>& rays,
-                VectorArrayT<T>& cirs)
-{
-    IndexSet ray_mask(cone.num_vars()+cone.num_cons());
-    cone.constraint_set(_4ti2_LB, ray_mask);
-    int index = 0;
-    for (int i = 0; i < rays.get_number(); ++i) {
-        if (!ray_mask.set_disjoint(supps[i])) {
-            rays.swap_vectors(i,index);
-            ++index;
-        }
-    }
-    cirs.transfer(rays, index, rays.get_number(), 0);
-}
-
-template <class T, class IndexSet>
-void
-QSolveAlgorithm<T,IndexSet>::update_supports(
+QSolveAlgorithm<T>::update_supports(
                 std::vector<IndexSet>& supps,
                 Index index, Index start, Index end)
 {
     for (Index i = start; i < end; ++i) { supps[i].set(index); }
 }
 
-template <class T, class IndexSet>
+template <class T> template <class IndexSet>
 void
-QSolveAlgorithm<T,IndexSet>::resize_supports(
+QSolveAlgorithm<T>::resize_supports(
                 std::vector<IndexSet>& supps, Size size)
 {
     for (Index i = 0; i < (Index) supps.size(); ++i) { supps[i].resize(size); }
 }
 
-template <class T, class IndexSet>
+template <class T> template <class IndexSet>
 Index
-QSolveAlgorithm<T,IndexSet>::next_constraint(
+QSolveAlgorithm<T>::next_constraint(
             const ConeT<T>& cone,
             const IndexSet& rem,
             VectorArrayT<T>& rays,
@@ -807,9 +674,9 @@ QSolveAlgorithm<T,IndexSet>::next_constraint(
     return next_con;
 }
 
-template <class T, class IndexSet>
+template <class T> template <class IndexSet>
 void
-QSolveAlgorithm<T,IndexSet>::print_debug_diagnostics(
+QSolveAlgorithm<T>::print_debug_diagnostics(
             const ConeT<T>& cone, 
             const VectorArrayT<T>& rays,
             const std::vector<IndexSet>& supps,
@@ -823,6 +690,63 @@ QSolveAlgorithm<T,IndexSet>::print_debug_diagnostics(
         cone.get_slack(rays[i], next, s);
         *out << "Sla " << s << "\n";
     }
+}
+#endif
+
+// Splits rays into rays and circuits.
+// NOTE: Does not update supports.
+// TODO: cannot assume anything about the size of the supports.
+template <class T> template <class IndexSet>
+void
+QSolveAlgorithm<T>::split_rays(
+                const ConeT<T>& cone,
+                const std::vector<IndexSet>& supps,
+                VectorArrayT<T>& rays,
+                VectorArrayT<T>& cirs)
+{
+    IndexSet ray_mask(cone.num_vars()+cone.num_cons());
+    cone.constraint_set(_4ti2_LB, ray_mask);
+    int index = 0;
+    for (int i = 0; i < rays.get_number(); ++i) {
+        if (!ray_mask.set_disjoint(supps[i])) {
+            rays.swap_vectors(i,index);
+            ++index;
+        }
+    }
+    cirs.transfer(rays, index, rays.get_number(), 0);
+}
+
+inline
+IndexRanges::IndexRanges()
+{
+    pthread_mutex_init(&mutex1, 0);
+    r1_start = r1_index = r1_end = r2_start = r2_index = r2_end = increment = 0;
+}
+
+inline void
+IndexRanges::init(Index _r1_start, Index _r1_end, Index _r2_start, Index _r2_index, Index _r2_end)
+{
+    r1_start = r1_index = _r1_start;
+    r1_end = _r1_end;
+    r2_start = _r2_start;
+    r2_index = _r2_index;
+    r2_end = _r2_end;
+    if (Globals::num_threads==1) { increment = r1_end-r1_start; }
+    else { increment = 1000; } // TODO
+    //increment = (r1_end-r1_start)/Globals::num_threads+1;
+}
+
+inline void
+IndexRanges::next(Index& _r1_start, Index& _r1_end, Index& _r2_start, Index& _r2_index, Index& _r2_end)
+{
+    pthread_mutex_lock(&mutex1);
+    _r1_start = r1_index;
+    r1_index = std::min(r1_index+increment, r1_end);
+    _r1_end = r1_index;
+    _r2_start = r2_start;
+    _r2_index = r2_index;
+    _r2_end = r2_end;
+    pthread_mutex_unlock(&mutex1);
 }
 
 #undef DEBUG_4ti2

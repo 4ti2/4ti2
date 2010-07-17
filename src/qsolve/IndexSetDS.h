@@ -72,6 +72,7 @@ public:
     Size count_union(const IndexSetDS& b) const;
     bool count_lte(Size s) const;
     bool count_lte_diff(Size s, const IndexSetDS& b) const;
+    bool count_lte_2_diff(const IndexSetDS& b) const;
 
     bool operator[](Index index) const;
 
@@ -209,6 +210,17 @@ IndexSetDS::count_lte_diff(Size s, const IndexSetDS& b) const
         --s;
     }
     return true;
+}
+
+inline
+bool
+IndexSetDS::count_lte_2_diff(const IndexSetDS& b) const
+{
+    BlockType tmp = block & ~b.block;
+    tmp &= tmp-1;
+    if (!tmp) { return true; }
+    tmp &= tmp-1;
+    return !tmp;
 }
 
 inline
@@ -489,6 +501,7 @@ inline
 Size
 IndexSetDS::count() const
 {
+#if 1
     // The following section of code only works for 64 bit block sizes which we can
     // assume (hopefully) because the BlockType is uint64_t.
     // The following code is based upon code obtained from the website
@@ -499,6 +512,7 @@ IndexSetDS::count() const
     Size c = ((w + (w >> 4) & (BlockType) 0x0F0F0F0F0F0F0F0FULL) * (BlockType) 0x0101010101010101ULL)
             >> 56;
     return c;
+#endif
 #if 0
     // The following code is slower than the above code but it has the advantage
     // that it is independent of the block size. It is not used at present.
@@ -512,14 +526,21 @@ IndexSetDS::count() const
     }
     return c;
 #endif
+#if 0
+    BlockType tmp = block-((block >> 1) & 0333333333333333333333ULL)
+                    -((block >> 2) & 0111111111111111111111ULL);
+    tmp += tmp >> 3;
+    return (tmp & 0707070707070707070700ULL) % 63 + (tmp & 7);
+#endif
 }
 
 inline
 Size
 IndexSetDS::count_union(const IndexSetDS& b) const
 {
+#if 1
     // The following section of code only works for 64 bit block sizes which we can
-    // assume (hopefully) because the BlockType is uint64_t.
+    // assume because the BlockType is uint64_t.
     // The following code is based upon code obtained from the website
     // http://graphics.stanford.edu/~seander/bithacks.html
     BlockType w = block | b.block;
@@ -529,6 +550,16 @@ IndexSetDS::count_union(const IndexSetDS& b) const
     Size c = ((w + (w >> 4) & (BlockType) 0x0F0F0F0F0F0F0F0FULL) * (BlockType) 0x0101010101010101ULL)
             >> 56;
     return c;
+#endif
+    // The above code seems faster than using the following builtin function.
+    //return __builtin_popcountl(block | b.block);
+#if 0
+    BlockType w = block | b.block;
+    w = w -((w >> 1) & 0333333333333333333333ULL)
+                    -((w >> 2) & 0111111111111111111111ULL);
+    w += w >> 3;
+    return (w & 0707070707070707070700ULL) % 63 + (w & 7);
+#endif
 }
 
 inline

@@ -38,6 +38,7 @@ public:
 };
 
 extern std::ostream* out;
+extern char ENDL;
 
 } // namespace _4ti2_
 

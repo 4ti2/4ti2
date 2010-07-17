@@ -319,6 +319,7 @@ VectorDBase<T>::normalise()
     while(i != end && *i == 0) { ++i; }
     if (i == end) return;
     T gcd = *i;
+    if (gcd < 0) { gcd *= -1; }
     if (gcd == 1) return;
     ++i;
     while (i != end && *i == 0) { ++i; }

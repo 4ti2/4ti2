@@ -19,10 +19,12 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
+#include <pthread.h>
+#include <iostream>
+#include <iomanip>
+#include <algorithm>
+
 #include "qsolve/SupportAlgorithm.h"
-#include "qsolve/DiagonalAlgorithm.h"
-#include "qsolve/HermiteAlgorithm.h"
-#include "qsolve/Euclidean.h"
 #include "qsolve/Globals.h"
 #include "qsolve/Timer.h"
 #include "qsolve/Debug.h"
@@ -32,55 +34,65 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "qsolve/VectorArrayStream.h"
 #include "qsolve/IndexSetStream.h"
 #include "qsolve/Stream.h"
-#include <iostream>
-#include <iomanip>
-#include <algorithm>
 
 #undef DEBUG_4ti2
 #define DEBUG_4ti2(X) //X
 
 using namespace _4ti2_;
 
-template <class T, class IndexSet>
-SupportAlgorithm<T,IndexSet>::SupportAlgorithm()
-    : QSolveAlgorithm<T,IndexSet>()
+template <class T>
+SupportAlgorithm<T>::SupportAlgorithm()
+    : QSolveAlgorithm<T>()
 {
 }
 
-template <class T, class IndexSet>
-SupportAlgorithm<T,IndexSet>::SupportAlgorithm(QSolveConsOrder o)
-    : QSolveAlgorithm<T,IndexSet>(o)
+template <class T>
+SupportAlgorithm<T>::SupportAlgorithm(QSolveConsOrder o)
+    : QSolveAlgorithm<T>(o)
 {
 }
 
-template <class T, class IndexSet>
-SupportAlgorithm<T,IndexSet>::~SupportAlgorithm()
+template <class T>
+SupportAlgorithm<T>::~SupportAlgorithm()
 {
 }
 
-template <class T, class IndexSet>
+template <class T>
 void
-SupportAlgorithm<T,IndexSet>::compute(const ConeT<T>& cone, 
+SupportAlgorithm<T>::compute(const ConeT<T>& cone, 
             VectorArrayT<T>& rays, std::vector<Index>& ray_ineqs, 
             VectorArrayT<T>& cirs, std::vector<Index>& cir_ineqs)
 {
     // The number of constraints added so far.
     Index cons_added = 0;
-    std::vector<IndexSet> supps;
-    // Compute ray only constraints first.
-    compute(cone, rays, supps, cons_added, ray_ineqs);
+    IndexSetD lbs(cone.num_vars()+cone.num_cons());
+    cone.constraint_set(_4ti2_LB, lbs);
+    IndexSetD dbs(cone.num_vars()+cone.num_cons());
+    cone.constraint_set(_4ti2_DB, dbs);
 
-    // Compute circuits.
-    compute(cone, rays, supps, cons_added, cirs, cir_ineqs);
-
-    // Separate the rays from the circuits.
-    split_rays(cone, supps, rays, cirs);
+    if (lbs.count()+2*dbs.count() <= IndexSetDS::max_size) {
+        std::vector<IndexSetDS> supps;
+        // Compute ray only constraints first.
+        compute(cone, rays, supps, cons_added, ray_ineqs);
+        // Compute circuits.
+        compute(cone, rays, supps, cons_added, cirs, cir_ineqs);
+        // Separate the rays from the circuits.
+        split_rays(cone, supps, rays, cirs);
+    } else {
+        std::vector<IndexSetD> supps;
+        // Compute ray only constraints first.
+        compute(cone, rays, supps, cons_added, ray_ineqs);
+        // Compute circuits.
+        compute(cone, rays, supps, cons_added, cirs, cir_ineqs);
+        // Separate the rays from the circuits.
+        split_rays(cone, supps, rays, cirs);
+    }
 }
 
 // Computes extreme rays of the cone Ax>=0, x>=0.
-template <class T, class IndexSet>
+template <class T> template <class IndexSet>
 void
-SupportAlgorithm<T,IndexSet>::compute(
+SupportAlgorithm<T>::compute(
             const ConeT<T>& cone,
             VectorArrayT<T>& rays,
             std::vector<IndexSet>& supps,
@@ -89,7 +101,7 @@ SupportAlgorithm<T,IndexSet>::compute(
 {
     Timer t;
     *out << "Ray Support Algorithm.\n";
-    DEBUG_4ti2(*out << "CONSTRAINT MATRIX:\n" << cone.constraint_matrix() << "\n";)
+    DEBUG_4ti2(*out << "CONSTRAINT MATRIX:\n" << cone.get_matrix() << "\n";)
 
     // The number of variables.
     Size n = cone.num_vars();
@@ -131,14 +143,14 @@ SupportAlgorithm<T,IndexSet>::compute(
 
     SUPPORTTREE<IndexSet> tree;
     Index next = -1;
-
+    IndexRanges index_ranges;
+    IndexSet ray_mask(dim,true);
     // Construct main algorithm object.
-    SupportRayAlgorithm<T,IndexSet> alg(cone, rays, supps, rel, cons_added, next, tree);
+    RayState<T,IndexSet> state(cone, rays, supps, rem, ray_mask, next);
+    SupportRayAlgorithm<IndexSet> alg(state, supps, rel, cons_added, next, tree, index_ranges);
     // Construct threaded algorithm objects.
-    std::vector<SupportRayAlgorithm<T,IndexSet>*> algs;
-    for (Index i = 0; i < Globals::num_threads-1; ++i) {
-            algs.push_back(new SupportRayAlgorithm<T,IndexSet>(cone, rays, supps, rel, cons_added, next, tree));
-    }
+    std::vector<SupportRayAlgorithm<IndexSet>*> algs;
+    for (Index i = 0; i < Globals::num_threads-1; ++i) { algs.push_back(alg.clone()); }
 
     // While there are still rows to choose from.
     while (rays.get_number()>0 && !rem.empty()) {
@@ -147,16 +159,14 @@ SupportAlgorithm<T,IndexSet>::compute(
 
         // Choose the next constraint and sort rays.
         Index pos_start, pos_end, neg_start, neg_end;
-        next = next_constraint(cone, rem, rays, supps,
-                        pos_start, pos_end, neg_start, neg_end);
-
-        char buffer[256];
-        sprintf(buffer, "  Left = %3d  Col = %3d", rem.count(), next);
-        *out << ENDL << buffer;
-        *out << "  Size = " << std::setw(8) << rays.get_number() << "  Time: " << t;
+        next = state.next_constraint(QSolveAlgorithm<T>::order, pos_start, pos_end, neg_start, neg_end);
 
         // Check to see whether the next constraint is redundant. If so, ignore it.
         if (neg_start == neg_end) { rem.unset(next); continue; }
+
+        char buffer[256];
+        sprintf(buffer, "%cLeft %3d  Col %3d  Size %8d", ENDL, rem.count(), next, rays.get_number());
+        *out << buffer << std::flush;
 
         if (pos_start != pos_end) {
             // Next, we assign index ranges for the inner and outer for loops so
@@ -170,59 +180,52 @@ SupportAlgorithm<T,IndexSet>::compute(
                 r2_start = pos_start; r2_end = pos_end;
                 r1_start = neg_start; r1_end = neg_end;
             }
-    
+
             // We sort the r2's into vectors where r2_supp.count()==cons_added+1.
-            Index r2_index = r2_start;
-            for (Index r2 = r2_start; r2 < r2_end; ++r2) {
-                if (supps[r2].count() == cons_added+1) {
-                    rays.swap_rows(r2, r2_index);
-                    IndexSet::swap(supps[r2], supps[r2_index]);
-                    ++r2_index;
-                }
-            }
-    
+            Index r2_index = state.sort_count(cons_added+1, r2_start, r2_end);
+
             // Put supports into tree structure.
             tree.insert(supps);
+            DEBUG_4ti2(tree.dump();)
             //tree.print_statistics();
-    
+
             // Run threads.
-            Index increment = (r1_end-r1_start)/Globals::num_threads;
-            for (Index i = 0; i < Globals::num_threads-1; ++i) {
-                algs[i]->threaded_compute(r1_start, r1_start+increment, r2_start, r2_index, r2_end);
-                r1_start += increment;
-            }
+            index_ranges.init(r1_start, r1_end, r2_start, r2_index, r2_end);
+            for (Index i = 0; i < Globals::num_threads-1; ++i) { algs[i]->threaded_compute(); }
             // Run primary algorithm.
-            alg.compute(r1_start, r1_end, r2_start, r2_index, r2_end);
-    
+            alg.compute();
+
             // Wait for threads to finish.
             for (Index i = 0; i < Globals::num_threads-1; ++i) { algs[i]->wait(); }
-    
+
             // Clear tree.
             tree.clear();
         }
 
         // Delete all the vectors with a negative entry in the column next.
-        supps.erase(supps.begin()+neg_start, supps.begin()+neg_end);
-        rays.remove(neg_start, neg_end);
+        state.remove(neg_start, neg_end);
 
         // Add new rays and supps.
-        alg.transfer(rays, supps);
-        for (Index i = 0; i < Globals::num_threads-1; ++i) { algs[i]->transfer(rays, supps); }
+        alg.transfer();
+        for (Index i = 0; i < Globals::num_threads-1; ++i) { algs[i]->transfer(); }
 
         // Update the support vectors for the next_col.
         assert(pos_end <= neg_start); // ASSUMING pos is before neg. 
         //update_supports(supps, next, pos_start, pos_end);
-        resize_supports(supps, dim+cons_added+1);
-        update_supports(supps, dim+cons_added, pos_start, pos_end);
+        state.resize(dim+cons_added+1);
+        state.update(dim+cons_added, pos_start, pos_end);
+
+        ray_mask.resize(dim+cons_added+1);
+        ray_mask.set(dim+cons_added);
 
         rem.unset(next);
         rel.unset(next);
         ++cons_added;
 
         // Output statistics.
-        *out << ENDL << buffer;
-        *out << "  Size = " << std::setw(8) << rays.get_number() << ", ";
-        *out << "  Time: " << t << "                \n";
+        sprintf(buffer, "%cLeft %3d  Col %3d  Size %8d  Time %8.2fs", ENDL, rem.count(), next, 
+                rays.get_number(), t.get_elapsed_time());
+        *out << buffer << std::endl;
 
         DEBUG_4ti2(*out << "RAYS:\n" << rays << "\n";)
         DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
@@ -232,9 +235,9 @@ SupportAlgorithm<T,IndexSet>::compute(
     for (Index i = 0; i < Globals::num_threads-1; ++i) { delete algs[i]; }
 }
 
-template <class T, class IndexSet>
+template <class T> template <class IndexSet>
 void
-SupportAlgorithm<T,IndexSet>::compute(
+SupportAlgorithm<T>::compute(
         const ConeT<T>& cone,
         VectorArrayT<T>& rays,
         std::vector<IndexSet>& supps,
@@ -264,10 +267,17 @@ SupportAlgorithm<T,IndexSet>::compute(
 
     // Extend the support of the rays to include the circuit components.
     Index ray_supp_size = 0;
-    if (rays.get_number() != 0) { ray_supp_size = supps[0].get_size(); }
+    if (!supps.empty()) { ray_supp_size = supps[0].get_size(); }
     if (ray_supp_size%2 == 1) { ++ray_supp_size; } // Make ray support size even.
     Index cir_supp_size = ray_supp_size + 2*dim_cirs;
-    for (Index i = 0; i < (Index) supps.size(); ++i) { supps[i].resize(cir_supp_size); }
+
+    // The mask for the circuit constraints.
+    IndexSet ray_mask(cir_supp_size, false);
+    for (Index i = 0; i < ray_supp_size; ++i) { ray_mask.set(i); }
+
+    Index next = -1;
+    RayState<T,IndexSet> state(cone, rays, supps, rem, ray_mask, next);
+    state.resize(cir_supp_size);
 
     // Construct the circuit supports.
     rays.transfer(cirs, 0, cirs.get_number(), rays.get_number());
@@ -276,38 +286,37 @@ SupportAlgorithm<T,IndexSet>::compute(
         supp.set(ray_supp_size+2*i);
         supps.push_back(supp);
     }
-
-    // The mask for the circuit constraints.
-    IndexSet ray_mask(cir_supp_size, false);
-    for (Index i = 0; i < ray_supp_size; ++i) { ray_mask.set(i); }
+    DEBUG_4ti2(*out << "Initial Rays + Circuits:\n" << rays << "\n";)
+    DEBUG_4ti2(*out << "Initial Supports:\n" << supps << "\n";)
 
     SUPPORTTREE<IndexSet> tree;
-    Index next = -1;
 
-    SupportCirAlgorithm<T,IndexSet> alg(cone, rays, supps, rem, cons_added, next, tree, ray_mask);
+    IndexRanges index_ranges;
+    SupportCirAlgorithm<IndexSet> alg(state, supps, rem, cons_added, next, tree, ray_mask, index_ranges);
+    std::vector<SupportCirAlgorithm<IndexSet>*> algs;
+    for (Index i = 0; i < Globals::num_threads-1; ++i) { algs.push_back(alg.clone()); }
 
     while (rays.get_number() > 0 && !rem.empty()) {
         // Find the next constraint.
-        int ray_start, ray_end, cir_start, cir_end;
         int pos_ray_start, pos_ray_end, neg_ray_start, neg_ray_end;
         int pos_cir_start, pos_cir_end, neg_cir_start, neg_cir_end;
-        Index next_col = next_constraint(cone, rays, supps, rem, ray_mask,
-                    ray_start, ray_end, cir_start, cir_end,
+        next = state.next_constraint(QSolveAlgorithm<T>::order,
                     pos_ray_start, pos_ray_end, neg_ray_start, neg_ray_end,
                     pos_cir_start, pos_cir_end, neg_cir_start, neg_cir_end);
+        DEBUG_4ti2(*out << pos_ray_start << " " << pos_ray_end << " " << neg_ray_start << " " << neg_ray_end << " ";)
+        DEBUG_4ti2(*out << pos_cir_start << " " << pos_cir_end << " " << neg_cir_start << " " << neg_cir_end << std::endl;)
 
-        DEBUG_4ti2(print_debug_diagnostics(cone, rays, supps, next_col);)
+        //DEBUG_4ti2(print_debug_diagnostics(cone, rays, supps, next);)
 
         // Ouput statistics.
         char buffer[256];
-        sprintf(buffer, "  Left = %3d  Col = %3d", rem.count(), next_col);
-        *out << "\r" << buffer;
-        *out << "  Size = " << std::setw(8) << rays.get_number() << "  Time: " << t;
-        DEBUG_4ti2(*out << std::endl;)
+        sprintf(buffer, "%cLeft %3d  Col %3d", ENDL, rem.count(), next);
+        *out << buffer << std::flush;
+        DEBUG_4ti2(*out << "\nRAYS:\n" << rays << "\n";)
+        DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
 
-        // Note that the tree needs the ordering of the current vectors to be
-        // constant.
-        DEBUG_4ti2(*out << "Building Tree ... " << std::flush;)
+        // Note that the tree needs the ordering of the current vectors to be constant.
+        DEBUG_4ti2(*out << "\nBuilding Tree ... " << std::endl;)
         tree.insert(supps);
         // Insert the negatives of the circuit supports.
         for (int i = 0; i < rays.get_number(); ++i) {
@@ -322,82 +331,78 @@ SupportAlgorithm<T,IndexSet>::compute(
         DEBUG_4ti2(tree.dump();)
 
         // TODO: Make threaded.
-        if (pos_ray_start != pos_ray_end) {
-            flip(supps, pos_cir_start, pos_cir_end);
-            alg.compute(pos_ray_start, pos_ray_end, neg_ray_start, cir_end);
-            flip(supps, pos_cir_start, pos_cir_end);
-        }
-        if (neg_ray_start != neg_ray_end) {
-            flip(supps, neg_cir_start, neg_cir_end);
-            alg.compute(neg_ray_start, neg_ray_end, cir_start, cir_end);
-            flip(supps, neg_cir_start, neg_cir_end);
-        }
-        if (cir_start != cir_end) {
-            flip(supps, pos_cir_start, pos_cir_end);
-            alg.compute(cir_start, cir_end, cir_start, cir_end);
-            flip(supps, pos_cir_start, pos_cir_end);
-        }
+        state.flip(pos_cir_start, pos_cir_end);
+        alg.compute_cirs(pos_ray_start, neg_cir_end, pos_cir_start, neg_ray_end);
+        state.flip(neg_cir_start, neg_cir_end);
 
-        alg.transfer(rays, supps);
+        alg.transfer();
+        for (Index i = 0; i < Globals::num_threads-1; ++i) { algs[i]->transfer(); }
+
         tree.clear();
 
         // Update the supp vectors for the next_col.
-        for (Index i = 0; i < rays.get_number(); ++i) { supps[i].resize(cir_supp_size+2); }
-        update_supports(supps, cir_supp_size, pos_ray_start, pos_ray_end);
-        update_supports(supps, cir_supp_size, pos_cir_start, pos_cir_end);
-        update_supports(supps, cir_supp_size+1, neg_ray_start, neg_ray_end);
-        update_supports(supps, cir_supp_size+1, neg_cir_start, neg_cir_end);
+        state.resize(cir_supp_size+2);
+        state.update(cir_supp_size, pos_ray_start, pos_ray_end);
+        state.update(cir_supp_size, pos_cir_start, pos_cir_end);
+        state.update(cir_supp_size+1, neg_ray_start, neg_ray_end);
+        state.update(cir_supp_size+1, neg_cir_start, neg_cir_end);
         ray_mask.resize(cir_supp_size+2);
         cir_supp_size+=2;
 
-        *out << "\r" << buffer;
-        *out << "  Size = " << std::setw(8) << rays.get_number();
-        *out  << ",  Time: " << t << "                \n";
+        sprintf(buffer, "%cLeft %3d  Col %3d  Size %8d  Time %8.2fs", ENDL, rem.count(), next, 
+                rays.get_number(), t.get_elapsed_time());
+        *out << buffer << std::endl;
+        DEBUG_4ti2(*out << "\nRAYS:\n" << rays << "\n";)
+        DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
 
-        rem.unset(next_col);
+        rem.unset(next);
         ++cons_added;
     }
 }
 
-template <class T, class IndexSet>
-SupportRayAlgorithm<T,IndexSet>::SupportRayAlgorithm(
-                const ConeT<T>& _cone, const VectorArrayT<T>& _rays, const std::vector<IndexSet>& _supps, 
-                const IndexSet& _rel, const Index& _cons_added, const Index& _next, const SUPPORTTREE<IndexSet>& _tree)
-        : cone(_cone), rays(_rays), supps(_supps), rel(_rel),
-          cons_added(_cons_added), next(_next), tree(_tree), new_rays(0,_rays.get_size()), temp(_cone.num_vars())
-{
-    _r1_start = _r1_end = _r2_start = _r2_index = _r2_end = 0;
-}
-
-template <class T, class IndexSet>
-SupportRayAlgorithm<T,IndexSet>::~SupportRayAlgorithm()
-{
-    new_rays.clear();
-    new_supps.clear();
-}
-
-template <class T, class IndexSet>
-inline
+#if 0
+template <class T> template <class IndexSet>
 void
-SupportRayAlgorithm<T,IndexSet>::compute()
+SupportAlgorithm<T>::check(
+                const ConeT<T>& cone,
+                const IndexSet& rem,
+                const VectorArrayT<T>& rays,
+                const std::vector<IndexSet>& supps,
+                const std::vector<IndexSet>& cir_supps)
 {
-    compute(_r1_start, _r1_end, _r2_start, _r2_index, _r2_end);
+    Index n = cone.num_vars();
+    Index m = cone.num_cons();
+    VectorT<T> slacks(n+m);
+    for (Index i = 0; i < rays.get_number(); ++i) {
+        cone.get_slacks(rays[i], slacks);
+        for (Index j = 0; j < n+m; ++j) {
+            if (!rem[j]) {
+                if ((slacks[j] != 0) != supps[i][j]) { *out << "Support Check failed.\n"; }
+            }
+        }
+    }
+}
+#endif
+
+
+template <class IndexSet>
+SupportSubAlgorithmBase<IndexSet>::SupportSubAlgorithmBase(
+                RayStateAPI<IndexSet>& _helper, std::vector<IndexSet>& _supps, const IndexSet& _rel, const Index& _cons_added, 
+                const Index& _next, const IndexSet& _ray_mask, const SUPPORTTREE<IndexSet>& _tree)
+        : helper(*_helper.clone()), supps(_supps), rel(_rel), cons_added(_cons_added), next(_next), ray_mask(_ray_mask), tree(_tree)
+{
 }
 
-template <class T, class IndexSet>
-inline
-void
-SupportRayAlgorithm<T,IndexSet>::threaded_compute(
-                Index r1_start, Index r1_end, Index r2_start, Index r2_index, Index r2_end)
+template <class IndexSet>
+SupportSubAlgorithmBase<IndexSet>::~SupportSubAlgorithmBase()
 {
-    _r1_start = r1_start; _r1_end = r1_end; _r2_start = r2_start; _r2_index = r2_index; _r2_end = r2_end;
-    ThreadedAlgorithm::threaded_compute();
+    delete &helper;
 }
 
 #if 0
 template <class T, class IndexSet>
 void
-SupportRayAlgorithm<T,IndexSet>::compute(
+SupportSubAlgorithmBase<T,IndexSet>::compute(
                 Index r1_start, Index r1_end, Index r2_start, Index r2_index, Index r2_end)
 {
     if (r1_start == r1_end || r2_start == r2_end) { return; }
@@ -421,10 +426,10 @@ SupportRayAlgorithm<T,IndexSet>::compute(
     for (Index r1 = r1_start; r1 < r1_end; ++r1) { // Outer loop.
         // Output statistics.
         if (index_count % Globals::output_freq == 0) {
-            *out << "\r" << buffer;
+            *out << ENDL << buffer;
             *out << "  Size = " << std::setw(8) << rays.get_number() << ", ";
             *out << "  Index = " << std::setw(8) << r1-r1_start << "/" << r1_end-r1_start;
-            *out << std::flush;
+            *out << std::endl;
         }
         ++index_count;
 
@@ -434,14 +439,14 @@ SupportRayAlgorithm<T,IndexSet>::compute(
         if (r1_count == cons_added+1) {
             for (Index r2 = r2_start; r2 < r2_end; ++r2) {
                 temp_supp.set_difference(local_supps[r2], r1_supp);
-                if (temp_supp.singleton()) { create_ray(r1, s1, r2);  }
+                if (temp_supp.singleton()) { helper.create_ray(r2);  }
             }
             continue;
         }
 
         for (Index r2 = r2_start; r2 < r2_index; ++r2) {
             temp_supp.set_difference(r1_supp, local_supps[r2]);
-            if (temp_supp.singleton()) { create_ray(r1, s1, r2);  }
+            if (temp_supp.singleton()) { helper.create_ray(r2);  }
         }
 
         for (Index r2 = r2_index; r2 < r2_end; ++r2) { // Inner loop.
@@ -451,26 +456,27 @@ SupportRayAlgorithm<T,IndexSet>::compute(
             // Check whether the two rays r1 and r2 are adjacent.
             temp_supp.set_difference(r1_supp, local_supps[r2]);
             if (temp_supp.singleton()) {
-                create_ray(r1, s1, r2); 
+                helper.create_ray(r2); 
                 continue;
             }
             temp_supp.set_difference(local_supps[r2], r1_supp);
             if (temp_supp.singleton()) {
-                create_ray(r1, s1, r2); 
+                helper.create_ray(r2); 
                 continue;
             }
             STATS_4ti2(++num_checks;)
             if (tree.dominated(temp_union, r1, r2)) { STATS_4ti2(++num_dominated;) continue; }
-            create_ray(r1, s1, r2); 
+            helper.create_ray(r2); 
         }
     }
 }
 
-#else
+#endif
 
-template <class T, class IndexSet>
+#if 1
+template <class IndexSet>
 void
-SupportRayAlgorithm<T,IndexSet>::compute(
+SupportSubAlgorithmBase<IndexSet>::compute_rays(
                 Index r1_start, Index r1_end, Index r2_start, Index r2_index, Index r2_end)
 {
     if (r1_start == r1_end || r2_start == r2_end) { return; }
@@ -483,49 +489,38 @@ SupportRayAlgorithm<T,IndexSet>::compute(
     IndexSet temp_diff(supps_size);
     IndexSet zeros(supps_size);
     IndexSet r1_supp(supps_size);
-    Size r1_count;
-    T s1;
 
     std::vector<int> indices;
 
     char buffer[256];
-    sprintf(buffer, "  Left = %3d  Col = %3d", rel.count(), next);
+    sprintf(buffer, "  Left = %3d  Col = %3d", 0, 0);
 
-    //PlusTree<IndexSet> tmp_tree;
-    //tmp_tree.insert(supps);
-
-    //tmp_tree.dump();
-    //tree.dump();
-
-    FullTree<IndexSet> neg_tree;
+    SUPPORTTREE<IndexSet> neg_tree;
     neg_tree.insert(local_supps, r2_index, r2_end);
+    DEBUG_4ti2(neg_tree.dump());
     std::vector<Index> neg_indices;
-    std::vector<Index> neg_indices0;
 
     Index index_count = 0;
     // Check negative and positive combinations for adjacency.
     for (Index r1 = r1_start; r1 < r1_end; ++r1) { // Outer loop.
         // Output statistics.
         if (index_count % Globals::output_freq == 0) {
-            *out << "\r" << buffer;
-            *out << "  Size = " << std::setw(8) << rays.get_number() << ", ";
-            *out << "  Index = " << std::setw(8) << r1-r1_start << "/" << r1_end-r1_start;
-            *out << std::flush;
+            sprintf(buffer, "%cLeft %3d  Col %3d  Index %8d/%-8d", ENDL, rel.count(), next, index_count, r1_end-r1_start);
+            *out << buffer << std::flush;
         }
         ++index_count;
 
         r1_supp = local_supps[r1];
-        r1_count = r1_supp.count();
-        cone.get_slack(rays[r1], next, s1);
-        if (r1_count == cons_added+1) {
+        helper.set_r1_index(r1);
+        if (r1_supp.count() == cons_added+1) {
             for (Index r2 = r2_start; r2 < r2_end; ++r2) {
-                if (local_supps[r2].singleton_diff(r1_supp)) { create_ray(r1, s1, r2);  }
+                if (local_supps[r2].singleton_diff(r1_supp)) { helper.create_ray(r2);  }
             }
             continue;
         }
 
         for (Index r2 = r2_start; r2 < r2_index; ++r2) {
-            if (r1_supp.singleton_diff(local_supps[r2])) { create_ray(r1, s1, r2);  }
+            if (r1_supp.singleton_diff(local_supps[r2])) { helper.create_ray(r2);  }
         }
 
         zeros.zero();
@@ -535,10 +530,11 @@ SupportRayAlgorithm<T,IndexSet>::compute(
         // Find the rays whose support differs by one from the current ray's support.
         // These rays are adjacent to r1.
         tree.find_singleton_diff(indices, r1_supp);
+        DEBUG_4ti2(std::cout << "Singleton Indices:\n" << indices << "\n";)
         for (unsigned int i = 0; i < indices.size(); ++i) {
             Index r2 = indices[i];
             zeros.set_union(supps[r2]);
-            if (r2 >= r2_index && r2 < r2_end) { create_ray(r1, s1, r2); }
+            if (r2 >= r2_index && r2 < r2_end) { helper.create_ray(r2); }
         }
         zeros.set_difference(r1_supp);
 
@@ -546,11 +542,11 @@ SupportRayAlgorithm<T,IndexSet>::compute(
         for (Index r2 = r2_index; r2 < r2_end; ++r2) { // Inner loop.
             if (zeros.set_disjoint(local_supps[r2])) {
                 if (r1_supp.count_union(local_supps[r2]) <= cons_added+2) {
-                    if (r1_supp.singleton_diff(local_supps[r2])) { create_ray(r1, s1, r2);  continue; }
-                    if (local_supps[r2].count_lte_diff(2, r1_supp)) { create_ray(r1, s1, r2); continue; }
+                    if (r1_supp.singleton_diff(local_supps[r2])) { helper.create_ray(r2);  continue; }
+                    if (local_supps[r2].count_lte_diff(2, r1_supp)) { helper.create_ray(r2); continue; }
                     STATS_4ti2(++num_checks;)
                     temp_union.set_union(local_supps[r2], r1_supp);
-                    if (!tree.dominated(temp_union, r1, r2)) { create_ray(r1, s1, r2); }
+                    if (!tree.dominated(temp_union, r1, r2)) { helper.create_ray(r2); }
                 }
             }
         }
@@ -559,22 +555,27 @@ SupportRayAlgorithm<T,IndexSet>::compute(
 #if 1
         neg_indices.clear();
         neg_tree.find(neg_indices, zeros, r1_supp, cons_added+2);
+        DEBUG_4ti2(std::cout << "Neg Indices:\n" << neg_indices << "\n";)
         for (Index i = 0; i < (Index) neg_indices.size(); ++i) { // Inner loop.
             Index r2 = neg_indices[i];
-            if (r1_supp.singleton_diff(local_supps[r2])) { create_ray(r1, s1, r2);  continue; }
-            if (local_supps[r2].count_lte_diff(2, r1_supp)) { create_ray(r1, s1, r2); continue; }
+            if (r1_supp.singleton_diff(local_supps[r2])) { helper.create_ray(r2);  continue; }
+            if (local_supps[r2].count_lte_diff(2, r1_supp)) { helper.create_ray(r2); continue; }
             STATS_4ti2(++num_checks;)
             temp_union.set_union(local_supps[r2], r1_supp);
-            if (!tree.dominated(temp_union, r1, r2)) { create_ray(r1, s1, r2); }
+            //for (Index j = 0; j < (Index) neg_indices.size(); ++j) {
+            //    if (local_supps[j].set_subset(temp_union) && i != j) { continue; }
+            //}
+            if (!tree.dominated(temp_union, r1, r2)) { helper.create_ray(r2); }
         }
 #endif
     }
 }
 #endif
 
-template <class T, class IndexSet>
+#if 0
+template <class IndexSet>
 void
-SupportRayAlgorithm<T,IndexSet>::compute1(
+SupportSubAlgorithmBase<IndexSet>::compute_rays(
                 Index r1_start, Index r1_end, Index r2_start, Index r2_index, Index r2_end)
 {
     if (r1_start == r1_end || r2_start == r2_end) { return; }
@@ -582,164 +583,135 @@ SupportRayAlgorithm<T,IndexSet>::compute1(
     Size supps_size = supps[r1_start].get_size();
 
     // Temporary variables.
-    IndexSet temp_supp(supps_size);
-    IndexSet temp_union(supps_size);
     IndexSet r1_supp(supps_size);
-    Size r1_count;
-    T s1;
+    IndexSet temp_union(supps_size);
 
-    char buffer[256];
-    sprintf(buffer, "  Left = %3d  Col = %3d", rel.count(), next);
+    SUPPORTTREE<IndexSet> neg_tree;
+    neg_tree.insert(local_supps, r2_index, r2_end);
+    DEBUG_4ti2(*out << "\nNeg Tree.\n";)
+    DEBUG_4ti2(neg_tree.dump());
 
-    Index index_count = 0;
-    // Check negative and positive combinations for adjacency.
+    SUPPORTTREE<IndexSet> pos_tree;
     for (Index r1 = r1_start; r1 < r1_end; ++r1) { // Outer loop.
-        // Output statistics.
-        if (index_count % Globals::output_freq == 0) {
-            *out << "\r" << buffer;
-            *out << "  Size = " << std::setw(8) << rays.get_number() << ", ";
-            *out << "  Index = " << std::setw(8) << r1-r1_start << "/" << r1_end-r1_start;
-            *out << std::flush;
-        }
-        ++index_count;
-
         r1_supp = local_supps[r1];
-        r1_count = r1_supp.count();
-        cone.get_slack(rays[r1], next, s1);
-        if (r1_count == cons_added+1) {
+        helper.set_r1_index(r1);
+        if (r1_supp.count() == cons_added+1) {
             for (Index r2 = r2_start; r2 < r2_end; ++r2) {
-                temp_supp.set_difference(local_supps[r2], r1_supp);
-                if (temp_supp.singleton()) { create_ray(r1, s1, r2);  }
+                if (local_supps[r2].singleton_diff(r1_supp)) { helper.create_ray(r2);  }
             }
+        } else {
+            pos_tree.insert(r1_supp, r1);
+            for (Index r2 = r2_start; r2 < r2_index; ++r2) {
+                if (r1_supp.singleton_diff(local_supps[r2])) { helper.create_ray(r2);  }
+            }
+        }
+    }
+    DEBUG_4ti2(*out << "\nPosTree.\n";)
+    DEBUG_4ti2(neg_tree.dump());
+
+    std::vector<std::pair<Index,Index> > indices;
+    pos_tree.find(indices, neg_tree, cons_added+2);
+    for (Index i = 0; i < (Index) indices.size(); ++i) { // Inner loop
+        Index r1 = indices[i].first;
+        Index r2 = indices[i].second;
+        if (local_supps[r2].singleton_diff(local_supps[r1])) { create_ray(r1, r2);  continue; }
+        if (local_supps[r1].singleton_diff(local_supps[r2])) { create_ray(r1, r2);  continue; }
+        temp_union.set_union(local_supps[r1], local_supps[r2]);
+        if (!tree.dominated(temp_union, r1, r2)) { create_ray(r1, r2); }
+    }
+}
+#endif    
+
+
+#if 0
+template <class IndexSet>
+void
+SupportSubAlgorithmBase<IndexSet>::compute_rays(
+                Index r1_start, Index r1_end, Index r2_start, Index r2_index, Index r2_end)
+{
+    if (r1_start == r1_end || r2_start == r2_end) { return; }
+    const std::vector<IndexSet>& local_supps = supps;
+    Size supps_size = supps[r1_start].get_size();
+
+    // Temporary variables.
+    IndexSet r1_supp(supps_size);
+    IndexSet temp_union(supps_size);
+    IndexSet temp_diff(supps_size);
+    IndexSet temp_empty(supps_size,0);
+
+    SUPPORTTREE<IndexSet> neg_tree;
+    neg_tree.insert(local_supps, r2_index, r2_end);
+    DEBUG_4ti2(*out << "\nNeg Tree.\n";)
+    DEBUG_4ti2(neg_tree.dump());
+
+    SUPPORTTREE<IndexSet> pos_tree;
+    std::vector<IndexSet> diff_supps;
+    std::vector<Index> diffs;
+    for (Index r1 = r1_start; r1 < r1_end; ++r1) { // Outer loop.
+        r1_supp = local_supps[r1];
+        helper.set_r1_index(r1);
+        if (r1_supp.count() == cons_added+1) {
+            for (Index r2 = r2_start; r2 < r2_end; ++r2) {
+                if (local_supps[r2].singleton_diff(r1_supp)) { helper.create_ray(r2);  }
+            }
+            diff_supps.push_back(temp_empty);
             continue;
         }
 
+        pos_tree.insert(r1_supp, r1);
         for (Index r2 = r2_start; r2 < r2_index; ++r2) {
-            temp_supp.set_difference(r1_supp, local_supps[r2]);
-            if (temp_supp.singleton()) { create_ray(r1, s1, r2);  }
+            if (r1_supp.singleton_diff(local_supps[r2])) { helper.create_ray(r2);  }
         }
 
-        for (Index r2 = r2_index; r2 < r2_end; ++r2) { // Inner loop.
-            // Quick sufficient check whether the two rays are adjacent.
-            temp_union.set_union(local_supps[r2], r1_supp);
-            if (temp_union.count() > cons_added+2) { continue; }
-            // Check whether the two rays r1 and r2 are adjacent.
-            temp_supp.set_difference(r1_supp, local_supps[r2]);
-            if (temp_supp.singleton()) {
-                create_ray(r1, s1, r2); 
-                continue;
-            }
-            temp_supp.set_difference(local_supps[r2], r1_supp);
-            if (temp_supp.singleton()) {
-                create_ray(r1, s1, r2); 
-                continue;
-            }
-            STATS_4ti2(++num_checks;)
-            bool is_adjacent = true;
-            for (Index r3 = 0; r3 < rays.get_number(); ++r3) {
-                if (IndexSet::set_subset(local_supps[r3], temp_union) && r3 != r1 && r3 != r2) {
-                    is_adjacent = false;
-                    break;
-                }
-            }
-            if (is_adjacent) { create_ray(r1, s1, r2);  }
+        // Find the rays whose support differs by one from the current ray's support.
+        // These rays are adjacent to r1.
+        diffs.clear();
+        temp_diff.zero();
+        tree.find_singleton_diff(diffs, r1_supp);
+        DEBUG_4ti2(std::cout << "Singleton Indices:\n" << indices << "\n";)
+        for (unsigned int i = 0; i < diffs.size(); ++i) {
+            Index r2 = diffs[i];
+            temp_diff.set_union(supps[r2]);
+            if (r2 >= r2_index && r2 < r2_end) { helper.create_ray(r2); }
         }
+        temp_diff.set_difference(r1_supp);
+        diff_supps.push_back(temp_diff);
+    }
+    DEBUG_4ti2(*out << "\nPosTree.\n";)
+    DEBUG_4ti2(neg_tree.dump());
+
+    std::vector<std::pair<Index,Index> > indices;
+    pos_tree.find(indices, neg_tree, cons_added+2);
+    Index r1, r2;
+    for (Index i = 0; i < (Index) indices.size(); ++i) { // Inner loop
+        if (indices[i].first >= r1_start && indices[i].first < r1_end) { 
+            r1 = indices[i].first;
+            r2 = indices[i].second;
+        } else {
+            r2 = indices[i].first;
+            r1 = indices[i].second;
+        }
+        //if (local_supps[r2].singleton_diff(local_supps[r1])) { create_ray(r1, r2);  continue; }
+        if (!local_supps[r2].set_disjoint(diff_supps[r1-r1_start])) { continue; }
+        if (local_supps[r1].singleton_diff(local_supps[r2])) { create_ray(r1, r2);  continue; }
+        temp_union.set_union(local_supps[r1], local_supps[r2]);
+        if (!tree.dominated(temp_union, r1, r2)) { create_ray(r1, r2); }
     }
 }
+#endif    
 
-template <class T, class IndexSet>
-inline
+template <class IndexSet>
 void
-SupportRayAlgorithm<T,IndexSet>::transfer(VectorArrayT<T>& rays, std::vector<IndexSet>& supps)
-{
-    rays.transfer(new_rays, 0, new_rays.get_number(), rays.get_number());
-    supps.insert(supps.end(), new_supps.begin(), new_supps.end());
-    new_supps.clear();
-}
-
-template <class T, class IndexSet>
-inline
-void
-SupportRayAlgorithm<T,IndexSet>::create_ray(Index r1, const T& s1, Index r2)
-{
-    //T s1; cone.get_slack(rays[r1], next, s1);
-    T s2; cone.get_slack(rays[r2], next, s2);
-    if (r1 < r2) {
-        temp.add(rays[r2], s1, rays[r1], -s2);
-    }
-    else {
-        temp.add(rays[r1], s2, rays[r2], -s1);
-    }
-    temp.normalise();
-    new_rays.insert(temp);
-    IndexSet temp_supp(supps[r1]);
-    temp_supp.set_union(supps[r2]);
-    new_supps.push_back(temp_supp);
-
-    DEBUG_4ti2(
-    *out << "\nADDING VECTOR.\n";
-    *out << "R1: " << r1 << "\n";
-    *out << rays[r1] << "\n";
-    *out << "R2: " << r2 << "\n";
-    *out << rays[r2] << "\n";
-    *out << "NEW:\n";
-    *out << temp << "\n";
-    )
-}
-
-template <class T, class IndexSet>
-SupportCirAlgorithm<T,IndexSet>::SupportCirAlgorithm(
-                const ConeT<T>& _cone, const VectorArrayT<T>& _rays, const std::vector<IndexSet>& _supps, 
-                const IndexSet& _rel, const Index& _cons_added, const Index& _next, const SUPPORTTREE<IndexSet>& _tree, const IndexSet& _ray_mask)
-        : SupportRayAlgorithm<T,IndexSet>(_cone, _rays, _supps, _rel, _cons_added, _next, _tree), ray_mask(_ray_mask)
-{
-}
-
-template <class T, class IndexSet>
-SupportCirAlgorithm<T,IndexSet>::~SupportCirAlgorithm()
-{
-}
-
-template <class T, class IndexSet>
-inline
-void
-SupportCirAlgorithm<T,IndexSet>::compute()
-{
-    compute(SupportRayAlgorithm<T,IndexSet>::_r1_start, SupportRayAlgorithm<T,IndexSet>::_r1_end, 
-            SupportRayAlgorithm<T,IndexSet>::_r2_start, SupportRayAlgorithm<T,IndexSet>::_r2_end);
-}
-
-template <class T, class IndexSet>
-inline
-void
-SupportCirAlgorithm<T,IndexSet>::threaded_compute(Index r1_start, Index r1_end, Index r2_start, Index r2_end)
-{
-    SupportRayAlgorithm<T,IndexSet>::_r1_start = r1_start; 
-    SupportRayAlgorithm<T,IndexSet>::_r1_end = r1_end; 
-    SupportRayAlgorithm<T,IndexSet>::_r2_start = r2_start; 
-    SupportRayAlgorithm<T,IndexSet>::_r2_end = r2_end;
-    ThreadedAlgorithm::threaded_compute();
-}
-
-template <class T, class IndexSet>
-void
-SupportCirAlgorithm<T,IndexSet>::compute(Index r1_start, Index r1_end, Index r2_start, Index r2_end)
+SupportSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, Index r2_start, Index r2_end)
 {
     if (r1_start == r1_end || r2_start == r2_end) { return; }
-    // Copy class variables onto the stack.
-    const ConeT<T>& cone = SupportRayAlgorithm<T,IndexSet>::cone;
-    const VectorArrayT<T>& rays = SupportRayAlgorithm<T,IndexSet>::rays;
-    const std::vector<IndexSet>& supps = SupportRayAlgorithm<T,IndexSet>::supps;
-    const Index cons_added = SupportRayAlgorithm<T,IndexSet>::cons_added;
-    const Index next = SupportRayAlgorithm<T,IndexSet>::next;
-    const SUPPORTTREE<IndexSet>& tree = SupportRayAlgorithm<T,IndexSet>::tree;
+    // TODO: Copy class variables onto the stack???
 
     char buffer[256];
-    //sprintf(buffer, "  Left = %3d  Col = %3d", rel.count(), next);
 
     DEBUG_4ti2(*out << "\nComputing circuits for ranges ";)
-    DEBUG_4ti2(*out << "R1 [" << r1_start << "..." << r1_end << "] and ";)
-    DEBUG_4ti2(*out << "R2 [" << r2_start << "..." << r2_end << "]\n";)
+    DEBUG_4ti2(*out << "R1 [" << r1_start << ",...," << r1_end << "] and ";)
+    DEBUG_4ti2(*out << "R2 [" << r2_start << ",...," << r2_end << "]\n";)
 
     Index cir_supp_size = ray_mask.get_size();
     IndexSet temp_supp(cir_supp_size);
@@ -749,23 +721,24 @@ SupportCirAlgorithm<T,IndexSet>::compute(Index r1_start, Index r1_end, Index r2_
     IndexSet r1_supp(cir_supp_size);
     IndexSet r1_neg_supp(cir_supp_size);
     Size r1_count;
-    T s1;
 
     int index_count = 0;
     for (int r1 = r1_start; r1 < r1_end; ++r1) {
+        if (r2_start <= r1) { r2_start = r1+1; supps[r1].swap_odd_n_even(); }
+
         r1_supp = supps[r1];
         r1_count = r1_supp.count();
         r1_neg_supp.set_intersection(r1_supp, cir_mask);
         r1_neg_supp.swap_odd_n_even();
-        cone.get_slack(rays[r1], next, s1);
+        helper.set_r1_index(r1);
+        //if (r2_start <= r1) { r2_start = r1+1; IndexSet::swap(r1_supp, r1_neg_supp); }
 
-        if (r2_start == r1) { ++r2_start; IndexSet::swap(r1_supp, r1_neg_supp); }
 
         if (r1_count == cons_added+1) {
             for (Index r2 = r2_start; r2 < r2_end; ++r2) {
                 if (r1_neg_supp.set_disjoint(supps[r2])
                     && supps[r2].singleton_diff(r1_supp)) {
-                    create_circuit(r1, s1, r2);
+                    helper.create_circuit(r2);
                 }
             }
             continue;
@@ -775,61 +748,155 @@ SupportCirAlgorithm<T,IndexSet>::compute(Index r1_start, Index r1_end, Index r2_
             if (r1_neg_supp.set_disjoint(supps[r2])
                 && r1_supp.count_union(supps[r2]) <= cons_added+2) {
                 temp_supp.set_union(r1_supp, supps[r2]);
-                if (!tree.dominated(temp_supp, r1, r2)) { create_circuit(r1, s1, r2); }
+                if (!tree.dominated(temp_supp, r1, r2)) { helper.create_circuit(r2); }
             }
         }
 
         if (index_count % Globals::output_freq == 0) {
-           *out << "\r" << buffer;
-           *out << "  Size = " << std::setw(8) << rays.get_number();
-           *out << ",  Index = " << r1 << "/" << r2_end << std::flush;
-            DEBUG_4ti2(*out << std::endl;)
+            sprintf(buffer, "%cLeft %3d  Col %3d  Index %8d/%-8d", ENDL, rel.count(), next, index_count, r1_end-r1_start);
+            *out << buffer << std::flush;
         }
         ++index_count;
     }
-    *out << "\r" << buffer;
-    *out << "  Size = " << std::setw(8) << rays.get_number();
-    *out << ",  Index = " << r1_end << "/" << r2_end << std::flush;
-    DEBUG_4ti2(*out << std::endl;)
+    sprintf(buffer, "%cLeft %3d  Col %3d  Index %8d/%-8d", ENDL, rel.count(), next, r1_end, r2_end);
+    *out << buffer << std::flush;
 }
 
-template <class T, class IndexSet>
+template <class IndexSet>
+inline
 void
-SupportCirAlgorithm<T,IndexSet>::create_circuit(Index i1, const T& s1, Index i2)
+SupportSubAlgorithmBase<IndexSet>::transfer()
+{
+    //supps.insert(supps.end(), new_supps.begin(), new_supps.end());
+    //new_supps.clear();
+    helper.transfer();
+}
+
+#if 0
+template <class IndexSet>
+inline
+void
+SupportSubAlgorithmBase<IndexSet>::set_r1_index(Index _r1)
+{
+    r1 = _r1;
+    helper.set_r1_index(_r1);
+}
+
+template <class IndexSet>
+inline
+void
+SupportSubAlgorithmBase<IndexSet>::create_ray(Index r2)
+{
+    IndexSet temp_supp(supps[r1]);
+    temp_supp.set_union(supps[r2]);
+    new_supps.push_back(temp_supp);
+    helper.create_ray(r2);
+
+    DEBUG_4ti2(
+    *out << "\nADDING VECTOR.\n";
+    *out << "R1: " << r1 << "\n";
+    *out << "R2: " << r2 << "\n";
+    *out << temp_supp << "\n";
+    )
+}
+
+template <class IndexSet>
+void
+SupportSubAlgorithmBase<IndexSet>::create_circuit(Index i1, Index i2)
 {
     DEBUG_4ti2(*out << "Creating new circuit.\n";)
-    const VectorR<T>& r1 = SupportRayAlgorithm<T,IndexSet>::rays[i1];
-    const VectorR<T>& r2 = SupportRayAlgorithm<T,IndexSet>::rays[i2];
-    const Index next = SupportRayAlgorithm<T,IndexSet>::next;
-    VectorT<T>& temp = SupportRayAlgorithm<T,IndexSet>::temp;
+    bool is_pos = helper.create_circuit(i1, i2);
 
-    //T s1; cone.get_slack(r1, next, s1); 
-    T s2; SupportRayAlgorithm<T,IndexSet>::cone.get_slack(r2, next, s2); 
-
-    if (s2 > 0) { temp.add(r1,s2,r2,-s1); }
-    else { temp.add(r1,-s2,r2,s1); }
-    temp.normalise();
-    SupportRayAlgorithm<T,IndexSet>::new_rays.insert(temp);
-
-    IndexSet r1_supp(SupportRayAlgorithm<T,IndexSet>::supps[i1]);
-    IndexSet r2_supp(SupportRayAlgorithm<T,IndexSet>::supps[i2]);
-    IndexSet tmp_union(r1_supp.get_size());
-    tmp_union.set_union(r1_supp, r2_supp);
+    IndexSet tmp_union(supps[i2]);
+    tmp_union.swap_odd_n_even();
+    tmp_union.set_union(supps[i1]);
     if (ray_mask.set_disjoint(tmp_union)) {
-        if (s1 > 0) { r1_supp.swap_odd_n_even(); }
-        else { r2_supp.swap_odd_n_even(); }
+        if (is_pos) { tmp_union.swap_odd_n_even(); }
     }
-    tmp_union.set_union(r1_supp, r2_supp);
-    SupportRayAlgorithm<T,IndexSet>::new_supps.push_back(tmp_union);
+    new_supps.push_back(tmp_union);
 
-    DEBUG_4ti2(*out << "Ray" << i1 << " " << r1 << "\t";)
-    DEBUG_4ti2(*out << "Sup " << supps[i1] << "\t";)
-    DEBUG_4ti2(*out << "Sla " << s1 << "\n";)
-    DEBUG_4ti2(*out << "Ray" << i2 << " " << r2 << "\t";)
-    DEBUG_4ti2(*out << "Sup " << supps[i2] << "\t";)
-    DEBUG_4ti2(*out << "Sla " << s2 << "\n";)
-    DEBUG_4ti2(*out << "Ray " << temp << "\t";)
-    DEBUG_4ti2(*out << "Sup " << temp_supp << "\n";)
+    DEBUG_4ti2(
+        *out << "Cir1 " << supps[i1] << "\n";
+        *out << "Cir2 " << supps[i2] << "\n";
+        *out << "Cir0 " << tmp_union << "\n";
+    )
+}
+#endif
+
+
+template <class IndexSet>
+SupportRayAlgorithm<IndexSet>::SupportRayAlgorithm(
+                RayStateAPI<IndexSet>& _helper, std::vector<IndexSet>& _supps, 
+                const IndexSet& _rel, const Index& _cons_added, const Index& _next, const SUPPORTTREE<IndexSet>& _tree,
+                IndexRanges& _indices)
+        : SupportSubAlgorithmBase<IndexSet>(_helper, _supps, _rel, _cons_added, _next, IndexSet(_rel.get_size(),true), _tree),
+          indices(_indices)
+{
+}
+
+template <class IndexSet>
+inline
+void
+SupportRayAlgorithm<IndexSet>::compute()
+{
+    Index r1_start, r1_end, r2_start, r2_index, r2_end;
+    indices.next(r1_start, r1_end, r2_start, r2_index, r2_end);
+    while (r1_start != r1_end) {
+        SupportSubAlgorithmBase<IndexSet>::compute_rays(r1_start, r1_end, r2_start, r2_index, r2_end);
+        indices.next(r1_start, r1_end, r2_start, r2_index, r2_end);
+    }
+}
+
+template <class IndexSet>
+SupportRayAlgorithm<IndexSet>*
+SupportRayAlgorithm<IndexSet>::clone()
+{
+    return new SupportRayAlgorithm(
+                SupportSubAlgorithmBase<IndexSet>::helper,
+                SupportSubAlgorithmBase<IndexSet>::supps, 
+                SupportSubAlgorithmBase<IndexSet>::rel,
+                SupportSubAlgorithmBase<IndexSet>::cons_added,
+                SupportSubAlgorithmBase<IndexSet>::next,
+                SupportSubAlgorithmBase<IndexSet>::tree,
+                indices);
+}
+
+template <class IndexSet>
+SupportCirAlgorithm<IndexSet>::SupportCirAlgorithm(
+                RayStateAPI<IndexSet>& _helper, std::vector<IndexSet>& _supps, 
+                const IndexSet& _rel, const Index& _cons_added, const Index& _next, const SUPPORTTREE<IndexSet>& _tree,
+                const IndexSet& _ray_mask, IndexRanges& _indices)
+        : SupportSubAlgorithmBase<IndexSet>(_helper, _supps, _rel, _cons_added, _next, _ray_mask, _tree),
+          indices(_indices)
+{
+}
+
+template <class IndexSet>
+inline
+void
+SupportCirAlgorithm<IndexSet>::compute()
+{
+    Index r1_start, r1_end, r2_start, r2_index, r2_end;
+    indices.next(r1_start, r1_end, r2_start, r2_index, r2_end);
+    while (r1_start != r1_end) {
+        SupportSubAlgorithmBase<IndexSet>::compute_cirs(r1_start, r1_end, r2_start, r2_end);
+        indices.next(r1_start, r1_end, r2_start, r2_index, r2_end);
+    }
+}
+
+template <class IndexSet>
+SupportCirAlgorithm<IndexSet>*
+SupportCirAlgorithm<IndexSet>::clone()
+{
+    return new SupportCirAlgorithm(
+                SupportSubAlgorithmBase<IndexSet>::helper,
+                SupportSubAlgorithmBase<IndexSet>::supps, 
+                SupportSubAlgorithmBase<IndexSet>::rel,
+                SupportSubAlgorithmBase<IndexSet>::cons_added,
+                SupportSubAlgorithmBase<IndexSet>::next,
+                SupportSubAlgorithmBase<IndexSet>::tree,
+                SupportSubAlgorithmBase<IndexSet>::ray_mask,
+                indices);
 }
 
 #undef DEBUG_4ti2

@@ -27,20 +27,21 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "qsolve/Vector.h"
 #include "qsolve/VectorArray.h"
 #include "qsolve/QSolveConsOrder.h"
+#include "qsolve/RayState.h"
 
-//#include "qsolve/SupportTree.h"
-//#include "qsolve/BinaryTree.h"
-#include "qsolve/PlusTree.h"
+#include "qsolve/BinaryTree.h"
 #include "qsolve/FullTree.h"
+#include "qsolve/MultiTree.h"
 
-#define SUPPORTTREE FullTree
-//#define SUPPORTTREE PlusTree 
+//#define SUPPORTTREE FullTree
+//#define SUPPORTTREE BinaryTree
+#define SUPPORTTREE MultiTree
 
 namespace _4ti2_
 {
 
-template <class T, class IndexSet>
-class SupportAlgorithm : public QSolveAlgorithm<T,IndexSet>
+template <class T>
+class SupportAlgorithm : public QSolveAlgorithm<T>
 {
 public:
     SupportAlgorithm();
@@ -52,71 +53,71 @@ protected:
                 VectorArrayT<T>& rays, std::vector<Index>& ray_ineqs, 
                 VectorArrayT<T>& cirs, std::vector<Index>& cir_ineqs);
 
+    template <class IndexSet>
     void compute(const ConeT<T>& cone, VectorArrayT<T>& rays, std::vector<IndexSet>& supps, 
                 Index& cons_added, std::vector<int>& ineqs);
-    void compute1(const ConeT<T>& cone, VectorArrayT<T>& rays, std::vector<IndexSet>& supps, 
-                Index& cons_added, std::vector<int>& ineqs);
-
+    template <class IndexSet>
     void compute(const ConeT<T>& cone, VectorArrayT<T>& rays, std::vector<IndexSet>& supps,
                 Index& cons_added, VectorArrayT<T>& cirs, std::vector<int>& dbls);
-
-    void compute(const ConeT<T>& cone, const SUPPORTTREE<IndexSet>& tree, const IndexSet& cir_mask,
-                const char* buffer, VectorArrayT<T>& rays, std::vector<IndexSet>& supps,
-                int next_col, int m1, int r1_start, int r1_end, int r2_start, int r2_end);
 };
 
-template <class T, class IndexSet>
-class SupportRayAlgorithm : public ThreadedAlgorithm
+template <class IndexSet>
+class SupportSubAlgorithmBase
 {
 public:
-    SupportRayAlgorithm(const ConeT<T>& cone, const VectorArrayT<T>& rays, const std::vector<IndexSet>& supps, 
-                const IndexSet& rel, const Index& cons_added, const Index& next, const SUPPORTTREE<IndexSet>& tree);
-    virtual ~SupportRayAlgorithm();
+    SupportSubAlgorithmBase(RayStateAPI<IndexSet>& helper, std::vector<IndexSet>& supps, const IndexSet& rel, const Index& cons_added,
+                             const Index& next, const IndexSet& ray_mask, const SUPPORTTREE<IndexSet>& tree);
+    virtual ~SupportSubAlgorithmBase();
 
-    virtual void compute();
-    void compute(Index r1_start, Index r1_end, Index r2_start, Index r2_index, Index r2_end);
-    void compute1(Index r1_start, Index r1_end, Index r2_start, Index r2_index, Index r2_end);
-    void threaded_compute(Index r1_start, Index r1_end, Index r2_start, Index r2_index, Index r2_end);
-    void transfer(VectorArrayT<T>& rays, std::vector<IndexSet>& supps);
+    void compute_rays(Index r1_start, Index r1_end, Index r2_start, Index r2_index, Index r2_end);
+    void compute_cirs(Index r1_start, Index r1_end, Index r2_start, Index r2_end);
+    void transfer();
 
 protected:
-    const ConeT<T>& cone;
-    const VectorArrayT<T>& rays;
-    const std::vector<IndexSet>& supps;
+    RayStateAPI<IndexSet>& helper;
+    std::vector<IndexSet>& supps;
+    //std::vector<IndexSet> new_supps;
+
     const IndexSet& rel;
     const Index& cons_added;
     const Index& next;
+    const IndexSet& ray_mask;
     const SUPPORTTREE<IndexSet>& tree;
 
-    VectorArrayT<T> new_rays;
-    std::vector<IndexSet> new_supps;
-
-    Index _r1_start;
-    Index _r1_end;
-    Index _r2_start;
-    Index _r2_index;
-    Index _r2_end;
-
-    VectorT<T> temp;
-    void create_ray(Index r1, const T& s1, Index r2);
+    //Index r1;
+    //void set_r1_index(Index r1);
+    //void create_ray(Index r2);
+    //void create_circuit(Index r1, Index r2);
 };
 
-template <class T, class IndexSet>
-class SupportCirAlgorithm : public SupportRayAlgorithm<T,IndexSet>
+template <class IndexSet>
+class SupportRayAlgorithm : public SupportSubAlgorithmBase<IndexSet>, public ThreadedAlgorithm
 {
 public:
-    SupportCirAlgorithm(const ConeT<T>& cone, const VectorArrayT<T>& rays, const std::vector<IndexSet>& supps, 
-                const IndexSet& rel, const Index& cons_added, const Index& next, const SUPPORTTREE<IndexSet>& tree, const IndexSet& ray_mask);
-    virtual ~SupportCirAlgorithm();
+    SupportRayAlgorithm(RayStateAPI<IndexSet>& helper, std::vector<IndexSet>& supps, 
+                const IndexSet& rel, const Index& cons_added, const Index& next, const SUPPORTTREE<IndexSet>& tree,
+                IndexRanges& indices);
+    SupportRayAlgorithm* clone();
 
     virtual void compute();
-    void compute(Index r1_start, Index r1_end, Index r2_start, Index r2_end);
-    void threaded_compute(Index r1_start, Index r1_end, Index r2_start, Index r2_end);
 
 protected:
-    const IndexSet& ray_mask;
+    IndexRanges& indices;
+};
 
-    void create_circuit(Index r1, const T& s1, Index r2);
+template <class IndexSet>
+class SupportCirAlgorithm : public SupportSubAlgorithmBase<IndexSet>, public ThreadedAlgorithm
+{
+public:
+    SupportCirAlgorithm(RayStateAPI<IndexSet>& helper, std::vector<IndexSet>& supps, 
+                const IndexSet& rel, const Index& cons_added, const Index& next, const SUPPORTTREE<IndexSet>& tree,
+                const IndexSet& ray_mask, IndexRanges& indices);
+    SupportCirAlgorithm* clone();
+
+    virtual void compute();
+
+protected:
+    IndexRanges& indices;
 };
 
 

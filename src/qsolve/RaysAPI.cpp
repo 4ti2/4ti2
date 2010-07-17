@@ -24,7 +24,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <iostream>
 #include "4ti2/4ti2.h"
 #include "qsolve/QSolveAlgorithm.h"
-#include "qsolve/VectorArrayAPI.h"
 #include "qsolve/VectorArrayStream.h"
 #include "qsolve/RaysAPI.h"
 #include "qsolve/Globals.h"
@@ -32,41 +31,48 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 using namespace _4ti2_;
 
-template <class T>
-RaysAPI<T>::RaysAPI()
-    : QSolveAPI<T>()
+RaysAPI::RaysAPI()
+    : QSolveAPI()
 {
-    QSolveAPI<T>::sign_default = _4ti2_LB;
-    QSolveAPI<T>::rel_default = _4ti2_EQ;
+    QSolveAPI::sign_default = _4ti2_LB;
+    QSolveAPI::rel_default = _4ti2_EQ;
 }
 
-template <class T>
-RaysAPI<T>::~RaysAPI()
+RaysAPI::~RaysAPI()
 {
 }
 
-template <class T>
+_4ti2_matrix*
+RaysAPI::get_matrix(const char* name)
+{
+    if (!strcmp(name, "mat")) { return mat; }
+    if (!strcmp(name, "sign")) { return sign; }
+    if (!strcmp(name, "rel")) { return rel; }
+    if (!strcmp(name, "ray")) { return ray; }
+    if (!strcmp(name, "qfree")) { return qfree; }
+    std::cerr << "ERROR: Unrecognised mat type " << name << ".\n";
+    return 0;
+}
+
 void
-RaysAPI<T>::post_compute()
+RaysAPI::post_compute()
 {
-    QSolveAPI<T>::ray.data.sort();
-    QSolveAPI<T>::qfree.data.sort();
+    //QSolveAPI::ray.data.sort();
+    //QSolveAPI::qfree.data.sort();
 }
 
-template <class T>
 void
-RaysAPI<T>::write_usage()
+RaysAPI::write_usage()
 {
     std::cerr << "Usage: rays [options] <PROJECT>\n\n";
     std::cerr << "Computes the extreme rays of a cone.\n";
     write_input_files();
     write_output_files();
-    QSolveAPI<T>::write_options();
+    QSolveAPI::write_options();
 }
 
-template <class T>
 void
-RaysAPI<T>::write_input_files()
+RaysAPI::write_input_files()
 {
     std::cerr << "\
 Input Files:\n\
@@ -80,9 +86,8 @@ Input Files:\n\
                       The mat must be given with this file.\n";
 }
 
-template <class T>
 void
-RaysAPI<T>::write_output_files()
+RaysAPI::write_output_files()
 {
     std::cerr << "\
 Output Files:\n\
@@ -92,15 +97,14 @@ Output Files:\n\
                       is trivial.\n\n";
 }
 
-template <class T>
 void
-RaysAPI<T>::write(const char* basename_c_str)
+RaysAPI::write(const char* basename_c_str)
 {
     std::string basename(basename_c_str);
 
     std::string ray_filename(basename + ".ray");
-    QSolveAPI<T>::ray.write(ray_filename.c_str());
+    QSolveAPI::ray->write(ray_filename.c_str());
 
     std::string qfree_filename(basename + ".qfree");
-    QSolveAPI<T>::qfree.write(qfree_filename.c_str());
+    QSolveAPI::qfree->write(qfree_filename.c_str());
 }

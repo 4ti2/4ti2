@@ -27,15 +27,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "4ti2/4ti2xx.h"
 #include "qsolve/QSolveVariant.h"
 #include "qsolve/QSolveConsOrder.h"
-#include "qsolve/VectorArrayAPI.h"
-#include "qsolve/ConeAPI.h"
 #include "qsolve/VectorArray.h"
 
 namespace _4ti2_ {
 
-template <class T> class VectorArrayAPI;
-
-template <class T>
 class QSolveAPI : public _4ti2_state {
 public:
     QSolveAPI();
@@ -55,10 +50,20 @@ public:
     virtual _4ti2_matrix* get_matrix(const char* name);
 
 protected:
+    std::string basename;
+    _4ti2_precision prec;
     QSolveVariant algorithm;
     QSolveConsOrder order;
     _4ti2_constraint sign_default;
     _4ti2_constraint rel_default;
+    enum _4ti2_input { DEFAULT, INE, EXT, IEQ, POI };
+    _4ti2_input input;
+
+    void initialise_data();
+    template <class T>
+    void initialise_dataT();
+    template <class T>
+    void computeT();
 
     virtual void pre_compute();
     virtual void post_compute();
@@ -68,23 +73,20 @@ protected:
     virtual void write_input_files();
     virtual void write_output_files();
 
+    void parse_porta_ieq(std::istream&in);
+
     void print_banner();
     void unrecognised_option_argument(const char* option);
 
-    typedef VectorArrayAPI<int32_t> RelAPI;
-    typedef VectorArrayAPI<int32_t> SignAPI;
-
-    ConeAPI<T> mat;
-    SignAPI sign;
-    RelAPI rel;
-    VectorArrayAPI<T> ray;
-    VectorArrayAPI<T> cir;
-    VectorArrayAPI<T> qhom;
-    VectorArrayAPI<T> qfree;
+    _4ti2_matrix* mat;
+    _4ti2_matrix* sign;
+    _4ti2_matrix* rel;
+    _4ti2_matrix* ray;
+    _4ti2_matrix* cir;
+    _4ti2_matrix* qhom;
+    _4ti2_matrix* qfree;
 };
 
 } // namespace _4ti2_
-
-#include "qsolve/QSolveAPI.hpp"
 
 #endif

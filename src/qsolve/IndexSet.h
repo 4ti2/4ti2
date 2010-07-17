@@ -28,13 +28,4 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "qsolve/IndexSetS.h"
 #include "qsolve/IndexSetR.h"
 
-//typedef _4ti2_::IndexSetD IndexSet;
-//typedef _4ti2_::IndexSetDS IndexSet;
-//typedef _4ti2_::IndexSetS IndexSet;
-
-namespace _4ti2_
-{
-
-} // namespace _4ti2_
-
 #endif

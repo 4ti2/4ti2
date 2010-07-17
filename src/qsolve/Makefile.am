@@ -22,11 +22,8 @@ bin_PROGRAMS = 4ti2
 
 lib_LTLIBRARIES = lib4ti2.la
 
-# Allow accessing 4ti2's header files as "4ti2/HEADER.h"
-AM_CXXFLAGS = -I$(srcdir)/..
-
 # 4ti2 needs the next option to access maximum values of integer types.
-AM_CXXFLAGS += -D__STDC_LIMIT_MACROS
+AM_CXXFLAGS = -D__STDC_LIMIT_MACROS
 # The optimisation flags.
 AM_CXXFLAGS += -DNDEBUG
 # The threaded flags.
@@ -44,7 +41,10 @@ lib4ti2sources = \
 	IndexSetD.cpp \
 	IndexSetDS.cpp \
 	IndexSetStream.cpp \
-	Options.cpp \
+	QSolveAPI.cpp \
+	QSolveConsOrder.cpp \
+	RaysAPI.cpp \
+	CircuitsAPI.cpp \
 	Timer.cpp
 
 4ti2includedir = $(includedir)/4ti2
@@ -53,7 +53,6 @@ lib4ti2sources = \
 	QSolveAlgorithm.h \
 	QSolveAlgorithm.hpp \
 	QSolveAPI.h \
-	QSolveAPI.hpp \
 	QSolveConsOrder.h \
 	QSolveVariant.h \
 	TypeConversion.h \
@@ -67,15 +66,17 @@ lib4ti2sources = \
 	IndexSetD.h \
 	IndexSetDS.h \
 	IndexSetStream.h \
-	Options.h \
 	Size.h \
 	Timer.h \
 	Vector.h \
 	VectorD.h \
+	VectorD.hpp \
 	VectorS.h \
 	VectorStream.h \
 	VectorArray.h \
-	VectorArrayStream.h
+	VectorArrayStream.h \
+	MatrixAPI.h \
+	MatrixAPI.hpp
 
 4ti2sources =	\
 	main.cpp
@@ -86,8 +87,9 @@ lib4ti2sources = \
 lib4ti2_la_SOURCES = $(lib4ti2sources)
 4ti2_SOURCES = $(4ti2sources)
 4ti2_LDADD = lib4ti2.la
-lib4ti2_la_CPPFLAGS =
-4ti2_CPPFLAGS = 
+lib4ti2_la_CPPFLAGS = -I$(srcdir)/..
+# Allow accessing 4ti2's header files as "4ti2/HEADER.h"
+4ti2_CPPFLAGS = -I$(srcdir)/..
 if HAVE_GMP_WITH_CXX
 lib4ti2_la_CPPFLAGS += -D_4ti2_GMP_ ${GMP_CFLAGS}
 4ti2_CPPFLAGS += -D_4ti2_GMP_ ${GMP_CFLAGS}

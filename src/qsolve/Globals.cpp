@@ -29,3 +29,4 @@ std::string Globals::exec;
 int Globals::output_freq = 1000;
 int Globals::num_threads = 1;
 std::ostream* _4ti2_::out = &std::cout;
+char _4ti2_::ENDL = '\r';
