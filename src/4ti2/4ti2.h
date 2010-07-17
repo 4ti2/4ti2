@@ -31,99 +31,104 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <gmp.h>
 #endif
 
-#ifdef __cplusplus
-extern "C" 
-{
-#endif
-
 // Enum representing the possible arithmetic precision settings available.
 typedef enum { _4ti2_PREC_INT_32 = 32, _4ti2_PREC_INT_64 = 64, _4ti2_PREC_INT_ARB = 0 } _4ti2_precision;
 
 // Enum representing values describing the constraints on a variable or row of the constraint matrix.
-typedef enum { _4ti2_FR = 0, _4ti2_LB = 1, _4ti2_UB = -1, _4ti2_DB = 2, _4ti2_FX = 3 } _4ti2_constraint;
+typedef enum { _4ti2_FR = 0, _4ti2_LB = 1, _4ti2_UB = -1, _4ti2_DB = 2, _4ti2_EQ = 3 } _4ti2_constraint;
 
 // Enum representing the exit status of an API call to 4ti2.
 typedef enum { _4ti2_OK = 0, _4ti2_ERROR = 1 } _4ti2_status;
 
 // 4ti2 data structures.
+#ifdef __cplusplus
+class _4ti2_state;
+class _4ti2_matrix;
+#else
 typedef struct _4ti2_state _4ti2_state;
 typedef struct _4ti2_matrix _4ti2_matrix;
+#endif
+
+#ifdef __cplusplus
+extern "C" 
+{
+#endif
 
 // Create a QSolve 4ti2 state object.
-_4ti2_state* _4ti2_qsolve_create_state(_4ti2_precision prec);
+extern _4ti2_state* _4ti2_qsolve_create_state();
 
 // Create a QSolve 4ti2 rays object.
-_4ti2_state* _4ti2_rays_create_state(_4ti2_precision prec);
+extern _4ti2_state* _4ti2_rays_create_state();
 
 // Create a QSolve 4ti2 circuits object.
-_4ti2_state* _4ti2_circuits_create_state(_4ti2_precision prec);
+extern _4ti2_state* _4ti2_circuits_create_state();
 
 // Create a ZSolve 4ti2 state object.
-_4ti2_state* _4ti2_zsolve_create_state(_4ti2_precision prec);
+extern _4ti2_state* _4ti2_zsolve_create_state(_4ti2_precision prec);
 
 // Create a ZSolve 4ti2 state object.
-_4ti2_state* _4ti2_hilbert_create_state(_4ti2_precision prec);
+extern _4ti2_state* _4ti2_hilbert_create_state(_4ti2_precision prec);
 
 // Create a ZSolve 4ti2 state object.
-_4ti2_state* _4ti2_graver_create_state(_4ti2_precision prec);
+extern _4ti2_state* _4ti2_graver_create_state(_4ti2_precision prec);
 
 // Read in options for the 4ti2 state object.
 // These options are exactly the same as the command line options without the project filename at the end.
-// Note that argv[0] is ignored!
-_4ti2_status _4ti2_state_set_options(_4ti2_state* state, int argc, char** argv);
+// Note that argv[0] determines the mode.
+extern _4ti2_status _4ti2_state_set_options(_4ti2_state* state, int argc, char** argv);
 
 #if 0
   /* Implementation does not exist. --mkoeppe */
 // Read in the state object from "project"
-_4ti2_status _4ti2_state_read(_4ti2_state* state, const char* project);
+extern _4ti2_status _4ti2_state_read(_4ti2_state* state, const char* project);
 
 // Write out the state object to "project"
-_4ti2_status _4ti2_state_write(_4ti2_state* state, const char* project);
+extern _4ti2_status _4ti2_state_write(_4ti2_state* state, const char* project);
 #endif
   
 // Deletes a 4ti2 state object.
-void _4ti2_state_delete(_4ti2_state* state);
+extern void _4ti2_state_delete(_4ti2_state* state);
 
 // Runs the main algorithm of the 4ti2 state object.
-_4ti2_status _4ti2_state_compute(_4ti2_state* state);
+extern _4ti2_status _4ti2_state_compute(_4ti2_state* state);
 
 // Create a 4ti2 matrix. Previous matrix is deleted if it exists.  Pointer is 0 if "name" is not valid.
-_4ti2_status _4ti2_state_create_matrix(_4ti2_state* state, int num_rows, int num_cols, const char* name, _4ti2_matrix** matrix);
+extern _4ti2_status _4ti2_state_create_matrix(_4ti2_state* state, int num_rows, int num_cols, const char* name, _4ti2_matrix** matrix);
 
-// Read a 4ti2 matrix from a file.  Previous matrix is deleted if it exists. Returns 0 if "name" is not valid.
-_4ti2_status _4ti2_state_read_matrix(_4ti2_state* state, const char* filename, const char* name, _4ti2_matrix** matrix);
+// Read a 4ti2 matrix from a file.  Pointer is set to 0 if matrix could not be created.
+extern _4ti2_status _4ti2_state_read_matrix(_4ti2_state* state, const char* filename, const char* name, _4ti2_matrix** matrix);
 
-// Get a 4ti2 matrix.  Returns 0 if "name" is not valid or if matrix has not been created.
-_4ti2_status _4ti2_state_get_matrix(_4ti2_state* state, const char* name, _4ti2_matrix** matrix);
+// Get a 4ti2 matrix.  Pointer is set to 0 if matrix could not be created.
+extern _4ti2_status _4ti2_state_get_matrix(_4ti2_state* state, const char* name, _4ti2_matrix** matrix);
 
 // Returns the number of rows of the matrix.
-int _4ti2_matrix_get_num_rows(const _4ti2_matrix*  matrix);
+extern int _4ti2_matrix_get_num_rows(const _4ti2_matrix*  matrix);
 
 // Returns the number of columns of the matrix.
-int _4ti2_matrix_get_num_cols(const _4ti2_matrix*  matrix);
+extern int _4ti2_matrix_get_num_cols(const _4ti2_matrix*  matrix);
 
 // Write the 4ti2 matrix to stdout.
-void _4ti2_matrix_write_to_stdout(const _4ti2_matrix*  matrix);
+extern void _4ti2_matrix_write_to_stdout(const _4ti2_matrix*  matrix);
 
 // Write the 4ti2 matrix to sterr.
-void _4ti2_matrix_write_to_stderr(const _4ti2_matrix*  matrix);
+extern void _4ti2_matrix_write_to_stderr(const _4ti2_matrix*  matrix);
 
-// Write the 4ti2 matrix to the file called "filename".
-void _4ti2_matrix_write_to_file(const _4ti2_matrix*  matrix, const char* filename);
+// Appends the 4ti2 matrix to the file called "filename".
+extern void _4ti2_matrix_write_to_file(const _4ti2_matrix*  matrix, const char* filename);
 
 // Operations on the matrix.
-_4ti2_status _4ti2_matrix_set_entry_int32_t(_4ti2_matrix*  matrix, int r, int c, int32_t value);
+extern _4ti2_status _4ti2_matrix_set_entry_int32_t(_4ti2_matrix*  matrix, int r, int c, int32_t value);
 
-_4ti2_status _4ti2_matrix_get_entry_int32_t(const _4ti2_matrix*  matrix, int r, int c, int32_t* value);
+extern _4ti2_status _4ti2_matrix_get_entry_int32_t(const _4ti2_matrix*  matrix, int r, int c, int32_t* value);
 
-_4ti2_status _4ti2_matrix_set_entry_int64_t(_4ti2_matrix*  matrix, int r, int c, int64_t value);
+extern _4ti2_status _4ti2_matrix_set_entry_int64_t(_4ti2_matrix*  matrix, int r, int c, int64_t value);
 
-_4ti2_status _4ti2_matrix_get_entry_int64_t(const _4ti2_matrix*  matrix, int r, int c, int64_t* value);
+extern _4ti2_status _4ti2_matrix_get_entry_int64_t(const _4ti2_matrix*  matrix, int r, int c, int64_t* value);
 
 #ifdef _4ti2_HAVE_GMP
-_4ti2_status _4ti2_matrix_set_entry_mpz_ptr(_4ti2_matrix*  matrix, int r, int c, mpz_ptr value);
+extern _4ti2_status _4ti2_matrix_set_entry_mpz_ptr(_4ti2_matrix*  matrix, int r, int c, mpz_ptr value);
 
-_4ti2_status _4ti2_matrix_get_entry_mpz_ptr(const _4ti2_matrix*  matrix, int r, int c, mpz_ptr value);
+extern _4ti2_status _4ti2_matrix_get_entry_mpz_ptr(const _4ti2_matrix*  matrix, int r, int c, mpz_ptr value);
 #endif
 
 #ifdef __cplusplus

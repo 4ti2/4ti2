@@ -7,7 +7,7 @@ AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE(foreign)
 AM_MAINTAINER_MODE
 AC_CONFIG_FILES([Makefile src/Makefile src/4ti2/Makefile
-		 src/groebner/Makefile src/util/Makefile 
+		 src/groebner/Makefile src/util/Makefile src/qsolve/Makefile
 		 src/ppi/Makefile src/zsolve/Makefile
 		 src/fiber/Makefile
 		 m4/Makefile])

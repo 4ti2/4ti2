@@ -36,16 +36,27 @@ void
 RelAPI::read(std::istream& in)
 {
     assert(VectorArrayAPI<int>::data.height() == 1);
-    if (!in.good()) { throw IOException("Unreadable istream for relations."); }
+    if (!in.good()) { throw IOException("Unreadable input stream for relations."); }
     std::string s;
     for (size_t i = 0; i < VectorArrayAPI<int>::data.width(); ++i) {
         in >> s;
-        if (in.fail()) { throw IOException("Unreadable istream for relations."); }
-        if (s == "<" || s == "-1") { VectorArrayAPI<int>::data[0][i] = -1; }
-        else if (s == ">" || s == "1") { VectorArrayAPI<int>::data[0][i] = 1; }
-        else if (s == "=" || s == "0") { VectorArrayAPI<int>::data[0][i] = 0; }
+        if (in.fail()) { throw IOException("Unreadable input stream for relations."); }
+        if (s == "-1") { VectorArrayAPI<int>::data[0][i] = -1; }
+        else if (s == "1" || s == "+1") { VectorArrayAPI<int>::data[0][i] = 1; }
+        else if (s == "0") { VectorArrayAPI<int>::data[0][i] = 0; }
+        // Deprecated symbol processing.
+        else if (s == "<" || s == "<=") { VectorArrayAPI<int>::data[0][i] = -1; deprecated(); }
+        else if (s == ">" || s == ">=") { VectorArrayAPI<int>::data[0][i] = 1; deprecated(); }
+        else if (s == "=") { VectorArrayAPI<int>::data[0][i] = 0; deprecated(); }
         else { throw IOException("Unrecognised input for relations: " + s); }
     }
+}
+
+void
+RelAPI::deprecated()
+{
+    std::cerr << "WARNING: Use of deprecated symbols for relations.\n";
+    std::cerr << "WARNING: Please use `-1' for <=, `0' for = and `1' for >= instead.";
 }
 
 } // namspace _4ti2_

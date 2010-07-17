@@ -36,17 +36,29 @@ void
 SignAPI::read(std::istream& in)
 {
     assert(VectorArrayAPI<int>::data.height() == 1);
-    if (!in.good()) { throw IOException("Unreadable istream for sign."); }
+    if (!in.good()) { throw IOException("Unreadable input stream for sign."); }
     std::string s;
     for (size_t i = 0; i < VectorArrayAPI<int>::data.width(); ++i) {
         in >> s;
-        if (in.fail()) { throw IOException("Unreadable istream for sign."); }
-        if (s == "free" || s == "f" || s == "0") { VectorArrayAPI<int>::data[0][i] = 0; }
-        else if (s == "hilbert" || s == "h" || s == "+h" || s == "1" || s == "+") { VectorArrayAPI<int>::data[0][i] = 1; }
-        else if (s == "-hilbert" || s == "-h" || s == "-1" || s == "-") { VectorArrayAPI<int>::data[0][i] = -1; }
-        else if (s == "graver" || s == "g" || s == "2") { VectorArrayAPI<int>::data[0][i] = 2; }
+        if (in.fail()) { throw IOException("Unreadable input stream for sign."); }
+        if (s == "0") { VectorArrayAPI<int>::data[0][i] = 0; }
+        else if (s == "1" || s == "+1") { VectorArrayAPI<int>::data[0][i] = 1; }
+        else if (s == "-1") { VectorArrayAPI<int>::data[0][i] = -1; }
+        else if (s == "2") { VectorArrayAPI<int>::data[0][i] = 2; }
+        // Deprecated symbol processing.
+        else if (s == "free" || s == "f") { VectorArrayAPI<int>::data[0][i] = 0; deprecated(); }
+        else if (s == "hilbert" || s == "h" || s == "+h" || s == "+") { VectorArrayAPI<int>::data[0][i] = 1; deprecated(); }
+        else if (s == "-hilbert" || s == "-h" || s == "-") { VectorArrayAPI<int>::data[0][i] = -1; deprecated(); }
+        else if (s == "graver" || s == "g") { VectorArrayAPI<int>::data[0][i] = 2; deprecated(); }
         else { throw IOException("Unrecognised input for sign: " + s); }
     }
+}
+
+void
+SignAPI::deprecated()
+{
+    std::cerr << "WARNING: Use of deprecated symbols for sign.\n";
+    std::cerr << "WARNING: Please use `0' for free variable, `1' for >=, `-1' for <= and `2' for graver variable instead.";
 }
 
 } // namspace _4ti2_

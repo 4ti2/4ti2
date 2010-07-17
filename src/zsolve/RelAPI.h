@@ -32,6 +32,8 @@ public:
     RelAPI(int num_rows, int num_cols);
 
     virtual void read(std::istream& in);
+protected:
+    void deprecated();
 };
 
 } // namspace _4ti2_

@@ -23,9 +23,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "4ti2/4ti2.h"
 #include "4ti2/4ti2xx.h"
 
-extern "C" 
-{
-
 _4ti2_status
 _4ti2_state_set_options(_4ti2_state* state, int argc, char** argv)
 {
@@ -112,28 +109,28 @@ _4ti2_matrix_write_to_file(const _4ti2_matrix*  matrix, const char* filename)
 _4ti2_status
 _4ti2_matrix_set_entry_int32_t(_4ti2_matrix*  matrix, int r, int c, int32_t value)
 {
-    matrix->set_entry_int32_t(r, c, value);
+    matrix->set_entry(r, c, value);
     return _4ti2_OK;
 }
 
 _4ti2_status
 _4ti2_matrix_get_entry_int32_t(const _4ti2_matrix*  matrix, int r, int c, int32_t* value)
 {
-    matrix->get_entry_int32_t(r, c, *value);
+    matrix->get_entry(r, c, *value);
     return _4ti2_OK;
 }
 
 _4ti2_status
 _4ti2_matrix_set_entry_int64_t(_4ti2_matrix*  matrix, int r, int c, int64_t value)
 {
-    matrix->set_entry_int64_t(r, c, value);
+    matrix->set_entry(r, c, value);
     return _4ti2_OK;
 }
 
 _4ti2_status
 _4ti2_matrix_get_entry_int64_t(const _4ti2_matrix*  matrix, int r, int c, int64_t* value)
 {
-    matrix->get_entry_int64_t(r, c, *value);
+    matrix->get_entry(r, c, *value);
     return _4ti2_OK;
 }
 
@@ -142,7 +139,7 @@ _4ti2_status
 _4ti2_matrix_set_entry_mpz_ptr(_4ti2_matrix*  matrix, int r, int c, mpz_ptr value)
 {
     mpz_class z(value);
-    matrix->set_entry_mpz_class(r, c, z);
+    matrix->set_entry(r, c, z);
     return _4ti2_OK;
 }
 
@@ -150,11 +147,9 @@ _4ti2_status
 _4ti2_matrix_get_entry_mpz_ptr(const _4ti2_matrix*  matrix, int r, int c, mpz_ptr value)
 {
     mpz_class z;
-    matrix->get_entry_mpz_class(r, c, z);
+    matrix->get_entry(r, c, z);
     mpz_set(value, z.get_mpz_t());
     return _4ti2_OK;
 }
 #endif
-
-}
 
