@@ -95,6 +95,7 @@ public:
 
     friend bool operator==(const IndexSetD& b1, const IndexSetD& b2);
     friend bool operator!=(const IndexSetD& b1, const IndexSetD& b2);
+    friend bool operator<(const IndexSetD& b1, const IndexSetD& b2);
 
     class Iter
     {
@@ -411,6 +412,18 @@ bool
 operator!=(const IndexSetD& b1, const IndexSetD& b2)
 {
     return !operator==(b1, b2);
+}
+
+inline
+bool
+operator<(const IndexSetD& b1, const IndexSetD& b2)
+{
+    assert(b1.size == b2.size);
+    assert(b1.num_blocks == b2.num_blocks);
+    Index i = 0;
+    while (i < b1.num_blocks && b1.blocks[i] == b2.blocks[i]) {  ++i; }
+    if (i < b1.num_blocks && b1.blocks[i] < b2.blocks[i]) { return true; }
+    return false;
 }
 
 inline

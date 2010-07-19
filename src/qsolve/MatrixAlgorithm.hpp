@@ -12,9 +12,11 @@
 #include "qsolve/Timer.h"
 #include "qsolve/Debug.h"
 #include "qsolve/Matrix.h"
+#include "qsolve/MultiTree.h"
 #include <iomanip>
 #include <cmath>
 #include <pthread.h>
+#include <set>
 
 #define STATS_4ti2(X) //X
 #undef DEBUG_4ti2
@@ -184,6 +186,7 @@ MatrixAlgorithm<T>::compute(
 
         DEBUG_4ti2(*out << "RAYS:\n" << rays << "\n";)
         DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
+        DEBUG_4ti2(check(cone, rem, rays, supps);)
     }
 
     // Clean up threaded algorithms objects.
@@ -201,7 +204,6 @@ MatrixAlgorithm<T>::compute(
         VectorArrayT<T>& cirs,
         std::vector<Index>& dbls)
 {
-#if 0
     Timer t;
 
     // The number of variables.
@@ -224,101 +226,68 @@ MatrixAlgorithm<T>::compute(
 
     // Construct the circuit supports.
     rays.transfer(cirs, 0, cirs.get_number(), rays.get_number());
-    std::vector<IndexSet> cir_supps;
+    //std::vector<IndexSet> cir_supps;
     for (Index i = 0; i < dim_cirs; ++i) {
         IndexSet supp(n+m, false);
         supp.set(dbls[i]);
         supps.push_back(supp);
-        IndexSet pos_supp(dim_cirs*2, false);
-        pos_supp.set(i*2);
-        cir_supps.push_back(pos_supp);
+        //IndexSet pos_supp(dim_cirs*2, false);
+        //pos_supp.set(i*2);
+        //cir_supps.push_back(pos_supp);
     }
 
     // The mask for the circuit constraints.
     IndexSet cir_mask(n+m, false);
     cone.constraint_set(_4ti2_DB, cir_mask);
-    IndexSet ray_mask(cir_mask);
-    ray_mask.set_complement();
+    // The mask for the ray constraints.
+    IndexSet ray_mask(n+m,false);
+    cone.constraint_set(_4ti2_LB, ray_mask);
 
     // Construct main algorithm object.
     Index next = -1;
     IndexRanges index_ranges;
-    MatrixCirAlgorithm<IndexSet> alg(*(new RayState<T,IndexSet>(cone, rays, supps, rem, next)), supps, cir_supps, rem, cons_added, next, index_ranges);
+    RayState<T,IndexSet> state(cone, rays, supps, rem, ray_mask, next);
+    MatrixCirAlgorithm<IndexSet> alg(state, supps, rem, cons_added, next, index_ranges);
     // Construct threaded algorithm objects.
     std::vector<MatrixCirAlgorithm<IndexSet>*> algs;
     for (Index i = 0; i < Globals::num_threads-1; ++i) { algs.push_back(alg.clone()); }
 
     while (rays.get_number() > 0 && !rem.empty()) {
         // Find the next column and sort the rays.
-        int ray_start, ray_end, cir_start, cir_end;
         int pos_ray_start, pos_ray_end, neg_ray_start, neg_ray_end;
         int pos_cir_start, pos_cir_end, neg_cir_start, neg_cir_end;
-        next = next_constraint(cone, rays, supps, cir_supps, rem, ray_mask,
-                    ray_start, ray_end, cir_start, cir_end,
+        next = state.next_constraint(QSolveAlgorithm<T>::order,
                     pos_ray_start, pos_ray_end, neg_ray_start, neg_ray_end,
                     pos_cir_start, pos_cir_end, neg_cir_start, neg_cir_end);
 
-        DEBUG_4ti2(check(cone, rem, rays, supps, cir_supps);)
+        DEBUG_4ti2(check(cone, rem, rays, supps);)
 
         // Ouput statistics.
         char buffer[256];
         sprintf(buffer, "%cLeft %3d  Col %3d", ENDL, rem.count(), next);
         *out << buffer << std::flush;
 
-        // Switch the negative circuit supports, so that it is as if all
-        // vectors have a positive entry in the next column.
-        flip(cir_supps, neg_ray_start, neg_ray_end);
-        flip(cir_supps, neg_cir_start, neg_cir_end);
-#if 0
-        alg.compute_cirs(pos_ray_start, pos_ray_end, neg_ray_start, cir_end);
-        alg.compute_cirs(neg_ray_start, neg_ray_end, cir_start, cir_end);
-        alg.compute_cirs(cir_start, cir_end, cir_start, cir_end);
-#endif
-#if 1
-        if (pos_ray_start != pos_ray_end) {
-            index_ranges.init(pos_ray_start, pos_ray_end, neg_ray_start, neg_ray_start, cir_end); 
-            for (Index i = 0; i < Globals::num_threads-1; ++i) { algs[i]->threaded_compute(); }
-            alg.compute();
-            // Wait for threads to finish.
-            for (Index i = 0; i < Globals::num_threads-1; ++i) { algs[i]->wait(); }
-        }
-
-        if (neg_ray_start != neg_ray_end) {
-            index_ranges.init(neg_ray_start, neg_ray_end, cir_start, cir_start, cir_end); 
-            for (Index i = 0; i < Globals::num_threads-1; ++i) { algs[i]->threaded_compute(); }
-            alg.compute();
-            // Wait for threads to finish.
-            for (Index i = 0; i < Globals::num_threads-1; ++i) { algs[i]->wait(); }
-        }
-
-        if (cir_start != cir_end) {
-            index_ranges.init(cir_start, cir_end, cir_start, cir_start, cir_end); 
-            for (Index i = 0; i < Globals::num_threads-1; ++i) { algs[i]->threaded_compute(); }
-            alg.compute();
-            // Wait for threads to finish.
-            for (Index i = 0; i < Globals::num_threads-1; ++i) { algs[i]->wait(); }
-        }
-#endif
-
-        // Switch back the negative circuit supports.
-        flip(cir_supps, neg_ray_start, neg_ray_end);
-        flip(cir_supps, neg_cir_start, neg_cir_end);
+        // TODO: Make threaded. // Change algorithm so that supps are constrant.
+        //state.flip(pos_cir_start, pos_cir_end);
+        alg.compute_cirs(pos_ray_start, neg_cir_end, pos_cir_start, neg_ray_end);
+        //state.flip(neg_cir_start, neg_cir_end);
 
         // Add new rays and supps.
         alg.transfer();
         for (Index i = 0; i < Globals::num_threads-1; ++i) { algs[i]->transfer(); }
 
         // Update the supp vectors for the next_con.
-        update_supports(supps, next, ray_start, cir_end);
-        resize_supports(cir_supps, 2*dim_cirs+2);
-        update_supports(cir_supps, 2*dim_cirs, pos_ray_start, pos_ray_end);
-        update_supports(cir_supps, 2*dim_cirs, pos_cir_start, pos_cir_end);
-        update_supports(cir_supps, 2*dim_cirs+1, neg_ray_start, neg_ray_end);
-        update_supports(cir_supps, 2*dim_cirs+1, neg_cir_start, neg_cir_end);
-        dim_cirs+=1;
-        cir_mask.set(next);
+        state.update(next, pos_ray_start, neg_ray_end);
 
-        //DEBUG_4ti2(check(cone, rem, rays, supps, cir_supps);)
+        //resize_supports(cir_supps, 2*dim_cirs+2);
+        //update_supports(cir_supps, 2*dim_cirs, pos_ray_start, pos_ray_end);
+        //update_supports(cir_supps, 2*dim_cirs, pos_cir_start, pos_cir_end);
+        //update_supports(cir_supps, 2*dim_cirs+1, neg_ray_start, neg_ray_end);
+        //update_supports(cir_supps, 2*dim_cirs+1, neg_cir_start, neg_cir_end);
+        //dim_cirs+=1;
+        //cir_mask.set(next);
+
+        DEBUG_4ti2(check(cone, rem, rays, supps);)
 
         sprintf(buffer, "%cLeft %3d  Col %3d  Size %8d  Time %8.2fs", ENDL, rem.count(), next, 
                 rays.get_number(), t.get_elapsed_time());
@@ -327,18 +296,15 @@ MatrixAlgorithm<T>::compute(
         rem.unset(next);
         ++cons_added;
     }
-#endif
 }
 
-// TODO: Check circuit supports.
 template <class T> template <class IndexSet>
 void
 MatrixAlgorithm<T>::check(
                 const ConeT<T>& cone,
                 const IndexSet& rem,
                 const VectorArrayT<T>& rays,
-                const std::vector<IndexSet>& supps,
-                const std::vector<IndexSet>& cir_supps)
+                const std::vector<IndexSet>& supps)
 {
     Index n = cone.num_vars();
     Index m = cone.num_cons();
@@ -355,10 +321,9 @@ MatrixAlgorithm<T>::check(
 
 template <class IndexSet>
 MatrixSubAlgorithmBase<IndexSet>::MatrixSubAlgorithmBase(
-                RayStateAPI<IndexSet>& _helper,
-                std::vector<IndexSet>& _supps, std::vector<IndexSet>& _cir_supps,
+                RayStateAPI<IndexSet>& _helper, std::vector<IndexSet>& _supps, 
                 const IndexSet& _rel, const Index& _cons_added, const Index& _next)
-        : helper(*_helper.clone()), supps(_supps), cir_supps(_cir_supps), rel(_rel), cons_added(_cons_added), next(_next)
+        : helper(*_helper.clone()), supps(_supps), rel(_rel), cons_added(_cons_added), next(_next)
 {
 }
 
@@ -483,9 +448,12 @@ MatrixSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, Ind
     IndexSet r1_supp(s);
     Size r1_count;
 
-    Size t = cir_supps[0].get_size();
-    IndexSet r1_cir_supp(t);
+    //Size t = cir_supps[0].get_size();
+    //IndexSet r1_cir_supp(t);
 
+    MultiTree<IndexSet> old;
+    old.insert(supps, 0, r1_start);
+    
     Index index_count = 0;
     for (Index r1 = r1_start; r1 < r1_end; ++r1) {
         // Output Statistics
@@ -499,14 +467,18 @@ MatrixSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, Ind
 
         r1_supp = supps[r1];
         r1_count = r1_supp.count();
-        r1_cir_supp = cir_supps[r1];
+        //r1_cir_supp = cir_supps[r1];
         helper.set_r1_index(r1);
 
         if (r1_count == cons_added+1) {
             for (Index r2 = r2_start; r2 < r2_end; ++r2) {
-                if (supps[r2].singleton_diff(r1_supp)
-                    && r1_cir_supp.set_disjoint(cir_supps[r2])) {
-                    helper.create_circuit(r2);
+                if (supps[r2].singleton_diff(r1_supp)) {
+                    //&& r1_cir_supp.set_disjoint(cir_supps[r2])) {
+                    temp_supp.set_union(r1_supp, supps[r2]);
+                    if (!old.dominated(temp_supp,-1,-1)) {
+                        old.insert(temp_supp,0);
+                        helper.create_circuit(r2);
+                    }
                 }
             }
             continue;
@@ -520,14 +492,20 @@ MatrixSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, Ind
         DEBUG_4ti2(*out << "NEW ZEROS:\n" << temp_zeros << "\n";)
 
         for (Index r2 = r2_start; r2 < r2_end; ++r2) {
-            if (temp_zeros.singleton_intersection(supps[r2])
-                && r1_supp.count_union(supps[r2]) <= cons_added+2
-                && r1_cir_supp.set_disjoint(cir_supps[r2])) { 
+            if (temp_zeros.singleton_intersection(supps[r2]) &&
+                r1_supp.count_union(supps[r2]) <= cons_added+2) {
+                //&& r1_cir_supp.set_disjoint(cir_supps[r2])) { 
                 //if (supps[r2].singleton_diff(r1_supp)) { helper.create_circuit(r2); continue; }
                 //if (r1_supp.singleton_diff(supps[r2])) { helper.create_circuit(r2); continue; }
                 temp_supp.set_difference(supps[r2], r1_supp);
                 //if (temp_supp.count_lte(2))) { helper.create_circuit(r2); continue; }
-                if (helper.is_two_dimensional_face(con_map, temp_supp)) { helper.create_circuit(r2); }
+                if (helper.is_two_dimensional_face(con_map, temp_supp)) {
+                    temp_supp.set_union(r1_supp, supps[r2]);
+                    if (!old.dominated(temp_supp,-1,-1)) {
+                        old.insert(temp_supp,0);
+                        helper.create_circuit(r2);
+                    }
+                }
             }
         }
     }
@@ -625,7 +603,7 @@ MatrixRayAlgorithm<IndexSet>::MatrixRayAlgorithm(
                 RayStateAPI<IndexSet>& helper,
                 std::vector<IndexSet>& supps,
                 const IndexSet& rel, const Index& cons_added, const Index& next, IndexRanges& _indices)
-        : MatrixSubAlgorithmBase<IndexSet>(helper, supps, supps, rel, cons_added, next), indices(_indices)
+        : MatrixSubAlgorithmBase<IndexSet>(helper, supps, rel, cons_added, next), indices(_indices)
 {
 }
 
@@ -657,10 +635,9 @@ MatrixRayAlgorithm<IndexSet>::compute()
 
 template <class IndexSet>
 MatrixCirAlgorithm<IndexSet>::MatrixCirAlgorithm(
-                RayStateAPI<IndexSet>& helper,
-                std::vector<IndexSet>& supps, std::vector<IndexSet>& cir_supps, 
+                RayStateAPI<IndexSet>& helper, std::vector<IndexSet>& supps, 
                 const IndexSet& rel, const Index& cons_added, const Index& next, IndexRanges& _indices)
-        : MatrixSubAlgorithmBase<IndexSet>(helper, supps, cir_supps, rel, cons_added, next), indices(_indices)
+        : MatrixSubAlgorithmBase<IndexSet>(helper, supps, rel, cons_added, next), indices(_indices)
 {
 }
 
@@ -671,7 +648,6 @@ MatrixCirAlgorithm<IndexSet>::clone()
     return new MatrixCirAlgorithm(
                 MatrixSubAlgorithmBase<IndexSet>::helper,
                 MatrixSubAlgorithmBase<IndexSet>::supps,
-                MatrixSubAlgorithmBase<IndexSet>::cir_supps, 
                 MatrixSubAlgorithmBase<IndexSet>::rel,
                 MatrixSubAlgorithmBase<IndexSet>::cons_added,
                 MatrixSubAlgorithmBase<IndexSet>::next,

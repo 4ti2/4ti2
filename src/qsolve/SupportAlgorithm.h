@@ -33,7 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "qsolve/FullTree.h"
 #include "qsolve/MultiTree.h"
 
-//#define SUPPORTTREE FullTree
+//#define SUPPORTTREE FullTree  // TODO: DOES NOT WORK!
 //#define SUPPORTTREE BinaryTree
 #define SUPPORTTREE MultiTree
 
@@ -58,7 +58,14 @@ protected:
                 Index& cons_added, std::vector<int>& ineqs);
     template <class IndexSet>
     void compute(const ConeT<T>& cone, VectorArrayT<T>& rays, std::vector<IndexSet>& supps,
-                Index& cons_added, VectorArrayT<T>& cirs, std::vector<int>& dbls);
+                Index& cons_added, VectorArrayT<T>& cirs, std::vector<int>& ineqs, std::vector<int>& dbls);
+
+    template <class IndexSet>
+    void check( const ConeT<T>& cone,
+                const std::vector<Index>& con_map,
+                const std::vector<_4ti2_constraint>& types,
+                const VectorArrayT<T>& rays,
+                const std::vector<IndexSet>& supps);
 };
 
 template <class IndexSet>

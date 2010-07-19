@@ -63,7 +63,7 @@ inline
 void
 type_conversion(const int64_t& v1, mpz_class& v2)
 {
-    v2 = v1;
+    //v2 = v1;
 }
 
 template <>
@@ -90,6 +90,15 @@ type_conversion(const mpz_class& v1, long int& v2)
         exit(1);    
     }
     v2 = v1.get_si();
+}
+
+template <>
+inline
+void
+type_conversion(const mpz_class& v1, long long int& v2)
+{
+    // TODO;
+    //v2 = v1.get_si();
 }
 
 #endif

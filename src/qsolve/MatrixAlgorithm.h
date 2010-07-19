@@ -59,9 +59,8 @@ protected:
                 Index& cons_added, VectorArrayT<T>& cirs, std::vector<int>& ineqs);
 
     template <class IndexSet>
-    void check(const ConeT<T>& cone, const IndexSet& rem, const VectorArrayT<T>& rays,
-                const std::vector<IndexSet>& supps,
-                const std::vector<IndexSet>& cir_supps);
+    void check(const ConeT<T>& cone, const IndexSet& rem,
+                const VectorArrayT<T>& rays, const std::vector<IndexSet>& supps);
 };
 
 
@@ -69,7 +68,7 @@ template <class IndexSet>
 class MatrixSubAlgorithmBase
 {
 public:
-    MatrixSubAlgorithmBase(RayStateAPI<IndexSet>& helper, std::vector<IndexSet>& supps, std::vector<IndexSet>& cir_supps, 
+    MatrixSubAlgorithmBase(RayStateAPI<IndexSet>& helper, std::vector<IndexSet>& supps, 
                         const IndexSet& rel, const Index& cons_added, const Index& next);
     virtual ~MatrixSubAlgorithmBase();
 
@@ -82,8 +81,6 @@ protected:
     RayStateAPI<IndexSet>& helper;
     std::vector<IndexSet>& supps;
     //std::vector<IndexSet> new_supps;
-    std::vector<IndexSet>& cir_supps;
-    //std::vector<IndexSet> new_cir_supps;
 
     const IndexSet& rel;
     const Index& cons_added;
@@ -120,8 +117,7 @@ template <class IndexSet>
 class MatrixCirAlgorithm : public MatrixSubAlgorithmBase<IndexSet>, public ThreadedAlgorithm
 {
 public:
-    MatrixCirAlgorithm(RayStateAPI<IndexSet>& helper,
-                std::vector<IndexSet>& supps, std::vector<IndexSet>& cir_supps, 
+    MatrixCirAlgorithm(RayStateAPI<IndexSet>& helper, std::vector<IndexSet>& supps, 
                 const IndexSet& rel, const Index& cons_added, const Index& next, IndexRanges& indices);
 
     virtual void compute();

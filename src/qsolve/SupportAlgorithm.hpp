@@ -75,7 +75,7 @@ SupportAlgorithm<T>::compute(const ConeT<T>& cone,
         // Compute ray only constraints first.
         compute(cone, rays, supps, cons_added, ray_ineqs);
         // Compute circuits.
-        compute(cone, rays, supps, cons_added, cirs, cir_ineqs);
+        compute(cone, rays, supps, cons_added, cirs, ray_ineqs, cir_ineqs);
         // Separate the rays from the circuits.
         split_rays(cone, supps, rays, cirs);
     } else {
@@ -83,7 +83,7 @@ SupportAlgorithm<T>::compute(const ConeT<T>& cone,
         // Compute ray only constraints first.
         compute(cone, rays, supps, cons_added, ray_ineqs);
         // Compute circuits.
-        compute(cone, rays, supps, cons_added, cirs, cir_ineqs);
+        compute(cone, rays, supps, cons_added, cirs, ray_ineqs, cir_ineqs);
         // Separate the rays from the circuits.
         split_rays(cone, supps, rays, cirs);
     }
@@ -115,16 +115,6 @@ SupportAlgorithm<T>::compute(
     IndexSet rem(n+m, 0);
     cone.constraint_set(_4ti2_LB, rem);
 
-#if 0
-    // Construct the initial set supports.
-    for (Index i = 0; i != dim; ++i) { 
-        IndexSet supp(n+m, 0);
-        supp.set(ineqs[i]);
-        supps.push_back(supp);
-        rem.unset(ineqs[i]);
-    }
-#endif 
-#if 1
     // Construct the initial set supports.
     for (Index i = 0; i != dim; ++i) { 
         IndexSet supp(dim,0);
@@ -132,7 +122,8 @@ SupportAlgorithm<T>::compute(
         supps.push_back(supp);
         rem.unset(ineqs[i]);
     }
-#endif
+    std::vector<_4ti2_constraint> types(dim, _4ti2_LB);
+
     DEBUG_4ti2(*out << "Initial Rays:\n" << rays << "\n";)
     DEBUG_4ti2(*out << "Initial Supps:\n" << supps << "\n";)
 
@@ -145,9 +136,11 @@ SupportAlgorithm<T>::compute(
     Index next = -1;
     IndexRanges index_ranges;
     IndexSet ray_mask(dim,true);
+
     // Construct main algorithm object.
     RayState<T,IndexSet> state(cone, rays, supps, rem, ray_mask, next);
     SupportRayAlgorithm<IndexSet> alg(state, supps, rel, cons_added, next, tree, index_ranges);
+
     // Construct threaded algorithm objects.
     std::vector<SupportRayAlgorithm<IndexSet>*> algs;
     for (Index i = 0; i < Globals::num_threads-1; ++i) { algs.push_back(alg.clone()); }
@@ -219,6 +212,8 @@ SupportAlgorithm<T>::compute(
         ray_mask.set(dim+cons_added);
 
         rem.unset(next);
+        ineqs.push_back(next);
+        types.push_back(_4ti2_LB);
         rel.unset(next);
         ++cons_added;
 
@@ -229,6 +224,8 @@ SupportAlgorithm<T>::compute(
 
         DEBUG_4ti2(*out << "RAYS:\n" << rays << "\n";)
         DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
+        DEBUG_4ti2(check(cone, ineqs, types, rays, supps);)
+        check(cone, ineqs, types, rays, supps);
     }
 
     // Clean up threaded algorithms objects.
@@ -243,7 +240,8 @@ SupportAlgorithm<T>::compute(
         std::vector<IndexSet>& supps,
         Index& cons_added,
         VectorArrayT<T>& cirs,
-        std::vector<int>& dbls)
+        std::vector<Index>& ineqs,
+        std::vector<Index>& dbls)
 {
     Timer t;
 
@@ -259,6 +257,7 @@ SupportAlgorithm<T>::compute(
     if (rem.empty()) { return; }
     // We have already processed the initial constraints.
     for (Index i = 0; i < (Index) dbls.size(); ++i) { rem.unset(dbls[i]); }
+    std::vector<_4ti2_constraint> types(ineqs.size(), _4ti2_LB);
 
     *out << "Circuit Support Algorithm.\n";
 
@@ -285,6 +284,10 @@ SupportAlgorithm<T>::compute(
         IndexSet supp(cir_supp_size, false);
         supp.set(ray_supp_size+2*i);
         supps.push_back(supp);
+        ineqs.push_back(dbls[i]);
+        types.push_back(_4ti2_LB);
+        ineqs.push_back(dbls[i]);
+        types.push_back(_4ti2_UB);
     }
     DEBUG_4ti2(*out << "Initial Rays + Circuits:\n" << rays << "\n";)
     DEBUG_4ti2(*out << "Initial Supports:\n" << supps << "\n";)
@@ -330,7 +333,7 @@ SupportAlgorithm<T>::compute(
         DEBUG_4ti2(*out << "done." << std::endl;)
         DEBUG_4ti2(tree.dump();)
 
-        // TODO: Make threaded.
+        // TODO: Make threaded. // Change algorithm so that supps are constant.
         state.flip(pos_cir_start, pos_cir_end);
         alg.compute_cirs(pos_ray_start, neg_cir_end, pos_cir_start, neg_ray_end);
         state.flip(neg_cir_start, neg_cir_end);
@@ -349,41 +352,69 @@ SupportAlgorithm<T>::compute(
         ray_mask.resize(cir_supp_size+2);
         cir_supp_size+=2;
 
+        ineqs.push_back(next);
+        types.push_back(_4ti2_LB);
+        ineqs.push_back(next);
+        types.push_back(_4ti2_UB);
+
         sprintf(buffer, "%cLeft %3d  Col %3d  Size %8d  Time %8.2fs", ENDL, rem.count(), next, 
                 rays.get_number(), t.get_elapsed_time());
         *out << buffer << std::endl;
         DEBUG_4ti2(*out << "\nRAYS:\n" << rays << "\n";)
         DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
+        DEBUG_4ti2(check(cone, ineqs, types, rays, supps));
+        check(cone, ineqs, types, rays, supps);
 
         rem.unset(next);
         ++cons_added;
     }
 }
 
-#if 0
 template <class T> template <class IndexSet>
 void
 SupportAlgorithm<T>::check(
                 const ConeT<T>& cone,
-                const IndexSet& rem,
+                const std::vector<Index>& ineqs,
+                const std::vector<_4ti2_constraint>& types,
                 const VectorArrayT<T>& rays,
-                const std::vector<IndexSet>& supps,
-                const std::vector<IndexSet>& cir_supps)
+                const std::vector<IndexSet>& supps)
 {
     Index n = cone.num_vars();
     Index m = cone.num_cons();
     VectorT<T> slacks(n+m);
+
     for (Index i = 0; i < rays.get_number(); ++i) {
+        bool failed = false;
         cone.get_slacks(rays[i], slacks);
-        for (Index j = 0; j < n+m; ++j) {
-            if (!rem[j]) {
-                if ((slacks[j] != 0) != supps[i][j]) { *out << "Support Check failed.\n"; }
+        for (Index j = 0; j < (Index) ineqs.size(); ++j) {
+            if (types[j] == _4ti2_LB) {
+                if ((slacks[ineqs[j]] > 0) != supps[i][j]) { *out << "Check LB Supp failed.\n"; failed = true; }
+                if (cone.get_constraint_type(ineqs[j]) == _4ti2_LB && slacks[ineqs[j]] < 0) { * out << "Check LB failed.\n"; failed = true; }
+            } 
+            else if (types[j] == _4ti2_UB) {
+                if ((slacks[ineqs[j]] < 0) != supps[i][j]) { *out << "Check UB Supp failed.\n"; failed = true; }
+                if (cone.get_constraint_type(ineqs[j]) == _4ti2_UB && slacks[ineqs[j]] > 0) { * out << "Check UB failed.\n"; failed = true; }
             }
+            else if (types[j] == _4ti2_EQ) {
+                if (slacks[ineqs[j]] != 0) { *out << "Check EQ failed.\n"; failed = true; }
+                if (supps[i][j]) { *out << "Check EQ Supps failed.\n"; failed = true; }
+            }
+            else if (types[j] == _4ti2_DB) {
+                if ((slacks[ineqs[j]] != 0) != supps[i][j]) { *out << "Support Check DB failed.\n"; failed = true; }
+            }
+            else if (types[j] == _4ti2_FR) {
+                if (supps[i][j]) { *out << "Check FR Supps failed.\n"; failed = true; failed = true; }
+            }
+        }
+        if (failed) { 
+            *out << "Ineqs: ";
+            for (Index j = 0; j < (Index) ineqs.size(); ++j) { *out << " " << ineqs[j]; }
+            *out << "\nTypes: ";
+            for (Index j = 0; j < (Index) types.size(); ++j) { *out << " " << types[j]; }
+            *out << "\n" << rays[i] << "\n" << supps[i] << "\n" << slacks << "\n"; 
         }
     }
 }
-#endif
-
 
 template <class IndexSet>
 SupportSubAlgorithmBase<IndexSet>::SupportSubAlgorithmBase(
