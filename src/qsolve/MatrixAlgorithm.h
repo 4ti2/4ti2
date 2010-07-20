@@ -27,9 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "qsolve/VectorArray.h"
 #include "qsolve/IndexSet.h"
 #include "qsolve/QSolveConsOrder.h"
-#include "qsolve/QSolveVariant.h"
 #include "qsolve/Cone.h"
-#include "qsolve/QSolveAlgorithm.h"
 #include "qsolve/ThreadedAlgorithm.h"
 #include "qsolve/Matrix.h"
 #include "qsolve/ConeC.h"
@@ -38,29 +36,27 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 namespace _4ti2_
 {
 
-template <class T>
-class MatrixAlgorithm : public QSolveAlgorithm<T>
+template <class IndexSet>
+class MatrixAlgorithm
 {
 public:
     MatrixAlgorithm();
-    MatrixAlgorithm(QSolveConsOrder o);
+    MatrixAlgorithm(ConsOrder o);
     ~MatrixAlgorithm();
 
+    void compute_rays(const ConeAPI& cone, RayStateAPI<IndexSet>& state, std::vector<IndexSet>& supps, Index& next, Index& cons_added, 
+                std::vector<int>& ineqs);
+    void compute_cirs(const ConeAPI& cone, RayStateAPI<IndexSet>& state, std::vector<IndexSet>& supps, Index& next, Index& cons_added,
+                std::vector<int>& ineqs);
+
 protected:
-    virtual void compute(const ConeT<T>& cone, 
-                VectorArrayT<T>& rays, std::vector<Index>& ray_ineqs, 
-                VectorArrayT<T>& cirs, std::vector<Index>& cir_ineqs);
-
-    template <class IndexSet>
-    void compute(const ConeT<T>& cone, VectorArrayT<T>& rays, std::vector<IndexSet>& supps, 
-                Index& cons_added, std::vector<int>& ineqs);
-    template <class IndexSet>
-    void compute(const ConeT<T>& cone, VectorArrayT<T>& rays, std::vector<IndexSet>& supps,
-                Index& cons_added, VectorArrayT<T>& cirs, std::vector<int>& ineqs);
-
+#if 0
     template <class IndexSet>
     void check(const ConeT<T>& cone, const IndexSet& rem,
                 const VectorArrayT<T>& rays, const std::vector<IndexSet>& supps);
+#endif 
+
+    ConsOrder order;
 };
 
 
@@ -80,21 +76,12 @@ public:
 protected:
     RayStateAPI<IndexSet>& helper;
     std::vector<IndexSet>& supps;
-    //std::vector<IndexSet> new_supps;
 
     const IndexSet& rel;
     const Index& cons_added;
     const Index& next;
 
     Index _r1;
-
-#if 0
-    void set_r1_index(Index r1);
-    // The next function is virtual just so the compiler doesn't inline it!!!
-    virtual void create_ray(Index r2);
-    void create_rays(Index r1, std::vector<Index>& r2s);
-    void create_circuit(Index r2);
-#endif
 };
 
 

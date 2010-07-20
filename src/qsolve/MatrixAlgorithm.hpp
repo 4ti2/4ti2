@@ -24,60 +24,31 @@
 
 using namespace _4ti2_;
 
-template <class T>
-MatrixAlgorithm<T>::MatrixAlgorithm()
-    : QSolveAlgorithm<T>()
+template <class IndexSet>
+MatrixAlgorithm<IndexSet>::MatrixAlgorithm()
 {
 }
 
-template <class T>
-MatrixAlgorithm<T>::MatrixAlgorithm(QSolveConsOrder o)
-    : QSolveAlgorithm<T>(o)
+template <class IndexSet>
+MatrixAlgorithm<IndexSet>::MatrixAlgorithm(ConsOrder o)
+    : order(o)
 {
 }
 
-template <class T>
-MatrixAlgorithm<T>::~MatrixAlgorithm()
+template <class IndexSet>
+MatrixAlgorithm<IndexSet>::~MatrixAlgorithm()
 {
 }
 
-template <class T>
-void
-MatrixAlgorithm<T>::compute(const ConeT<T>& cone, 
-            VectorArrayT<T>& rays, std::vector<Index>& ray_ineqs, 
-            VectorArrayT<T>& cirs, std::vector<Index>& cir_ineqs)
-{
-    // The number of constraints added so far.
-    Index cons_added = 0;
-    // TODO: set size better. Must incorporate circuit constraints.
-    if (cone.num_vars()+cone.num_cons() <= IndexSetDS::max_size) {
-        std::vector<IndexSetDS> supps;
-        // Compute ray only constraints first.
-        compute(cone, rays, supps, cons_added, ray_ineqs);
-        // Compute circuits.
-        compute(cone, rays, supps, cons_added, cirs, cir_ineqs);
-        // Separate the rays from the circuits.
-        split_rays(cone, supps, rays, cirs);
-    } else {
-        std::vector<IndexSetD> supps;
-        // Compute ray only constraints first.
-        compute(cone, rays, supps, cons_added, ray_ineqs);
-        // Compute circuits.
-        compute(cone, rays, supps, cons_added, cirs, cir_ineqs);
-        // Separate the rays from the circuits.
-        split_rays(cone, supps, rays, cirs);
-    }
-}
 
-
-#if 1
 // Computes extreme rays of the cone Ax>=0, x>=0.
-template <class T> template <class IndexSet>
+template <class IndexSet>
 void
-MatrixAlgorithm<T>::compute(
-            const ConeT<T>& cone,
-            VectorArrayT<T>& rays,
+MatrixAlgorithm<IndexSet>::compute_rays(
+            const ConeAPI& cone,
+            RayStateAPI<IndexSet>& state,
             std::vector<IndexSet>& supps,
+            Index& next,
             Index& cons_added,
             std::vector<int>& ineqs)
 {
@@ -91,11 +62,11 @@ MatrixAlgorithm<T>::compute(
     Size m = cone.num_cons();
 
     // The dimension
-    Size dim = rays.get_number();
+    Size dim = state.num_gens();
 
     // The set of constraints to be processed.
     IndexSet rem(n+m, 0);
-    cone.constraint_set(_4ti2_LB, rem);
+    cone.get_constraint_set(_4ti2_LB, rem);
 
     // Construct the initial set supports.
     for (Index i = 0; i != dim; ++i) { 
@@ -104,40 +75,36 @@ MatrixAlgorithm<T>::compute(
         supps.push_back(supp);
         rem.unset(ineqs[i]);
     }
-    DEBUG_4ti2(*out << "Initial Rays:\n" << rays << "\n";)
     DEBUG_4ti2(*out << "Initial Supps:\n" << supps << "\n";)
     DEBUG_4ti2(*out << "Initial Rem:\n" << rem << "\n";)
 
     // The total set of relaxed constraints.
     IndexSet rel(rem);
-    cone.constraint_set(_4ti2_FR, rel);
-    cone.constraint_set(_4ti2_DB, rel);
+    cone.get_constraint_set(_4ti2_FR, rel);
+    cone.get_constraint_set(_4ti2_DB, rel);
 
-    Index next = -1;
     IndexSet ray_mask(n+m);
     IndexRanges index_ranges;
 
     // Construct main algorithm object.
-    RayState<T,IndexSet> state(cone, rays, supps, rem, ray_mask, next);
     MatrixRayAlgorithm<IndexSet> alg(state, supps, rel, cons_added, next, index_ranges);
     // Construct threaded algorithm objects.
     std::vector<MatrixRayAlgorithm<IndexSet>*> algs;
     for (Index i = 0; i < Globals::num_threads-1; ++i) { algs.push_back(alg.clone()); }
 
     // While there are still rows to choose from.
-    while (rays.get_number()>0 && !rem.empty()) {
-        DEBUG_4ti2(*out << "RAYS:\n" << rays << "\n";)
+    while (state.num_gens()>0 && !rem.empty()) {
         DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
 
         // Choose the next constraint and sort rays.
         Index pos_start, pos_end, neg_start, neg_end;
-        next = state.next_constraint(QSolveAlgorithm<T>::order, pos_start, pos_end, neg_start, neg_end);
+        next = state.next_constraint(order, rem, pos_start, pos_end, neg_start, neg_end);
 
         // Check to see whether the next constraint is redundant. If so, ignore it.
         if (neg_start == neg_end) { rem.unset(next); continue; }
 
         char buffer[256];
-        sprintf(buffer, "%cLeft %3d  Col %3d  Size %8d", ENDL, rem.count(), next, rays.get_number());
+        sprintf(buffer, "%cLeft %3d  Col %3d  Size %8d", ENDL, rem.count(), next, state.num_gens());
         *out << buffer << std::flush;
 
         // Next, we assign index ranges for the inner and outer for loops so
@@ -181,10 +148,9 @@ MatrixAlgorithm<T>::compute(
 
         // Output statistics.
         sprintf(buffer, "%cLeft %3d  Col %3d  Size %8d  Time %8.2fs", ENDL, rem.count(), next, 
-                rays.get_number(), t.get_elapsed_time());
+                state.num_gens(), t.get_elapsed_time());
         *out << buffer << std::endl;
 
-        DEBUG_4ti2(*out << "RAYS:\n" << rays << "\n";)
         DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
         DEBUG_4ti2(check(cone, rem, rays, supps);)
     }
@@ -192,16 +158,15 @@ MatrixAlgorithm<T>::compute(
     // Clean up threaded algorithms objects.
     for (Index i = 0; i < Globals::num_threads-1; ++i) { delete algs[i]; }
 }
-#endif
 
-template <class T> template <class IndexSet>
+template <class IndexSet>
 void
-MatrixAlgorithm<T>::compute(
-        const ConeT<T>& cone,
-        VectorArrayT<T>& rays,
+MatrixAlgorithm<IndexSet>::compute_cirs(
+        const ConeAPI& cone,
+        RayStateAPI<IndexSet>& state,
         std::vector<IndexSet>& supps,
+        Index& next,
         Index& cons_added,
-        VectorArrayT<T>& cirs,
         std::vector<Index>& dbls)
 {
     Timer t;
@@ -214,7 +179,7 @@ MatrixAlgorithm<T>::compute(
     // The remaining columns to process.
     IndexSet rem(n+m, 0); 
     // We only process circuit constraints.
-    cone.constraint_set(_4ti2_DB, rem);
+    cone.get_constraint_set(_4ti2_DB, rem);
     if (rem.empty()) { return; }
     // We have already processed the initial constraints.
     for (Index i = 0; i < (Index) dbls.size(); ++i) { rem.unset(dbls[i]); }
@@ -222,41 +187,34 @@ MatrixAlgorithm<T>::compute(
     *out << "Circuit Matrix Algorithm.\n";
 
     // The number of circuit components.
-    Size dim_cirs = cirs.get_number();
+    Size dim_cirs = dbls.size();
 
     // Construct the circuit supports.
-    rays.transfer(cirs, 0, cirs.get_number(), rays.get_number());
-    //std::vector<IndexSet> cir_supps;
     for (Index i = 0; i < dim_cirs; ++i) {
         IndexSet supp(n+m, false);
         supp.set(dbls[i]);
         supps.push_back(supp);
-        //IndexSet pos_supp(dim_cirs*2, false);
-        //pos_supp.set(i*2);
-        //cir_supps.push_back(pos_supp);
     }
 
     // The mask for the circuit constraints.
     IndexSet cir_mask(n+m, false);
-    cone.constraint_set(_4ti2_DB, cir_mask);
+    cone.get_constraint_set(_4ti2_DB, cir_mask);
     // The mask for the ray constraints.
     IndexSet ray_mask(n+m,false);
-    cone.constraint_set(_4ti2_LB, ray_mask);
+    cone.get_constraint_set(_4ti2_LB, ray_mask);
 
     // Construct main algorithm object.
-    Index next = -1;
     IndexRanges index_ranges;
-    RayState<T,IndexSet> state(cone, rays, supps, rem, ray_mask, next);
     MatrixCirAlgorithm<IndexSet> alg(state, supps, rem, cons_added, next, index_ranges);
     // Construct threaded algorithm objects.
     std::vector<MatrixCirAlgorithm<IndexSet>*> algs;
     for (Index i = 0; i < Globals::num_threads-1; ++i) { algs.push_back(alg.clone()); }
 
-    while (rays.get_number() > 0 && !rem.empty()) {
+    while (state.num_gens() > 0 && !rem.empty()) {
         // Find the next column and sort the rays.
         int pos_ray_start, pos_ray_end, neg_ray_start, neg_ray_end;
         int pos_cir_start, pos_cir_end, neg_cir_start, neg_cir_end;
-        next = state.next_constraint(QSolveAlgorithm<T>::order,
+        next = state.next_constraint(order, rem, ray_mask,
                     pos_ray_start, pos_ray_end, neg_ray_start, neg_ray_end,
                     pos_cir_start, pos_cir_end, neg_cir_start, neg_cir_end);
 
@@ -290,7 +248,7 @@ MatrixAlgorithm<T>::compute(
         DEBUG_4ti2(check(cone, rem, rays, supps);)
 
         sprintf(buffer, "%cLeft %3d  Col %3d  Size %8d  Time %8.2fs", ENDL, rem.count(), next, 
-                rays.get_number(), t.get_elapsed_time());
+                state.num_gens(), t.get_elapsed_time());
         *out << buffer << std::endl;
 
         rem.unset(next);
@@ -298,6 +256,7 @@ MatrixAlgorithm<T>::compute(
     }
 }
 
+#if 0
 template <class T> template <class IndexSet>
 void
 MatrixAlgorithm<T>::check(
@@ -318,7 +277,7 @@ MatrixAlgorithm<T>::check(
         }
     }
 }
-
+#endif
 template <class IndexSet>
 MatrixSubAlgorithmBase<IndexSet>::MatrixSubAlgorithmBase(
                 RayStateAPI<IndexSet>& _helper, std::vector<IndexSet>& _supps, 

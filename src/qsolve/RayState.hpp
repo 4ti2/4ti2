@@ -35,8 +35,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 using namespace _4ti2_;
 
 template <class T, class IndexSet>
-RayState<T,IndexSet>::RayState(const ConeT<T>& _cone, VectorArrayT<T>& _rays, std::vector<IndexSet>& _supps, const IndexSet& _rem, const IndexSet& _ray_mask, const Index& _next)
-        : cone(_cone), rays(_rays), supps(_supps), rem(_rem), next(_next), ray_mask(_ray_mask),
+RayState<T,IndexSet>::RayState(const ConeT<T>& _cone, VectorArrayT<T>& _rays, std::vector<IndexSet>& _supps, const Index& _next)
+        : RayStateAPI<IndexSet>(cone), cone(_cone), rays(_rays), supps(_supps), next(_next),
           new_rays(0,rays.get_size()), temp(rays.get_size())
 {
 }
@@ -50,7 +50,7 @@ template <class T, class IndexSet>
 RayState<T,IndexSet>*
 RayState<T,IndexSet>::clone()
 {
-    return new RayState(cone, rays, supps, rem, ray_mask, next);
+    return new RayState(cone, rays, supps, next);
 }
 
 template <class T, class IndexSet>
@@ -179,7 +179,7 @@ RayState<T,IndexSet>::resize(Size size)
 
 template <class T, class IndexSet>
 Index
-RayState<T,IndexSet>::next_constraint(const ConsOrder& order, Index& pos_start, Index& pos_end, Index& neg_start, Index& neg_end)
+RayState<T,IndexSet>::next_constraint(const ConsOrder& order, const IndexSet& rem, Index& pos_start, Index& pos_end, Index& neg_start, Index& neg_end)
 {
     assert(!rem.empty());
     // First, we choose the next constraint to add.
@@ -203,7 +203,7 @@ RayState<T,IndexSet>::next_constraint(const ConsOrder& order, Index& pos_start, 
 template <class T, class IndexSet>
 Index
 RayState<T,IndexSet>::next_constraint(
-                const ConsOrder& order,
+                const ConsOrder& order, const IndexSet& rem, const IndexSet& ray_mask,
                 Index& pos_ray_start, Index& pos_ray_end, Index& neg_ray_start, Index& neg_ray_end,
                 Index& pos_cir_start, Index& pos_cir_end, Index& neg_cir_start, Index& neg_cir_end)
 {

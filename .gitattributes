@@ -18,3 +18,4 @@ src/qsolve/RayAlgorithmAPI.cpp -text
 src/qsolve/RayState.h -text
 src/qsolve/RayState.hpp -text
 src/qsolve/RaysAPI.cpp -text
+src/qsolve/ThreadedAlgorithm.cpp -text

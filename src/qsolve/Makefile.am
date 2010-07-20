@@ -45,6 +45,7 @@ lib4ti2sources = \
 	QSolveConsOrder.cpp \
 	RaysAPI.cpp \
 	CircuitsAPI.cpp \
+    ThreadedAlgorithm.cpp \
 	Timer.cpp
 
 4ti2includedir = $(includedir)/4ti2

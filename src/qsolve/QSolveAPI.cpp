@@ -233,11 +233,8 @@ QSolveAPI::computeT()
     VectorArrayT<T>& cir_data = dynamic_cast<MatrixAPI<VectorArrayT<T> >&>(*cir).data;
     VectorArrayT<T>& qfree_data = dynamic_cast<MatrixAPI<VectorArrayT<T> >&>(*qfree).data;
 
-    QSolveAlgorithm<T>* alg = 0;
-    if (algorithm == MATRIX) { alg = new MatrixAlgorithm<T>(order); }
-    else { alg = new SupportAlgorithm<T>(order); }
-    alg->compute(cone, ray_data, cir_data, qfree_data);
-    delete alg;
+    QSolveAlgorithm<T> alg(algorithm, order);
+    alg.compute(cone, ray_data, cir_data, qfree_data);
 }
 
 void

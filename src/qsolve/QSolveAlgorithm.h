@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "qsolve/VectorArray.h"
 #include "qsolve/Cone.h"
 #include "qsolve/QSolveConsOrder.h"
+#include "qsolve/QSolveVariant.h"
 
 namespace _4ti2_
 {
@@ -36,21 +37,18 @@ class QSolveAlgorithm
 {
 public:
     QSolveAlgorithm();
-    QSolveAlgorithm(QSolveConsOrder o);
+    QSolveAlgorithm(QSolveVariant v, QSolveConsOrder o);
     virtual ~QSolveAlgorithm();
 
-    void set_constraint_order(QSolveConsOrder o);
-
-    void compute(
-                    const ConeT<T>& cone,
+    void compute(   const ConeT<T>& cone,
                     VectorArrayT<T>& rays,
                     VectorArrayT<T>& circuits,
                     VectorArrayT<T>& subspace);
 
 protected:
-    virtual void compute(const ConeT<T>& cone, 
+    void compute(const ConeT<T>& cone, 
                 VectorArrayT<T>& rays, std::vector<Index>& ray_ineqs, 
-                VectorArrayT<T>& cirs, std::vector<Index>& cir_ineqs) = 0;
+                VectorArrayT<T>& cirs, std::vector<Index>& cir_ineqs);
 
     template <class IndexSet>
     void split_rays(
@@ -59,90 +57,8 @@ protected:
                 VectorArrayT<T>& rays,
                 VectorArrayT<T>& cirs);
 
-#if 0
-    template <class IndexSet>
-    Index next_constraint(
-            const ConeT<T>& cone, const IndexSet& rem, 
-            VectorArrayT<T>& rays, std::vector<IndexSet>& supps,
-            Index& pos_start, Index& pos_end, Index& neg_start, Index& neg_end);
-
-    template <class IndexSet>
-    void sort_nonzeros(
-                const ConeT<T>& cone, VectorArrayT<T>& vs, std::vector<IndexSet>& supps,
-                Index start, Index end, Index next_col, Index& middle);
-    template <class IndexSet>
-    void sort_positives(
-                const ConeT<T>& cone, VectorArrayT<T>& vs, std::vector<IndexSet>& supps,
-                Index start, Index end, Index next_col, Index& middle);
-    template <class IndexSet>
-    void sort_negatives(
-                const ConeT<T>& cone, VectorArrayT<T>& vs, std::vector<IndexSet>& supps,
-                Index start, Index end, Index next_col, Index& middle);
-    template <class IndexSet>
-    void sort_rays(
-                VectorArrayT<T>& vs, std::vector<IndexSet>& supps,
-                const IndexSet& ray_mask, Index start, Index end, Index& middle);
-
-    template <class IndexSet>
-    Index next_constraint(
-                const ConeT<T>& cone, VectorArrayT<T>& vs, std::vector<IndexSet>& supps,
-                const IndexSet& rem, const IndexSet& ray_mask,
-                Index& ray_start, Index& ray_end, Index& cir_start, Index& cir_end,
-                Index& pos_ray_start, Index& pos_ray_end, Index& neg_ray_start, Index& neg_ray_end,
-                Index& pos_cir_start, Index& pos_cir_end, Index& neg_cir_start, Index& neg_cir_end);
-
-    template <class IndexSet>
-    Index next_constraint(const ConeT<T>& cone, const VectorArrayT<T>& vs, const IndexSet& rem);
-
-    template <class IndexSet>
-    Index next_circuit_constraint(const ConeT<T>& cone, const VectorArrayT<T>& vs, const IndexSet& rem);
-
-    template <class IndexSet>
-    void sort_nonzeros(
-                const ConeT<T>& cone, VectorArrayT<T>& vs, std::vector<IndexSet>& supps,
-                std::vector<IndexSet>& cir_supps,
-                Index start, Index end, Index next_col, Index& middle);
-    template <class IndexSet>
-    void sort_positives(
-                const ConeT<T>& cone, VectorArrayT<T>& vs, std::vector<IndexSet>& supps,
-                std::vector<IndexSet>& cir_supps,
-                Index start, Index end, Index next_col, Index& middle);
-    template <class IndexSet>
-    void sort_negatives(
-                const ConeT<T>& cone, VectorArrayT<T>& vs, std::vector<IndexSet>& supps,
-                std::vector<IndexSet>& cir_supps,
-                Index start, Index end, Index next_col, Index& middle);
-    template <class IndexSet>
-    void sort_rays(
-                VectorArrayT<T>& vs, std::vector<IndexSet>& supps,
-                std::vector<IndexSet>& cir_supps,
-                const IndexSet& ray_mask, Index start, Index end, Index& middle);
-
-    template <class IndexSet>
-    Index next_constraint(
-                const ConeT<T>& cone, VectorArrayT<T>& vs, std::vector<IndexSet>& supps,
-                std::vector<IndexSet>& cir_supps,
-                const IndexSet& rem, const IndexSet& ray_mask,
-                Index& ray_start, Index& ray_end, Index& cir_start, Index& cir_end,
-                Index& pos_ray_start, Index& pos_ray_end, Index& neg_ray_start, Index& neg_ray_end,
-                Index& pos_cir_start, Index& pos_cir_end, Index& neg_cir_start, Index& neg_cir_end);
-
-    template <class IndexSet>
-    void flip(std::vector<IndexSet>& supps, Index start, Index end);
-
-    template <class IndexSet>
-    void update_supports(
-                    std::vector<IndexSet>& supps,
-                    Index index, Index start, Index end);
-    template <class IndexSet>
-    void resize_supports(std::vector<IndexSet>& supps, Size size);
-
-    template <class IndexSet>
-    void print_debug_diagnostics(const ConeT<T>& cone, 
-                const VectorArrayT<T>& rays, const std::vector<IndexSet>& supps, Index next);
-#endif
-
     ConsOrder order;
+    QSolveVariant variant;
 };
 
 class IndexRanges {

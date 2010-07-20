@@ -44,6 +44,4 @@ protected:
 
 } // namespace _4ti2_
 
-#include "qsolve/ThreadedAlgorithm.hpp"
-
 #endif

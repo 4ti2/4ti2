@@ -1,4 +1,5 @@
 #include <pthread.h>
+#include "qsolve/ThreadedAlgorithm.h"
 
 using namespace _4ti2_;
 

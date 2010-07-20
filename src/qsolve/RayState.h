@@ -35,7 +35,7 @@ template <class IndexSet>
 class RayStateAPI
 {
 public:
-    RayStateAPI() {}
+    RayStateAPI(const ConeAPI& cone) {} //: rem(cone.num_vars()+cone.num_cons(),0), ray_mask(0), next(-1) {}
     virtual ~RayStateAPI() {}
     virtual RayStateAPI* clone() = 0;
 
@@ -43,8 +43,8 @@ public:
     virtual Size num_cons() = 0;
     virtual Size num_gens() = 0;
 
-    virtual Index next_constraint(const ConsOrder& order, Index& pos_start, Index& pos_end, Index& neg_start, Index& neg_end) = 0;
-    virtual Index next_constraint(const ConsOrder& order,
+    virtual Index next_constraint(const ConsOrder& order, const IndexSet& rem, Index& pos_start, Index& pos_end, Index& neg_start, Index& neg_end) = 0;
+    virtual Index next_constraint(const ConsOrder& order, const IndexSet& rem, const IndexSet& ray_mask,
                 Index& pos_ray_start, Index& pos_ray_end, Index& neg_ray_start, Index& neg_ray_end,
                 Index& pos_cir_start, Index& pos_cir_end, Index& neg_cir_start, Index& neg_cir_end) = 0;
     virtual Index sort_count(Size count, Index start, Index end) = 0;
@@ -60,13 +60,19 @@ public:
 
     virtual void project_cone(const IndexSet& zero_supp, std::vector<Index>& con_map, IndexSet& zeros) = 0;
     virtual bool is_two_dimensional_face(const std::vector<Index>& con_map, const IndexSet& diff) = 0;
+
+public:
+    //std::vector<IndexSet> supps;
+    //IndexSet rem;
+    //IndexSet ray_mask;
+    //Index next;
 };
 
 template <class T, class IndexSet>
 class RayState : public RayStateAPI<IndexSet>
 {
 public:
-    RayState(const ConeT<T>& _cone, VectorArrayT<T>& _rays, std::vector<IndexSet>& _supps, const IndexSet& _rem, const IndexSet& ray_mask, const Index& _next);
+    RayState(const ConeT<T>& _cone, VectorArrayT<T>& _rays, std::vector<IndexSet>& _supps, const Index& _next);
     virtual ~RayState();
     virtual RayState* clone();
 
@@ -74,8 +80,8 @@ public:
     Size num_cons();
     Size num_gens();
 
-    Index next_constraint(const ConsOrder& order, Index& pos_start, Index& pos_end, Index& neg_start, Index& neg_end);
-    Index next_constraint(const ConsOrder& order,
+    Index next_constraint(const ConsOrder& order, const IndexSet& rem, Index& pos_start, Index& pos_end, Index& neg_start, Index& neg_end);
+    Index next_constraint(const ConsOrder& order, const IndexSet& rem, const IndexSet& ray_mask,
                 Index& pos_ray_start, Index& pos_ray_end, Index& neg_ray_start, Index& neg_ray_end,
                 Index& pos_cir_start, Index& pos_cir_end, Index& neg_cir_start, Index& neg_cir_end);
     Index next_constraint(const ConsOrder& order, const IndexSet& rem);
@@ -103,10 +109,7 @@ protected:
     const ConeT<T>& cone;
     VectorArrayT<T>& rays;
     std::vector<IndexSet>& supps;
-
-    const IndexSet& rem;
     const Index& next;
-    const IndexSet& ray_mask;
 
     VectorArrayT<T> new_rays;
     std::vector<IndexSet> new_supps;

@@ -92,7 +92,7 @@ am__objects_1 = lib4ti2_la-Globals.lo lib4ti2_la-IndexSetD.lo \
 	lib4ti2_la-IndexSetDS.lo lib4ti2_la-IndexSetStream.lo \
 	lib4ti2_la-QSolveAPI.lo lib4ti2_la-QSolveConsOrder.lo \
 	lib4ti2_la-RaysAPI.lo lib4ti2_la-CircuitsAPI.lo \
-	lib4ti2_la-Timer.lo
+	lib4ti2_la-ThreadedAlgorithm.lo lib4ti2_la-Timer.lo
 am_lib4ti2_la_OBJECTS = $(am__objects_1)
 lib4ti2_la_OBJECTS = $(am_lib4ti2_la_OBJECTS)
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
@@ -255,6 +255,7 @@ lib4ti2sources = \
 	QSolveConsOrder.cpp \
 	RaysAPI.cpp \
 	CircuitsAPI.cpp \
+    ThreadedAlgorithm.cpp \
 	Timer.cpp
 
 4ti2includedir = $(includedir)/4ti2
@@ -409,6 +410,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib4ti2_la-QSolveAPI.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib4ti2_la-QSolveConsOrder.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib4ti2_la-RaysAPI.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib4ti2_la-ThreadedAlgorithm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib4ti2_la-Timer.Plo@am__quote@
 
 .cpp.o:
@@ -487,6 +489,13 @@ lib4ti2_la-CircuitsAPI.lo: CircuitsAPI.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CircuitsAPI.cpp' object='lib4ti2_la-CircuitsAPI.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(lib4ti2_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o lib4ti2_la-CircuitsAPI.lo `test -f 'CircuitsAPI.cpp' || echo '$(srcdir)/'`CircuitsAPI.cpp
+
+lib4ti2_la-ThreadedAlgorithm.lo: ThreadedAlgorithm.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(lib4ti2_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT lib4ti2_la-ThreadedAlgorithm.lo -MD -MP -MF $(DEPDIR)/lib4ti2_la-ThreadedAlgorithm.Tpo -c -o lib4ti2_la-ThreadedAlgorithm.lo `test -f 'ThreadedAlgorithm.cpp' || echo '$(srcdir)/'`ThreadedAlgorithm.cpp
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/lib4ti2_la-ThreadedAlgorithm.Tpo $(DEPDIR)/lib4ti2_la-ThreadedAlgorithm.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='ThreadedAlgorithm.cpp' object='lib4ti2_la-ThreadedAlgorithm.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(lib4ti2_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o lib4ti2_la-ThreadedAlgorithm.lo `test -f 'ThreadedAlgorithm.cpp' || echo '$(srcdir)/'`ThreadedAlgorithm.cpp
 
 lib4ti2_la-Timer.lo: Timer.cpp
 @am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(lib4ti2_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT lib4ti2_la-Timer.lo -MD -MP -MF $(DEPDIR)/lib4ti2_la-Timer.Tpo -c -o lib4ti2_la-Timer.lo `test -f 'Timer.cpp' || echo '$(srcdir)/'`Timer.cpp
