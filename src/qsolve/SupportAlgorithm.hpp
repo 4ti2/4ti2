@@ -267,7 +267,7 @@ SupportAlgorithm<T>::compute(
     // Extend the support of the rays to include the circuit components.
     Index ray_supp_size = 0;
     if (!supps.empty()) { ray_supp_size = supps[0].get_size(); }
-    if (ray_supp_size%2 == 1) { ++ray_supp_size; } // Make ray support size even.
+    if (ray_supp_size%2 == 1) { ++ray_supp_size; ineqs.push_back(-1); types.push_back(_4ti2_FR); } // Make ray support size even.
     Index cir_supp_size = ray_supp_size + 2*dim_cirs;
 
     // The mask for the circuit constraints.
@@ -388,11 +388,17 @@ SupportAlgorithm<T>::check(
         cone.get_slacks(rays[i], slacks);
         for (Index j = 0; j < (Index) ineqs.size(); ++j) {
             if (types[j] == _4ti2_LB) {
-                if ((slacks[ineqs[j]] > 0) != supps[i][j]) { *out << "Check LB Supp failed.\n"; failed = true; }
+                if ((slacks[ineqs[j]] > 0) != supps[i][j]) { 
+                    *out << "Check LB Supp failed: " << supps[i][j] << " " << ineqs[j] << " " << slacks[ineqs[j]] << "\n";
+                    failed = true;
+                }
                 if (cone.get_constraint_type(ineqs[j]) == _4ti2_LB && slacks[ineqs[j]] < 0) { * out << "Check LB failed.\n"; failed = true; }
             } 
             else if (types[j] == _4ti2_UB) {
-                if ((slacks[ineqs[j]] < 0) != supps[i][j]) { *out << "Check UB Supp failed.\n"; failed = true; }
+                if ((slacks[ineqs[j]] < 0) != supps[i][j]) { 
+                    *out << "Check UB Supp failed: " << supps[i][j] << " " << ineqs[j] << " " << slacks[ineqs[j]] << "\n";
+                    failed = true;
+                }
                 if (cone.get_constraint_type(ineqs[j]) == _4ti2_UB && slacks[ineqs[j]] > 0) { * out << "Check UB failed.\n"; failed = true; }
             }
             else if (types[j] == _4ti2_EQ) {
@@ -400,7 +406,7 @@ SupportAlgorithm<T>::check(
                 if (supps[i][j]) { *out << "Check EQ Supps failed.\n"; failed = true; }
             }
             else if (types[j] == _4ti2_DB) {
-                if ((slacks[ineqs[j]] != 0) != supps[i][j]) { *out << "Support Check DB failed.\n"; failed = true; }
+                if (slacks[ineqs[j]] == 0 && supps[i][j]) { *out << "Support Check DB failed.\n"; failed = true; }
             }
             else if (types[j] == _4ti2_FR) {
                 if (supps[i][j]) { *out << "Check FR Supps failed.\n"; failed = true; failed = true; }
