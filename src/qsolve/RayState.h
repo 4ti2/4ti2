@@ -31,13 +31,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 namespace _4ti2_
 {
 
+template <class IndexSet> class RaySubStateAPI;
+template <class T, class IndexSet> class RaySubState;
+
 template <class IndexSet>
 class RayStateAPI
 {
 public:
-    RayStateAPI(const ConeAPI& cone) {} //: rem(cone.num_vars()+cone.num_cons(),0), ray_mask(0), next(-1) {}
-    virtual ~RayStateAPI() {}
-    virtual RayStateAPI* clone() = 0;
+    RayStateAPI(const ConeAPI& cone);
+    virtual ~RayStateAPI();
+    virtual RaySubStateAPI<IndexSet>* clone() = 0;
 
     virtual Size num_vars() = 0;
     virtual Size num_cons() = 0;
@@ -48,33 +51,29 @@ public:
                 Index& pos_ray_start, Index& pos_ray_end, Index& neg_ray_start, Index& neg_ray_end,
                 Index& pos_cir_start, Index& pos_cir_end, Index& neg_cir_start, Index& neg_cir_end) = 0;
     virtual Index sort_count(Size count, Index start, Index end) = 0;
-    virtual void update(Index index, Index start, Index end) = 0;
-    virtual void flip(Index start, Index end) = 0;
+    void update(Index index, Index start, Index end);
+    void flip(Index start, Index end);
+    void resize(Size s);
     virtual void remove(Index start, Index end) = 0;
-    virtual void resize(Size s) = 0;
-
-    virtual void set_r1_index(Index r1) = 0;
-    virtual void create_ray(Index r2) = 0;
-    virtual void create_circuit(Index r2) = 0;
-    virtual void transfer() = 0;
-
-    virtual void project_cone(const IndexSet& zero_supp, std::vector<Index>& con_map, IndexSet& zeros) = 0;
-    virtual bool is_two_dimensional_face(const std::vector<Index>& con_map, const IndexSet& diff) = 0;
 
 public:
-    //std::vector<IndexSet> supps;
-    //IndexSet rem;
-    //IndexSet ray_mask;
-    //Index next;
+    std::vector<IndexSet> supps;
+    const ConeAPI& cone_api;
+    Index next;
+    Index cons_added;
+
+    std::vector<Index> supps_to_cons;
+    std::vector<_4ti2_constraint> supp_types;
+    std::vector<Index> cons_to_supps;
 };
 
 template <class T, class IndexSet>
 class RayState : public RayStateAPI<IndexSet>
 {
 public:
-    RayState(const ConeT<T>& _cone, VectorArrayT<T>& _rays, std::vector<IndexSet>& _supps, const Index& _next);
+    RayState(const ConeT<T>& _cone, VectorArrayT<T>& _rays);
     virtual ~RayState();
-    virtual RayState* clone();
+    virtual RaySubState<T,IndexSet>* clone();
 
     Size num_vars();
     Size num_cons();
@@ -87,10 +86,45 @@ public:
     Index next_constraint(const ConsOrder& order, const IndexSet& rem);
 
     Index sort_count(Size count, Index start, Index end);
-    void update(Index index, Index start, Index end);
     void remove(Index start, Index end);
-    void flip(Index start, Index end);
-    void resize(Size s);
+
+protected:
+    typedef RayStateAPI<IndexSet> Base;
+
+    void sort_nonzeros(Index start, Index end, Index& middle);
+    void sort_positives(Index start, Index end, Index& middle);
+    void sort_negatives(Index start, Index end, Index& middle);
+    void sort_filter(const IndexSet& filter, Index start, Index end, Index& middle);
+
+    const ConeT<T>& cone;
+    VectorArrayT<T>& rays;
+};
+
+template <class IndexSet>
+class RaySubStateAPI
+{
+public:
+    RaySubStateAPI() {}
+    virtual ~RaySubStateAPI() {}
+
+    virtual void set_r1_index(Index r1) = 0;
+    virtual void create_ray(Index r2) = 0;
+    virtual void create_circuit(Index r2) = 0;
+    virtual void transfer() = 0;
+
+    virtual void project_cone(const IndexSet& zero_supp, std::vector<Index>& con_map, IndexSet& zeros) = 0;
+    virtual void project_cone(const IndexSet& zero_supp, 
+                            const std::vector<Index>& supps_to_cons, const std::vector<Index>& cons_to_supps, 
+                            std::vector<Index>& con_map, IndexSet& zeros) = 0;
+    virtual bool is_two_dimensional_face(const std::vector<Index>& con_map, const IndexSet& diff) = 0;
+};
+
+template <class T, class IndexSet>
+class RaySubState : public RaySubStateAPI<IndexSet>
+{
+public:
+    RaySubState(const ConeT<T>& _cone, VectorArrayT<T>& _rays, std::vector<IndexSet>& _supps, const Index& _next);
+    virtual ~RaySubState();
 
     void set_r1_index(Index r1);
     void create_ray(Index r2);
@@ -98,14 +132,12 @@ public:
     void transfer();
 
     void project_cone(const IndexSet& zero_supp, std::vector<Index>& con_map, IndexSet& zeros);
+    virtual void project_cone(const IndexSet& zero_supp, 
+                            const std::vector<Index>& supps_to_cons, const std::vector<Index>& cons_to_supps, 
+                            std::vector<Index>& con_map, IndexSet& zeros);
     bool is_two_dimensional_face(const std::vector<Index>& con_map, const IndexSet& diff);
 
 protected:
-    void sort_nonzeros(Index start, Index end, Index next_col, Index& middle);
-    void sort_positives(Index start, Index end, Index next_col, Index& middle);
-    void sort_negatives(Index start, Index end, Index next_col, Index& middle);
-    void sort_filter(const IndexSet& filter, Index start, Index end, Index& middle);
-
     const ConeT<T>& cone;
     VectorArrayT<T>& rays;
     std::vector<IndexSet>& supps;
@@ -120,98 +152,6 @@ protected:
     T s1;
     Index _r1;
 };
-
-#if 0
-class MatrixHelperAPI
-{
-public:
-    MatrixHelperAPI() {}
-    virtual ~MatrixHelperAPI() {}
-    virtual MatrixHelperAPI* clone() = 0;
-
-    virtual void set_r1_index(Index r1) = 0;
-    virtual void create_ray(Index r2) = 0;
-    virtual void create_rays(Index r1, std::vector<Index>& r2s) = 0;
-    virtual bool create_circuit(Index r2) = 0;
-    virtual void transfer() = 0;
-
-    virtual void project_cone(const IndexSetD& zero_supp, std::vector<Index>& con_map, IndexSetD& zeros) = 0;
-    virtual void project_cone(const IndexSetDS& zero_supp, std::vector<Index>& con_map, IndexSetDS& zeros) = 0;
-    virtual bool is_two_dimensional_face(const std::vector<Index>& con_map, const IndexSetD& diff) = 0;
-    virtual bool is_two_dimensional_face(const std::vector<Index>& con_map, const IndexSetDS& diff) = 0;
-};
-
-template <class T>
-class MatrixHelper: public MatrixHelperAPI
-{
-public:
-    MatrixHelper(const ConeT<T>& cone, VectorArrayT<T>& rays, const Index& next);
-    ~MatrixHelper();
-    virtual MatrixHelper* clone();
-
-    void set_r1_index(Index r1);
-    void create_ray(Index r2);
-    void create_rays(Index r1, std::vector<Index>& r2s);
-    bool create_circuit(Index r2);
-    void transfer();
-
-    void project_cone(const IndexSetD& zero_supp, std::vector<Index>& con_map, IndexSetD& zeros);
-    void project_cone(const IndexSetDS& zero_supp, std::vector<Index>& con_map, IndexSetDS& zeros);
-    bool is_two_dimensional_face(const std::vector<Index>& con_map, const IndexSetD& diff);
-    bool is_two_dimensional_face(const std::vector<Index>& con_map, const IndexSetDS& diff);
-
-protected:
-    const ConeT<T>& cone;
-    VectorArrayT<T>& rays;
-    const Index& next;
-    VectorArrayT<T> new_rays;
-
-    VectorT<T> temp;
-    ConeC<T> sub_cone;
-    T s1;
-    Index _r1;
-
-    template <class IndexSet>
-    void project_coneT(const IndexSet& zero_supp, std::vector<Index>& con_map, IndexSet& zeros);
-    template <class IndexSet>
-    bool is_two_dimensional_faceT(const std::vector<Index>& con_map, const IndexSet& diff);
-};
-
-class SupportHelperAPI
-{
-public:
-    SupportHelperAPI() {}
-    virtual ~SupportHelperAPI() {}
-
-    virtual void transfer() = 0;
-    virtual void set_r1_index(Index r1) = 0;
-    virtual void create_ray(Index r1) = 0;
-    virtual bool create_circuit(Index r1, Index r2) = 0;
-};
-
-template <class T>
-class SupportHelper : public SupportHelperAPI
-{
-public:
-    SupportHelper(const ConeT<T>& cone, VectorArrayT<T>& rays, const Index& next);
-    virtual ~SupportHelper();
-
-    virtual void transfer();
-    virtual void set_r1_index(Index r1);
-    virtual void create_ray(Index r1);
-    virtual bool create_circuit(Index r1, Index r2);
-
-protected:
-    const ConeT<T>& cone;
-    VectorArrayT<T>& rays;
-    VectorArrayT<T> new_rays;
-    const Index& next;
-
-    VectorT<T> temp;
-    Index r1;
-    T s1;
-};
-#endif
 
 } // namespace _4ti2_
 

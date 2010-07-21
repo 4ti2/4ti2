@@ -48,10 +48,8 @@ public:
     SupportAlgorithm(ConsOrder o);
     virtual ~SupportAlgorithm();
 
-    void compute_rays(const ConeAPI& cone, RayStateAPI<IndexSet>& state, std::vector<IndexSet>& supps, Index& next, Index& cons_added, 
-                std::vector<int>& ineqs);
-    void compute_cirs(const ConeAPI& cone, RayStateAPI<IndexSet>& state, std::vector<IndexSet>& supps, Index& next, Index& cons_added,
-                std::vector<int>& ineqs);
+    void compute_rays(const ConeAPI& cone, RayStateAPI<IndexSet>& state, std::vector<int>& ineqs);
+    void compute_cirs(const ConeAPI& cone, RayStateAPI<IndexSet>& state, std::vector<int>& ineqs);
 
 protected:
 
@@ -71,7 +69,7 @@ template <class IndexSet>
 class SupportSubAlgorithmBase
 {
 public:
-    SupportSubAlgorithmBase(RayStateAPI<IndexSet>& helper, std::vector<IndexSet>& supps, const IndexSet& rel, const Index& cons_added,
+    SupportSubAlgorithmBase(RayStateAPI<IndexSet>& state, std::vector<IndexSet>& supps, const IndexSet& rel, const Index& cons_added,
                              const Index& next, const IndexSet& ray_mask, const SUPPORTTREE<IndexSet>& tree);
     virtual ~SupportSubAlgorithmBase();
 
@@ -80,7 +78,8 @@ public:
     void transfer();
 
 protected:
-    RayStateAPI<IndexSet>& helper;
+    RayStateAPI<IndexSet>& state;
+    RaySubStateAPI<IndexSet>& helper;
     std::vector<IndexSet>& supps;
     //std::vector<IndexSet> new_supps;
 
@@ -100,7 +99,7 @@ template <class IndexSet>
 class SupportRayAlgorithm : public SupportSubAlgorithmBase<IndexSet>, public ThreadedAlgorithm
 {
 public:
-    SupportRayAlgorithm(RayStateAPI<IndexSet>& helper, std::vector<IndexSet>& supps, 
+    SupportRayAlgorithm(RayStateAPI<IndexSet>& state, std::vector<IndexSet>& supps, 
                 const IndexSet& rel, const Index& cons_added, const Index& next, const SUPPORTTREE<IndexSet>& tree,
                 IndexRanges& indices);
     SupportRayAlgorithm* clone();
@@ -115,7 +114,7 @@ template <class IndexSet>
 class SupportCirAlgorithm : public SupportSubAlgorithmBase<IndexSet>, public ThreadedAlgorithm
 {
 public:
-    SupportCirAlgorithm(RayStateAPI<IndexSet>& helper, std::vector<IndexSet>& supps, 
+    SupportCirAlgorithm(RayStateAPI<IndexSet>& state, std::vector<IndexSet>& supps, 
                 const IndexSet& rel, const Index& cons_added, const Index& next, const SUPPORTTREE<IndexSet>& tree,
                 const IndexSet& ray_mask, IndexRanges& indices);
     SupportCirAlgorithm* clone();

@@ -34,10 +34,42 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 using namespace _4ti2_;
 
+template <class IndexSet>
+RayStateAPI<IndexSet>::RayStateAPI(const ConeAPI& _cone)
+    : cone_api(_cone), next(-1), cons_added(0)
+{
+}
+
+template <class IndexSet>
+RayStateAPI<IndexSet>::~RayStateAPI()
+{
+}
+
+template <class IndexSet>
+void
+RayStateAPI<IndexSet>::update(Index index, Index start, Index end)
+{
+    // Update supports
+    for (Index i = start; i < end; ++i) { supps[i].set(index); }
+}
+
+template <class IndexSet>
+void
+RayStateAPI<IndexSet>::flip(Index start, Index end)
+{
+    for (Index i = start; i < end; ++i) { supps[i].swap_odd_n_even(); }
+}
+
+template <class IndexSet>
+void
+RayStateAPI<IndexSet>::resize(Size size)
+{
+    for (Index i = 0; i < (Index) supps.size(); ++i) { supps[i].resize(size); }
+}
+
 template <class T, class IndexSet>
-RayState<T,IndexSet>::RayState(const ConeT<T>& _cone, VectorArrayT<T>& _rays, std::vector<IndexSet>& _supps, const Index& _next)
-        : RayStateAPI<IndexSet>(cone), cone(_cone), rays(_rays), supps(_supps), next(_next),
-          new_rays(0,rays.get_size()), temp(rays.get_size())
+RayState<T,IndexSet>::RayState(const ConeT<T>& _cone, VectorArrayT<T>& _rays)
+        : RayStateAPI<IndexSet>(_cone), cone(_cone), rays(_rays)
 {
 }
 
@@ -47,10 +79,10 @@ RayState<T,IndexSet>::~RayState()
 }
 
 template <class T, class IndexSet>
-RayState<T,IndexSet>*
+RaySubState<T,IndexSet>*
 RayState<T,IndexSet>::clone()
 {
-    return new RayState(cone, rays, supps, next);
+    return new RaySubState<T,IndexSet>(cone, rays, Base::supps, Base::next);
 }
 
 template <class T, class IndexSet>
@@ -77,16 +109,16 @@ RayState<T,IndexSet>::num_gens()
 // Pushes zeros to the beginning.
 template <class T, class IndexSet>
 void
-RayState<T,IndexSet>::sort_nonzeros(Index start, Index end, Index next_col, Index& middle)
+RayState<T,IndexSet>::sort_nonzeros(Index start, Index end, Index& middle)
 {
     assert(start >= 0 && start <= end && end <= rays.get_number());
     T slack;
     Index index = start;
     for (Index i = start; i < end; ++i) {
-        cone.get_slack(rays[i], next_col, slack);
+        cone.get_slack(rays[i], Base::next, slack);
         if (slack != 0) {
             rays.swap_vectors(i,index);
-            IndexSet::swap(supps[i], supps[index]);
+            IndexSet::swap(Base::supps[i], Base::supps[index]);
             ++index;
         }
     }
@@ -96,16 +128,16 @@ RayState<T,IndexSet>::sort_nonzeros(Index start, Index end, Index next_col, Inde
 // Pushes positives to the beginning.
 template <class T, class IndexSet>
 void
-RayState<T,IndexSet>::sort_positives(Index start, Index end, Index next_col, Index& middle)
+RayState<T,IndexSet>::sort_positives(Index start, Index end, Index& middle)
 {
     assert(start >= 0 && start <= end && end <= rays.get_number());
     T slack;
     Index index = start;
     for (Index i = start; i < end; ++i) {
-        cone.get_slack(rays[i], next_col, slack);
+        cone.get_slack(rays[i], Base::next, slack);
         if (slack > 0) {
             rays.swap_vectors(i,index);
-            IndexSet::swap(supps[i], supps[index]);
+            IndexSet::swap(Base::supps[i], Base::supps[index]);
             ++index;
         }
     }
@@ -115,16 +147,16 @@ RayState<T,IndexSet>::sort_positives(Index start, Index end, Index next_col, Ind
 // Pushes positives to the beginning.
 template <class T, class IndexSet>
 void
-RayState<T,IndexSet>::sort_negatives(Index start, Index end, Index next_col, Index& middle)
+RayState<T,IndexSet>::sort_negatives(Index start, Index end, Index& middle)
 {
     assert(start >= 0 && start <= end && end <= rays.get_number());
     T slack;
     Index index = start;
     for (Index i = start; i < end; ++i) {
-        cone.get_slack(rays[i], next_col, slack);
+        cone.get_slack(rays[i], Base::next, slack);
         if (slack < 0) {
             rays.swap_vectors(i,index);
-            IndexSet::swap(supps[i], supps[index]);
+            IndexSet::swap(Base::supps[i], Base::supps[index]);
             ++index;
         }
     }
@@ -138,9 +170,9 @@ RayState<T,IndexSet>::sort_filter(const IndexSet& filter, Index start, Index end
 {
     Index index = start;
     for (Index i = start; i < end; ++i) {
-        if (!filter.set_disjoint(supps[i])) {
+        if (!filter.set_disjoint(Base::supps[i])) {
             rays.swap_vectors(i,index);
-            IndexSet::swap(supps[i], supps[index]);
+            IndexSet::swap(Base::supps[i], Base::supps[index]);
             ++index;
         }
     }
@@ -149,32 +181,10 @@ RayState<T,IndexSet>::sort_filter(const IndexSet& filter, Index start, Index end
 
 template <class T, class IndexSet>
 void
-RayState<T,IndexSet>::update(Index index, Index start, Index end)
-{
-    // Update supports
-    for (Index i = start; i < end; ++i) { supps[i].set(index); }
-}
-
-template <class T, class IndexSet>
-void
 RayState<T,IndexSet>::remove(Index start, Index end)
 {
-    supps.erase(supps.begin()+start, supps.begin()+end);
+    Base::supps.erase(Base::supps.begin()+start, Base::supps.begin()+end);
     rays.remove(start, end);
-}
-
-template <class T, class IndexSet>
-void
-RayState<T,IndexSet>::flip(Index start, Index end)
-{
-    for (Index i = start; i < end; ++i) { supps[i].swap_odd_n_even(); }
-}
-
-template <class T, class IndexSet>
-void
-RayState<T,IndexSet>::resize(Size size)
-{
-    for (Index i = 0; i < (Index) supps.size(); ++i) { supps[i].resize(size); }
 }
 
 template <class T, class IndexSet>
@@ -183,21 +193,21 @@ RayState<T,IndexSet>::next_constraint(const ConsOrder& order, const IndexSet& re
 {
     assert(!rem.empty());
     // First, we choose the next constraint to add.
-    Index next_con = next_constraint(order, rem);
+    Base::next = next_constraint(order, rem);
 
     // TODO: Should we use a vector of slacks?
     Index start = 0; Index end = rays.get_number(); Index middle;
 
     // We sort the vectors into nonzeros and then zeros.
-    sort_nonzeros(start, end, next_con, middle);
+    sort_nonzeros(start, end, middle);
     Index nonzero_start = start, nonzero_end = middle;
 
     // We sort the rays into positives and then negatives.
-    sort_positives(nonzero_start, nonzero_end, next_con, middle);
+    sort_positives(nonzero_start, nonzero_end, middle);
     pos_start = nonzero_start; pos_end = middle;
     neg_start = middle; neg_end = nonzero_end;
 
-    return next_con;
+    return Base::next;
 }
 
 template <class T, class IndexSet>
@@ -209,17 +219,17 @@ RayState<T,IndexSet>::next_constraint(
 {
     assert(!rem.empty());
     // First, we choose the next constraint to add.
-    //TODO Index next_col = next_circuit_constraint(order, rem);
-    Index next_col = next_constraint(order, rem);
+    //TODO Index Base::next = next_circuit_constraint(order, rem);
+    Base::next = next_constraint(order, rem);
     
     Index start = 0; Index end = rays.get_number(); Index middle;
 
     // We sort the vectors into nonzeros and then zeros.
-    sort_nonzeros(start, end, next_col, middle);
+    sort_nonzeros(start, end, middle);
     Index nonzero_start = start, nonzero_end = middle;
 
     // We sort the nonzeros into positives and then negatives.
-    sort_positives(nonzero_start, nonzero_end, next_col, middle);
+    sort_positives(nonzero_start, nonzero_end, middle);
     Index pos_start = nonzero_start; Index pos_end = middle;
     Index neg_start = middle; Index neg_end = nonzero_end;
 
@@ -234,7 +244,7 @@ RayState<T,IndexSet>::next_constraint(
     neg_cir_start = neg_start; neg_cir_end = middle;
     neg_ray_start = middle; neg_ray_end = neg_end;
 
-    return next_col;
+    return Base::next;
 }
 
 template <class T, class IndexSet>
@@ -244,9 +254,9 @@ RayState<T,IndexSet>::sort_count(Size count, Index start, Index end)
     // We sort the r2's into vectors where r2_supp.count()==cons_added+1.
     Index middle = start;
     for (Index i = start; i < end; ++i) {
-        if (supps[i].count() == count) {
+        if (Base::supps[i].count() == count) {
             rays.swap_rows(i, middle);
-            IndexSet::swap(supps[i], supps[middle]);
+            IndexSet::swap(Base::supps[i], Base::supps[middle]);
             ++middle;
         }
     }
@@ -254,9 +264,56 @@ RayState<T,IndexSet>::sort_count(Size count, Index start, Index end)
 }
 
 template <class T, class IndexSet>
+Index
+RayState<T,IndexSet>::next_constraint(const ConsOrder& order, const IndexSet& rem)
+{
+    // Sanity Check
+    assert(rays.get_size() == rem.get_size());
+
+    Index next_con = *rem.begin();
+    if (order.get_constraint_order() == MININDEX) { return next_con; }
+
+    typename IndexSet::Iter it = rem.begin(); ++it;
+    if (it == rem.end()) { return next_con; }
+
+    Size next_pos_count, next_neg_count, next_zero_count;
+    cone.slack_count(rays, next_con, next_pos_count, next_neg_count, next_zero_count);
+    while (it != rem.end()) {
+        Size pos_count, neg_count, zero_count;
+        cone.slack_count(rays, *it, pos_count, neg_count, zero_count);
+        if ((*order.compare)(next_pos_count, next_neg_count, next_zero_count,
+                        pos_count, neg_count, zero_count)) {
+            next_con = *it;
+            next_pos_count = pos_count;
+            next_neg_count = neg_count;
+            next_zero_count = zero_count;
+        }
+        ++it;
+    }
+    DEBUG_4ti2(*out << "Next Constraint is " << next_con << "\n";)
+    return next_con;
+}
+
+/////////////////
+// RaySubState //
+/////////////////
+
+template <class T, class IndexSet>
+RaySubState<T,IndexSet>::RaySubState(const ConeT<T>& _cone, VectorArrayT<T>& _rays, std::vector<IndexSet>& _supps, const Index& _next)
+        : RaySubStateAPI<IndexSet>(), cone(_cone), rays(_rays), supps(_supps), next(_next),
+          new_rays(0,rays.get_size()), temp(rays.get_size())
+{
+}
+
+template <class T, class IndexSet>
+RaySubState<T,IndexSet>::~RaySubState()
+{
+}
+
+template <class T, class IndexSet>
 inline
 void
-RayState<T,IndexSet>::transfer()
+RaySubState<T,IndexSet>::transfer()
 {
     rays.transfer(new_rays, 0, new_rays.get_number(), rays.get_number());
     supps.insert(supps.end(), new_supps.begin(), new_supps.end());
@@ -266,7 +323,7 @@ RayState<T,IndexSet>::transfer()
 template <class T, class IndexSet>
 inline  
 void    
-RayState<T,IndexSet>::set_r1_index(Index r1)
+RaySubState<T,IndexSet>::set_r1_index(Index r1)
 {
     _r1 = r1;
     cone.get_slack(rays[r1], next, s1);
@@ -274,7 +331,7 @@ RayState<T,IndexSet>::set_r1_index(Index r1)
 
 template <class T, class IndexSet>
 void
-RayState<T,IndexSet>::create_ray(Index r2)
+RaySubState<T,IndexSet>::create_ray(Index r2)
 {
     IndexSet temp_supp(supps[_r1]);
     temp_supp.set_union(supps[r2]);
@@ -300,7 +357,7 @@ RayState<T,IndexSet>::create_ray(Index r2)
 
 template <class T, class IndexSet>
 void
-RayState<T,IndexSet>::create_circuit(Index i2)
+RaySubState<T,IndexSet>::create_circuit(Index i2)
 {
     DEBUG_4ti2(*out << "Creating new circuit.\n";)
 
@@ -340,42 +397,10 @@ RayState<T,IndexSet>::create_circuit(Index i2)
     )
 }
 
-
-template <class T, class IndexSet>
-Index
-RayState<T,IndexSet>::next_constraint(const ConsOrder& order, const IndexSet& rem)
-{
-    // Sanity Check
-    assert(rays.get_size() == rem.get_size());
-
-    Index next_con = *rem.begin();
-    if (order.get_constraint_order() == MININDEX) { return next_con; }
-
-    typename IndexSet::Iter it = rem.begin(); ++it;
-    if (it == rem.end()) { return next_con; }
-
-    Size next_pos_count, next_neg_count, next_zero_count;
-    cone.slack_count(rays, next_con, next_pos_count, next_neg_count, next_zero_count);
-    while (it != rem.end()) {
-        Size pos_count, neg_count, zero_count;
-        cone.slack_count(rays, *it, pos_count, neg_count, zero_count);
-        if ((*order.compare)(next_pos_count, next_neg_count, next_zero_count,
-                        pos_count, neg_count, zero_count)) {
-            next_con = *it;
-            next_pos_count = pos_count;
-            next_neg_count = neg_count;
-            next_zero_count = zero_count;
-        }
-        ++it;
-    }
-    DEBUG_4ti2(*out << "Next Constraint is " << next_con << "\n";)
-    return next_con;
-}
-
 template <class T, class IndexSet>
 inline
 void
-RayState<T,IndexSet>::project_cone(
+RaySubState<T,IndexSet>::project_cone(
                 const IndexSet& zero_supp,
                 std::vector<Index>& con_map,
                 IndexSet& zeros)
@@ -397,82 +422,25 @@ RayState<T,IndexSet>::project_cone(
     DEBUG_4ti2(*out << "Zeros:\n" << zeros << "\n";)
 }
 
-// Checks whether the given support determines a two dimensional face of the cone.
 template <class T, class IndexSet>
 inline
-bool
-RayState<T,IndexSet>::is_two_dimensional_face(
-            const std::vector<Index>& con_map,
-            const IndexSet& diff)
-{
-    DEBUG_4ti2(*out << "\nis_two_dimensional_face\n";)
-    Index n = sub_cone.num_vars();
-    Index m = sub_cone.num_cons();
-
-    IndexSet vars(n,0);
-    for (Index i = 0; i < n; ++i) { 
-        if (con_map[i] != -1 && diff[con_map[i]]) { vars.set(i); }
-    }
-    IndexSet cons(m,0);
-    for (Index i = n; i < m+n; ++i) {
-        if (con_map[i] != -1 && !diff[con_map[i]]) { cons.set(i-n); }
-    }
-    DEBUG_4ti2(*out << "Vars:\n" << vars << "\nCons:\n" << cons << "\n";)
-
-    return sub_cone.is_one_dimensional_face(vars, cons);
-}
-
-#if 0
-template <class T>
-MatrixHelper<T>::MatrixHelper(
-                const ConeT<T>& _cone, VectorArrayT<T>& _rays, const Index& _next)
-        : cone(_cone), rays(_rays), next(_next), new_rays(0,_rays.get_size()), temp(_cone.num_vars())
-{
-}
-
-template <class T>
-MatrixHelper<T>*
-MatrixHelper<T>::clone()
-{
-    return new MatrixHelper<T>(cone, rays, next);
-}
-
-template <class T>
-MatrixHelper<T>::~MatrixHelper()
-{
-}
-
-template <class T>
-inline
 void
-MatrixHelper<T>::project_cone(
-                const IndexSetD& zero_supp,
-                std::vector<Index>& con_map,
-                IndexSetD& zeros)
-{
-    project_coneT(zero_supp, con_map, zeros);
-}
-
-template <class T>
-inline
-void
-MatrixHelper<T>::project_cone(
-                const IndexSetDS& zero_supp,
-                std::vector<Index>& con_map,
-                IndexSetDS& zeros)
-{
-    project_coneT(zero_supp, con_map, zeros);
-}
-
-template <class T> template <class IndexSet>
-inline
-void
-MatrixHelper<T>::project_coneT(
-                const IndexSet& zero_supp,
+RaySubState<T,IndexSet>::project_cone(
+                const IndexSet& temp_supp,
+                const std::vector<Index>& supps_to_cons,
+                const std::vector<Index>& cons_to_supps,
                 std::vector<Index>& con_map,
                 IndexSet& zeros)
 {
+    IndexSet zero_supp(cone.num_vars()+cone.num_cons());
+    for (typename IndexSet::Iter it = temp_supp.begin(); it != temp_supp.end(); ++it) {
+        zero_supp.set(supps_to_cons[*it]);
+    }
+
     sub_cone.project_cone(cone, zero_supp, con_map);
+    for (Index i = 0; i < (Index) con_map.size(); ++i) {
+        if (con_map[i] != -1) { con_map[i] = cons_to_supps[con_map[i]]; }
+    }
 
     const MatrixT<T>& trans = sub_cone.get_matrix();
     zeros.zero();
@@ -489,29 +457,11 @@ MatrixHelper<T>::project_coneT(
     DEBUG_4ti2(*out << "Zeros:\n" << zeros << "\n";)
 }
 
-template <class T>
-bool
-MatrixHelper<T>::is_two_dimensional_face(
-            const std::vector<Index>& con_map,
-            const IndexSetD& diff)
-{
-    return is_two_dimensional_faceT(con_map, diff);
-}
-
-template <class T>
-bool
-MatrixHelper<T>::is_two_dimensional_face(
-            const std::vector<Index>& con_map,
-            const IndexSetDS& diff)
-{
-    return is_two_dimensional_faceT(con_map, diff);
-}
-
 // Checks whether the given support determines a two dimensional face of the cone.
-template <class T> template <class IndexSet>
+template <class T, class IndexSet>
 inline
 bool
-MatrixHelper<T>::is_two_dimensional_faceT(
+RaySubState<T,IndexSet>::is_two_dimensional_face(
             const std::vector<Index>& con_map,
             const IndexSet& diff)
 {
@@ -531,162 +481,5 @@ MatrixHelper<T>::is_two_dimensional_faceT(
 
     return sub_cone.is_one_dimensional_face(vars, cons);
 }
-
-template <class T>
-inline
-void
-MatrixHelper<T>::transfer()
-{
-    rays.transfer(new_rays, 0, new_rays.get_number(), rays.get_number());
-}
-
-template <class T>
-inline  
-void    
-MatrixHelper<T>::set_r1_index(Index r1)
-{
-    _r1 = r1;
-    cone.get_slack(rays[r1], next, s1);
-}
-
-template <class T>
-void
-MatrixHelper<T>::create_rays(Index i1, std::vector<Index>& r2s)
-{
-    VectorR<T>& r1 = rays[i1];
-    T s1, s2; 
-    cone.get_slack(r1, next, s1);
-    for (std::vector<Index>::iterator i2 = r2s.begin(); i2 != r2s.end(); ++i2) {
-        VectorR<T>& r2 = rays[*i2];
-        cone.get_slack(r2, next, s2);
-        if (i1 < *i2) { temp.add(r2, s1, r1, -s2); }
-        else { temp.add(r1, s2, r2, -s1); }
-
-        temp.normalise();
-        new_rays.insert(temp);
-    }
-}
-
-template <class T>
-void
-MatrixHelper<T>::create_ray(Index r2)
-{
-    //T s1; cone.get_slack(rays[r1], next, s1);
-    T s2; cone.get_slack(rays[r2], next, s2);
-    if (_r1 < r2) { temp.add(rays[r2], s1, rays[_r1], -s2); }
-    else { temp.add(rays[_r1], s2, rays[r2], -s1); }
-
-    temp.normalise();
-    new_rays.insert(temp);
-
-    DEBUG_4ti2(
-    *out << "\nADDING VECTOR.\n";
-    *out << "R1: " << _r1 << "\n";
-    *out << rays[_r1] << "\n";
-    *out << "R2: " << r2 << "\n";
-    *out << rays[r2] << "\n";
-    *out << "NEW:\n";
-    *out << temp << "\n";
-    )
-}
-
-template <class T>
-bool
-MatrixHelper<T>::create_circuit(Index i2)
-{
-    DEBUG_4ti2(*out << "Creating new circuit.\n";)
-    const Index i1 = _r1;
-    const VectorR<T>& r1 = rays[i1];
-    const VectorR<T>& r2 = rays[i2];
-
-    //T s1; cone.get_slack(r1, next, s1); 
-    T s2; cone.get_slack(r2, next, s2); 
-    if (s1 > 0) { temp.add(r1,-s2,r2,-s1); }
-    else { temp.add(r1,-s2,r2,s1); }
-    temp.normalise();
-    new_rays.insert(temp);
-
-    if (s1 > 0) { return true; }
-    return false;
-
-    DEBUG_4ti2(
-        *out << "Ray1 " << i1 << " " << s1 << " : " << r1 << "\n";
-        *out << "Ray2 " << i2 << " " << s2 << " : " << r2 << "\n";
-        *out << "Ray0 " << temp << "\n";
-    )
-}
-
-template <class T>
-SupportHelper<T>::SupportHelper(const ConeT<T>& _cone, VectorArrayT<T>& _rays, const Index& _next)
-        : cone(_cone), rays(_rays), new_rays(0,_rays.get_size()), next(_next), temp(_cone.num_vars())
-{
-}
-
-template <class T>
-SupportHelper<T>::~SupportHelper()
-{
-}
-
-template <class T>
-inline
-void
-SupportHelper<T>::transfer()
-{
-    rays.transfer(new_rays, 0, new_rays.get_number(), rays.get_number());
-}
-
-template <class T>
-inline
-void
-SupportHelper<T>::set_r1_index(Index _r1)
-{
-    r1 = _r1;
-    cone.get_slack(rays[r1], next, s1);
-}
-
-template <class T>
-inline
-void
-SupportHelper<T>::create_ray(Index r2)
-{
-    T s2; cone.get_slack(rays[r2], next, s2);
-    if (r1 < r2) { temp.add(rays[r2], s1, rays[r1], -s2); }
-    else { temp.add(rays[r1], s2, rays[r2], -s1); }
-    temp.normalise();
-    new_rays.insert(temp);
-
-    DEBUG_4ti2(
-    *out << rays[r1] << "\n";
-    *out << rays[r2] << "\n";
-    )
-}
-
-template <class T>
-bool
-SupportHelper<T>::create_circuit(Index i1, Index i2)
-{
-    DEBUG_4ti2(*out << "Creating new circuit.\n";)
-    const VectorR<T>& r1 = rays[i1];
-    const VectorR<T>& r2 = rays[i2];
-
-    //T s1; cone.get_slack(r1, next, s1); 
-    T s2; cone.get_slack(r2, next, s2); 
-
-    if (s2 > 0) { temp.add(r1,s2,r2,-s1); }
-    else { temp.add(r1,-s2,r2,s1); }
-    temp.normalise();
-    new_rays.insert(temp);
-
-    if (s1 > 0) { return true; }
-    return false;
-
-    DEBUG_4ti2(
-        *out << "Ray1 " << i1 << " " << s1 << " : " << r1 << "\n";
-        *out << "Ray2 " << i2 << " " << s2 << " : " << r2 << "\n";
-        *out << "Ray0 " << temp << "\n";
-    )
-}
-#endif
 
 #undef DEBUG_4ti2
-

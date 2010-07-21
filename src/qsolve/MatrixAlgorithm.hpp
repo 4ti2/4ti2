@@ -47,12 +47,14 @@ void
 MatrixAlgorithm<IndexSet>::compute_rays(
             const ConeAPI& cone,
             RayStateAPI<IndexSet>& state,
-            std::vector<IndexSet>& supps,
-            Index& next,
-            Index& cons_added,
             std::vector<int>& ineqs)
 {
     Timer t;
+
+    std::vector<IndexSet>& supps = state.supps;
+    Index& next = state.next;
+    Index& cons_added = state.cons_added;
+
     *out << "Ray Matrix Algorithm.\n";
     DEBUG_4ti2(*out << "CONSTRAINT MATRIX:\n" << cone.get_matrix() << "\n";)
 
@@ -164,12 +166,13 @@ void
 MatrixAlgorithm<IndexSet>::compute_cirs(
         const ConeAPI& cone,
         RayStateAPI<IndexSet>& state,
-        std::vector<IndexSet>& supps,
-        Index& next,
-        Index& cons_added,
         std::vector<Index>& dbls)
 {
     Timer t;
+
+    std::vector<IndexSet>& supps = state.supps;
+    Index& next = state.next;
+    Index& cons_added = state.cons_added;
 
     // The number of variables.
     Size n = cone.num_vars();
@@ -280,9 +283,9 @@ MatrixAlgorithm<T>::check(
 #endif
 template <class IndexSet>
 MatrixSubAlgorithmBase<IndexSet>::MatrixSubAlgorithmBase(
-                RayStateAPI<IndexSet>& _helper, std::vector<IndexSet>& _supps, 
+                RayStateAPI<IndexSet>& _state, std::vector<IndexSet>& _supps, 
                 const IndexSet& _rel, const Index& _cons_added, const Index& _next)
-        : helper(*_helper.clone()), supps(_supps), rel(_rel), cons_added(_cons_added), next(_next)
+        : state(_state), helper(*_state.clone()), supps(_supps), rel(_rel), cons_added(_cons_added), next(_next)
 {
 }
 
@@ -319,8 +322,11 @@ MatrixSubAlgorithmBase<IndexSet>::compute_rays(
     }
     if (!temp_supp.empty()) { *out << "All Intersection:\n" << temp_supp << "\n"; }
 #endif
+    
+    std::vector<Index> supps_to_cons(supps_size);
+    for (Index i = 0; i < supps_size; ++i) { supps_to_cons[i] = i; }
+    std::vector<Index> cons_to_supps = supps_to_cons;
 
-    //std::vector<long> zero_count(supps_size, 0);
     Index index_count = 0;
     // Check negative and positive combinations for adjacency.
     for (Index r1 = r1_start; r1 < r1_end; ++r1) { // Outer loop.
@@ -559,10 +565,10 @@ MatrixSubAlgorithmBase<IndexSet>::create_circuit(Index i2)
 
 template <class IndexSet>
 MatrixRayAlgorithm<IndexSet>::MatrixRayAlgorithm(
-                RayStateAPI<IndexSet>& helper,
+                RayStateAPI<IndexSet>& state,
                 std::vector<IndexSet>& supps,
                 const IndexSet& rel, const Index& cons_added, const Index& next, IndexRanges& _indices)
-        : MatrixSubAlgorithmBase<IndexSet>(helper, supps, rel, cons_added, next), indices(_indices)
+        : MatrixSubAlgorithmBase<IndexSet>(state, supps, rel, cons_added, next), indices(_indices)
 {
 }
 
@@ -571,7 +577,7 @@ MatrixRayAlgorithm<IndexSet>*
 MatrixRayAlgorithm<IndexSet>::clone()
 {
     return new MatrixRayAlgorithm(
-                MatrixSubAlgorithmBase<IndexSet>::helper,
+                MatrixSubAlgorithmBase<IndexSet>::state,
                 MatrixSubAlgorithmBase<IndexSet>::supps, 
                 MatrixSubAlgorithmBase<IndexSet>::rel,
                 MatrixSubAlgorithmBase<IndexSet>::cons_added,
@@ -594,9 +600,9 @@ MatrixRayAlgorithm<IndexSet>::compute()
 
 template <class IndexSet>
 MatrixCirAlgorithm<IndexSet>::MatrixCirAlgorithm(
-                RayStateAPI<IndexSet>& helper, std::vector<IndexSet>& supps, 
+                RayStateAPI<IndexSet>& state, std::vector<IndexSet>& supps, 
                 const IndexSet& rel, const Index& cons_added, const Index& next, IndexRanges& _indices)
-        : MatrixSubAlgorithmBase<IndexSet>(helper, supps, rel, cons_added, next), indices(_indices)
+        : MatrixSubAlgorithmBase<IndexSet>(state, supps, rel, cons_added, next), indices(_indices)
 {
 }
 
@@ -605,7 +611,7 @@ MatrixCirAlgorithm<IndexSet>*
 MatrixCirAlgorithm<IndexSet>::clone()
 {
     return new MatrixCirAlgorithm(
-                MatrixSubAlgorithmBase<IndexSet>::helper,
+                MatrixSubAlgorithmBase<IndexSet>::state,
                 MatrixSubAlgorithmBase<IndexSet>::supps,
                 MatrixSubAlgorithmBase<IndexSet>::rel,
                 MatrixSubAlgorithmBase<IndexSet>::cons_added,

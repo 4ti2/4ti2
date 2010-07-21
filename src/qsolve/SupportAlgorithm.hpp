@@ -62,14 +62,15 @@ void
 SupportAlgorithm<IndexSet>::compute_rays(
             const ConeAPI& cone,
             RayStateAPI<IndexSet>& state,
-            std::vector<IndexSet>& supps,
-            Index& next,
-            Index& cons_added,
             std::vector<int>& ineqs)
 {
     Timer t;
     *out << "Ray Support Algorithm.\n";
     DEBUG_4ti2(*out << "CONSTRAINT MATRIX:\n" << cone.get_matrix() << "\n";)
+
+    std::vector<IndexSet>& supps = state.supps;
+    Index& next = state.next;
+    Index& cons_added = state.cons_added;
 
     // The number of variables.
     Size n = cone.num_vars();
@@ -87,13 +88,18 @@ SupportAlgorithm<IndexSet>::compute_rays(
     IndexSet ray_mask(dim,true);
 
     // Construct the initial set supports.
+    state.supp_types.clear();
+    state.supp_types.resize(dim, _4ti2_LB);
+    state.supps_to_cons = ineqs;
+    state.cons_to_supps.clear();
+    state.cons_to_supps.resize(n+m,-1);
     for (Index i = 0; i != dim; ++i) { 
         IndexSet supp(dim,0);
         supp.set(i);
         supps.push_back(supp);
         rem.unset(ineqs[i]);
+        state.cons_to_supps[ineqs[i]] = i;
     }
-    std::vector<_4ti2_constraint> types(dim, _4ti2_LB);
 
     DEBUG_4ti2(*out << "Initial Supps:\n" << supps << "\n";)
 
@@ -176,8 +182,9 @@ SupportAlgorithm<IndexSet>::compute_rays(
         ray_mask.set(dim+cons_added);
 
         rem.unset(next);
-        ineqs.push_back(next);
-        types.push_back(_4ti2_LB);
+        state.supps_to_cons.push_back(next);
+        state.cons_to_supps[next] = dim+cons_added;
+        state.supp_types.push_back(_4ti2_LB);
         rel.unset(next);
         ++cons_added;
 
@@ -199,12 +206,13 @@ void
 SupportAlgorithm<IndexSet>::compute_cirs(
         const ConeAPI& cone,
         RayStateAPI<IndexSet>& state,
-        std::vector<IndexSet>& supps,
-        Index& next,
-        Index& cons_added,
         std::vector<Index>& dbls)
 {
     Timer t;
+
+    std::vector<IndexSet>& supps = state.supps;
+    Index& next = state.next;
+    Index& cons_added = state.cons_added;
 
     // The number of variables.
     Size n = cone.num_vars();
@@ -381,9 +389,9 @@ SupportAlgorithm<T>::check(
 
 template <class IndexSet>
 SupportSubAlgorithmBase<IndexSet>::SupportSubAlgorithmBase(
-                RayStateAPI<IndexSet>& _helper, std::vector<IndexSet>& _supps, const IndexSet& _rel, const Index& _cons_added, 
+                RayStateAPI<IndexSet>& _state, std::vector<IndexSet>& _supps, const IndexSet& _rel, const Index& _cons_added, 
                 const Index& _next, const IndexSet& _ray_mask, const SUPPORTTREE<IndexSet>& _tree)
-        : helper(*_helper.clone()), supps(_supps), rel(_rel), cons_added(_cons_added), next(_next), ray_mask(_ray_mask), tree(_tree)
+        : state(_state), helper(*_state.clone()), supps(_supps), rel(_rel), cons_added(_cons_added), next(_next), ray_mask(_ray_mask), tree(_tree)
 {
 }
 
@@ -727,7 +735,6 @@ SupportSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, In
         helper.set_r1_index(r1);
         //if (r2_start <= r1) { r2_start = r1+1; IndexSet::swap(r1_supp, r1_neg_supp); }
 
-
         if (r1_count == cons_added+1) {
             for (Index r2 = r2_start; r2 < r2_end; ++r2) {
                 if (r1_neg_supp.set_disjoint(supps[r2])
@@ -820,10 +827,10 @@ SupportSubAlgorithmBase<IndexSet>::create_circuit(Index i1, Index i2)
 
 template <class IndexSet>
 SupportRayAlgorithm<IndexSet>::SupportRayAlgorithm(
-                RayStateAPI<IndexSet>& _helper, std::vector<IndexSet>& _supps, 
+                RayStateAPI<IndexSet>& _state, std::vector<IndexSet>& _supps, 
                 const IndexSet& _rel, const Index& _cons_added, const Index& _next, const SUPPORTTREE<IndexSet>& _tree,
                 IndexRanges& _indices)
-        : SupportSubAlgorithmBase<IndexSet>(_helper, _supps, _rel, _cons_added, _next, IndexSet(_rel.get_size(),true), _tree),
+        : SupportSubAlgorithmBase<IndexSet>(_state, _supps, _rel, _cons_added, _next, IndexSet(_rel.get_size(),true), _tree),
           indices(_indices)
 {
 }
@@ -846,7 +853,7 @@ SupportRayAlgorithm<IndexSet>*
 SupportRayAlgorithm<IndexSet>::clone()
 {
     return new SupportRayAlgorithm(
-                SupportSubAlgorithmBase<IndexSet>::helper,
+                SupportSubAlgorithmBase<IndexSet>::state,
                 SupportSubAlgorithmBase<IndexSet>::supps, 
                 SupportSubAlgorithmBase<IndexSet>::rel,
                 SupportSubAlgorithmBase<IndexSet>::cons_added,
@@ -857,10 +864,10 @@ SupportRayAlgorithm<IndexSet>::clone()
 
 template <class IndexSet>
 SupportCirAlgorithm<IndexSet>::SupportCirAlgorithm(
-                RayStateAPI<IndexSet>& _helper, std::vector<IndexSet>& _supps, 
+                RayStateAPI<IndexSet>& _state, std::vector<IndexSet>& _supps, 
                 const IndexSet& _rel, const Index& _cons_added, const Index& _next, const SUPPORTTREE<IndexSet>& _tree,
                 const IndexSet& _ray_mask, IndexRanges& _indices)
-        : SupportSubAlgorithmBase<IndexSet>(_helper, _supps, _rel, _cons_added, _next, _ray_mask, _tree),
+        : SupportSubAlgorithmBase<IndexSet>(_state, _supps, _rel, _cons_added, _next, _ray_mask, _tree),
           indices(_indices)
 {
 }
@@ -883,7 +890,7 @@ SupportCirAlgorithm<IndexSet>*
 SupportCirAlgorithm<IndexSet>::clone()
 {
     return new SupportCirAlgorithm(
-                SupportSubAlgorithmBase<IndexSet>::helper,
+                SupportSubAlgorithmBase<IndexSet>::state,
                 SupportSubAlgorithmBase<IndexSet>::supps, 
                 SupportSubAlgorithmBase<IndexSet>::rel,
                 SupportSubAlgorithmBase<IndexSet>::cons_added,

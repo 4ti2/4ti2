@@ -285,6 +285,7 @@ IndexSetDS::range(Index start, Index end)
     block &= ~unused_masks[start];
 }
 
+#if 0
 inline
 void
 IndexSetDS::swap_odd_n_even()
@@ -292,6 +293,16 @@ IndexSetDS::swap_odd_n_even()
     assert(size%2 == 0);
     block = ((block >> 1) & (BlockType) 0x5555555555555555ULL) |
             ((block << 1) & (BlockType) 0xAAAAAAAAAAAAAAAAULL);
+}
+#endif
+
+inline
+void
+IndexSetDS::swap_odd_n_even()
+{
+    assert(size%2 == 0);
+    block = ((block & (BlockType) 0x5555555555555555ULL) << 1) |
+            ((block & (BlockType) 0xAAAAAAAAAAAAAAAAULL) >> 1);
 }
 
 inline

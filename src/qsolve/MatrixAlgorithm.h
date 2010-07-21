@@ -44,10 +44,8 @@ public:
     MatrixAlgorithm(ConsOrder o);
     ~MatrixAlgorithm();
 
-    void compute_rays(const ConeAPI& cone, RayStateAPI<IndexSet>& state, std::vector<IndexSet>& supps, Index& next, Index& cons_added, 
-                std::vector<int>& ineqs);
-    void compute_cirs(const ConeAPI& cone, RayStateAPI<IndexSet>& state, std::vector<IndexSet>& supps, Index& next, Index& cons_added,
-                std::vector<int>& ineqs);
+    void compute_rays(const ConeAPI& cone, RayStateAPI<IndexSet>& state, std::vector<int>& ineqs);
+    void compute_cirs(const ConeAPI& cone, RayStateAPI<IndexSet>& state, std::vector<int>& ineqs);
 
 protected:
 #if 0
@@ -64,7 +62,7 @@ template <class IndexSet>
 class MatrixSubAlgorithmBase
 {
 public:
-    MatrixSubAlgorithmBase(RayStateAPI<IndexSet>& helper, std::vector<IndexSet>& supps, 
+    MatrixSubAlgorithmBase(RayStateAPI<IndexSet>& state, std::vector<IndexSet>& supps, 
                         const IndexSet& rel, const Index& cons_added, const Index& next);
     virtual ~MatrixSubAlgorithmBase();
 
@@ -74,7 +72,8 @@ public:
     void transfer();
 
 protected:
-    RayStateAPI<IndexSet>& helper;
+    RayStateAPI<IndexSet>& state;
+    RaySubStateAPI<IndexSet>& helper;
     std::vector<IndexSet>& supps;
 
     const IndexSet& rel;
@@ -89,7 +88,7 @@ template <class IndexSet>
 class MatrixRayAlgorithm : public MatrixSubAlgorithmBase<IndexSet>, public ThreadedAlgorithm
 {
 public:
-    MatrixRayAlgorithm(RayStateAPI<IndexSet>& helper,
+    MatrixRayAlgorithm(RayStateAPI<IndexSet>& state,
                 std::vector<IndexSet>& supps, const IndexSet& rel, const
                 Index& cons_added, const Index& next, IndexRanges& indices);
 
@@ -104,7 +103,7 @@ template <class IndexSet>
 class MatrixCirAlgorithm : public MatrixSubAlgorithmBase<IndexSet>, public ThreadedAlgorithm
 {
 public:
-    MatrixCirAlgorithm(RayStateAPI<IndexSet>& helper, std::vector<IndexSet>& supps, 
+    MatrixCirAlgorithm(RayStateAPI<IndexSet>& state, std::vector<IndexSet>& supps, 
                 const IndexSet& rel, const Index& cons_added, const Index& next, IndexRanges& indices);
 
     virtual void compute();
