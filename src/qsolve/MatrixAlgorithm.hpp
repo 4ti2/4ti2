@@ -219,6 +219,15 @@ MatrixAlgorithm<IndexSet>::compute_rays(
     DEBUG_4ti2(*out << "Initial Supps:\n" << supps << "\n";)
     DEBUG_4ti2(*out << "Initial Rem:\n" << rem << "\n";)
 
+    state.supp_types.clear();
+    state.supp_types.resize(n+m, _4ti2_LB);
+    state.supps_to_cons.resize(n+m, -1);
+    state.cons_to_supps.resize(n+m, -1);
+    for (Index i = 0; i < n+m; ++i) {
+        state.supps_to_cons[i]=i;
+        state.cons_to_supps[i]=i;
+    }
+
     // The total set of relaxed constraints.
     rel = rem;
     cone.get_constraint_set(_4ti2_FR, rel);
