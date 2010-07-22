@@ -34,8 +34,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "qsolve/MultiTree.h"
 
 //#define SUPPORTTREE FullTree  // TODO: DOES NOT WORK!
-//#define SUPPORTTREE BinaryTree
-#define SUPPORTTREE MultiTree
+#define SUPPORTTREE BinaryTree
+//#define SUPPORTTREE MultiTree
 
 namespace _4ti2_
 {
@@ -52,16 +52,6 @@ public:
     void compute_cirs(const ConeAPI& cone, RayStateAPI<IndexSet>& state, std::vector<int>& ineqs);
 
 protected:
-
-#if 0
-    template <class IndexSet>
-    void check( const ConeT<T>& cone,
-                const std::vector<Index>& con_map,
-                const std::vector<_4ti2_constraint>& types,
-                const VectorArrayT<T>& rays,
-                const std::vector<IndexSet>& supps);
-#endif
-
     ConsOrder order;
 };
 

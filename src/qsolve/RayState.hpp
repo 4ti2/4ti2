@@ -30,14 +30,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "4ti2/4ti2.h"
 
 #undef DEBUG_4ti2
-#define DEBUG_4ti2(X)
+#define DEBUG_4ti2 0
 
 using namespace _4ti2_;
 
 template <class IndexSet>
 RayStateAPI<IndexSet>::RayStateAPI(const ConeAPI& _cone)
     : cone_api(_cone), next(-1), cons_added(0), 
-      rem(_cone.num_vars()+_cone.num_cons(),0), rel(_cone.num_vars()+_cone.num_cons(),0)
+      rem(_cone.num_vars()+_cone.num_cons(),0), rel(_cone.num_vars()+_cone.num_cons(),0), ray_mask(0)
 {
 }
 
@@ -167,11 +167,11 @@ RayState<T,IndexSet>::sort_negatives(Index start, Index end, Index& middle)
 // Pushes rays to the beginning.
 template <class T, class IndexSet>
 void
-RayState<T,IndexSet>::sort_filter(const IndexSet& filter, Index start, Index end, Index& middle)
+RayState<T,IndexSet>::sort_filter(const IndexSet& filter, bool pos, Index start, Index end, Index& middle)
 {
     Index index = start;
     for (Index i = start; i < end; ++i) {
-        if (!filter.set_disjoint(Base::supps[i])) {
+        if (filter.set_disjoint(Base::supps[i]) != pos) {
             rays.swap_vectors(i,index);
             IndexSet::swap(Base::supps[i], Base::supps[index]);
             ++index;
@@ -235,15 +235,19 @@ RayState<T,IndexSet>::next_constraint(
     Index neg_start = middle; Index neg_end = nonzero_end;
 
     // We sort the positives into rays and then circuits.
-    sort_filter(ray_mask, pos_start, pos_end, middle);
+    sort_filter(ray_mask, true, pos_start, pos_end, middle);
     pos_ray_start = pos_start; pos_ray_end = middle;
     pos_cir_start = middle; pos_cir_end = pos_end;
 
     // We sort the negatives into circuits then rays.
-    IndexSet cir_mask(ray_mask); cir_mask.set_complement();
-    sort_filter(cir_mask, neg_start, neg_end, middle);
+    sort_filter(ray_mask, false, neg_start, neg_end, middle);
     neg_cir_start = neg_start; neg_cir_end = middle;
     neg_ray_start = middle; neg_ray_end = neg_end;
+
+#if DEBUG_4ti2 > 0
+    *out << "\nr+ " << pos_ray_start << "," << pos_ray_end << " r- " << neg_ray_start << "," << neg_ray_end;
+    *out << " c+ " << pos_cir_start << "," << pos_cir_end << " c-" << neg_cir_start << "," << neg_cir_end << std::endl;
+#endif
 
     return Base::next;
 }
@@ -268,9 +272,6 @@ template <class T, class IndexSet>
 Index
 RayState<T,IndexSet>::next_constraint(const ConsOrder& order, const IndexSet& rem)
 {
-    // Sanity Check
-    assert(rays.get_size() == rem.get_size());
-
     Index next_con = *rem.begin();
     if (order.get_constraint_order() == MININDEX) { return next_con; }
 
@@ -291,8 +292,73 @@ RayState<T,IndexSet>::next_constraint(const ConsOrder& order, const IndexSet& re
         }
         ++it;
     }
-    DEBUG_4ti2(*out << "Next Constraint is " << next_con << "\n";)
     return next_con;
+}
+
+template <class T, class IndexSet>
+void
+RayState<T, IndexSet>::check()
+{
+    bool failed = false;
+    for (Index i = 0; i < rays.get_number(); ++i) {
+        failed |= check(rays[i], Base::supps[i]);
+    }
+
+    if (failed) { 
+        *out << "supps_to_cons: ";
+        for (Index j = 0; j < (Index) Base::supps_to_cons.size(); ++j) { *out << " " << Base::supps_to_cons[j]; }
+        *out << "\ncons_to_supps: ";
+        for (Index j = 0; j < (Index) Base::cons_to_supps.size(); ++j) { *out << " " << Base::cons_to_supps[j]; }
+        *out << "\nsupp_types:    ";
+        for (Index j = 0; j < (Index) Base::supp_types.size(); ++j) { *out << " " << Base::supp_types[j]; }
+        *out << "\n";
+    }
+}
+
+template <class T, class IndexSet>
+bool
+RayState<T, IndexSet>::check(const VectorR<T>& ray, const IndexSet& supp)
+{
+    Index n = cone.num_vars();
+    Index m = cone.num_cons();
+
+    VectorT<T> slacks(n+m);
+    bool failed = false;
+    cone.get_slacks(ray, slacks);
+    for (Index j = 0; j < (Index) Base::supps_to_cons.size(); ++j) {
+        if (Base::supp_types[j] == _4ti2_LB) {
+            if ((slacks[Base::supps_to_cons[j]] > 0) != supp[j]) { 
+                *out << "Check LB Supp failed: " << supp[j] << " " << Base::supps_to_cons[j] << " " << slacks[Base::supps_to_cons[j]] << "\n";
+                failed = true;
+            }
+            if (cone.get_constraint_type(Base::supps_to_cons[j]) == _4ti2_LB && slacks[Base::supps_to_cons[j]] < 0) { 
+                *out << "Check LB failed.\n"; failed = true;
+            }
+        } 
+        else if (Base::supp_types[j] == _4ti2_UB) {
+            if ((slacks[Base::supps_to_cons[j]] < 0) != supp[j]) { 
+                *out << "Check UB Supp failed: " << supp[j] << " " << Base::supps_to_cons[j] << " " << slacks[Base::supps_to_cons[j]] << "\n";
+                failed = true;
+            }
+            if (cone.get_constraint_type(Base::supps_to_cons[j]) == _4ti2_UB && slacks[Base::supps_to_cons[j]] > 0) {
+                * out << "Check UB failed.\n"; failed = true;
+            }
+        }
+        else if (Base::supp_types[j] == _4ti2_EQ) {
+            if (slacks[Base::supps_to_cons[j]] != 0) { *out << "Check EQ failed.\n"; failed = true; }
+            if (supp[j]) { *out << "Check EQ Supps failed.\n"; failed = true; }
+        }
+        else if (Base::supp_types[j] == _4ti2_DB) {
+            if (slacks[Base::supps_to_cons[j]] == 0 && supp[j]) { *out << "Support Check DB failed.\n"; failed = true; }
+        }
+        else if (Base::supp_types[j] == _4ti2_FR) {
+            if (supp[j]) { *out << "Check FR Supps failed.\n"; failed = true; failed = true; }
+        }
+    }
+    if (failed) {
+        *out << "Ray:    " << ray << "\nSupp:   " << supp << "\nSlacks: " << slacks << "\n\n"; 
+    }
+    return failed;
 }
 
 /////////////////
@@ -345,34 +411,25 @@ RaySubState<T,IndexSet>::create_ray(Index r2)
     temp.normalise();
     new_rays.insert(temp);
 
-    DEBUG_4ti2(
-    *out << "\nADDING VECTOR.\n";
+#if DEBUG_4ti2 > 0
+    *out << "\nADDING NEW RAY.\n";
     *out << "R1: " << _r1 << "\n";
     *out << rays[_r1] << "\n";
     *out << "R2: " << r2 << "\n";
     *out << rays[r2] << "\n";
     *out << "NEW:\n";
     *out << temp << "\n";
-    )
+#endif
 }
 
 template <class T, class IndexSet>
 void
 RaySubState<T,IndexSet>::create_circuit(Index i2)
 {
-    DEBUG_4ti2(*out << "Creating new circuit.\n";)
-
     IndexSet tmp_union(supps[i2]);
     tmp_union.set_union(supps[_r1]);
     new_supps.push_back(tmp_union);
 
-    DEBUG_4ti2(
-        *out << "Cir1 " << supps[i1] << "\n";
-        *out << "Cir2 " << supps[i2] << "\n";
-        *out << "Cir0 " << tmp_union << "\n";
-    )
-
-    DEBUG_4ti2(*out << "Creating new circuit.\n";)
     const VectorR<T>& r1 = rays[_r1];
     const VectorR<T>& r2 = rays[i2];
 
@@ -391,14 +448,19 @@ RaySubState<T,IndexSet>::create_circuit(Index i2)
     temp.normalise();
     new_rays.insert(temp);
 
-    DEBUG_4ti2(
-        *out << "Ray1 " << i1 << " " << s1 << " : " << r1 << "\n";
+#if DEBUG_4ti2 > 0
+    if (state.check(temp, tmp_union)) {
+        *out << "Ray1 " << _r1 << " " << s1 << " : " << r1 << "\n";
         *out << "Ray2 " << i2 << " " << s2 << " : " << r2 << "\n";
         *out << "Ray0 " << temp << "\n";
-    )
+        *out << "Cir1 " << supps[_r1] << "\n";
+        *out << "Cir2 " << supps[i2] << "\n";
+        *out << "Cir0 " << tmp_union << "\n";
+    }
+#endif
 }
 
-#if 1
+#if 0
 template <class T, class IndexSet>
 inline
 void
@@ -407,6 +469,7 @@ RaySubState<T,IndexSet>::project_cone(
                 std::vector<Index>& con_map,
                 IndexSet& zeros)
 {
+    zero_supp.set_complement();
     zero_supp.set_difference(state.rel);
     sub_cone.project_cone(cone, zero_supp, con_map);
 
@@ -422,11 +485,10 @@ RaySubState<T,IndexSet>::project_cone(
             if (trans(i,j) != 0 && con_map[j+n] >= 0) { zeros.unset(con_map[i]); break; }
         }
     }
-    DEBUG_4ti2(*out << "Zeros:\n" << zeros << "\n";)
 }
 #endif
 
-#if 0
+#if 1
 template <class T, class IndexSet>
 inline
 void
@@ -435,11 +497,12 @@ RaySubState<T,IndexSet>::project_cone(
                 std::vector<Index>& con_map,
                 IndexSet& zeros)
 {
-    IndexSet zero_supp(cone.num_vars()+cone.num_cons());
+    IndexSet zero_supp(cone.num_vars()+cone.num_cons(),0);
     for (typename IndexSet::Iter it = temp_supp.begin(); it != temp_supp.end(); ++it) {
         zero_supp.set(state.supps_to_cons[*it]);
     }
 
+    zero_supp.set_complement();
     zero_supp.set_difference(state.rel);
     sub_cone.project_cone(cone, zero_supp, con_map);
     for (Index i = 0; i < (Index) con_map.size(); ++i) {
@@ -458,7 +521,6 @@ RaySubState<T,IndexSet>::project_cone(
             if (trans(i,j) != 0 && con_map[j+n] >= 0) { zeros.unset(con_map[i]); break; }
         }
     }
-    DEBUG_4ti2(*out << "Zeros:\n" << zeros << "\n";)
 }
 #endif
 
@@ -470,7 +532,6 @@ RaySubState<T,IndexSet>::is_two_dimensional_face(
             const std::vector<Index>& con_map,
             const IndexSet& diff)
 {
-    DEBUG_4ti2(*out << "\nis_two_dimensional_face\n";)
     Index n = sub_cone.num_vars();
     Index m = sub_cone.num_cons();
 
@@ -482,7 +543,10 @@ RaySubState<T,IndexSet>::is_two_dimensional_face(
     for (Index i = n; i < m+n; ++i) {
         if (con_map[i] != -1 && !diff[con_map[i]]) { cons.set(i-n); }
     }
-    DEBUG_4ti2(*out << "Vars:\n" << vars << "\nCons:\n" << cons << "\n";)
+#if DEBUG_4ti2 > 0
+    *out << "\nis_two_dimensional_face\n";
+    *out << "Vars:\n" << vars << "\nCons:\n" << cons << "\n";
+#endif
 
     return sub_cone.is_one_dimensional_face(vars, cons);
 }

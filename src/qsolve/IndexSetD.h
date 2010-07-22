@@ -347,8 +347,8 @@ IndexSetD::swap_odd_n_even()
 {
     assert(size%2 == 0);
     for (Index i = 0; i < num_blocks; ++i) {
-        blocks[i] = ((blocks[i] << 1) & (BlockType) 0x5555555555555555ULL) |
-                    ((blocks[i] >> 1) & (BlockType) 0xAAAAAAAAAAAAAAAAULL);
+        blocks[i] = ((blocks[i] & (BlockType) 0x5555555555555555ULL) << 1) |
+                    ((blocks[i] & (BlockType) 0xAAAAAAAAAAAAAAAAULL) >> 1);
     }
 }
 

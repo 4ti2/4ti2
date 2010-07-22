@@ -54,6 +54,7 @@ protected:
     void split_rays(
                 const ConeT<T>& cone,
                 const std::vector<IndexSet>& supps,
+                const IndexSet& ray_mask,
                 VectorArrayT<T>& rays,
                 VectorArrayT<T>& cirs);
 

@@ -186,7 +186,7 @@ QSolveAlgorithm<T>::compute(const ConeT<T>& cone,
             alg.compute_cirs(cone, state, cir_ineqs);
         }
         // Separate the rays from the circuits.
-        split_rays(cone, state.supps, rays, cirs);
+        split_rays(cone, state.supps, state.ray_mask, rays, cirs);
     } else {
         RayState<T,IndexSetD> state(cone, rays);
         if (variant == MATRIX) {
@@ -205,7 +205,7 @@ QSolveAlgorithm<T>::compute(const ConeT<T>& cone,
             alg.compute_cirs(cone, state, cir_ineqs);
         }
         // Separate the rays from the circuits.
-        split_rays(cone, state.supps, rays, cirs);
+        split_rays(cone, state.supps, state.ray_mask, rays, cirs);
     }
 }
 
@@ -217,11 +217,10 @@ void
 QSolveAlgorithm<T>::split_rays(
                 const ConeT<T>& cone,
                 const std::vector<IndexSet>& supps,
+                const IndexSet& ray_mask,
                 VectorArrayT<T>& rays,
                 VectorArrayT<T>& cirs)
 {
-    IndexSet ray_mask(cone.num_vars()+cone.num_cons());
-    cone.constraint_set(_4ti2_LB, ray_mask);
     int index = 0;
     for (int i = 0; i < rays.get_number(); ++i) {
         if (!ray_mask.set_disjoint(supps[i])) {

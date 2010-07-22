@@ -55,6 +55,7 @@ public:
     void flip(Index start, Index end);
     void resize(Size s);
     virtual void remove(Index start, Index end) = 0;
+    virtual void check() = 0;
 
 public:
     std::vector<IndexSet> supps;
@@ -63,6 +64,7 @@ public:
     Index cons_added;
     IndexSet rem;
     IndexSet rel;
+    IndexSet ray_mask;
 
     std::vector<Index> supps_to_cons;
     std::vector<_4ti2_constraint> supp_types;
@@ -86,6 +88,8 @@ public:
                 Index& pos_ray_start, Index& pos_ray_end, Index& neg_ray_start, Index& neg_ray_end,
                 Index& pos_cir_start, Index& pos_cir_end, Index& neg_cir_start, Index& neg_cir_end);
     Index next_constraint(const ConsOrder& order, const IndexSet& rem);
+    void check();
+    bool check(const VectorR<T>& ray, const IndexSet& supp);
 
     Index sort_count(Size count, Index start, Index end);
     void remove(Index start, Index end);
@@ -96,7 +100,7 @@ protected:
     void sort_nonzeros(Index start, Index end, Index& middle);
     void sort_positives(Index start, Index end, Index& middle);
     void sort_negatives(Index start, Index end, Index& middle);
-    void sort_filter(const IndexSet& filter, Index start, Index end, Index& middle);
+    void sort_filter(const IndexSet& filter, bool pos, Index start, Index end, Index& middle);
 
     const ConeT<T>& cone;
     VectorArrayT<T>& rays;

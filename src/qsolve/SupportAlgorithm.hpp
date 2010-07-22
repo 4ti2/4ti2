@@ -71,6 +71,7 @@ SupportAlgorithm<IndexSet>::compute_rays(
     std::vector<IndexSet>& supps = state.supps;
     Index& next = state.next;
     Index& cons_added = state.cons_added;
+    IndexSet& ray_mask = state.ray_mask;
 
     // The number of variables.
     Size n = cone.num_vars();
@@ -85,7 +86,8 @@ SupportAlgorithm<IndexSet>::compute_rays(
     cone.get_constraint_set(_4ti2_LB, rem);
 
     IndexRanges index_ranges;
-    IndexSet ray_mask(dim,true);
+    ray_mask.resize(dim);
+    ray_mask.one();
 
     // Construct the initial set supports.
     state.supp_types.clear();
@@ -194,7 +196,7 @@ SupportAlgorithm<IndexSet>::compute_rays(
         *out << buffer << std::endl;
 
         DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
-        DEBUG_4ti2(check(cone, ineqs, types, rays, supps);)
+        DEBUG_4ti2(state.check());
     }
 
     // Clean up threaded algorithms objects.
@@ -213,6 +215,7 @@ SupportAlgorithm<IndexSet>::compute_cirs(
     std::vector<IndexSet>& supps = state.supps;
     Index& next = state.next;
     Index& cons_added = state.cons_added;
+    IndexSet& ray_mask = state.ray_mask;
 
     // The number of variables.
     Size n = cone.num_vars();
@@ -236,11 +239,17 @@ SupportAlgorithm<IndexSet>::compute_cirs(
     // Extend the support of the rays to include the circuit components.
     Index ray_supp_size = 0;
     if (!supps.empty()) { ray_supp_size = supps[0].get_size(); }
-    if (ray_supp_size%2 == 1) { ++ray_supp_size; } //ineqs.push_back(-1); types.push_back(_4ti2_FR); } // Make ray support size even.
+    // Make ray support size even.
+    if (ray_supp_size%2 == 1) { 
+        ++ray_supp_size; 
+        state.supps_to_cons.push_back(-1); 
+        state.supp_types.push_back(_4ti2_FR);
+    }
     Index cir_supp_size = ray_supp_size + 2*dim_cirs;
 
     // The mask for the circuit constraints.
-    IndexSet ray_mask(cir_supp_size, false);
+    ray_mask.resize(cir_supp_size);
+    ray_mask.zero();
     for (Index i = 0; i < ray_supp_size; ++i) { ray_mask.set(i); }
     state.resize(cir_supp_size);
 
@@ -249,10 +258,12 @@ SupportAlgorithm<IndexSet>::compute_cirs(
         IndexSet supp(cir_supp_size, false);
         supp.set(ray_supp_size+2*i);
         supps.push_back(supp);
-        //ineqs.push_back(dbls[i]);
-        //types.push_back(_4ti2_LB);
-        //ineqs.push_back(dbls[i]);
-        //types.push_back(_4ti2_UB);
+
+        state.supps_to_cons.push_back(dbls[i]);
+        state.supps_to_cons.push_back(dbls[i]);
+        state.supp_types.push_back(_4ti2_LB);
+        state.supp_types.push_back(_4ti2_UB);
+        state.cons_to_supps[dbls[i]] = ray_supp_size + 2*i;
     }
     DEBUG_4ti2(*out << "Initial Rays + Circuits:\n" << rays << "\n";)
     DEBUG_4ti2(*out << "Initial Supports:\n" << supps << "\n";)
@@ -271,8 +282,6 @@ SupportAlgorithm<IndexSet>::compute_cirs(
         next = state.next_constraint(order, rem, ray_mask,
                     pos_ray_start, pos_ray_end, neg_ray_start, neg_ray_end,
                     pos_cir_start, pos_cir_end, neg_cir_start, neg_cir_end);
-        DEBUG_4ti2(*out << pos_ray_start << " " << pos_ray_end << " " << neg_ray_start << " " << neg_ray_end << " ";)
-        DEBUG_4ti2(*out << pos_cir_start << " " << pos_cir_end << " " << neg_cir_start << " " << neg_cir_end << std::endl;)
 
         //DEBUG_4ti2(print_debug_diagnostics(cone, rays, supps, next);)
 
@@ -314,78 +323,25 @@ SupportAlgorithm<IndexSet>::compute_cirs(
         state.update(cir_supp_size+1, neg_ray_start, neg_ray_end);
         state.update(cir_supp_size+1, neg_cir_start, neg_cir_end);
         ray_mask.resize(cir_supp_size+2);
-        cir_supp_size+=2;
 
-        //ineqs.push_back(next);
-        //types.push_back(_4ti2_LB);
-        //ineqs.push_back(next);
-        //types.push_back(_4ti2_UB);
+        state.supps_to_cons.push_back(next);
+        state.supps_to_cons.push_back(next);
+        state.supp_types.push_back(_4ti2_LB);
+        state.supp_types.push_back(_4ti2_UB);
+        state.cons_to_supps[next] = cir_supp_size;
+
+        cir_supp_size+=2;
 
         sprintf(buffer, "%cLeft %3d  Col %3d  Size %8d  Time %8.2fs", ENDL, rem.count(), next, 
                 state.num_gens(), t.get_elapsed_time());
         *out << buffer << std::endl;
         DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
-        DEBUG_4ti2(check(cone, ineqs, types, rays, supps));
-        //check(cone, ineqs, types, rays, supps);
+        DEBUG_4ti2(state.check());
 
         rem.unset(next);
         ++cons_added;
     }
 }
-
-#if 0
-template <class T> template <class IndexSet>
-void
-SupportAlgorithm<T>::check(
-                const ConeT<T>& cone,
-                const std::vector<Index>& ineqs,
-                const std::vector<_4ti2_constraint>& types,
-                const VectorArrayT<T>& rays,
-                const std::vector<IndexSet>& supps)
-{
-    Index n = cone.num_vars();
-    Index m = cone.num_cons();
-    VectorT<T> slacks(n+m);
-
-    for (Index i = 0; i < rays.get_number(); ++i) {
-        bool failed = false;
-        cone.get_slacks(rays[i], slacks);
-        for (Index j = 0; j < (Index) ineqs.size(); ++j) {
-            if (types[j] == _4ti2_LB) {
-                if ((slacks[ineqs[j]] > 0) != supps[i][j]) { 
-                    *out << "Check LB Supp failed: " << supps[i][j] << " " << ineqs[j] << " " << slacks[ineqs[j]] << "\n";
-                    failed = true;
-                }
-                if (cone.get_constraint_type(ineqs[j]) == _4ti2_LB && slacks[ineqs[j]] < 0) { * out << "Check LB failed.\n"; failed = true; }
-            } 
-            else if (types[j] == _4ti2_UB) {
-                if ((slacks[ineqs[j]] < 0) != supps[i][j]) { 
-                    *out << "Check UB Supp failed: " << supps[i][j] << " " << ineqs[j] << " " << slacks[ineqs[j]] << "\n";
-                    failed = true;
-                }
-                if (cone.get_constraint_type(ineqs[j]) == _4ti2_UB && slacks[ineqs[j]] > 0) { * out << "Check UB failed.\n"; failed = true; }
-            }
-            else if (types[j] == _4ti2_EQ) {
-                if (slacks[ineqs[j]] != 0) { *out << "Check EQ failed.\n"; failed = true; }
-                if (supps[i][j]) { *out << "Check EQ Supps failed.\n"; failed = true; }
-            }
-            else if (types[j] == _4ti2_DB) {
-                if (slacks[ineqs[j]] == 0 && supps[i][j]) { *out << "Support Check DB failed.\n"; failed = true; }
-            }
-            else if (types[j] == _4ti2_FR) {
-                if (supps[i][j]) { *out << "Check FR Supps failed.\n"; failed = true; failed = true; }
-            }
-        }
-        if (failed) { 
-            *out << "Ineqs: ";
-            for (Index j = 0; j < (Index) ineqs.size(); ++j) { *out << " " << ineqs[j]; }
-            *out << "\nTypes: ";
-            for (Index j = 0; j < (Index) types.size(); ++j) { *out << " " << types[j]; }
-            *out << "\n" << rays[i] << "\n" << supps[i] << "\n" << slacks << "\n"; 
-        }
-    }
-}
-#endif
 
 template <class IndexSet>
 SupportSubAlgorithmBase<IndexSet>::SupportSubAlgorithmBase(
@@ -772,58 +728,6 @@ SupportSubAlgorithmBase<IndexSet>::transfer()
     //new_supps.clear();
     helper.transfer();
 }
-
-#if 0
-template <class IndexSet>
-inline
-void
-SupportSubAlgorithmBase<IndexSet>::set_r1_index(Index _r1)
-{
-    r1 = _r1;
-    helper.set_r1_index(_r1);
-}
-
-template <class IndexSet>
-inline
-void
-SupportSubAlgorithmBase<IndexSet>::create_ray(Index r2)
-{
-    IndexSet temp_supp(supps[r1]);
-    temp_supp.set_union(supps[r2]);
-    new_supps.push_back(temp_supp);
-    helper.create_ray(r2);
-
-    DEBUG_4ti2(
-    *out << "\nADDING VECTOR.\n";
-    *out << "R1: " << r1 << "\n";
-    *out << "R2: " << r2 << "\n";
-    *out << temp_supp << "\n";
-    )
-}
-
-template <class IndexSet>
-void
-SupportSubAlgorithmBase<IndexSet>::create_circuit(Index i1, Index i2)
-{
-    DEBUG_4ti2(*out << "Creating new circuit.\n";)
-    bool is_pos = helper.create_circuit(i1, i2);
-
-    IndexSet tmp_union(supps[i2]);
-    tmp_union.swap_odd_n_even();
-    tmp_union.set_union(supps[i1]);
-    if (ray_mask.set_disjoint(tmp_union)) {
-        if (is_pos) { tmp_union.swap_odd_n_even(); }
-    }
-    new_supps.push_back(tmp_union);
-
-    DEBUG_4ti2(
-        *out << "Cir1 " << supps[i1] << "\n";
-        *out << "Cir2 " << supps[i2] << "\n";
-        *out << "Cir0 " << tmp_union << "\n";
-    )
-}
-#endif
-
 
 template <class IndexSet>
 SupportRayAlgorithm<IndexSet>::SupportRayAlgorithm(

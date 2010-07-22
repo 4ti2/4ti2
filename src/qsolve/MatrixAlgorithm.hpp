@@ -40,7 +40,7 @@ MatrixAlgorithm<IndexSet>::~MatrixAlgorithm()
 {
 }
 
-#if 0
+#if 1
 // Computes extreme rays of the cone Ax>=0, x>=0.
 template <class IndexSet>
 void
@@ -56,6 +56,7 @@ MatrixAlgorithm<IndexSet>::compute_rays(
     std::vector<IndexSet>& supps = state.supps;
     Index& next = state.next;
     Index& cons_added = state.cons_added;
+    IndexSet& ray_mask = state.ray_mask;
 
     // The number of variables.
     Size n = cone.num_vars();
@@ -70,9 +71,10 @@ MatrixAlgorithm<IndexSet>::compute_rays(
     cone.get_constraint_set(_4ti2_LB, rem);
 
     IndexRanges index_ranges;
-    IndexSet ray_mask(dim,true);
+    ray_mask.resize(dim);
+    ray_mask.one();
 
-    // Construct the initial set supports.
+    // Construct the initial set of supports.
     state.supp_types.clear();
     state.supp_types.resize(dim, _4ti2_LB);
     state.supps_to_cons = ineqs;
@@ -102,6 +104,11 @@ MatrixAlgorithm<IndexSet>::compute_rays(
     // While there are still rows to choose from.
     while (state.num_gens()>0 && !rem.empty()) {
         DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
+        *out << "\ncons_to_supps:";
+        for (Index i = 0; i < (Index) state.cons_to_supps.size(); ++i) { *out << " " << state.cons_to_supps[i]; }
+        *out << "\nsupps_to_cons:";
+        for (Index i = 0; i < (Index) state.supps_to_cons.size(); ++i) { *out << " " << state.supps_to_cons[i]; }
+        *out << "\n";
 
         // Choose the next constraint and sort rays.
         Index pos_start, pos_end, neg_start, neg_end;
@@ -156,13 +163,13 @@ MatrixAlgorithm<IndexSet>::compute_rays(
         ray_mask.resize(dim+cons_added+1);
         ray_mask.set(dim+cons_added);
 
-        rem.unset(next);
-        rel.unset(next);
-        ++cons_added;
-
         state.supps_to_cons.push_back(next);
         state.cons_to_supps[next] = dim+cons_added;
         state.supp_types.push_back(_4ti2_LB);
+
+        rem.unset(next);
+        rel.unset(next);
+        ++cons_added;
 
         // Output statistics.
         sprintf(buffer, "%cLeft %3d  Col %3d  Size %8d  Time %8.2fs", ENDL, rem.count(), next, 
@@ -170,7 +177,7 @@ MatrixAlgorithm<IndexSet>::compute_rays(
         *out << buffer << std::endl;
 
         DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
-        DEBUG_4ti2(check(cone, ineqs, types, rays, supps);)
+        DEBUG_4ti2(state.check());
     }
 
     // Clean up threaded algorithms objects.
@@ -178,7 +185,7 @@ MatrixAlgorithm<IndexSet>::compute_rays(
 }
 #endif
 
-#if 1
+#if 0
 // Computes extreme rays of the cone Ax>=0, x>=0.
 template <class IndexSet>
 void
@@ -302,7 +309,7 @@ MatrixAlgorithm<IndexSet>::compute_rays(
         *out << buffer << std::endl;
 
         DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
-        DEBUG_4ti2(check(cone, rem, rays, supps);)
+        DEBUG_4ti2(state.check());
     }
 
     // Clean up threaded algorithms objects.
@@ -370,7 +377,7 @@ MatrixAlgorithm<IndexSet>::compute_cirs(
                     pos_ray_start, pos_ray_end, neg_ray_start, neg_ray_end,
                     pos_cir_start, pos_cir_end, neg_cir_start, neg_cir_end);
 
-        DEBUG_4ti2(check(cone, rem, rays, supps);)
+        DEBUG_4ti2(state.check());
 
         // Ouput statistics.
         char buffer[256];
@@ -397,7 +404,7 @@ MatrixAlgorithm<IndexSet>::compute_cirs(
         //dim_cirs+=1;
         //cir_mask.set(next);
 
-        DEBUG_4ti2(check(cone, rem, rays, supps);)
+        DEBUG_4ti2(state.check());
 
         sprintf(buffer, "%cLeft %3d  Col %3d  Size %8d  Time %8.2fs", ENDL, rem.count(), next, 
                 state.num_gens(), t.get_elapsed_time());
@@ -407,29 +414,6 @@ MatrixAlgorithm<IndexSet>::compute_cirs(
         ++cons_added;
     }
 }
-
-#if 0
-template <class T> template <class IndexSet>
-void
-MatrixAlgorithm<T>::check(
-                const ConeT<T>& cone,
-                const IndexSet& rem,
-                const VectorArrayT<T>& rays,
-                const std::vector<IndexSet>& supps)
-{
-    Index n = cone.num_vars();
-    Index m = cone.num_cons();
-    VectorT<T> slacks(n+m);
-    for (Index i = 0; i < rays.get_number(); ++i) {
-        cone.get_slacks(rays[i], slacks);
-        for (Index j = 0; j < n+m; ++j) {
-            if (!rem[j]) {
-                if ((slacks[j] != 0) != supps[i][j]) { *out << "Support Check failed.\n"; }
-            }
-        }
-    }
-}
-#endif
 
 template <class IndexSet>
 MatrixSubAlgorithmBase<IndexSet>::MatrixSubAlgorithmBase(
@@ -503,7 +487,6 @@ MatrixSubAlgorithmBase<IndexSet>::compute_rays(
         if (r2_index == r2_end) { continue; }
 
         temp_supp = r1_supp;
-        temp_supp.set_complement();
         std::vector<Index> con_map;
         helper.project_cone(temp_supp, con_map, zeros);
 
@@ -599,7 +582,6 @@ MatrixSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, Ind
         }
 
         temp_supp = r1_supp;
-        temp_supp.set_complement();
         std::vector<Index> con_map;
         helper.project_cone(temp_supp, con_map, temp_zeros);
         DEBUG_4ti2(*out << "NEW ZEROS:\n" << temp_zeros << "\n";)
