@@ -34,8 +34,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "qsolve/MultiTree.h"
 
 //#define SUPPORTTREE FullTree  // TODO: DOES NOT WORK!
-#define SUPPORTTREE BinaryTree
-//#define SUPPORTTREE MultiTree
+//#define SUPPORTTREE BinaryTree
+#define SUPPORTTREE MultiTree
 
 namespace _4ti2_
 {

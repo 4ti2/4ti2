@@ -57,6 +57,8 @@ MatrixAlgorithm<IndexSet>::compute_rays(
     Index& next = state.next;
     Index& cons_added = state.cons_added;
     IndexSet& ray_mask = state.ray_mask;
+    IndexSet& rem = state.rem;
+    IndexSet& rel = state.rel;
 
     // The number of variables.
     Size n = cone.num_vars();
@@ -67,7 +69,6 @@ MatrixAlgorithm<IndexSet>::compute_rays(
     Size dim = state.num_gens();
 
     // The set of constraints to be processed.
-    IndexSet rem(n+m, 0);
     cone.get_constraint_set(_4ti2_LB, rem);
 
     IndexRanges index_ranges;
@@ -91,7 +92,7 @@ MatrixAlgorithm<IndexSet>::compute_rays(
     DEBUG_4ti2(*out << "Initial Supps:\n" << supps << "\n";)
 
     // The total set of relaxed constraints.
-    IndexSet rel(rem);
+    rel = rem;
     cone.get_constraint_set(_4ti2_FR, rel);
     cone.get_constraint_set(_4ti2_DB, rel);
 
@@ -104,11 +105,6 @@ MatrixAlgorithm<IndexSet>::compute_rays(
     // While there are still rows to choose from.
     while (state.num_gens()>0 && !rem.empty()) {
         DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
-        *out << "\ncons_to_supps:";
-        for (Index i = 0; i < (Index) state.cons_to_supps.size(); ++i) { *out << " " << state.cons_to_supps[i]; }
-        *out << "\nsupps_to_cons:";
-        for (Index i = 0; i < (Index) state.supps_to_cons.size(); ++i) { *out << " " << state.supps_to_cons[i]; }
-        *out << "\n";
 
         // Choose the next constraint and sort rays.
         Index pos_start, pos_end, neg_start, neg_end;
@@ -550,7 +546,7 @@ MatrixSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, Ind
 
     MultiTree<IndexSet> old;
     old.insert(supps, 0, r1_start);
-    
+
     Index index_count = 0;
     for (Index r1 = r1_start; r1 < r1_end; ++r1) {
         // Output Statistics

@@ -343,8 +343,8 @@ template <class IS>
 bool
 ConeT<T>::is_d_dimensional_faceT(const IS& supp, int d)
 {
-#if 0 // TODO
-    assert(supp.size() == num_vars()+num_cons());
+#if 0
+    assert(supp.get_size() == num_vars()+num_cons());
     Index n = num_vars();
     Index m = num_cons();
     // We insert only the constraints that correspond to zero slack entries and
@@ -370,6 +370,7 @@ ConeT<T>::is_d_dimensional_faceT(const IS& supp, int d)
     DEBUG_4ti2(*out << "M Rank is " << rank << "\n";)
     if (rank == supp_size-d) { return true; }
 #endif
+
     return false;
 }
 

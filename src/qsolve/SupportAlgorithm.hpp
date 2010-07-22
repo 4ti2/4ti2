@@ -72,6 +72,8 @@ SupportAlgorithm<IndexSet>::compute_rays(
     Index& next = state.next;
     Index& cons_added = state.cons_added;
     IndexSet& ray_mask = state.ray_mask;
+    IndexSet& rem = state.rem;
+    IndexSet& rel = state.rel;
 
     // The number of variables.
     Size n = cone.num_vars();
@@ -82,7 +84,6 @@ SupportAlgorithm<IndexSet>::compute_rays(
     Size dim = state.num_gens();
 
     // The set of constraints to be processed.
-    IndexSet rem(n+m, 0);
     cone.get_constraint_set(_4ti2_LB, rem);
 
     IndexRanges index_ranges;
@@ -106,7 +107,7 @@ SupportAlgorithm<IndexSet>::compute_rays(
     DEBUG_4ti2(*out << "Initial Supps:\n" << supps << "\n";)
 
     // The total set of relaxed constraints.
-    IndexSet rel(rem);
+    rel = rem;
     cone.get_constraint_set(_4ti2_FR, rel);
     cone.get_constraint_set(_4ti2_DB, rel);
 
@@ -119,7 +120,7 @@ SupportAlgorithm<IndexSet>::compute_rays(
     for (Index i = 0; i < Globals::num_threads-1; ++i) { algs.push_back(alg.clone()); }
 
     // While there are still rows to choose from.
-    while (state.num_gens()>0 && !rem.empty()) {
+    while (state.num_gens() > 0 && !rem.empty()) {
         DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
 
         // Choose the next constraint and sort rays.
@@ -127,6 +128,7 @@ SupportAlgorithm<IndexSet>::compute_rays(
         next = state.next_constraint(order, rem, pos_start, pos_end, neg_start, neg_end);
 
         // Check to see whether the next constraint is redundant. If so, ignore it.
+        // TODO: We should check this before sorting the supports and rays.
         if (neg_start == neg_end) { rem.unset(next); continue; }
 
         char buffer[256];
@@ -183,10 +185,11 @@ SupportAlgorithm<IndexSet>::compute_rays(
         ray_mask.resize(dim+cons_added+1);
         ray_mask.set(dim+cons_added);
 
-        rem.unset(next);
         state.supps_to_cons.push_back(next);
         state.cons_to_supps[next] = dim+cons_added;
         state.supp_types.push_back(_4ti2_LB);
+
+        rem.unset(next);
         rel.unset(next);
         ++cons_added;
 
@@ -198,6 +201,7 @@ SupportAlgorithm<IndexSet>::compute_rays(
         DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
         DEBUG_4ti2(state.check());
     }
+    rem.zero();
 
     // Clean up threaded algorithms objects.
     for (Index i = 0; i < Globals::num_threads-1; ++i) { delete algs[i]; }
@@ -216,17 +220,14 @@ SupportAlgorithm<IndexSet>::compute_cirs(
     Index& next = state.next;
     Index& cons_added = state.cons_added;
     IndexSet& ray_mask = state.ray_mask;
+    IndexSet& rem = state.rem;
+    IndexSet& rel = state.rel;
 
-    // The number of variables.
-    Size n = cone.num_vars();
-    // The number of constraints.
-    Size m = cone.num_cons();
-
-    // The remaining columns to process.
-    IndexSet rem(n+m, 0); 
     // We only process circuit constraints.
+    rem.zero();
     cone.get_constraint_set(_4ti2_DB, rem);
     if (rem.empty()) { return; }
+    rel = rem;
     // We have already processed the initial constraints.
     for (Index i = 0; i < (Index) dbls.size(); ++i) { rem.unset(dbls[i]); }
     //std::vector<_4ti2_constraint> types(ineqs.size(), _4ti2_LB);
@@ -339,6 +340,7 @@ SupportAlgorithm<IndexSet>::compute_cirs(
         DEBUG_4ti2(state.check());
 
         rem.unset(next);
+        rel.unset(next);
         ++cons_added;
     }
 }
