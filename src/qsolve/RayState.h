@@ -61,6 +61,8 @@ public:
     const ConeAPI& cone_api;
     Index next;
     Index cons_added;
+    IndexSet rem;
+    IndexSet rel;
 
     std::vector<Index> supps_to_cons;
     std::vector<_4ti2_constraint> supp_types;
@@ -112,10 +114,7 @@ public:
     virtual void create_circuit(Index r2) = 0;
     virtual void transfer() = 0;
 
-    virtual void project_cone(const IndexSet& zero_supp, std::vector<Index>& con_map, IndexSet& zeros) = 0;
-    virtual void project_cone(const IndexSet& zero_supp, 
-                            const std::vector<Index>& supps_to_cons, const std::vector<Index>& cons_to_supps, 
-                            std::vector<Index>& con_map, IndexSet& zeros) = 0;
+    virtual void project_cone(IndexSet& zero_supp, std::vector<Index>& con_map, IndexSet& zeros) = 0;
     virtual bool is_two_dimensional_face(const std::vector<Index>& con_map, const IndexSet& diff) = 0;
 };
 
@@ -123,7 +122,7 @@ template <class T, class IndexSet>
 class RaySubState : public RaySubStateAPI<IndexSet>
 {
 public:
-    RaySubState(const ConeT<T>& _cone, VectorArrayT<T>& _rays, std::vector<IndexSet>& _supps, const Index& _next);
+    RaySubState(RayState<T,IndexSet>& _state, const ConeT<T>& _cone, VectorArrayT<T>& _rays, std::vector<IndexSet>& _supps, const Index& _next);
     virtual ~RaySubState();
 
     void set_r1_index(Index r1);
@@ -131,16 +130,14 @@ public:
     void create_circuit(Index r2);
     void transfer();
 
-    void project_cone(const IndexSet& zero_supp, std::vector<Index>& con_map, IndexSet& zeros);
-    virtual void project_cone(const IndexSet& zero_supp, 
-                            const std::vector<Index>& supps_to_cons, const std::vector<Index>& cons_to_supps, 
-                            std::vector<Index>& con_map, IndexSet& zeros);
+    void project_cone(IndexSet& zero_supp, std::vector<Index>& con_map, IndexSet& zeros);
     bool is_two_dimensional_face(const std::vector<Index>& con_map, const IndexSet& diff);
 
 protected:
+    std::vector<IndexSet>& supps;
+    RayState<T,IndexSet>& state;
     const ConeT<T>& cone;
     VectorArrayT<T>& rays;
-    std::vector<IndexSet>& supps;
     const Index& next;
 
     VectorArrayT<T> new_rays;

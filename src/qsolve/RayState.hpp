@@ -36,7 +36,8 @@ using namespace _4ti2_;
 
 template <class IndexSet>
 RayStateAPI<IndexSet>::RayStateAPI(const ConeAPI& _cone)
-    : cone_api(_cone), next(-1), cons_added(0)
+    : cone_api(_cone), next(-1), cons_added(0), 
+      rem(_cone.num_vars()+_cone.num_cons(),0), rel(_cone.num_vars()+_cone.num_cons(),0)
 {
 }
 
@@ -82,7 +83,7 @@ template <class T, class IndexSet>
 RaySubState<T,IndexSet>*
 RayState<T,IndexSet>::clone()
 {
-    return new RaySubState<T,IndexSet>(cone, rays, Base::supps, Base::next);
+    return new RaySubState<T,IndexSet>(*this, cone, rays, Base::supps, Base::next);
 }
 
 template <class T, class IndexSet>
@@ -299,8 +300,8 @@ RayState<T,IndexSet>::next_constraint(const ConsOrder& order, const IndexSet& re
 /////////////////
 
 template <class T, class IndexSet>
-RaySubState<T,IndexSet>::RaySubState(const ConeT<T>& _cone, VectorArrayT<T>& _rays, std::vector<IndexSet>& _supps, const Index& _next)
-        : RaySubStateAPI<IndexSet>(), cone(_cone), rays(_rays), supps(_supps), next(_next),
+RaySubState<T,IndexSet>::RaySubState(RayState<T,IndexSet>& _state, const ConeT<T>& _cone, VectorArrayT<T>& _rays, std::vector<IndexSet>& _supps, const Index& _next)
+        : RaySubStateAPI<IndexSet>(), supps(_supps), state(_state), cone(_cone), rays(_rays), next(_next),
           new_rays(0,rays.get_size()), temp(rays.get_size())
 {
 }
@@ -397,14 +398,16 @@ RaySubState<T,IndexSet>::create_circuit(Index i2)
     )
 }
 
+#if 1
 template <class T, class IndexSet>
 inline
 void
 RaySubState<T,IndexSet>::project_cone(
-                const IndexSet& zero_supp,
+                IndexSet& zero_supp,
                 std::vector<Index>& con_map,
                 IndexSet& zeros)
 {
+    zero_supp.set_difference(state.rel);
     sub_cone.project_cone(cone, zero_supp, con_map);
 
     const MatrixT<T>& trans = sub_cone.get_matrix();
@@ -421,25 +424,26 @@ RaySubState<T,IndexSet>::project_cone(
     }
     DEBUG_4ti2(*out << "Zeros:\n" << zeros << "\n";)
 }
+#endif
 
+#if 0
 template <class T, class IndexSet>
 inline
 void
 RaySubState<T,IndexSet>::project_cone(
-                const IndexSet& temp_supp,
-                const std::vector<Index>& supps_to_cons,
-                const std::vector<Index>& cons_to_supps,
+                IndexSet& temp_supp,
                 std::vector<Index>& con_map,
                 IndexSet& zeros)
 {
     IndexSet zero_supp(cone.num_vars()+cone.num_cons());
     for (typename IndexSet::Iter it = temp_supp.begin(); it != temp_supp.end(); ++it) {
-        zero_supp.set(supps_to_cons[*it]);
+        zero_supp.set(state.supps_to_cons[*it]);
     }
 
+    zero_supp.set_difference(state.rel);
     sub_cone.project_cone(cone, zero_supp, con_map);
     for (Index i = 0; i < (Index) con_map.size(); ++i) {
-        if (con_map[i] != -1) { con_map[i] = cons_to_supps[con_map[i]]; }
+        if (con_map[i] != -1) { con_map[i] = state.cons_to_supps[con_map[i]]; }
     }
 
     const MatrixT<T>& trans = sub_cone.get_matrix();
@@ -456,6 +460,7 @@ RaySubState<T,IndexSet>::project_cone(
     }
     DEBUG_4ti2(*out << "Zeros:\n" << zeros << "\n";)
 }
+#endif
 
 // Checks whether the given support determines a two dimensional face of the cone.
 template <class T, class IndexSet>

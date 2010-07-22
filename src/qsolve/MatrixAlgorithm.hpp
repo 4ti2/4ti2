@@ -40,7 +40,7 @@ MatrixAlgorithm<IndexSet>::~MatrixAlgorithm()
 {
 }
 
-
+#if 0
 // Computes extreme rays of the cone Ax>=0, x>=0.
 template <class IndexSet>
 void
@@ -50,13 +50,12 @@ MatrixAlgorithm<IndexSet>::compute_rays(
             std::vector<int>& ineqs)
 {
     Timer t;
+    *out << "Ray Support Algorithm.\n";
+    DEBUG_4ti2(*out << "CONSTRAINT MATRIX:\n" << cone.get_matrix() << "\n";)
 
     std::vector<IndexSet>& supps = state.supps;
     Index& next = state.next;
     Index& cons_added = state.cons_added;
-
-    *out << "Ray Matrix Algorithm.\n";
-    DEBUG_4ti2(*out << "CONSTRAINT MATRIX:\n" << cone.get_matrix() << "\n";)
 
     // The number of variables.
     Size n = cone.num_vars();
@@ -70,23 +69,29 @@ MatrixAlgorithm<IndexSet>::compute_rays(
     IndexSet rem(n+m, 0);
     cone.get_constraint_set(_4ti2_LB, rem);
 
+    IndexRanges index_ranges;
+    IndexSet ray_mask(dim,true);
+
     // Construct the initial set supports.
+    state.supp_types.clear();
+    state.supp_types.resize(dim, _4ti2_LB);
+    state.supps_to_cons = ineqs;
+    state.cons_to_supps.clear();
+    state.cons_to_supps.resize(n+m,-1);
     for (Index i = 0; i != dim; ++i) { 
-        IndexSet supp(n+m, 0);
-        supp.set(ineqs[i]);
+        IndexSet supp(dim,0);
+        supp.set(i);
         supps.push_back(supp);
         rem.unset(ineqs[i]);
+        state.cons_to_supps[ineqs[i]] = i;
     }
+
     DEBUG_4ti2(*out << "Initial Supps:\n" << supps << "\n";)
-    DEBUG_4ti2(*out << "Initial Rem:\n" << rem << "\n";)
 
     // The total set of relaxed constraints.
     IndexSet rel(rem);
     cone.get_constraint_set(_4ti2_FR, rel);
     cone.get_constraint_set(_4ti2_DB, rel);
-
-    IndexSet ray_mask(n+m);
-    IndexRanges index_ranges;
 
     // Construct main algorithm object.
     MatrixRayAlgorithm<IndexSet> alg(state, supps, rel, cons_added, next, index_ranges);
@@ -107,6 +112,140 @@ MatrixAlgorithm<IndexSet>::compute_rays(
 
         char buffer[256];
         sprintf(buffer, "%cLeft %3d  Col %3d  Size %8d", ENDL, rem.count(), next, state.num_gens());
+        *out << buffer << std::flush;
+
+        if (pos_start != pos_end) {
+            // Next, we assign index ranges for the inner and outer for loops so
+            // that the outer loop is smaller than the inner loop.
+            Index r1_start, r1_end, r2_start, r2_end;
+            if (pos_end-pos_start <= neg_end-neg_start) {
+                r1_start = pos_start; r1_end = pos_end;
+                r2_start = neg_start; r2_end = neg_end;
+            }
+            else {
+                r2_start = pos_start; r2_end = pos_end;
+                r1_start = neg_start; r1_end = neg_end;
+            }
+
+            // We sort the r2's into vectors where r2_supp.count()==cons_added+1.
+            Index r2_index = state.sort_count(cons_added+1, r2_start, r2_end);
+
+            // Run threads.
+            index_ranges.init(r1_start, r1_end, r2_start, r2_index, r2_end);
+            for (Index i = 0; i < Globals::num_threads-1; ++i) { algs[i]->threaded_compute(); }
+            // Run primary algorithm.
+            alg.compute();
+
+            // Wait for threads to finish.
+            for (Index i = 0; i < Globals::num_threads-1; ++i) { algs[i]->wait(); }
+        }
+
+        // Delete all the vectors with a negative entry in the column next.
+        state.remove(neg_start, neg_end);
+
+        // Add new rays and supps.
+        alg.transfer();
+        for (Index i = 0; i < Globals::num_threads-1; ++i) { algs[i]->transfer(); }
+
+        // Update the support vectors for the next_col.
+        assert(pos_end <= neg_start); // ASSUMING pos is before neg. 
+        //update_supports(supps, next, pos_start, pos_end);
+        state.resize(dim+cons_added+1);
+        state.update(dim+cons_added, pos_start, pos_end);
+
+        ray_mask.resize(dim+cons_added+1);
+        ray_mask.set(dim+cons_added);
+
+        rem.unset(next);
+        rel.unset(next);
+        ++cons_added;
+
+        state.supps_to_cons.push_back(next);
+        state.cons_to_supps[next] = dim+cons_added;
+        state.supp_types.push_back(_4ti2_LB);
+
+        // Output statistics.
+        sprintf(buffer, "%cLeft %3d  Col %3d  Size %8d  Time %8.2fs", ENDL, rem.count(), next, 
+                state.num_gens(), t.get_elapsed_time());
+        *out << buffer << std::endl;
+
+        DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
+        DEBUG_4ti2(check(cone, ineqs, types, rays, supps);)
+    }
+
+    // Clean up threaded algorithms objects.
+    for (Index i = 0; i < Globals::num_threads-1; ++i) { delete algs[i]; }
+}
+#endif
+
+#if 1
+// Computes extreme rays of the cone Ax>=0, x>=0.
+template <class IndexSet>
+void
+MatrixAlgorithm<IndexSet>::compute_rays(
+            const ConeAPI& cone,
+            RayStateAPI<IndexSet>& state,
+            std::vector<int>& ineqs)
+{
+    Timer t;
+
+    std::vector<IndexSet>& supps = state.supps;
+    Index& cons_added = state.cons_added;
+    IndexSet& rel = state.rel;
+    IndexSet& rem = state.rem;
+
+    *out << "Ray Matrix Algorithm.\n";
+    DEBUG_4ti2(*out << "CONSTRAINT MATRIX:\n" << cone.get_matrix() << "\n";)
+
+    // The number of variables.
+    Size n = cone.num_vars();
+    // The number of constraints.
+    Size m = cone.num_cons();
+
+    // The dimension
+    Size dim = state.num_gens();
+
+    // The set of constraints to be processed.
+    rem.zero();
+    cone.get_constraint_set(_4ti2_LB, rem);
+
+    // Construct the initial set supports.
+    for (Index i = 0; i != dim; ++i) { 
+        IndexSet supp(n+m, 0);
+        supp.set(ineqs[i]);
+        supps.push_back(supp);
+        rem.unset(ineqs[i]);
+    }
+    DEBUG_4ti2(*out << "Initial Supps:\n" << supps << "\n";)
+    DEBUG_4ti2(*out << "Initial Rem:\n" << rem << "\n";)
+
+    // The total set of relaxed constraints.
+    rel = rem;
+    cone.get_constraint_set(_4ti2_FR, rel);
+    cone.get_constraint_set(_4ti2_DB, rel);
+
+    IndexSet ray_mask(n+m);
+    IndexRanges index_ranges;
+
+    // Construct main algorithm object.
+    MatrixRayAlgorithm<IndexSet> alg(state, supps, rel, cons_added, state.next, index_ranges);
+    // Construct threaded algorithm objects.
+    std::vector<MatrixRayAlgorithm<IndexSet>*> algs;
+    for (Index i = 0; i < Globals::num_threads-1; ++i) { algs.push_back(alg.clone()); }
+
+    // While there are still rows to choose from.
+    while (state.num_gens()>0 && !rem.empty()) {
+        DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
+
+        // Choose the next constraint and sort rays.
+        Index pos_start, pos_end, neg_start, neg_end;
+        state.next = state.next_constraint(order, rem, pos_start, pos_end, neg_start, neg_end);
+
+        // Check to see whether the next constraint is redundant. If so, ignore it.
+        if (neg_start == neg_end) { rem.unset(state.next); continue; }
+
+        char buffer[256];
+        sprintf(buffer, "%cLeft %3d  Col %3d  Size %8d", ENDL, rem.count(), state.next, state.num_gens());
         *out << buffer << std::flush;
 
         // Next, we assign index ranges for the inner and outer for loops so
@@ -136,7 +275,7 @@ MatrixAlgorithm<IndexSet>::compute_rays(
         for (Index i = 0; i < Globals::num_threads-1; ++i) { algs[i]->wait(); }
 
         // Update the support vectors for the next_con.
-        state.update(next, pos_start, pos_end);
+        state.update(state.next, pos_start, pos_end);
         // Delete all the vectors with a negative entry in the column next.
         state.remove(neg_start, neg_end);
 
@@ -144,12 +283,12 @@ MatrixAlgorithm<IndexSet>::compute_rays(
         alg.transfer();
         for (Index i = 0; i < Globals::num_threads-1; ++i) { algs[i]->transfer(); }
 
-        rem.unset(next);
-        rel.unset(next);
+        rem.unset(state.next);
+        rel.unset(state.next);
         ++cons_added;
 
         // Output statistics.
-        sprintf(buffer, "%cLeft %3d  Col %3d  Size %8d  Time %8.2fs", ENDL, rem.count(), next, 
+        sprintf(buffer, "%cLeft %3d  Col %3d  Size %8d  Time %8.2fs", ENDL, rem.count(), state.next, 
                 state.num_gens(), t.get_elapsed_time());
         *out << buffer << std::endl;
 
@@ -160,6 +299,7 @@ MatrixAlgorithm<IndexSet>::compute_rays(
     // Clean up threaded algorithms objects.
     for (Index i = 0; i < Globals::num_threads-1; ++i) { delete algs[i]; }
 }
+#endif
 
 template <class IndexSet>
 void
@@ -281,6 +421,7 @@ MatrixAlgorithm<T>::check(
     }
 }
 #endif
+
 template <class IndexSet>
 MatrixSubAlgorithmBase<IndexSet>::MatrixSubAlgorithmBase(
                 RayStateAPI<IndexSet>& _state, std::vector<IndexSet>& _supps, 
@@ -352,9 +493,8 @@ MatrixSubAlgorithmBase<IndexSet>::compute_rays(
         }
         if (r2_index == r2_end) { continue; }
 
-        temp_supp.set_union(r1_supp, rel);
+        temp_supp = r1_supp;
         temp_supp.set_complement();
-
         std::vector<Index> con_map;
         helper.project_cone(temp_supp, con_map, zeros);
 
@@ -449,9 +589,8 @@ MatrixSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, Ind
             continue;
         }
 
-        temp_supp.set_union(r1_supp, rel);
+        temp_supp = r1_supp;
         temp_supp.set_complement();
-
         std::vector<Index> con_map;
         helper.project_cone(temp_supp, con_map, temp_zeros);
         DEBUG_4ti2(*out << "NEW ZEROS:\n" << temp_zeros << "\n";)
