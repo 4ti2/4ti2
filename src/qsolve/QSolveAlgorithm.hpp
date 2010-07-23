@@ -62,19 +62,17 @@ QSolveAlgorithm<T>::compute(
                             VectorArrayT<T>& cirs,
                             VectorArrayT<T>& subspace)
 {
-    DEBUG_4ti2(*out << "MATRIX:\n" << cone.get_matrix() << "\n";)
-    //DEBUG_4ti2(*out << "RELS:\n" << rels << "\n";)
-    //DEBUG_4ti2(*out << "SIGN:\n" << sign << "\n";)
-
     Size n = cone.num_vars();
     Size m = cone.num_cons();
-    Size num_cons = n+m;
+    Size full_num_cons = n+m;
 
-    IndexSetD full_rs(num_cons,0);
+    IndexSetD full_rs(full_num_cons,0);
     cone.constraint_set(_4ti2_LB, full_rs);
-    IndexSetD full_cir(num_cons,0);
+    IndexSetD var_rs(full_rs);
+    var_rs.resize(n);
+    IndexSetD full_cir(full_num_cons,0);
     cone.constraint_set(_4ti2_DB, full_cir);
-    IndexSetD full_eq(num_cons,0);
+    IndexSetD full_eq(full_num_cons,0);
     cone.constraint_set(_4ti2_EQ, full_eq);
 
     DEBUG_4ti2(*out << "RS:\n" << full_rs << "\n";)
@@ -83,7 +81,7 @@ QSolveAlgorithm<T>::compute(
 
     // If there are only ray components...
     // TODO: This could be better.
-    if (full_rs.full()) {
+    if (var_rs.full() && full_eq.empty()) {
         // Construct initial rays.
         std::vector<Index> ray_ineqs;
         for (Index i = 0; i < cone.num_vars(); ++i) {

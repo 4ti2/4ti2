@@ -244,7 +244,7 @@ RayState<T,IndexSet>::next_constraint(
     neg_cir_start = neg_start; neg_cir_end = middle;
     neg_ray_start = middle; neg_ray_end = neg_end;
 
-#if DEBUG_4ti2 > 0
+#if DEBUG_4ti2 > 1
     *out << "\nr+ " << pos_ray_start << "," << pos_ray_end << " r- " << neg_ray_start << "," << neg_ray_end;
     *out << " c+ " << pos_cir_start << "," << pos_cir_end << " c-" << neg_cir_start << "," << neg_cir_end << std::endl;
 #endif
@@ -301,7 +301,7 @@ RayState<T, IndexSet>::check()
 {
     bool failed = false;
     for (Index i = 0; i < rays.get_number(); ++i) {
-        failed |= check(rays[i], Base::supps[i]);
+        failed |= check(rays[i], Base::supps[i], 1);
     }
 
     if (failed) { 
@@ -317,7 +317,7 @@ RayState<T, IndexSet>::check()
 
 template <class T, class IndexSet>
 bool
-RayState<T, IndexSet>::check(const VectorR<T>& ray, const IndexSet& supp)
+RayState<T, IndexSet>::check(const VectorR<T>& ray, const IndexSet& supp, Size d)
 {
     Index n = cone.num_vars();
     Index m = cone.num_cons();
@@ -355,6 +355,18 @@ RayState<T, IndexSet>::check(const VectorR<T>& ray, const IndexSet& supp)
             if (supp[j]) { *out << "Check FR Supps failed.\n"; failed = true; failed = true; }
         }
     }
+
+    // Check whether the ray defines a d-dimensional face.
+    IndexSet full_supp(Base::rel);
+    for (Index j = 0; j < supp.get_size(); ++j) { 
+        if (supp[j]) { full_supp.set(Base::supps_to_cons[j]); }
+    }
+    Size face = cone.is_d_dimensional_faceT(full_supp);
+    if (face != d) {
+        *out << "\nDoes not define " << d << " face but " << face << " face.\n";
+        failed = true;
+    }
+
     if (failed) {
         *out << "Ray:    " << ray << "\nSupp:   " << supp << "\nSlacks: " << slacks << "\n\n"; 
     }
@@ -412,13 +424,14 @@ RaySubState<T,IndexSet>::create_ray(Index r2)
     new_rays.insert(temp);
 
 #if DEBUG_4ti2 > 0
-    *out << "\nADDING NEW RAY.\n";
-    *out << "R1: " << _r1 << "\n";
-    *out << rays[_r1] << "\n";
-    *out << "R2: " << r2 << "\n";
-    *out << rays[r2] << "\n";
-    *out << "NEW:\n";
-    *out << temp << "\n";
+    if (state.check(temp, temp_supp, 2)) {
+        *out << "Ray1 " << _r1 << " " << s1 << " : " << rays[_r1] << "\n";
+        *out << "Ray2 " << r2 << " " << s2 << " : " << rays[r2] << "\n";
+        *out << "Ray0 " << temp << "\n";
+        *out << "Sup1 " << supps[_r1] << "\n";
+        *out << "Sup2 " << supps[r2] << "\n";
+        *out << "Sup0 " << temp_supp << "\n";
+    }
 #endif
 }
 
@@ -449,13 +462,13 @@ RaySubState<T,IndexSet>::create_circuit(Index i2)
     new_rays.insert(temp);
 
 #if DEBUG_4ti2 > 0
-    if (state.check(temp, tmp_union)) {
+    if (state.check(temp, tmp_union, 2)) {
         *out << "Ray1 " << _r1 << " " << s1 << " : " << r1 << "\n";
         *out << "Ray2 " << i2 << " " << s2 << " : " << r2 << "\n";
         *out << "Ray0 " << temp << "\n";
-        *out << "Cir1 " << supps[_r1] << "\n";
-        *out << "Cir2 " << supps[i2] << "\n";
-        *out << "Cir0 " << tmp_union << "\n";
+        *out << "Sup1 " << supps[_r1] << "\n";
+        *out << "Sup2 " << supps[i2] << "\n";
+        *out << "Sup0 " << tmp_union << "\n";
     }
 #endif
 }
@@ -472,6 +485,42 @@ RaySubState<T,IndexSet>::project_cone(
     zero_supp.set_complement();
     zero_supp.set_difference(state.rel);
     sub_cone.project_cone(cone, zero_supp, con_map);
+
+    const MatrixT<T>& trans = sub_cone.get_matrix();
+    zeros.zero();
+    Index n = trans.get_m();
+    Index m = trans.get_n();
+    for (Index i = 0; i < n; ++i) {
+        if (con_map[i] < 0) { continue; }
+        zeros.set(con_map[i]);
+        for (Index j = 0; j < m; ++j) {
+            // TODO: trans row.
+            if (trans(i,j) != 0 && con_map[j+n] >= 0) { zeros.unset(con_map[i]); break; }
+        }
+    }
+}
+#endif
+
+#if 0
+template <class T, class IndexSet>
+inline
+void
+RaySubState<T,IndexSet>::project_cone(
+                IndexSet& temp_supp,
+                std::vector<Index>& con_map,
+                IndexSet& zeros)
+{
+    IndexSet zero_supp(cone.num_vars()+cone.num_cons(),0);
+    for (typename IndexSet::Iter it = temp_supp.begin(); it != temp_supp.end(); ++it) {
+        zero_supp.set(state.supps_to_cons[*it]);
+    }
+
+    zero_supp.set_complement();
+    zero_supp.set_difference(state.rel);
+    sub_cone.project_cone(cone, zero_supp, con_map);
+    for (Index i = 0; i < (Index) con_map.size(); ++i) {
+        if (con_map[i] != -1) { con_map[i] = state.cons_to_supps[con_map[i]]; }
+    }
 
     const MatrixT<T>& trans = sub_cone.get_matrix();
     zeros.zero();
@@ -513,17 +562,23 @@ RaySubState<T,IndexSet>::project_cone(
     zeros.zero();
     Index n = trans.get_m();
     Index m = trans.get_n();
+    bool zero_col = true;
     for (Index i = 0; i < n; ++i) {
         if (con_map[i] < 0) { continue; }
-        zeros.set(con_map[i]);
+        zero_col = true;
         for (Index j = 0; j < m; ++j) {
             // TODO: trans row.
-            if (trans(i,j) != 0 && con_map[j+n] >= 0) { zeros.unset(con_map[i]); break; }
+            if (trans(i,j) != 0 && con_map[j+n] >= 0) { zero_col = false; break; }
+        }
+        if (zero_col) { 
+            zeros.set(con_map[i]);
+            if (!state.ray_mask[con_map[i]]) { zeros.set(con_map[i]+1); }
         }
     }
 }
 #endif
 
+#if 0
 // Checks whether the given support determines a two dimensional face of the cone.
 template <class T, class IndexSet>
 inline
@@ -550,5 +605,35 @@ RaySubState<T,IndexSet>::is_two_dimensional_face(
 
     return sub_cone.is_one_dimensional_face(vars, cons);
 }
+#endif
+
+#if 1
+// Checks whether the given support determines a two dimensional face of the cone.
+template <class T, class IndexSet>
+inline
+bool
+RaySubState<T,IndexSet>::is_two_dimensional_face(
+            const std::vector<Index>& con_map,
+            const IndexSet& diff)
+{
+    Index n = sub_cone.num_vars();
+    Index m = sub_cone.num_cons();
+
+    IndexSet vars(n,0);
+    for (Index i = 0; i < n; ++i) { 
+        if (con_map[i] != -1 && (diff[con_map[i]] || (!state.ray_mask[con_map[i]] && diff[con_map[i]+1]))) { vars.set(i); }
+    }
+    IndexSet cons(m,0);
+    for (Index i = n; i < m+n; ++i) {
+        if (con_map[i] != -1 && !diff[con_map[i]] && (state.ray_mask[con_map[i]] || !diff[con_map[i]+1])) { cons.set(i-n); }
+    }
+#if DEBUG_4ti2 > 1
+    *out << "\nis_two_dimensional_face\n";
+    *out << "Vars:\n" << vars << "\nCons:\n" << cons << "\n";
+#endif
+
+    return sub_cone.is_one_dimensional_face(vars, cons);
+}
+#endif
 
 #undef DEBUG_4ti2

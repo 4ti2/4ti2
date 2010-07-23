@@ -23,8 +23,8 @@ public:
     virtual Size num_cons() const = 0;
 
     // Determine whether the given support gives a d-dimensional face of the cone.
-    virtual bool is_d_dimensional_face(const IndexSetD& supp, int d) = 0;
-    virtual bool is_d_dimensional_face(const IndexSetDS& supp, int d) = 0;
+    virtual Size is_d_dimensional_face(const IndexSetD& supp) const = 0;
+    virtual Size is_d_dimensional_face(const IndexSetDS& supp) const = 0;
 
     // The set of constraints matching the given constraint type.
     virtual void get_constraint_set(_4ti2_constraint t, IndexSetD& is) const = 0;
@@ -55,8 +55,8 @@ public:
     virtual Size num_cons() const;
 
     // Determine whether the given support gives a d-dimensional face of the cone.
-    virtual bool is_d_dimensional_face(const IndexSetD& supp, int d);
-    virtual bool is_d_dimensional_face(const IndexSetDS& supp, int d);
+    virtual Size is_d_dimensional_face(const IndexSetD& supp) const;
+    virtual Size is_d_dimensional_face(const IndexSetDS& supp) const;
 
     // The set of constraints matching the given constraint type.
     virtual void get_constraint_set(_4ti2_constraint t, IndexSetD& is) const;
@@ -93,11 +93,11 @@ public:
     // Counts the polarity of the slacks for the constraint i and the given set of rays.
     void slack_count(const VectorArrayT<T>& rs, Index i, Size& pos, Size& neg, Size& zero) const;
 
-private:
     // Checks whether the given support determines a d dimensional face of the cone.
     template <class IS>
-    bool is_d_dimensional_faceT(const IS& supp, int d);
+    Size is_d_dimensional_faceT(const IS& supp) const;
 
+private:
     VectorArrayT<T> matrix; // Constraints.
     VectorArrayT<T> generators; // Generators.
     std::vector<_4ti2_constraint> types;
@@ -293,17 +293,17 @@ ConeT<T>::get_slacks(const VectorArrayT<T>& rs, Index i, VectorR<T>& slacks) con
 }
 
 template <class T>
-bool 
-ConeT<T>::is_d_dimensional_face(const IndexSetD& supp, int d)
+Size
+ConeT<T>::is_d_dimensional_face(const IndexSetD& supp) const
 {
-    return is_d_dimensional_faceT(supp, d);
+    return is_d_dimensional_faceT(supp);
 }
 
 template <class T>
-bool 
-ConeT<T>::is_d_dimensional_face(const IndexSetDS& supp, int d)
+Size
+ConeT<T>::is_d_dimensional_face(const IndexSetDS& supp) const
 {
-    return is_d_dimensional_faceT(supp, d);
+    return is_d_dimensional_faceT(supp);
 }
 
 // Count how many zero, positive and negative entries there are in a column.
@@ -339,39 +339,35 @@ ConeT<T>::slack_count(Index next_con, Size& pos_count, Size& neg_count, Size& ze
 
 // Checks whether the given support determines a two dimensional face of the cone.
 template <class T>
-template <class IS>
-bool
-ConeT<T>::is_d_dimensional_faceT(const IS& supp, int d)
+template <class IndexSet>
+Size
+ConeT<T>::is_d_dimensional_faceT(const IndexSet& supp) const
 {
-#if 0
-    assert(supp.get_size() == num_vars()+num_cons());
-    Index n = num_vars();
-    Index m = num_cons();
+    assert(supp.get_size() == n+m);
     // We insert only the constraints that correspond to zero slack entries and
     // only the columns that correspond to the non-zero support entries.
-    DEBUG_4ti2(*out << "CONSTRAINTS:\n" << matrix << "\n";)
-    IS var_supp(n);
-    IS::shrink(supp, var_supp); 
-    Index supp_size = var_supp.count();
-    VectorArrayT<T> matrix(0, supp_size);
-    VectorT<T> temp_vec(supp_size);
-    DEBUG_4ti2(*out << "SUPP:\n" << supp << "\n";)
-    DEBUG_4ti2(*out << "VAR SUPP:\n" << var_supp << "\n";)
-    for (Index i = 0; i < m; ++i) { 
-        if (!supp[i+n]) {
-            temp_vec.assign(matrix[i], var_supp, IndexSetR(0,supp_size));
-            matrix.insert(temp_vec);
-        }
-    }
-    DEBUG_4ti2(*out << "REDUCED MATRIX:\n" << matrix << "\n";)
-    //*out << "REDUCED MATRIX:\n" << m << "\n";
-    // Compute the rank of the matrix.
-    Index rank = upper_triangle(matrix);
-    DEBUG_4ti2(*out << "M Rank is " << rank << "\n";)
-    if (rank == supp_size-d) { return true; }
-#endif
+    Index n = num_vars();
+    Index m = num_cons();
+    IndexSet var_supp(n);
+    IndexSet con_supp(m);
+    for (Index i = 0; i < n; ++i) { if (supp[i]) { var_supp.set(i); } }
+    for (Index i = n; i < n+m; ++i) { if (!supp[i]) { con_supp.set(i-n); } }
 
-    return false;
+#if 1
+    VectorArrayT<T> temp(con_supp.count(), var_supp.count());
+    temp.assign(matrix, con_supp, var_supp);
+
+    // Compute the rank of the matrix.
+    Index rank = upper_triangle(temp);
+    return (temp.get_size()-rank);
+#else
+    VectorArrayT<T> temp(var_supp.count(), con_supp.count());
+    temp.assign_trans(matrix, con_supp, var_supp);
+
+    // Compute the rank of the matrix.
+    Index rank = upper_triangle(temp);
+    return (temp.get_number()-rank);
+#endif
 }
 
 template <class T>
@@ -379,8 +375,6 @@ void
 ConeT<T>::canonize(ConeT<T>& proj_cone, VectorArrayT<T>& subspace, VectorArrayT<T>& map) const
 {
     DEBUG_4ti2(*out << "MATRIX:\n" << cone.get_matrix() << "\n";)
-    //DEBUG_4ti2(*out << "RELS:\n" << rels << "\n";)
-    //DEBUG_4ti2(*out << "SIGN:\n" << sign << "\n";)
 
     Size n = num_vars();
     Size m = num_cons();

@@ -130,6 +130,26 @@ ConeC<T>::is_one_dimensional_face(const IndexSet& vars, const IndexSet& cons)
     return false;
 }
 
+#if 0
+// Checks whether the given support determines a one dimensional face of the cone.
+template <class T> template <class IndexSet>
+bool
+ConeC<T>::is_one_dimensional_face(const IndexSet& supp)
+{
+    Size proj_n = vars.count();
+    Size proj_m = cons.count();
+    if (proj_n <= 1) { return true; }
+    temp.init(proj_n, proj_m);
+    temp.assign(matrix, vars, cons);
+    DEBUG_4ti2(*out << "MATRIX:\n"; temp.print();)
+    Size rank = temp.row_triangulate();
+    DEBUG_4ti2(*out << "Rank: " << rank << "\n";)
+    if (rank == temp.get_m()-1) { return true; }
+
+    return false;
+}
+#endif
+
 } // namespace _4ti2_
 
 #undef DEBUG_4ti2

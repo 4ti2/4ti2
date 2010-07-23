@@ -66,8 +66,8 @@ QSolveAPI::initialise_data()
         initialise_dataT<int64_t>(); break;
     }
 
-    if (prec == _4ti2_PREC_INT_ARB) { algorithm = SUPPORT; }
-    else { algorithm = MATRIX; }
+    //if (prec == _4ti2_PREC_INT_ARB) { algorithm = SUPPORT; }
+    //else { algorithm = MATRIX; }
 }
 
 template <class T>
@@ -83,7 +83,7 @@ QSolveAPI::initialise_dataT()
 }
 
 QSolveAPI::QSolveAPI()
-    : _4ti2_state(), prec(_4ti2_PREC_INT_64), input(DEFAULT), mat(0), ray(0), cir(0), qhom(0), qfree(0)
+    : _4ti2_state(), prec(_4ti2_PREC_INT_64), algorithm(SUPPORT), input(DEFAULT), mat(0), ray(0), cir(0), qhom(0), qfree(0)
 {
     print_banner();
     sign_default = _4ti2_FR;

@@ -50,26 +50,29 @@ MatrixAlgorithm<IndexSet>::compute_rays(
             std::vector<int>& ineqs)
 {
     Timer t;
-    *out << "Ray Support Algorithm.\n";
+    *out << "Ray Matrix Algorithm.\n";
     DEBUG_4ti2(*out << "CONSTRAINT MATRIX:\n" << cone.get_matrix() << "\n";)
 
     std::vector<IndexSet>& supps = state.supps;
     Index& next = state.next;
     Index& cons_added = state.cons_added;
     IndexSet& ray_mask = state.ray_mask;
-    IndexSet& rem = state.rem;
-    IndexSet& rel = state.rel;
 
     // The number of variables.
     Size n = cone.num_vars();
     // The number of constraints.
     Size m = cone.num_cons();
-
     // The dimension
     Size dim = state.num_gens();
 
     // The set of constraints to be processed.
+    IndexSet& rem = state.rem;
     cone.get_constraint_set(_4ti2_LB, rem);
+
+    // The total set of relaxed constraints.
+    IndexSet& rel = state.rel;
+    cone.get_constraint_set(_4ti2_EQ, rel);
+    rel.set_complement();
 
     IndexRanges index_ranges;
     ray_mask.resize(dim);
@@ -86,15 +89,11 @@ MatrixAlgorithm<IndexSet>::compute_rays(
         supp.set(i);
         supps.push_back(supp);
         rem.unset(ineqs[i]);
+        rel.unset(ineqs[i]);
         state.cons_to_supps[ineqs[i]] = i;
     }
 
     DEBUG_4ti2(*out << "Initial Supps:\n" << supps << "\n";)
-
-    // The total set of relaxed constraints.
-    rel = rem;
-    cone.get_constraint_set(_4ti2_FR, rel);
-    cone.get_constraint_set(_4ti2_DB, rel);
 
     // Construct main algorithm object.
     MatrixRayAlgorithm<IndexSet> alg(state, supps, rel, cons_added, next, index_ranges);
@@ -325,89 +324,109 @@ MatrixAlgorithm<IndexSet>::compute_cirs(
     std::vector<IndexSet>& supps = state.supps;
     Index& next = state.next;
     Index& cons_added = state.cons_added;
+    IndexSet& ray_mask = state.ray_mask;
+    IndexSet& rem = state.rem;
+    IndexSet& rel = state.rel;
 
-    // The number of variables.
-    Size n = cone.num_vars();
-    // The number of constraints.
-    Size m = cone.num_cons();
-
-    // The remaining columns to process.
-    IndexSet rem(n+m, 0); 
     // We only process circuit constraints.
+    rem.zero();
     cone.get_constraint_set(_4ti2_DB, rem);
     if (rem.empty()) { return; }
     // We have already processed the initial constraints.
-    for (Index i = 0; i < (Index) dbls.size(); ++i) { rem.unset(dbls[i]); }
+    for (Index i = 0; i < (Index) dbls.size(); ++i) { rem.unset(dbls[i]); rel.unset(dbls[i]); }
 
     *out << "Circuit Matrix Algorithm.\n";
 
     // The number of circuit components.
     Size dim_cirs = dbls.size();
 
-    // Construct the circuit supports.
-    for (Index i = 0; i < dim_cirs; ++i) {
-        IndexSet supp(n+m, false);
-        supp.set(dbls[i]);
-        supps.push_back(supp);
+    // Extend the support of the rays to include the circuit components.
+    Index ray_supp_size = 0;
+    if (!supps.empty()) { ray_supp_size = supps[0].get_size(); }
+    // Make ray support size even.
+    if (ray_supp_size%2 == 1) { 
+        ++ray_supp_size; 
+        state.supps_to_cons.push_back(-1); 
+        state.supp_types.push_back(_4ti2_FR);
     }
+    Index cir_supp_size = ray_supp_size + 2*dim_cirs;
 
     // The mask for the circuit constraints.
-    IndexSet cir_mask(n+m, false);
-    cone.get_constraint_set(_4ti2_DB, cir_mask);
-    // The mask for the ray constraints.
-    IndexSet ray_mask(n+m,false);
-    cone.get_constraint_set(_4ti2_LB, ray_mask);
+    ray_mask.resize(cir_supp_size);
+    ray_mask.zero();
+    for (Index i = 0; i < ray_supp_size; ++i) { ray_mask.set(i); }
+    state.resize(cir_supp_size);
 
-    // Construct main algorithm object.
+    // Construct the circuit supports.
+    for (Index i = 0; i < dim_cirs; ++i) {
+        IndexSet supp(cir_supp_size, false);
+        supp.set(ray_supp_size+2*i);
+        supps.push_back(supp);
+
+        state.supps_to_cons.push_back(dbls[i]);
+        state.supps_to_cons.push_back(dbls[i]);
+        state.supp_types.push_back(_4ti2_LB);
+        state.supp_types.push_back(_4ti2_UB);
+        state.cons_to_supps[dbls[i]] = ray_supp_size + 2*i;
+    }
+    DEBUG_4ti2(*out << "Initial Rays + Circuits:\n" << rays << "\n";)
+    DEBUG_4ti2(*out << "Initial Supports:\n" << supps << "\n";)
+
     IndexRanges index_ranges;
     MatrixCirAlgorithm<IndexSet> alg(state, supps, rem, cons_added, next, index_ranges);
-    // Construct threaded algorithm objects.
     std::vector<MatrixCirAlgorithm<IndexSet>*> algs;
     for (Index i = 0; i < Globals::num_threads-1; ++i) { algs.push_back(alg.clone()); }
 
     while (state.num_gens() > 0 && !rem.empty()) {
-        // Find the next column and sort the rays.
+        // Find the next constraint.
         int pos_ray_start, pos_ray_end, neg_ray_start, neg_ray_end;
         int pos_cir_start, pos_cir_end, neg_cir_start, neg_cir_end;
         next = state.next_constraint(order, rem, ray_mask,
                     pos_ray_start, pos_ray_end, neg_ray_start, neg_ray_end,
                     pos_cir_start, pos_cir_end, neg_cir_start, neg_cir_end);
 
-        DEBUG_4ti2(state.check());
+        //DEBUG_4ti2(print_debug_diagnostics(cone, rays, supps, next);)
 
         // Ouput statistics.
         char buffer[256];
         sprintf(buffer, "%cLeft %3d  Col %3d", ENDL, rem.count(), next);
         *out << buffer << std::flush;
+        DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
 
-        // TODO: Make threaded. // Change algorithm so that supps are constrant.
-        //state.flip(pos_cir_start, pos_cir_end);
+        // TODO: Make threaded. // Change algorithm so that supps are constant.
+        state.flip(pos_cir_start, pos_cir_end);
         alg.compute_cirs(pos_ray_start, neg_cir_end, pos_cir_start, neg_ray_end);
-        //state.flip(neg_cir_start, neg_cir_end);
+        state.flip(neg_cir_start, neg_cir_end);
 
-        // Add new rays and supps.
         alg.transfer();
         for (Index i = 0; i < Globals::num_threads-1; ++i) { algs[i]->transfer(); }
 
-        // Update the supp vectors for the next_con.
-        state.update(next, pos_ray_start, neg_ray_end);
+        // Update the supp vectors for the next_col.
+        state.resize(cir_supp_size+2);
+        state.update(cir_supp_size, pos_ray_start, pos_ray_end);
+        state.update(cir_supp_size, pos_cir_start, pos_cir_end);
+        state.update(cir_supp_size+1, neg_ray_start, neg_ray_end);
+        state.update(cir_supp_size+1, neg_cir_start, neg_cir_end);
+        ray_mask.resize(cir_supp_size+2);
 
-        //resize_supports(cir_supps, 2*dim_cirs+2);
-        //update_supports(cir_supps, 2*dim_cirs, pos_ray_start, pos_ray_end);
-        //update_supports(cir_supps, 2*dim_cirs, pos_cir_start, pos_cir_end);
-        //update_supports(cir_supps, 2*dim_cirs+1, neg_ray_start, neg_ray_end);
-        //update_supports(cir_supps, 2*dim_cirs+1, neg_cir_start, neg_cir_end);
-        //dim_cirs+=1;
-        //cir_mask.set(next);
+        state.supps_to_cons.push_back(next);
+        state.supps_to_cons.push_back(next);
+        state.supp_types.push_back(_4ti2_LB);
+        state.supp_types.push_back(_4ti2_UB);
+        state.cons_to_supps[next] = cir_supp_size;
 
-        DEBUG_4ti2(state.check());
+        cir_supp_size+=2;
 
         sprintf(buffer, "%cLeft %3d  Col %3d  Size %8d  Time %8.2fs", ENDL, rem.count(), next, 
                 state.num_gens(), t.get_elapsed_time());
         *out << buffer << std::endl;
 
         rem.unset(next);
+        rel.unset(next);
         ++cons_added;
+
+        DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
+        DEBUG_4ti2(state.check());
     }
 }
 
@@ -528,50 +547,41 @@ template <class IndexSet>
 void
 MatrixSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, Index r2_start, Index r2_end)
 {
+    if (r1_start == r1_end || r2_start == r2_end) { return; }
+    // TODO: Copy class variables onto the stack???
+
     char buffer[256];
 
-    if (r1_start == r1_end || r2_start == r2_end) { return; }
     DEBUG_4ti2(*out << "\nComputing circuits for ranges ";)
-    DEBUG_4ti2(*out << "R1 [" << r1_start << "..." << r1_end << "] and ";)
-    DEBUG_4ti2(*out << "R2 [" << r2_start << "..." << r2_end << "]\n";)
+    DEBUG_4ti2(*out << "R1 [" << r1_start << ",...," << r1_end << "] and ";)
+    DEBUG_4ti2(*out << "R2 [" << r2_start << ",...," << r2_end << "]\n";)
 
-    Size s = supps[0].get_size();
-    IndexSet temp_supp(s);
-    IndexSet temp_zeros(s);
-    IndexSet r1_supp(s);
+    Index cir_supp_size = state.ray_mask.get_size();
+    IndexSet temp_supp(cir_supp_size);
+    IndexSet temp_zeros(cir_supp_size);
+    IndexSet cir_mask(state.ray_mask);
+    cir_mask.set_complement();
+
+    IndexSet r1_supp(cir_supp_size);
+    IndexSet r1_neg_supp(cir_supp_size);
     Size r1_count;
 
-    //Size t = cir_supps[0].get_size();
-    //IndexSet r1_cir_supp(t);
-
-    MultiTree<IndexSet> old;
-    old.insert(supps, 0, r1_start);
-
-    Index index_count = 0;
-    for (Index r1 = r1_start; r1 < r1_end; ++r1) {
-        // Output Statistics
-        if (index_count % Globals::output_freq == 0) {
-            sprintf(buffer, "%cLeft %3d  Col %3d  Index %8d/%-8d", ENDL, rel.count(), next, r1, r2_end);
-           *out << buffer << std::flush;
-        }
-        ++index_count;
-
-        if (r2_start <= r1) { r2_start = r1+1; }
+    int index_count = 0;
+    for (int r1 = r1_start; r1 < r1_end; ++r1) {
+        if (r2_start <= r1) { r2_start = r1+1; supps[r1].swap_odd_n_even(); }
 
         r1_supp = supps[r1];
         r1_count = r1_supp.count();
-        //r1_cir_supp = cir_supps[r1];
+        r1_neg_supp.set_intersection(r1_supp, cir_mask);
+        r1_neg_supp.swap_odd_n_even();
         helper.set_r1_index(r1);
+        //if (r2_start <= r1) { r2_start = r1+1; IndexSet::swap(r1_supp, r1_neg_supp); }
 
         if (r1_count == cons_added+1) {
             for (Index r2 = r2_start; r2 < r2_end; ++r2) {
-                if (supps[r2].singleton_diff(r1_supp)) {
-                    //&& r1_cir_supp.set_disjoint(cir_supps[r2])) {
-                    temp_supp.set_union(r1_supp, supps[r2]);
-                    if (!old.dominated(temp_supp,-1,-1)) {
-                        old.insert(temp_supp,0);
-                        helper.create_circuit(r2);
-                    }
+                if (r1_neg_supp.set_disjoint(supps[r2])
+                    && supps[r2].singleton_diff(r1_supp)) {
+                    helper.create_circuit(r2);
                 }
             }
             continue;
@@ -583,22 +593,20 @@ MatrixSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, Ind
         DEBUG_4ti2(*out << "NEW ZEROS:\n" << temp_zeros << "\n";)
 
         for (Index r2 = r2_start; r2 < r2_end; ++r2) {
-            if (temp_zeros.singleton_intersection(supps[r2]) &&
-                r1_supp.count_union(supps[r2]) <= cons_added+2) {
-                //&& r1_cir_supp.set_disjoint(cir_supps[r2])) { 
-                //if (supps[r2].singleton_diff(r1_supp)) { helper.create_circuit(r2); continue; }
-                //if (r1_supp.singleton_diff(supps[r2])) { helper.create_circuit(r2); continue; }
+            if (temp_zeros.singleton_intersection(supps[r2])
+                && r1_neg_supp.set_disjoint(supps[r2])
+                && r1_supp.count_union(supps[r2]) <= cons_added+2) {
                 temp_supp.set_difference(supps[r2], r1_supp);
                 //if (temp_supp.count_lte(2))) { helper.create_circuit(r2); continue; }
-                if (helper.is_two_dimensional_face(con_map, temp_supp)) {
-                    temp_supp.set_union(r1_supp, supps[r2]);
-                    if (!old.dominated(temp_supp,-1,-1)) {
-                        old.insert(temp_supp,0);
-                        helper.create_circuit(r2);
-                    }
-                }
+                if (helper.is_two_dimensional_face(con_map, temp_supp)) { helper.create_circuit(r2); }
             }
         }
+
+        if (index_count % Globals::output_freq == 0) {
+            sprintf(buffer, "%cLeft %3d  Col %3d  Index %8d/%-8d", ENDL, rel.count(), next, index_count, r1_end-r1_start);
+            *out << buffer << std::flush;
+        }
+        ++index_count;
     }
     sprintf(buffer, "%cLeft %3d  Col %3d  Index %8d/%-8d", ENDL, rel.count(), next, r1_end, r2_end);
     *out << buffer << std::flush;
@@ -609,84 +617,8 @@ inline
 void
 MatrixSubAlgorithmBase<IndexSet>::transfer()
 {
-    //supps.insert(supps.end(), new_supps.begin(), new_supps.end());
-    //new_supps.clear();
-    //cir_supps.insert(cir_supps.end(), new_cir_supps.begin(), new_cir_supps.end());
-    //new_cir_supps.clear();
     helper.transfer();
 }
-
-#if 0
-template <class IndexSet>
-inline  
-void    
-MatrixSubAlgorithmBase<IndexSet>::set_r1_index(Index r1)
-{
-    _r1 = r1;
-    helper.set_r1_index(r1);
-}
-
-template <class IndexSet>
-void
-MatrixSubAlgorithmBase<IndexSet>::create_ray(Index r2)
-{
-    IndexSet temp_supp(supps[_r1]);
-    temp_supp.set_union(supps[r2]);
-    new_supps.push_back(temp_supp);
-
-    helper.create_ray(r2);
-
-    DEBUG_4ti2(*out << "SUPP:\n" << temp_supp << "\n";)
-}
-
-template <class IndexSet>
-void
-MatrixSubAlgorithmBase<IndexSet>::create_rays(Index i1, std::vector<Index>& r2s)
-{
-    if (r2s.empty()) { return; }
-    IndexSet r1_supp(supps[i1]);
-    IndexSet r2_supp(r1_supp.get_size());
-    for (std::vector<Index>::iterator i2 = r2s.begin(); i2 != r2s.end(); ++i2) {
-        r2_supp.set_union(r1_supp, supps[*i2]);
-        new_supps.push_back(r2_supp);
-    }
-
-    helper.create_rays(i1, r2s);
-
-    DEBUG_4ti2(*out << "SUPP:\n" << temp_supp << "\n";)
-}
-
-template <class IndexSet>
-void
-MatrixSubAlgorithmBase<IndexSet>::create_circuit(Index i2)
-{
-    DEBUG_4ti2(*out << "Creating new circuit.\n";)
-    const Index i1 = _r1;
-
-    bool is_i1_pos = helper.create_circuit(i2);
-
-    IndexSet temp_supp(supps[i1]);
-    temp_supp.set_union(supps[i2]);
-    new_supps.push_back(temp_supp);
-
-    IndexSet cir_supp(cir_supps[i2]);
-    cir_supp.swap_odd_n_even();
-    cir_supp.set_union(cir_supps[i1]);
-    if (!is_i1_pos) { cir_supp.swap_odd_n_even(); }
-    new_cir_supps.push_back(cir_supp);
-
-    DEBUG_4ti2(
-        *out << "Ray1 " << i1;
-        *out << "Sup1 " << supps[i1] << "\n";
-        *out << "Cir1 " << cir_supps[i1] << "\n";
-        *out << "Ray2 " << i2;
-        *out << "Sup2 " << supps[i2] << "\n";
-        *out << "Cir2 " << cir_supps[i2] << "\n";
-        *out << "Sup0 " << temp_supp << "\n";
-        *out << "Cir0 " << cir_supp << "\n";
-    )
-}
-#endif
 
 
 template <class IndexSet>

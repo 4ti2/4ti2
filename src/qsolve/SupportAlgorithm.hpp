@@ -72,19 +72,22 @@ SupportAlgorithm<IndexSet>::compute_rays(
     Index& next = state.next;
     Index& cons_added = state.cons_added;
     IndexSet& ray_mask = state.ray_mask;
-    IndexSet& rem = state.rem;
-    IndexSet& rel = state.rel;
 
     // The number of variables.
     Size n = cone.num_vars();
     // The number of constraints.
     Size m = cone.num_cons();
-
     // The dimension
     Size dim = state.num_gens();
 
     // The set of constraints to be processed.
+    IndexSet& rem = state.rem;
     cone.get_constraint_set(_4ti2_LB, rem);
+
+    // The total set of relaxed constraints.
+    IndexSet& rel = state.rel;
+    cone.get_constraint_set(_4ti2_EQ, rel);
+    rel.set_complement();
 
     IndexRanges index_ranges;
     ray_mask.resize(dim);
@@ -101,15 +104,11 @@ SupportAlgorithm<IndexSet>::compute_rays(
         supp.set(i);
         supps.push_back(supp);
         rem.unset(ineqs[i]);
+        rel.unset(ineqs[i]);
         state.cons_to_supps[ineqs[i]] = i;
     }
 
     DEBUG_4ti2(*out << "Initial Supps:\n" << supps << "\n";)
-
-    // The total set of relaxed constraints.
-    rel = rem;
-    cone.get_constraint_set(_4ti2_FR, rel);
-    cone.get_constraint_set(_4ti2_DB, rel);
 
     // Construct main algorithm object.
     SUPPORTTREE<IndexSet> tree;
@@ -201,7 +200,6 @@ SupportAlgorithm<IndexSet>::compute_rays(
         DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
         DEBUG_4ti2(state.check());
     }
-    rem.zero();
 
     // Clean up threaded algorithms objects.
     for (Index i = 0; i < Globals::num_threads-1; ++i) { delete algs[i]; }
@@ -227,10 +225,8 @@ SupportAlgorithm<IndexSet>::compute_cirs(
     rem.zero();
     cone.get_constraint_set(_4ti2_DB, rem);
     if (rem.empty()) { return; }
-    rel = rem;
     // We have already processed the initial constraints.
-    for (Index i = 0; i < (Index) dbls.size(); ++i) { rem.unset(dbls[i]); }
-    //std::vector<_4ti2_constraint> types(ineqs.size(), _4ti2_LB);
+    for (Index i = 0; i < (Index) dbls.size(); ++i) { rem.unset(dbls[i]); rel.unset(dbls[i]); }
 
     *out << "Circuit Support Algorithm.\n";
 
@@ -336,12 +332,13 @@ SupportAlgorithm<IndexSet>::compute_cirs(
         sprintf(buffer, "%cLeft %3d  Col %3d  Size %8d  Time %8.2fs", ENDL, rem.count(), next, 
                 state.num_gens(), t.get_elapsed_time());
         *out << buffer << std::endl;
-        DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
-        DEBUG_4ti2(state.check());
 
         rem.unset(next);
         rel.unset(next);
         ++cons_added;
+
+        DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
+        DEBUG_4ti2(state.check());
     }
 }
 

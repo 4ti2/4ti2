@@ -75,6 +75,8 @@ public:
     bool count_lte_2_diff(const IndexSetDS& b) const;
 
     bool operator[](Index index) const;
+    void operator>>=(Size s);
+    void operator<<=(Size s);
 
     void set(Index index);
     void unset(Index index);
@@ -304,7 +306,6 @@ IndexSetDS::swap(IndexSetDS& b1, IndexSetDS& b2)
     b2.block = temp;
 }
 
-#if 1
 inline
 bool
 IndexSetDS::operator[](Index index) const
@@ -313,7 +314,23 @@ IndexSetDS::operator[](Index index) const
     return (((BlockType) 1 << index) & block) != 0;
     //return (set_masks[index] & block) != 0;
 }
-#endif
+
+inline
+void
+IndexSetDS::operator<<=(Size s)
+{
+    assert(s >= 0 && s <= size);
+    block <<= s;
+    unset_unused_bits();
+}
+
+inline
+void
+IndexSetDS::operator>>=(Size s)
+{
+    assert(s >= 0 && s <= size);
+    block >>= s;
+}
 
 inline
 Size
@@ -579,7 +596,7 @@ IndexSetDS::IndexSetDS(Size _size, bool v)
         : size(_size)
 {
     initialise();
-    assert(_size >= 0 && _size <= (Size) BITS_PER_BLOCK);
+    assert(_size >= 0 && _size <= (Size) sizeofstorage);
     if (v == false) { zero(); }
     else { one(); } // v == true
 }
@@ -609,7 +626,7 @@ inline
 void
 IndexSetDS::resize(Size s)
 {
-    assert(s <= (Size) BITS_PER_BLOCK);
+    assert(s >= 0 && s <= (Size) sizeofstorage);
     size = s;
     unset_unused_bits();
 }

@@ -78,6 +78,8 @@ public:
     bool count_lte_2_diff(const IndexSetD& b) const;
 
     bool operator[](Index index) const;
+    void operator>>=(Size s);
+    void operator<<=(Size s);
 
     Size get_size() const;
     void resize(Size s);
@@ -362,7 +364,6 @@ IndexSetD::swap(IndexSetD& b1, IndexSetD& b2)
     b2.blocks = temp;
 }
 
-#if 1
 inline
 bool
 IndexSetD::operator[](Index index) const
@@ -372,7 +373,46 @@ IndexSetD::operator[](Index index) const
     //return (((BlockType) 1 << (index & (Index) 63)) & blocks[index >> 6]) != 0;
     return (((BlockType) 1 << (index%sizeofstorage)) & blocks[index/sizeofstorage]) != 0;
 }
-#endif
+
+inline
+void
+IndexSetD::operator>>=(Size s)
+{
+    Size s0 = num_blocks/s;
+    Size s1 = sizeofstorage%s;
+    Size s2 = sizeofstorage-s1;
+    if (s0) {
+        Index i = 0;
+        while (i < num_blocks-s0) { blocks[i] = blocks[i+s0]; ++i; }
+        while (i < num_blocks) { blocks[i] = 0; ++i; }
+    }
+
+    Index i = 0;
+    while (i < num_blocks-1) {
+        blocks[i] = (blocks[i] >> s1) & (blocks[i+1] << s2);
+        ++i;
+    }
+    blocks[i] >>= s1;
+}
+
+inline
+void
+IndexSetD::operator<<=(Size s)
+{
+    Size s0 = num_blocks/s;
+    Size s1 = sizeofstorage%s;
+    Size s2 = sizeofstorage-s1;
+    if (s0) {
+        Index i = 0;
+        while (i < s0) { blocks[i] = 0; ++i; }
+        while (i < num_blocks) { blocks[i] = blocks[i-s0]; ++i; }
+    }
+
+    blocks[0] <<= s1;
+    for (Index i = 1; i < num_blocks; ++i) {
+        blocks[i] = (blocks[i] << s1) & (blocks[i-1] >> s2);
+    }
+}
 
 inline
 Size

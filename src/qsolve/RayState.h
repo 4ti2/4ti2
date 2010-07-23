@@ -89,7 +89,7 @@ public:
                 Index& pos_cir_start, Index& pos_cir_end, Index& neg_cir_start, Index& neg_cir_end);
     Index next_constraint(const ConsOrder& order, const IndexSet& rem);
     void check();
-    bool check(const VectorR<T>& ray, const IndexSet& supp);
+    bool check(const VectorR<T>& ray, const IndexSet& supp, Size d);
 
     Index sort_count(Size count, Index start, Index end);
     void remove(Index start, Index end);
