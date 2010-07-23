@@ -32,6 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "qsolve/Matrix.h"
 #include "qsolve/ConeC.h"
 #include "qsolve/RayState.h"
+#include "qsolve/SubAlgorithm.h"
 
 namespace _4ti2_
 {
@@ -48,22 +49,14 @@ public:
     void compute_cirs(const ConeAPI& cone, RayStateAPI<IndexSet>& state, std::vector<int>& ineqs);
 
 protected:
-#if 0
-    template <class IndexSet>
-    void check(const ConeT<T>& cone, const IndexSet& rem,
-                const VectorArrayT<T>& rays, const std::vector<IndexSet>& supps);
-#endif 
-
     ConsOrder order;
 };
 
-
 template <class IndexSet>
-class MatrixSubAlgorithmBase
+class MatrixSubAlgorithmBase : public SubAlgorithm
 {
 public:
-    MatrixSubAlgorithmBase(RayStateAPI<IndexSet>& state, std::vector<IndexSet>& supps, 
-                        const IndexSet& rel, const Index& cons_added, const Index& next);
+    MatrixSubAlgorithmBase(RayStateAPI<IndexSet>& state);
     virtual ~MatrixSubAlgorithmBase();
 
     void compute_rays(Index r1_start, Index r1_end, Index r2_start, Index r2_index, Index r2_end);
@@ -74,23 +67,13 @@ public:
 protected:
     RayStateAPI<IndexSet>& state;
     RaySubStateAPI<IndexSet>& helper;
-    std::vector<IndexSet>& supps;
-
-    const IndexSet& rel;
-    const Index& cons_added;
-    const Index& next;
-
-    Index _r1;
 };
 
-
 template <class IndexSet>
-class MatrixRayAlgorithm : public MatrixSubAlgorithmBase<IndexSet>, public ThreadedAlgorithm
+class MatrixRayAlgorithm : public MatrixSubAlgorithmBase<IndexSet>
 {
 public:
-    MatrixRayAlgorithm(RayStateAPI<IndexSet>& state,
-                std::vector<IndexSet>& supps, const IndexSet& rel, const
-                Index& cons_added, const Index& next, IndexRanges& indices);
+    MatrixRayAlgorithm(RayStateAPI<IndexSet>& state, IndexRanges& indices);
 
     virtual void compute();
     MatrixRayAlgorithm* clone();
@@ -100,11 +83,10 @@ protected:
 };
 
 template <class IndexSet>
-class MatrixCirAlgorithm : public MatrixSubAlgorithmBase<IndexSet>, public ThreadedAlgorithm
+class MatrixCirAlgorithm : public MatrixSubAlgorithmBase<IndexSet>
 {
 public:
-    MatrixCirAlgorithm(RayStateAPI<IndexSet>& state, std::vector<IndexSet>& supps, 
-                const IndexSet& rel, const Index& cons_added, const Index& next, IndexRanges& indices);
+    MatrixCirAlgorithm(RayStateAPI<IndexSet>& state, IndexRanges& indices);
 
     virtual void compute();
     MatrixCirAlgorithm* clone();

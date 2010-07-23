@@ -28,8 +28,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "qsolve/IndexSetD.h"
 #include "qsolve/IndexSetStream.h"
 #include "4ti2/4ti2.h"
-#include "qsolve/MatrixAlgorithm.h"
-#include "qsolve/SupportAlgorithm.h"
+//#include "qsolve/MatrixAlgorithm.h"
+//#include "qsolve/SupportAlgorithm.h"
+#include "qsolve/Algorithm.h"
 #include "qsolve/RayState.h"
 
 #undef DEBUG_4ti2
@@ -168,40 +169,22 @@ QSolveAlgorithm<T>::compute(const ConeT<T>& cone,
 
     if (lbs.count()+2*dbs.count() <= IndexSetDS::max_size) {
         RayState<T,IndexSetDS> state(cone, rays);
-        if (variant == MATRIX) {
-            MatrixAlgorithm<IndexSetDS> alg(order);
-            // Compute ray only constraints first.
-            alg.compute_rays(cone, state, ray_ineqs);
-            // Compute circuits.
-            rays.transfer(cirs, 0, cirs.get_number(), rays.get_number());
-            alg.compute_cirs(cone, state, cir_ineqs);
-        } else {
-            SupportAlgorithm<IndexSetDS> alg(order);
-            // Compute ray only constraints first.
-            alg.compute_rays(cone, state, ray_ineqs);
-            // Compute circuits.
-            rays.transfer(cirs, 0, cirs.get_number(), rays.get_number());
-            alg.compute_cirs(cone, state, cir_ineqs);
-        }
+        Algorithm<IndexSetDS> alg(order, variant);
+        // Compute ray only constraints first.
+        alg.compute_rays(cone, state, ray_ineqs);
+        // Compute circuits.
+        rays.transfer(cirs, 0, cirs.get_number(), rays.get_number());
+        alg.compute_cirs(cone, state, cir_ineqs);
         // Separate the rays from the circuits.
         split_rays(cone, state.supps, state.ray_mask, rays, cirs);
     } else {
         RayState<T,IndexSetD> state(cone, rays);
-        if (variant == MATRIX) {
-            MatrixAlgorithm<IndexSetD> alg(order);
-            // Compute ray only constraints first.
-            alg.compute_rays(cone, state, ray_ineqs);
-            // Compute circuits.
-            rays.transfer(cirs, 0, cirs.get_number(), rays.get_number());
-            alg.compute_cirs(cone, state, cir_ineqs);
-        } else {
-            SupportAlgorithm<IndexSetD> alg(order);
-            // Compute ray only constraints first.
-            alg.compute_rays(cone, state, ray_ineqs);
-            // Compute circuits.
-            rays.transfer(cirs, 0, cirs.get_number(), rays.get_number());
-            alg.compute_cirs(cone, state, cir_ineqs);
-        }
+        Algorithm<IndexSetD> alg(order, variant);
+        // Compute ray only constraints first.
+        alg.compute_rays(cone, state, ray_ineqs);
+        // Compute circuits.
+        rays.transfer(cirs, 0, cirs.get_number(), rays.get_number());
+        alg.compute_cirs(cone, state, cir_ineqs);
         // Separate the rays from the circuits.
         split_rays(cone, state.supps, state.ray_mask, rays, cirs);
     }
@@ -228,39 +211,6 @@ QSolveAlgorithm<T>::split_rays(
     }
     cirs.transfer(rays, index, rays.get_number(), 0);
 }
-
-#if 0
-template <class T> template <class IndexSet>
-Index
-QSolveAlgorithm<T>::next_circuit_constraint(
-                const ConeT<T>& cone,
-                const VectorArrayT<T>& vs,
-                const IndexSet& rem)
-{
-    Index next_con = *rem.begin();
-    if (order.get_constraint_order() == MININDEX) { return next_con; }
-
-    typename IndexSet::Iter it = rem.begin(); ++it;
-    if (it == rem.end()) { return next_con; }
-
-    Size next_pos_count, next_neg_count, next_zero_count;
-    cone.slack_count(vs, next_con, next_pos_count, next_neg_count, next_zero_count);
-    while (it != rem.end()) {
-        Size pos_count, neg_count, zero_count;
-        cone.slack_count(vs, *it, pos_count, neg_count, zero_count);
-        if ((*order.circuit_compare)(next_pos_count, next_neg_count, next_zero_count,
-                        pos_count, neg_count, zero_count)) {
-            next_con = *it;
-            next_pos_count = pos_count;
-            next_neg_count = neg_count;
-            next_zero_count = zero_count;
-        }
-        ++it;
-    }
-    DEBUG_4ti2(*out << "Next Constraint is " << next_con << "\n";)
-    return next_con;
-}
-#endif
 
 inline
 IndexRanges::IndexRanges()

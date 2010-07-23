@@ -14,7 +14,6 @@ src/qsolve/MultiTree.h -text
 src/qsolve/MultiTree.hpp -text
 src/qsolve/QSolveAPI.cpp -text
 src/qsolve/QSolveConsOrder.cpp -text
-src/qsolve/RayAlgorithmAPI.cpp -text
 src/qsolve/RayState.h -text
 src/qsolve/RayState.hpp -text
 src/qsolve/RaysAPI.cpp -text

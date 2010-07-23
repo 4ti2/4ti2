@@ -37,6 +37,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #undef DEBUG_4ti2
 #define DEBUG_4ti2(X) //X
+#undef STATS_4ti2
+#define STATS_4ti2(X) //X
 
 using namespace _4ti2_;
 
@@ -111,9 +113,7 @@ SupportAlgorithm<IndexSet>::compute_rays(
     DEBUG_4ti2(*out << "Initial Supps:\n" << supps << "\n";)
 
     // Construct main algorithm object.
-    SUPPORTTREE<IndexSet> tree;
-    SupportRayAlgorithm<IndexSet> alg(state, supps, rel, cons_added, next, tree, index_ranges);
-
+    SupportRayAlgorithm<IndexSet> alg(state, index_ranges);
     // Construct threaded algorithm objects.
     std::vector<SupportRayAlgorithm<IndexSet>*> algs;
     for (Index i = 0; i < Globals::num_threads-1; ++i) { algs.push_back(alg.clone()); }
@@ -151,8 +151,8 @@ SupportAlgorithm<IndexSet>::compute_rays(
             Index r2_index = state.sort_count(cons_added+1, r2_start, r2_end);
 
             // Put supports into tree structure.
-            tree.insert(supps);
-            DEBUG_4ti2(tree.dump();)
+            state.tree.insert(supps);
+            DEBUG_4ti2(state.tree.dump();)
             //tree.print_statistics();
 
             // Run threads.
@@ -165,7 +165,7 @@ SupportAlgorithm<IndexSet>::compute_rays(
             for (Index i = 0; i < Globals::num_threads-1; ++i) { algs[i]->wait(); }
 
             // Clear tree.
-            tree.clear();
+            state.tree.clear();
         }
 
         // Delete all the vectors with a negative entry in the column next.
@@ -265,10 +265,8 @@ SupportAlgorithm<IndexSet>::compute_cirs(
     DEBUG_4ti2(*out << "Initial Rays + Circuits:\n" << rays << "\n";)
     DEBUG_4ti2(*out << "Initial Supports:\n" << supps << "\n";)
 
-    SUPPORTTREE<IndexSet> tree;
-
     IndexRanges index_ranges;
-    SupportCirAlgorithm<IndexSet> alg(state, supps, rem, cons_added, next, tree, ray_mask, index_ranges);
+    SupportCirAlgorithm<IndexSet> alg(state, index_ranges);
     std::vector<SupportCirAlgorithm<IndexSet>*> algs;
     for (Index i = 0; i < Globals::num_threads-1; ++i) { algs.push_back(alg.clone()); }
 
@@ -280,8 +278,6 @@ SupportAlgorithm<IndexSet>::compute_cirs(
                     pos_ray_start, pos_ray_end, neg_ray_start, neg_ray_end,
                     pos_cir_start, pos_cir_end, neg_cir_start, neg_cir_end);
 
-        //DEBUG_4ti2(print_debug_diagnostics(cone, rays, supps, next);)
-
         // Ouput statistics.
         char buffer[256];
         sprintf(buffer, "%cLeft %3d  Col %3d", ENDL, rem.count(), next);
@@ -290,18 +286,18 @@ SupportAlgorithm<IndexSet>::compute_cirs(
 
         // Note that the tree needs the ordering of the current vectors to be constant.
         DEBUG_4ti2(*out << "\nBuilding Tree ... " << std::endl;)
-        tree.insert(supps);
+        state.tree.insert(supps);
         // Insert the negatives of the circuit supports.
         for (int i = 0; i < state.num_gens(); ++i) {
             if (ray_mask.set_disjoint(supps[i])) {
                 supps[i].swap_odd_n_even();
-                tree.insert(supps[i], i);
+                state.tree.insert(supps[i], i);
                 supps[i].swap_odd_n_even();
             }
         }
-        //tree.print_statistics();
+        //state.tree.print_statistics();
         DEBUG_4ti2(*out << "done." << std::endl;)
-        DEBUG_4ti2(tree.dump();)
+        DEBUG_4ti2(state.ree.dump();)
 
         // TODO: Make threaded. // Change algorithm so that supps are constant.
         state.flip(pos_cir_start, pos_cir_end);
@@ -311,7 +307,7 @@ SupportAlgorithm<IndexSet>::compute_cirs(
         alg.transfer();
         for (Index i = 0; i < Globals::num_threads-1; ++i) { algs[i]->transfer(); }
 
-        tree.clear();
+        state.tree.clear();
 
         // Update the supp vectors for the next_col.
         state.resize(cir_supp_size+2);
@@ -343,10 +339,8 @@ SupportAlgorithm<IndexSet>::compute_cirs(
 }
 
 template <class IndexSet>
-SupportSubAlgorithmBase<IndexSet>::SupportSubAlgorithmBase(
-                RayStateAPI<IndexSet>& _state, std::vector<IndexSet>& _supps, const IndexSet& _rel, const Index& _cons_added, 
-                const Index& _next, const IndexSet& _ray_mask, const SUPPORTTREE<IndexSet>& _tree)
-        : state(_state), helper(*_state.clone()), supps(_supps), rel(_rel), cons_added(_cons_added), next(_next), ray_mask(_ray_mask), tree(_tree)
+SupportSubAlgorithmBase<IndexSet>::SupportSubAlgorithmBase(RayStateAPI<IndexSet>& _state)
+        : state(_state), helper(*_state.clone())
 {
 }
 
@@ -363,7 +357,7 @@ SupportSubAlgorithmBase<T,IndexSet>::compute(
                 Index r1_start, Index r1_end, Index r2_start, Index r2_index, Index r2_end)
 {
     if (r1_start == r1_end || r2_start == r2_end) { return; }
-    const std::vector<IndexSet>& local_supps = supps;
+    const std::vector<IndexSet>& supps = supps;
     Size supps_size = supps[r1_start].get_size();
     _next = next; //TODO: This is a hack.
 
@@ -376,7 +370,7 @@ SupportSubAlgorithmBase<T,IndexSet>::compute(
     T s1;
 
     char buffer[256];
-    sprintf(buffer, "  Left = %3d  Col = %3d", rel.count(), next);
+    sprintf(buffer, "  Left = %3d  Col = %3d", state.rem.count(), state.next);
 
     Index index_count = 0;
     // Check negative and positive combinations for adjacency.
@@ -390,39 +384,39 @@ SupportSubAlgorithmBase<T,IndexSet>::compute(
         }
         ++index_count;
 
-        r1_supp = local_supps[r1];
+        r1_supp = supps[r1];
         r1_count = r1_supp.count();
         cone.get_slack(rays[r1], next, s1);
         if (r1_count == cons_added+1) {
             for (Index r2 = r2_start; r2 < r2_end; ++r2) {
-                temp_supp.set_difference(local_supps[r2], r1_supp);
+                temp_supp.set_difference(supps[r2], r1_supp);
                 if (temp_supp.singleton()) { helper.create_ray(r2);  }
             }
             continue;
         }
 
         for (Index r2 = r2_start; r2 < r2_index; ++r2) {
-            temp_supp.set_difference(r1_supp, local_supps[r2]);
+            temp_supp.set_difference(r1_supp, supps[r2]);
             if (temp_supp.singleton()) { helper.create_ray(r2);  }
         }
 
         for (Index r2 = r2_index; r2 < r2_end; ++r2) { // Inner loop.
             // Quick sufficient check whether the two rays are adjacent.
-            temp_union.set_union(local_supps[r2], r1_supp);
+            temp_union.set_union(supps[r2], r1_supp);
             if (temp_union.count() > cons_added+2) { continue; }
             // Check whether the two rays r1 and r2 are adjacent.
-            temp_supp.set_difference(r1_supp, local_supps[r2]);
+            temp_supp.set_difference(r1_supp, supps[r2]);
             if (temp_supp.singleton()) {
                 helper.create_ray(r2); 
                 continue;
             }
-            temp_supp.set_difference(local_supps[r2], r1_supp);
+            temp_supp.set_difference(supps[r2], r1_supp);
             if (temp_supp.singleton()) {
                 helper.create_ray(r2); 
                 continue;
             }
             STATS_4ti2(++num_checks;)
-            if (tree.dominated(temp_union, r1, r2)) { STATS_4ti2(++num_dominated;) continue; }
+            if (state.tree.dominated(temp_union, r1, r2)) { STATS_4ti2(++num_dominated;) continue; }
             helper.create_ray(r2); 
         }
     }
@@ -437,7 +431,9 @@ SupportSubAlgorithmBase<IndexSet>::compute_rays(
                 Index r1_start, Index r1_end, Index r2_start, Index r2_index, Index r2_end)
 {
     if (r1_start == r1_end || r2_start == r2_end) { return; }
-    const std::vector<IndexSet>& local_supps = supps;
+    const std::vector<IndexSet>& supps = state.supps;
+    SUPPORTTREE<IndexSet>& tree = state.tree;
+
     Size supps_size = supps[r1_start].get_size();
 
     // Temporary variables.
@@ -453,7 +449,7 @@ SupportSubAlgorithmBase<IndexSet>::compute_rays(
     sprintf(buffer, "  Left = %3d  Col = %3d", 0, 0);
 
     SUPPORTTREE<IndexSet> neg_tree;
-    neg_tree.insert(local_supps, r2_index, r2_end);
+    neg_tree.insert(supps, r2_index, r2_end);
     DEBUG_4ti2(neg_tree.dump());
     std::vector<Index> neg_indices;
 
@@ -462,22 +458,22 @@ SupportSubAlgorithmBase<IndexSet>::compute_rays(
     for (Index r1 = r1_start; r1 < r1_end; ++r1) { // Outer loop.
         // Output statistics.
         if (index_count % Globals::output_freq == 0) {
-            sprintf(buffer, "%cLeft %3d  Col %3d  Index %8d/%-8d", ENDL, rel.count(), next, index_count, r1_end-r1_start);
+            sprintf(buffer, "%cLeft %3d  Col %3d  Index %8d/%-8d", ENDL, state.rem.count(), state.next, index_count, r1_end-r1_start);
             *out << buffer << std::flush;
         }
         ++index_count;
 
-        r1_supp = local_supps[r1];
+        r1_supp = supps[r1];
         helper.set_r1_index(r1);
-        if (r1_supp.count() == cons_added+1) {
+        if (r1_supp.count() == state.cons_added+1) {
             for (Index r2 = r2_start; r2 < r2_end; ++r2) {
-                if (local_supps[r2].singleton_diff(r1_supp)) { helper.create_ray(r2);  }
+                if (supps[r2].singleton_diff(r1_supp)) { helper.create_ray(r2);  }
             }
             continue;
         }
 
         for (Index r2 = r2_start; r2 < r2_index; ++r2) {
-            if (r1_supp.singleton_diff(local_supps[r2])) { helper.create_ray(r2);  }
+            if (r1_supp.singleton_diff(supps[r2])) { helper.create_ray(r2);  }
         }
 
         zeros.zero();
@@ -497,12 +493,12 @@ SupportSubAlgorithmBase<IndexSet>::compute_rays(
 
 #if 0
         for (Index r2 = r2_index; r2 < r2_end; ++r2) { // Inner loop.
-            if (zeros.set_disjoint(local_supps[r2])) {
-                if (r1_supp.count_union(local_supps[r2]) <= cons_added+2) {
-                    if (r1_supp.singleton_diff(local_supps[r2])) { helper.create_ray(r2);  continue; }
-                    if (local_supps[r2].count_lte_diff(2, r1_supp)) { helper.create_ray(r2); continue; }
+            if (zeros.set_disjoint(supps[r2])) {
+                if (r1_supp.count_union(supps[r2]) <= cons_added+2) {
+                    if (r1_supp.singleton_diff(supps[r2])) { helper.create_ray(r2);  continue; }
+                    if (supps[r2].count_lte_diff(2, r1_supp)) { helper.create_ray(r2); continue; }
                     STATS_4ti2(++num_checks;)
-                    temp_union.set_union(local_supps[r2], r1_supp);
+                    temp_union.set_union(supps[r2], r1_supp);
                     if (!tree.dominated(temp_union, r1, r2)) { helper.create_ray(r2); }
                 }
             }
@@ -511,16 +507,16 @@ SupportSubAlgorithmBase<IndexSet>::compute_rays(
 
 #if 1
         neg_indices.clear();
-        neg_tree.find(neg_indices, zeros, r1_supp, cons_added+2);
+        neg_tree.find(neg_indices, zeros, r1_supp, state.cons_added+2);
         DEBUG_4ti2(std::cout << "Neg Indices:\n" << neg_indices << "\n";)
         for (Index i = 0; i < (Index) neg_indices.size(); ++i) { // Inner loop.
             Index r2 = neg_indices[i];
-            if (r1_supp.singleton_diff(local_supps[r2])) { helper.create_ray(r2);  continue; }
-            if (local_supps[r2].count_lte_diff(2, r1_supp)) { helper.create_ray(r2); continue; }
+            if (r1_supp.singleton_diff(supps[r2])) { helper.create_ray(r2);  continue; }
+            if (supps[r2].count_lte_diff(2, r1_supp)) { helper.create_ray(r2); continue; }
             STATS_4ti2(++num_checks;)
-            temp_union.set_union(local_supps[r2], r1_supp);
+            temp_union.set_union(supps[r2], r1_supp);
             //for (Index j = 0; j < (Index) neg_indices.size(); ++j) {
-            //    if (local_supps[j].set_subset(temp_union) && i != j) { continue; }
+            //    if (supps[j].set_subset(temp_union) && i != j) { continue; }
             //}
             if (!tree.dominated(temp_union, r1, r2)) { helper.create_ray(r2); }
         }
@@ -536,7 +532,8 @@ SupportSubAlgorithmBase<IndexSet>::compute_rays(
                 Index r1_start, Index r1_end, Index r2_start, Index r2_index, Index r2_end)
 {
     if (r1_start == r1_end || r2_start == r2_end) { return; }
-    const std::vector<IndexSet>& local_supps = supps;
+    const std::vector<IndexSet>& supps = state.supps;
+    SUPPORTTREE<IndexSet>& tree = state.tree;
     Size supps_size = supps[r1_start].get_size();
 
     // Temporary variables.
@@ -544,22 +541,22 @@ SupportSubAlgorithmBase<IndexSet>::compute_rays(
     IndexSet temp_union(supps_size);
 
     SUPPORTTREE<IndexSet> neg_tree;
-    neg_tree.insert(local_supps, r2_index, r2_end);
+    neg_tree.insert(supps, r2_index, r2_end);
     DEBUG_4ti2(*out << "\nNeg Tree.\n";)
     DEBUG_4ti2(neg_tree.dump());
 
     SUPPORTTREE<IndexSet> pos_tree;
     for (Index r1 = r1_start; r1 < r1_end; ++r1) { // Outer loop.
-        r1_supp = local_supps[r1];
+        r1_supp = supps[r1];
         helper.set_r1_index(r1);
         if (r1_supp.count() == cons_added+1) {
             for (Index r2 = r2_start; r2 < r2_end; ++r2) {
-                if (local_supps[r2].singleton_diff(r1_supp)) { helper.create_ray(r2);  }
+                if (supps[r2].singleton_diff(r1_supp)) { helper.create_ray(r2);  }
             }
         } else {
             pos_tree.insert(r1_supp, r1);
             for (Index r2 = r2_start; r2 < r2_index; ++r2) {
-                if (r1_supp.singleton_diff(local_supps[r2])) { helper.create_ray(r2);  }
+                if (r1_supp.singleton_diff(supps[r2])) { helper.create_ray(r2);  }
             }
         }
     }
@@ -571,9 +568,9 @@ SupportSubAlgorithmBase<IndexSet>::compute_rays(
     for (Index i = 0; i < (Index) indices.size(); ++i) { // Inner loop
         Index r1 = indices[i].first;
         Index r2 = indices[i].second;
-        if (local_supps[r2].singleton_diff(local_supps[r1])) { create_ray(r1, r2);  continue; }
-        if (local_supps[r1].singleton_diff(local_supps[r2])) { create_ray(r1, r2);  continue; }
-        temp_union.set_union(local_supps[r1], local_supps[r2]);
+        if (supps[r2].singleton_diff(supps[r1])) { create_ray(r1, r2);  continue; }
+        if (supps[r1].singleton_diff(supps[r2])) { create_ray(r1, r2);  continue; }
+        temp_union.set_union(supps[r1], supps[r2]);
         if (!tree.dominated(temp_union, r1, r2)) { create_ray(r1, r2); }
     }
 }
@@ -587,7 +584,8 @@ SupportSubAlgorithmBase<IndexSet>::compute_rays(
                 Index r1_start, Index r1_end, Index r2_start, Index r2_index, Index r2_end)
 {
     if (r1_start == r1_end || r2_start == r2_end) { return; }
-    const std::vector<IndexSet>& local_supps = supps;
+    const std::vector<IndexSet>& supps = state.supps;
+    SUPPORTTREE<IndexSet>& tree = state.tree;
     Size supps_size = supps[r1_start].get_size();
 
     // Temporary variables.
@@ -597,7 +595,7 @@ SupportSubAlgorithmBase<IndexSet>::compute_rays(
     IndexSet temp_empty(supps_size,0);
 
     SUPPORTTREE<IndexSet> neg_tree;
-    neg_tree.insert(local_supps, r2_index, r2_end);
+    neg_tree.insert(supps, r2_index, r2_end);
     DEBUG_4ti2(*out << "\nNeg Tree.\n";)
     DEBUG_4ti2(neg_tree.dump());
 
@@ -605,11 +603,11 @@ SupportSubAlgorithmBase<IndexSet>::compute_rays(
     std::vector<IndexSet> diff_supps;
     std::vector<Index> diffs;
     for (Index r1 = r1_start; r1 < r1_end; ++r1) { // Outer loop.
-        r1_supp = local_supps[r1];
+        r1_supp = supps[r1];
         helper.set_r1_index(r1);
         if (r1_supp.count() == cons_added+1) {
             for (Index r2 = r2_start; r2 < r2_end; ++r2) {
-                if (local_supps[r2].singleton_diff(r1_supp)) { helper.create_ray(r2);  }
+                if (supps[r2].singleton_diff(r1_supp)) { helper.create_ray(r2);  }
             }
             diff_supps.push_back(temp_empty);
             continue;
@@ -617,7 +615,7 @@ SupportSubAlgorithmBase<IndexSet>::compute_rays(
 
         pos_tree.insert(r1_supp, r1);
         for (Index r2 = r2_start; r2 < r2_index; ++r2) {
-            if (r1_supp.singleton_diff(local_supps[r2])) { helper.create_ray(r2);  }
+            if (r1_supp.singleton_diff(supps[r2])) { helper.create_ray(r2);  }
         }
 
         // Find the rays whose support differs by one from the current ray's support.
@@ -648,10 +646,10 @@ SupportSubAlgorithmBase<IndexSet>::compute_rays(
             r2 = indices[i].first;
             r1 = indices[i].second;
         }
-        //if (local_supps[r2].singleton_diff(local_supps[r1])) { create_ray(r1, r2);  continue; }
-        if (!local_supps[r2].set_disjoint(diff_supps[r1-r1_start])) { continue; }
-        if (local_supps[r1].singleton_diff(local_supps[r2])) { create_ray(r1, r2);  continue; }
-        temp_union.set_union(local_supps[r1], local_supps[r2]);
+        //if (supps[r2].singleton_diff(supps[r1])) { create_ray(r1, r2);  continue; }
+        if (!supps[r2].set_disjoint(diff_supps[r1-r1_start])) { continue; }
+        if (supps[r1].singleton_diff(supps[r2])) { create_ray(r1, r2);  continue; }
+        temp_union.set_union(supps[r1], supps[r2]);
         if (!tree.dominated(temp_union, r1, r2)) { create_ray(r1, r2); }
     }
 }
@@ -662,7 +660,8 @@ void
 SupportSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, Index r2_start, Index r2_end)
 {
     if (r1_start == r1_end || r2_start == r2_end) { return; }
-    // TODO: Copy class variables onto the stack???
+    std::vector<IndexSet>& supps = state.supps;
+    SUPPORTTREE<IndexSet>& tree = state.tree;
 
     char buffer[256];
 
@@ -670,9 +669,9 @@ SupportSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, In
     DEBUG_4ti2(*out << "R1 [" << r1_start << ",...," << r1_end << "] and ";)
     DEBUG_4ti2(*out << "R2 [" << r2_start << ",...," << r2_end << "]\n";)
 
-    Index cir_supp_size = ray_mask.get_size();
+    Index cir_supp_size = state.ray_mask.get_size();
     IndexSet temp_supp(cir_supp_size);
-    IndexSet cir_mask(ray_mask);
+    IndexSet cir_mask(state.ray_mask);
     cir_mask.set_complement();
 
     IndexSet r1_supp(cir_supp_size);
@@ -690,7 +689,7 @@ SupportSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, In
         helper.set_r1_index(r1);
         //if (r2_start <= r1) { r2_start = r1+1; IndexSet::swap(r1_supp, r1_neg_supp); }
 
-        if (r1_count == cons_added+1) {
+        if (r1_count == state.cons_added+1) {
             for (Index r2 = r2_start; r2 < r2_end; ++r2) {
                 if (r1_neg_supp.set_disjoint(supps[r2])
                     && supps[r2].singleton_diff(r1_supp)) {
@@ -702,19 +701,19 @@ SupportSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, In
 
         for (Index r2 = r2_start; r2 < r2_end; ++r2) {
             if (r1_neg_supp.set_disjoint(supps[r2])
-                && r1_supp.count_union(supps[r2]) <= cons_added+2) {
+                && r1_supp.count_union(supps[r2]) <= state.cons_added+2) {
                 temp_supp.set_union(r1_supp, supps[r2]);
                 if (!tree.dominated(temp_supp, r1, r2)) { helper.create_circuit(r2); }
             }
         }
 
         if (index_count % Globals::output_freq == 0) {
-            sprintf(buffer, "%cLeft %3d  Col %3d  Index %8d/%-8d", ENDL, rel.count(), next, index_count, r1_end-r1_start);
+            sprintf(buffer, "%cLeft %3d  Col %3d  Index %8d/%-8d", ENDL, state.rem.count(), state.next, index_count, r1_end-r1_start);
             *out << buffer << std::flush;
         }
         ++index_count;
     }
-    sprintf(buffer, "%cLeft %3d  Col %3d  Index %8d/%-8d", ENDL, rel.count(), next, r1_end, r2_end);
+    sprintf(buffer, "%cLeft %3d  Col %3d  Index %8d/%-8d", ENDL, state.rem.count(), state.next, r1_end, r2_end);
     *out << buffer << std::flush;
 }
 
@@ -723,18 +722,12 @@ inline
 void
 SupportSubAlgorithmBase<IndexSet>::transfer()
 {
-    //supps.insert(supps.end(), new_supps.begin(), new_supps.end());
-    //new_supps.clear();
     helper.transfer();
 }
 
 template <class IndexSet>
-SupportRayAlgorithm<IndexSet>::SupportRayAlgorithm(
-                RayStateAPI<IndexSet>& _state, std::vector<IndexSet>& _supps, 
-                const IndexSet& _rel, const Index& _cons_added, const Index& _next, const SUPPORTTREE<IndexSet>& _tree,
-                IndexRanges& _indices)
-        : SupportSubAlgorithmBase<IndexSet>(_state, _supps, _rel, _cons_added, _next, IndexSet(_rel.get_size(),true), _tree),
-          indices(_indices)
+SupportRayAlgorithm<IndexSet>::SupportRayAlgorithm(RayStateAPI<IndexSet>& _state, IndexRanges& _indices)
+        : SupportSubAlgorithmBase<IndexSet>(_state), indices(_indices)
 {
 }
 
@@ -755,23 +748,12 @@ template <class IndexSet>
 SupportRayAlgorithm<IndexSet>*
 SupportRayAlgorithm<IndexSet>::clone()
 {
-    return new SupportRayAlgorithm(
-                SupportSubAlgorithmBase<IndexSet>::state,
-                SupportSubAlgorithmBase<IndexSet>::supps, 
-                SupportSubAlgorithmBase<IndexSet>::rel,
-                SupportSubAlgorithmBase<IndexSet>::cons_added,
-                SupportSubAlgorithmBase<IndexSet>::next,
-                SupportSubAlgorithmBase<IndexSet>::tree,
-                indices);
+    return new SupportRayAlgorithm(SupportSubAlgorithmBase<IndexSet>::state, indices);
 }
 
 template <class IndexSet>
-SupportCirAlgorithm<IndexSet>::SupportCirAlgorithm(
-                RayStateAPI<IndexSet>& _state, std::vector<IndexSet>& _supps, 
-                const IndexSet& _rel, const Index& _cons_added, const Index& _next, const SUPPORTTREE<IndexSet>& _tree,
-                const IndexSet& _ray_mask, IndexRanges& _indices)
-        : SupportSubAlgorithmBase<IndexSet>(_state, _supps, _rel, _cons_added, _next, _ray_mask, _tree),
-          indices(_indices)
+SupportCirAlgorithm<IndexSet>::SupportCirAlgorithm(RayStateAPI<IndexSet>& _state, IndexRanges& _indices)
+        : SupportSubAlgorithmBase<IndexSet>(_state), indices(_indices)
 {
 }
 
@@ -792,15 +774,7 @@ template <class IndexSet>
 SupportCirAlgorithm<IndexSet>*
 SupportCirAlgorithm<IndexSet>::clone()
 {
-    return new SupportCirAlgorithm(
-                SupportSubAlgorithmBase<IndexSet>::state,
-                SupportSubAlgorithmBase<IndexSet>::supps, 
-                SupportSubAlgorithmBase<IndexSet>::rel,
-                SupportSubAlgorithmBase<IndexSet>::cons_added,
-                SupportSubAlgorithmBase<IndexSet>::next,
-                SupportSubAlgorithmBase<IndexSet>::tree,
-                SupportSubAlgorithmBase<IndexSet>::ray_mask,
-                indices);
+    return new SupportCirAlgorithm(SupportSubAlgorithmBase<IndexSet>::state, indices);
 }
 
 #undef DEBUG_4ti2

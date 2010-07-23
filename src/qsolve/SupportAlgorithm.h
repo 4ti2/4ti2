@@ -28,14 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "qsolve/VectorArray.h"
 #include "qsolve/QSolveConsOrder.h"
 #include "qsolve/RayState.h"
-
-#include "qsolve/BinaryTree.h"
-#include "qsolve/FullTree.h"
-#include "qsolve/MultiTree.h"
-
-//#define SUPPORTTREE FullTree  // TODO: DOES NOT WORK!
-//#define SUPPORTTREE BinaryTree
-#define SUPPORTTREE MultiTree
+#include "qsolve/SubAlgorithm.h"
 
 namespace _4ti2_
 {
@@ -56,11 +49,10 @@ protected:
 };
 
 template <class IndexSet>
-class SupportSubAlgorithmBase
+class SupportSubAlgorithmBase : public SubAlgorithm
 {
 public:
-    SupportSubAlgorithmBase(RayStateAPI<IndexSet>& state, std::vector<IndexSet>& supps, const IndexSet& rel, const Index& cons_added,
-                             const Index& next, const IndexSet& ray_mask, const SUPPORTTREE<IndexSet>& tree);
+    SupportSubAlgorithmBase(RayStateAPI<IndexSet>& state);
     virtual ~SupportSubAlgorithmBase();
 
     void compute_rays(Index r1_start, Index r1_end, Index r2_start, Index r2_index, Index r2_end);
@@ -70,28 +62,13 @@ public:
 protected:
     RayStateAPI<IndexSet>& state;
     RaySubStateAPI<IndexSet>& helper;
-    std::vector<IndexSet>& supps;
-    //std::vector<IndexSet> new_supps;
-
-    const IndexSet& rel;
-    const Index& cons_added;
-    const Index& next;
-    const IndexSet& ray_mask;
-    const SUPPORTTREE<IndexSet>& tree;
-
-    //Index r1;
-    //void set_r1_index(Index r1);
-    //void create_ray(Index r2);
-    //void create_circuit(Index r1, Index r2);
 };
 
 template <class IndexSet>
-class SupportRayAlgorithm : public SupportSubAlgorithmBase<IndexSet>, public ThreadedAlgorithm
+class SupportRayAlgorithm : public SupportSubAlgorithmBase<IndexSet>
 {
 public:
-    SupportRayAlgorithm(RayStateAPI<IndexSet>& state, std::vector<IndexSet>& supps, 
-                const IndexSet& rel, const Index& cons_added, const Index& next, const SUPPORTTREE<IndexSet>& tree,
-                IndexRanges& indices);
+    SupportRayAlgorithm(RayStateAPI<IndexSet>& state, IndexRanges& indices);
     SupportRayAlgorithm* clone();
 
     virtual void compute();
@@ -101,12 +78,10 @@ protected:
 };
 
 template <class IndexSet>
-class SupportCirAlgorithm : public SupportSubAlgorithmBase<IndexSet>, public ThreadedAlgorithm
+class SupportCirAlgorithm : public SupportSubAlgorithmBase<IndexSet>
 {
 public:
-    SupportCirAlgorithm(RayStateAPI<IndexSet>& state, std::vector<IndexSet>& supps, 
-                const IndexSet& rel, const Index& cons_added, const Index& next, const SUPPORTTREE<IndexSet>& tree,
-                const IndexSet& ray_mask, IndexRanges& indices);
+    SupportCirAlgorithm(RayStateAPI<IndexSet>& state, IndexRanges& indices);
     SupportCirAlgorithm* clone();
 
     virtual void compute();

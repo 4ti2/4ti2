@@ -27,6 +27,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "qsolve/VectorArray.h"
 #include "qsolve/QSolveConsOrder.h"
 #include "qsolve/Cone.h"
+#include "qsolve/ConeC.h"
+
+#include "qsolve/BinaryTree.h"
+#include "qsolve/FullTree.h"
+#include "qsolve/MultiTree.h"
+
+//#define SUPPORTTREE FullTree  // TODO: DOES NOT WORK!
+//#define SUPPORTTREE BinaryTree
+#define SUPPORTTREE MultiTree
 
 namespace _4ti2_
 {
@@ -59,6 +68,7 @@ public:
 
 public:
     std::vector<IndexSet> supps;
+    SUPPORTTREE<IndexSet> tree;
     const ConeAPI& cone_api;
     Index next;
     Index cons_added;
