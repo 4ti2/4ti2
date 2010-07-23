@@ -34,21 +34,6 @@ namespace _4ti2_
 {
 
 template <class IndexSet>
-class SupportAlgorithm 
-{
-public:
-    SupportAlgorithm();
-    SupportAlgorithm(ConsOrder o);
-    virtual ~SupportAlgorithm();
-
-    void compute_rays(const ConeAPI& cone, RayStateAPI<IndexSet>& state, std::vector<int>& ineqs);
-    void compute_cirs(const ConeAPI& cone, RayStateAPI<IndexSet>& state, std::vector<int>& ineqs);
-
-protected:
-    ConsOrder order;
-};
-
-template <class IndexSet>
 class SupportSubAlgorithmBase : public SubAlgorithm
 {
 public:

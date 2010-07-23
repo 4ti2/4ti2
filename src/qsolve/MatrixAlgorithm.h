@@ -38,21 +38,6 @@ namespace _4ti2_
 {
 
 template <class IndexSet>
-class MatrixAlgorithm
-{
-public:
-    MatrixAlgorithm();
-    MatrixAlgorithm(ConsOrder o);
-    ~MatrixAlgorithm();
-
-    void compute_rays(const ConeAPI& cone, RayStateAPI<IndexSet>& state, std::vector<int>& ineqs);
-    void compute_cirs(const ConeAPI& cone, RayStateAPI<IndexSet>& state, std::vector<int>& ineqs);
-
-protected:
-    ConsOrder order;
-};
-
-template <class IndexSet>
 class MatrixSubAlgorithmBase : public SubAlgorithm
 {
 public:
