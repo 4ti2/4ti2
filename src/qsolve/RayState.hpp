@@ -83,7 +83,7 @@ template <class T, class IndexSet>
 RaySubState<T,IndexSet>*
 RayState<T,IndexSet>::clone()
 {
-    return new RaySubState<T,IndexSet>(*this, cone, rays, Base::supps, Base::next);
+    return new RaySubState<T,IndexSet>(*this);
 }
 
 template <class T, class IndexSet>
@@ -222,7 +222,7 @@ RayState<T,IndexSet>::next_constraint(
     // First, we choose the next constraint to add.
     //TODO Index Base::next = next_circuit_constraint(order, rem);
     Base::next = next_constraint(order, rem);
-    
+
     Index start = 0; Index end = rays.get_number(); Index middle;
 
     // We sort the vectors into nonzeros and then zeros.
@@ -378,9 +378,8 @@ RayState<T, IndexSet>::check(const VectorR<T>& ray, const IndexSet& supp, Size d
 /////////////////
 
 template <class T, class IndexSet>
-RaySubState<T,IndexSet>::RaySubState(RayState<T,IndexSet>& _state, const ConeT<T>& _cone, VectorArrayT<T>& _rays, std::vector<IndexSet>& _supps, const Index& _next)
-        : RaySubStateAPI<IndexSet>(), supps(_supps), state(_state), cone(_cone), rays(_rays), next(_next),
-          new_rays(0,rays.get_size()), temp(rays.get_size())
+RaySubState<T,IndexSet>::RaySubState(RayState<T,IndexSet>& _state)
+        : RaySubStateAPI<IndexSet>(), state(_state), new_rays(0,state.rays.get_size()), temp(state.rays.get_size())
 {
 }
 
@@ -394,42 +393,43 @@ inline
 void
 RaySubState<T,IndexSet>::transfer()
 {
-    rays.transfer(new_rays, 0, new_rays.get_number(), rays.get_number());
-    supps.insert(supps.end(), new_supps.begin(), new_supps.end());
+    state.rays.transfer(new_rays, 0, new_rays.get_number(), state.rays.get_number());
+    state.supps.insert(state.supps.end(), new_supps.begin(), new_supps.end());
     new_supps.clear();
 }
 
 template <class T, class IndexSet>
 inline  
 void    
-RaySubState<T,IndexSet>::set_r1_index(Index r1)
+RaySubState<T,IndexSet>::set_r1_index(Index _i1)
 {
-    _r1 = r1;
-    cone.get_slack(rays[r1], next, s1);
+    i1 = _i1;
+    Base::r1_supp = state.supps[i1];
+    state.cone.get_slack(state.rays[i1], state.next, s1);
 }
 
 template <class T, class IndexSet>
 void
-RaySubState<T,IndexSet>::create_ray(Index r2)
+RaySubState<T,IndexSet>::create_ray(Index i2)
 {
-    IndexSet temp_supp(supps[_r1]);
-    temp_supp.set_union(supps[r2]);
+    IndexSet temp_supp(Base::r1_supp);
+    temp_supp.set_union(state.supps[i2]);
     new_supps.push_back(temp_supp);
 
-    //T s1; cone.get_slack(rays[r1], next, s1);
-    T s2; cone.get_slack(rays[r2], next, s2);
-    if (_r1 < r2) { temp.add(rays[r2], s1, rays[_r1], -s2); }
-    else { temp.add(rays[_r1], s2, rays[r2], -s1); }
+    //T s1; state.cone.get_slack(state.rays[r1], state.next, s1);
+    T s2; state.cone.get_slack(state.rays[i2], state.next, s2);
+    if (i1 < i2) { temp.add(state.rays[i2], s1, state.rays[i1], -s2); }
+    else { temp.add(state.rays[i1], s2, state.rays[i2], -s1); }
     temp.normalise();
     new_rays.insert(temp);
 
 #if DEBUG_4ti2 > 0
     if (state.check(temp, temp_supp, 2)) {
-        *out << "Ray1 " << _r1 << " " << s1 << " : " << rays[_r1] << "\n";
-        *out << "Ray2 " << r2 << " " << s2 << " : " << rays[r2] << "\n";
+        *out << "Ray1 " << i1 << " " << s1 << " : " << state.rays[i1] << "\n";
+        *out << "Ray2 " << i2 << " " << s2 << " : " << state.rays[i2] << "\n";
         *out << "Ray0 " << temp << "\n";
-        *out << "Sup1 " << supps[_r1] << "\n";
-        *out << "Sup2 " << supps[r2] << "\n";
+        *out << "Sup1 " << state.supps[i1] << "\n";
+        *out << "Sup2 " << state.supps[i2] << "\n";
         *out << "Sup0 " << temp_supp << "\n";
     }
 #endif
@@ -439,15 +439,15 @@ template <class T, class IndexSet>
 void
 RaySubState<T,IndexSet>::create_circuit(Index i2)
 {
-    IndexSet tmp_union(supps[i2]);
-    tmp_union.set_union(supps[_r1]);
-    new_supps.push_back(tmp_union);
+    IndexSet temp_supp(Base::r1_supp);
+    temp_supp.set_union(state.supps[i2]);
+    new_supps.push_back(temp_supp);
 
-    const VectorR<T>& r1 = rays[_r1];
-    const VectorR<T>& r2 = rays[i2];
+    const VectorR<T>& r1 = state.rays[i1];
+    const VectorR<T>& r2 = state.rays[i2];
 
-    //T s1; cone.get_slack(r1, next, s1); 
-    T s2; cone.get_slack(r2, next, s2); 
+    //T s1; state.cone.get_slack(r1, state.next, s1); 
+    T s2; state.cone.get_slack(r2, state.next, s2); 
 
     if (s1 > 0) {
         if (s2 > 0) { temp.add(r1,s2,r2,-s1); } // r1 - r2.
@@ -462,13 +462,13 @@ RaySubState<T,IndexSet>::create_circuit(Index i2)
     new_rays.insert(temp);
 
 #if DEBUG_4ti2 > 0
-    if (state.check(temp, tmp_union, 2)) {
-        *out << "Ray1 " << _r1 << " " << s1 << " : " << r1 << "\n";
+    if (state.check(temp, temp_supp, 2)) {
+        *out << "Ray1 " << i1 << " " << s1 << " : " << r1 << "\n";
         *out << "Ray2 " << i2 << " " << s2 << " : " << r2 << "\n";
         *out << "Ray0 " << temp << "\n";
-        *out << "Sup1 " << supps[_r1] << "\n";
-        *out << "Sup2 " << supps[i2] << "\n";
-        *out << "Sup0 " << tmp_union << "\n";
+        *out << "Sup1 " << state.supps[i1] << "\n";
+        *out << "Sup2 " << state.supps[i2] << "\n";
+        *out << "Sup0 " << temp_supp << "\n";
     }
 #endif
 }
@@ -501,42 +501,6 @@ RaySubState<T,IndexSet>::project_cone(
 }
 #endif
 
-#if 0
-template <class T, class IndexSet>
-inline
-void
-RaySubState<T,IndexSet>::project_cone(
-                IndexSet& temp_supp,
-                std::vector<Index>& con_map,
-                IndexSet& zeros)
-{
-    IndexSet zero_supp(cone.num_vars()+cone.num_cons(),0);
-    for (typename IndexSet::Iter it = temp_supp.begin(); it != temp_supp.end(); ++it) {
-        zero_supp.set(state.supps_to_cons[*it]);
-    }
-
-    zero_supp.set_complement();
-    zero_supp.set_difference(state.rel);
-    sub_cone.project_cone(cone, zero_supp, con_map);
-    for (Index i = 0; i < (Index) con_map.size(); ++i) {
-        if (con_map[i] != -1) { con_map[i] = state.cons_to_supps[con_map[i]]; }
-    }
-
-    const MatrixT<T>& trans = sub_cone.get_matrix();
-    zeros.zero();
-    Index n = trans.get_m();
-    Index m = trans.get_n();
-    for (Index i = 0; i < n; ++i) {
-        if (con_map[i] < 0) { continue; }
-        zeros.set(con_map[i]);
-        for (Index j = 0; j < m; ++j) {
-            // TODO: trans row.
-            if (trans(i,j) != 0 && con_map[j+n] >= 0) { zeros.unset(con_map[i]); break; }
-        }
-    }
-}
-#endif
-
 #if 1
 template <class T, class IndexSet>
 inline
@@ -546,14 +510,14 @@ RaySubState<T,IndexSet>::project_cone(
                 std::vector<Index>& con_map,
                 IndexSet& zeros)
 {
-    IndexSet zero_supp(cone.num_vars()+cone.num_cons(),0);
+    IndexSet zero_supp(state.cone.num_vars()+state.cone.num_cons(),0);
     for (typename IndexSet::Iter it = temp_supp.begin(); it != temp_supp.end(); ++it) {
         zero_supp.set(state.supps_to_cons[*it]);
     }
 
     zero_supp.set_complement();
     zero_supp.set_difference(state.rel);
-    sub_cone.project_cone(cone, zero_supp, con_map);
+    sub_cone.project_cone(state.cone, zero_supp, con_map);
     for (Index i = 0; i < (Index) con_map.size(); ++i) {
         if (con_map[i] != -1) { con_map[i] = state.cons_to_supps[con_map[i]]; }
     }

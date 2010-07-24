@@ -343,11 +343,11 @@ template <class IndexSet>
 Size
 ConeT<T>::is_d_dimensional_faceT(const IndexSet& supp) const
 {
-    assert(supp.get_size() == n+m);
     // We insert only the constraints that correspond to zero slack entries and
     // only the columns that correspond to the non-zero support entries.
     Index n = num_vars();
     Index m = num_cons();
+    assert(supp.get_size() == n+m);
     IndexSet var_supp(n);
     IndexSet con_supp(m);
     for (Index i = 0; i < n; ++i) { if (supp[i]) { var_supp.set(i); } }

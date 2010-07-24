@@ -70,6 +70,7 @@ SupportSubAlgorithmBase<T,IndexSet>::compute(
     IndexSet temp_union(supps_size);
     IndexSet zeros(supps_size);
     IndexSet r1_supp(supps_size);
+    helper.r1_supp.resize(supps_size);
     Size r1_count;
     T s1;
 
@@ -146,6 +147,7 @@ SupportSubAlgorithmBase<IndexSet>::compute_rays(
     IndexSet temp_diff(supps_size);
     IndexSet zeros(supps_size);
     IndexSet r1_supp(supps_size);
+    helper.r1_supp.resize(supps_size);
 
     std::vector<int> indices;
 
@@ -243,6 +245,7 @@ SupportSubAlgorithmBase<IndexSet>::compute_rays(
     // Temporary variables.
     IndexSet r1_supp(supps_size);
     IndexSet temp_union(supps_size);
+    helper.r1_supp.resize(supps_size);
 
     SUPPORTTREE<IndexSet> neg_tree;
     neg_tree.insert(supps, r2_index, r2_end);
@@ -297,6 +300,7 @@ SupportSubAlgorithmBase<IndexSet>::compute_rays(
     IndexSet temp_union(supps_size);
     IndexSet temp_diff(supps_size);
     IndexSet temp_empty(supps_size,0);
+    helper.r1_supp.resize(supps_size);
 
     SUPPORTTREE<IndexSet> neg_tree;
     neg_tree.insert(supps, r2_index, r2_end);
@@ -380,18 +384,17 @@ SupportSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, In
 
     IndexSet r1_supp(cir_supp_size);
     IndexSet r1_neg_supp(cir_supp_size);
+    helper.r1_supp.resize(cir_supp_size);
     Size r1_count;
 
     int index_count = 0;
     for (int r1 = r1_start; r1 < r1_end; ++r1) {
-        if (r2_start <= r1) { r2_start = r1+1; supps[r1].swap_odd_n_even(); }
-
         r1_supp = supps[r1];
         r1_count = r1_supp.count();
         r1_neg_supp.set_intersection(r1_supp, cir_mask);
         r1_neg_supp.swap_odd_n_even();
         helper.set_r1_index(r1);
-        //if (r2_start <= r1) { r2_start = r1+1; IndexSet::swap(r1_supp, r1_neg_supp); }
+        if (r2_start <= r1) { r2_start = r1+1; IndexSet::swap(r1_supp, r1_neg_supp); helper.r1_supp = r1_supp; }
 
         if (r1_count == state.cons_added+1) {
             for (Index r2 = r2_start; r2 < r2_end; ++r2) {

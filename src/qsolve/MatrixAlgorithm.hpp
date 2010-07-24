@@ -45,10 +45,9 @@ MatrixSubAlgorithmBase<IndexSet>::compute_rays(
     Size supps_size = supps[r1_start].get_size();
 
     IndexSet temp_supp(supps_size);
-    IndexSet temp_diff(supps_size);
-    IndexSet temp_union(supps_size);
     IndexSet zeros(supps_size);
     IndexSet r1_supp(supps_size);
+    helper.r1_supp.resize(supps_size);
     Size r1_count;
 
     char buffer[256];
@@ -127,18 +126,18 @@ MatrixSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, Ind
 
     IndexSet r1_supp(cir_supp_size);
     IndexSet r1_neg_supp(cir_supp_size);
+    helper.r1_supp.resize(cir_supp_size);
     Size r1_count;
 
     int index_count = 0;
     for (int r1 = r1_start; r1 < r1_end; ++r1) {
-        if (r2_start <= r1) { r2_start = r1+1; supps[r1].swap_odd_n_even(); }
-
+        //if (r2_start <= r1) { r2_start = r1+1; supps[r1].swap_odd_n_even(); }
         r1_supp = supps[r1];
         r1_count = r1_supp.count();
         r1_neg_supp.set_intersection(r1_supp, cir_mask);
         r1_neg_supp.swap_odd_n_even();
         helper.set_r1_index(r1);
-        //if (r2_start <= r1) { r2_start = r1+1; IndexSet::swap(r1_supp, r1_neg_supp); }
+        if (r2_start <= r1) { r2_start = r1+1; IndexSet::swap(r1_supp, r1_neg_supp); helper.r1_supp = r1_supp; }
 
         if (r1_count == state.cons_added+1) {
             for (Index r2 = r2_start; r2 < r2_end; ++r2) {

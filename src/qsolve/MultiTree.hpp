@@ -43,7 +43,7 @@ MultiTree<IndexSet>::MultiTree()
 template <class IndexSet>
 MultiTree<IndexSet>::~MultiTree()
 {
-    clear();
+    delete root;
 }
 
 template <class IndexSet>

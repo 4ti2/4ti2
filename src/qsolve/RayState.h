@@ -104,6 +104,10 @@ public:
     Index sort_count(Size count, Index start, Index end);
     void remove(Index start, Index end);
 
+public:
+    const ConeT<T>& cone;
+    VectorArrayT<T>& rays;
+
 protected:
     typedef RayStateAPI<IndexSet> Base;
 
@@ -111,16 +115,13 @@ protected:
     void sort_positives(Index start, Index end, Index& middle);
     void sort_negatives(Index start, Index end, Index& middle);
     void sort_filter(const IndexSet& filter, bool pos, Index start, Index end, Index& middle);
-
-    const ConeT<T>& cone;
-    VectorArrayT<T>& rays;
 };
 
 template <class IndexSet>
 class RaySubStateAPI
 {
 public:
-    RaySubStateAPI() {}
+    RaySubStateAPI() : r1_supp(0) {}
     virtual ~RaySubStateAPI() {}
 
     virtual void set_r1_index(Index r1) = 0;
@@ -130,13 +131,15 @@ public:
 
     virtual void project_cone(IndexSet& zero_supp, std::vector<Index>& con_map, IndexSet& zeros) = 0;
     virtual bool is_two_dimensional_face(const std::vector<Index>& con_map, const IndexSet& diff) = 0;
+
+    IndexSet r1_supp;
 };
 
 template <class T, class IndexSet>
 class RaySubState : public RaySubStateAPI<IndexSet>
 {
 public:
-    RaySubState(RayState<T,IndexSet>& _state, const ConeT<T>& _cone, VectorArrayT<T>& _rays, std::vector<IndexSet>& _supps, const Index& _next);
+    RaySubState(RayState<T,IndexSet>& _state);
     virtual ~RaySubState();
 
     void set_r1_index(Index r1);
@@ -146,22 +149,18 @@ public:
 
     void project_cone(IndexSet& zero_supp, std::vector<Index>& con_map, IndexSet& zeros);
     bool is_two_dimensional_face(const std::vector<Index>& con_map, const IndexSet& diff);
-
 protected:
-    std::vector<IndexSet>& supps;
-    RayState<T,IndexSet>& state;
-    const ConeT<T>& cone;
-    VectorArrayT<T>& rays;
-    const Index& next;
+    typedef RaySubStateAPI<IndexSet> Base;
 
+    RayState<T,IndexSet>& state;
     VectorArrayT<T> new_rays;
     std::vector<IndexSet> new_supps;
 
     // Temporary variables.
     ConeC<T> sub_cone;
     VectorT<T> temp;
+    Index i1;
     T s1;
-    Index _r1;
 };
 
 } // namespace _4ti2_
