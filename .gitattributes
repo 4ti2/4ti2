@@ -5,6 +5,8 @@ doc/magicsqs.pdf svneol=native#unset
 doc/magicsqs_ray.pdf svneol=native#unset
 doc/solved_IP.pdf svneol=native#unset
 doc/solved_LP.pdf svneol=native#unset
+src/qsolve/Algorithm.h -text
+src/qsolve/Algorithm.hpp -text
 src/qsolve/CircuitsAPI.cpp -text
 src/qsolve/MatrixAPI.h -text
 src/qsolve/MatrixAPI.hpp -text
@@ -17,4 +19,5 @@ src/qsolve/QSolveConsOrder.cpp -text
 src/qsolve/RayState.h -text
 src/qsolve/RayState.hpp -text
 src/qsolve/RaysAPI.cpp -text
+src/qsolve/SubAlgorithm.h -text
 src/qsolve/ThreadedAlgorithm.cpp -text
