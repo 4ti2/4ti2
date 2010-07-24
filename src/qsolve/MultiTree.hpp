@@ -167,6 +167,7 @@ MultiTree<IndexSet>::TreeBranch::insert(const IndexSet& s, Index index)
             branch->supps.clear();
             indices.insert(indices.end(), branch->indices.begin(), branch->indices.end());
             branch->indices.clear();
+            delete branch;
         }
     }
 #endif
