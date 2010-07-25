@@ -40,6 +40,7 @@ typedef uint64_t BlockType;
 class IndexSetDS
 {
 public:
+    static bool initialise();
     explicit IndexSetDS(Size _size, bool v = false);
     IndexSetDS(const IndexSetDS&);
     IndexSetDS& operator=(const IndexSetDS&);
@@ -155,7 +156,7 @@ protected:
     static const Size sizeofstorage = BITS_PER_BLOCK;
     static const unsigned char bit_count[256];
 
-    static void initialise();
+    static const bool initialised;
     void unset_unused_bits();
 
     BlockType block;
@@ -595,7 +596,6 @@ inline
 IndexSetDS::IndexSetDS(Size _size, bool v)
         : size(_size)
 {
-    initialise();
     assert(_size >= 0 && _size <= (Size) sizeofstorage);
     if (v == false) { zero(); }
     else { one(); } // v == true

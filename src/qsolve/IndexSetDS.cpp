@@ -45,22 +45,20 @@ const unsigned char IndexSetDS::bit_count[] = {
 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
 4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8};
+const bool initialised = IndexSetDS::initialise();
 
-void
+bool
 IndexSetDS::initialise()
 {
-    static bool initialised = false;
-    if (initialised == false) {
-        BlockType mask = 1;
-        for (Index i = 0; i < sizeofstorage; ++i) {
-            set_masks[i] = mask;
-            unset_masks[i] = ~mask;
-            mask <<= 1;
-        }
-        initialised = true;
-        unused_masks[0] = 0;
-        for (Index i = 1; i <= sizeofstorage; ++i) {
-            unused_masks[i] = unused_masks[i-1] | set_masks[i-1];
-        }
+    BlockType mask = 1;
+    for (Index i = 0; i < sizeofstorage; ++i) {
+        set_masks[i] = mask;
+        unset_masks[i] = ~mask;
+        mask <<= 1;
     }
+    unused_masks[0] = 0;
+    for (Index i = 1; i <= sizeofstorage; ++i) {
+        unused_masks[i] = unused_masks[i-1] | set_masks[i-1];
+    }
+    return true;
 }

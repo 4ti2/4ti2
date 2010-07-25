@@ -43,6 +43,7 @@ typedef uint64_t BlockType;
 class IndexSetD
 {
 public:
+    static bool initialise();
     explicit IndexSetD(Size _size, bool v = false);
     IndexSetD(const IndexSetD&);
     IndexSetD& operator=(const IndexSetD&);
@@ -161,7 +162,7 @@ protected:
     static const Size sizeofstorage = BITS_PER_BLOCK;
     static const unsigned char bit_count[256];
 
-    static void initialise();
+    static const bool initialised;
     void unset_unused_bits();
 
     BlockType *blocks;
@@ -738,14 +739,12 @@ inline
 IndexSetD::IndexSetD()
         : blocks(0), size(0), num_blocks(0)
 {
-    //*out << "IndexSetD()\n";
 }
 
 inline
 IndexSetD::IndexSetD(Size _size, bool v)
         : size(_size), num_blocks(get_num_blocks(_size))
 {
-    initialise();
     assert(_size >= 0);
     blocks = new BlockType[num_blocks];
 

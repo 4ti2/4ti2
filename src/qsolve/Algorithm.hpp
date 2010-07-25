@@ -317,6 +317,10 @@ Algorithm<IndexSet>::compute_cirs(
         for (Index i = 0; i < Globals::num_threads-1; ++i) { algs[i]->threaded_compute(); }
         // Run primary algorithm.
         alg->compute();
+
+        // Wait for threads to finish.
+        for (Index i = 0; i < Globals::num_threads-1; ++i) { algs[i]->wait(); }
+
         // Unflip the positive circuits.
         state.flip(pos_cir_start, pos_cir_end);
 
