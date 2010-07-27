@@ -41,7 +41,7 @@ public:
     virtual ~SupportSubAlgorithmBase();
 
     void compute_rays(Index r1_start, Index r1_end, Index r2_start, Index r2_index, Index r2_end);
-    void compute_cirs(Index r1_start, Index r1_end, Index r2_start, Index r2_end);
+    void compute_cirs(Index r1_start, Index r1_end, Index r2_start, Index r2_index, Index r2_end);
     void transfer();
 
 protected:

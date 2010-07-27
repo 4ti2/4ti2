@@ -365,7 +365,7 @@ SupportSubAlgorithmBase<IndexSet>::compute_rays(
 
 template <class IndexSet>
 void
-SupportSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, Index r2_start, Index r2_end)
+SupportSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, Index r2_start, Index r2_index, Index r2_end)
 {
     if (r1_start == r1_end || r2_start == r2_end) { return; }
     std::vector<IndexSet>& supps = state.supps;
@@ -394,7 +394,12 @@ SupportSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, In
         r1_neg_supp.set_intersection(r1_supp, cir_mask);
         r1_neg_supp.swap_odd_n_even();
         helper.set_r1_index(r1);
-        if (r2_start <= r1) { r2_start = r1+1; IndexSet::swap(r1_supp, r1_neg_supp); helper.r1_supp = r1_supp; }
+        if (r2_start <= r1) { 
+            r2_start = r1+1; 
+            if (r2_start > r2_index) { r2_index = r2_start; }
+            IndexSet::swap(r1_supp, r1_neg_supp); 
+            helper.r1_supp = r1_supp; 
+        }
 
         if (r1_count == state.cons_added+1) {
             for (Index r2 = r2_start; r2 < r2_end; ++r2) {
@@ -406,7 +411,15 @@ SupportSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, In
             continue;
         }
 
-        for (Index r2 = r2_start; r2 < r2_end; ++r2) {
+        for (Index r2 = r2_start; r2 < r2_index; ++r2) {
+            if (r1_neg_supp.set_disjoint(supps[r2]) 
+                && r1_supp.singleton_diff(supps[r2])) {
+                helper.create_circuit(r2);
+            }
+        }
+        if (r2_index == r2_end) { continue; }
+
+        for (Index r2 = r2_index; r2 < r2_end; ++r2) {
             if (r1_neg_supp.set_disjoint(supps[r2])
                 && r1_supp.count_union(supps[r2]) <= state.cons_added+2) {
                 temp_supp.set_union(r1_supp, supps[r2]);
@@ -472,7 +485,7 @@ SupportCirAlgorithm<IndexSet>::compute()
     Index r1_start, r1_end, r2_start, r2_index, r2_end;
     indices.next(r1_start, r1_end, r2_start, r2_index, r2_end);
     while (r1_start != r1_end) {
-        SupportSubAlgorithmBase<IndexSet>::compute_cirs(r1_start, r1_end, r2_start, r2_end);
+        SupportSubAlgorithmBase<IndexSet>::compute_cirs(r1_start, r1_end, r2_start, r2_index, r2_end);
         indices.next(r1_start, r1_end, r2_start, r2_index, r2_end);
     }
 }

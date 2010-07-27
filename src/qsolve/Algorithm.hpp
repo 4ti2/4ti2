@@ -293,6 +293,9 @@ Algorithm<IndexSet>::compute_cirs(
         *out << buffer << std::flush;
         DEBUG_4ti2(*out << "SUPPORTS:\n" << supps << "\n";)
 
+        // We sort the r2's into vectors where r2_supp.count()==cons_added+1.
+        Index pos_cir_middle = state.sort_count(cons_added+1, pos_cir_start, pos_cir_end);
+
         if (variant == SUPPORT) {
             // Note that the tree needs the ordering of the current vectors to be constant.
             DEBUG_4ti2(*out << "\nBuilding Tree ... " << std::endl;)
@@ -313,7 +316,7 @@ Algorithm<IndexSet>::compute_cirs(
         // Flip the positive circuits.
         state.flip(pos_cir_start, pos_cir_end);
         // Run threads.
-        index_ranges.init(pos_ray_start, neg_cir_end, pos_cir_start, pos_cir_start, neg_ray_end);
+        index_ranges.init(pos_ray_start, neg_cir_end, pos_cir_start, pos_cir_middle, neg_ray_end);
         for (Index i = 0; i < Globals::num_threads-1; ++i) { algs[i]->threaded_compute(); }
         // Run primary algorithm.
         alg->compute();

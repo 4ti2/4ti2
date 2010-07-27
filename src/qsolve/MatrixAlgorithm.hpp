@@ -107,7 +107,7 @@ MatrixSubAlgorithmBase<IndexSet>::compute_rays(
 
 template <class IndexSet>
 void
-MatrixSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, Index r2_start, Index r2_end)
+MatrixSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, Index r2_start, Index r2_index, Index r2_end)
 {
     if (r1_start == r1_end || r2_start == r2_end) { return; }
     std::vector<IndexSet>& supps = state.supps;
@@ -131,13 +131,17 @@ MatrixSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, Ind
 
     int index_count = 0;
     for (int r1 = r1_start; r1 < r1_end; ++r1) {
-        //if (r2_start <= r1) { r2_start = r1+1; supps[r1].swap_odd_n_even(); }
         r1_supp = supps[r1];
         r1_count = r1_supp.count();
         r1_neg_supp.set_intersection(r1_supp, cir_mask);
         r1_neg_supp.swap_odd_n_even();
         helper.set_r1_index(r1);
-        if (r2_start <= r1) { r2_start = r1+1; IndexSet::swap(r1_supp, r1_neg_supp); helper.r1_supp = r1_supp; }
+        if (r2_start <= r1) { 
+            r2_start = r1+1; 
+            if (r2_start > r2_index) { r2_index = r2_start; }
+            IndexSet::swap(r1_supp, r1_neg_supp); 
+            helper.r1_supp = r1_supp;
+        }
 
         if (r1_count == state.cons_added+1) {
             for (Index r2 = r2_start; r2 < r2_end; ++r2) {
@@ -149,17 +153,26 @@ MatrixSubAlgorithmBase<IndexSet>::compute_cirs(Index r1_start, Index r1_end, Ind
             continue;
         }
 
+        for (Index r2 = r2_start; r2 < r2_index; ++r2) {
+            if (r1_neg_supp.set_disjoint(supps[r2]) 
+                && r1_supp.singleton_diff(supps[r2])) {
+                helper.create_circuit(r2);
+            }
+        }
+        if (r2_index == r2_end) { continue; }
+
         temp_supp = r1_supp;
         std::vector<Index> con_map;
         helper.project_cone(temp_supp, con_map, temp_zeros);
         DEBUG_4ti2(*out << "NEW ZEROS:\n" << temp_zeros << "\n";)
 
-        for (Index r2 = r2_start; r2 < r2_end; ++r2) {
+        for (Index r2 = r2_index; r2 < r2_end; ++r2) {
             if (temp_zeros.singleton_intersection(supps[r2])
                 && r1_neg_supp.set_disjoint(supps[r2])
                 && r1_supp.count_union(supps[r2]) <= state.cons_added+2) {
+                if (r1_supp.singleton_diff(supps[r2])) { helper.create_circuit(r2);  continue; }
                 temp_supp.set_difference(supps[r2], r1_supp);
-                //if (temp_supp.count_lte(2))) { helper.create_circuit(r2); continue; }
+                //if (temp_supp.count_lte(2)) { helper.create_circuit(r2); continue; }
                 if (helper.is_two_dimensional_face(con_map, temp_supp)) { helper.create_circuit(r2); }
             }
         }
@@ -233,7 +246,7 @@ MatrixCirAlgorithm<IndexSet>::compute()
     Index r1_start, r1_end, r2_start, r2_index, r2_end;
     indices.next(r1_start, r1_end, r2_start, r2_index, r2_end);
     while (r1_start != r1_end) {
-        MatrixSubAlgorithmBase<IndexSet>::compute_cirs(r1_start, r1_end, r2_start, r2_end);
+        MatrixSubAlgorithmBase<IndexSet>::compute_cirs(r1_start, r1_end, r2_start, r2_index, r2_end);
         indices.next(r1_start, r1_end, r2_start, r2_index, r2_end);
     }
 }
