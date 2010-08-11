@@ -45,12 +45,10 @@ CircuitsAPI::~CircuitsAPI()
 _4ti2_matrix*
 CircuitsAPI::get_matrix(const char* name)
 {
-    if (!strcmp(name, "mat")) { return mat; }
+    if (!strcmp(name, "mat")) { return &cone->get_matrix(); }
     if (!strcmp(name, "sign")) { return sign; }
     if (!strcmp(name, "rel")) { return rel; }
     if (!strcmp(name, "ray")) { return ray; } // TODO: Do we output .ray?
-    if (!strcmp(name, "cir")) { return cir; }
-    if (!strcmp(name, "qfree")) { return qfree; }
     std::cerr << "ERROR: Unrecognised mat type " << name << ".\n";
     return 0;
 }
@@ -111,8 +109,8 @@ CircuitsAPI::write(const char* basename_c_str)
     std::string basename(basename_c_str);
 
     std::string cir_filename(basename + ".cir");
-    QSolveAPI::cir->write(cir_filename.c_str());
+    //QSolveAPI::cir->write(cir_filename.c_str());
 
     std::string qfree_filename(basename + ".qfree");
-    QSolveAPI::qfree->write(qfree_filename.c_str());
+    //QSolveAPI::qfree->write(qfree_filename.c_str());
 }

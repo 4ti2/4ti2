@@ -45,11 +45,10 @@ RaysAPI::~RaysAPI()
 _4ti2_matrix*
 RaysAPI::get_matrix(const char* name)
 {
-    if (!strcmp(name, "mat")) { return mat; }
+    if (!strcmp(name, "mat")) { return &cone->get_matrix(); }
     if (!strcmp(name, "sign")) { return sign; }
     if (!strcmp(name, "rel")) { return rel; }
     if (!strcmp(name, "ray")) { return ray; }
-    if (!strcmp(name, "qfree")) { return qfree; }
     std::cerr << "ERROR: Unrecognised mat type " << name << ".\n";
     return 0;
 }
@@ -58,7 +57,6 @@ void
 RaysAPI::post_compute()
 {
     //QSolveAPI::ray.data.sort();
-    //QSolveAPI::qfree.data.sort();
 }
 
 void
@@ -106,5 +104,5 @@ RaysAPI::write(const char* basename_c_str)
     QSolveAPI::ray->write(ray_filename.c_str());
 
     std::string qfree_filename(basename + ".qfree");
-    QSolveAPI::qfree->write(qfree_filename.c_str());
+    //QSolveAPI::qfree->write(qfree_filename.c_str());
 }

@@ -10,6 +10,8 @@ src/qsolve/Algorithm.hpp -text
 src/qsolve/CircuitsAPI.cpp -text
 src/qsolve/MatrixAPI.h -text
 src/qsolve/MatrixAPI.hpp -text
+src/qsolve/MatrixRef.h -text
+src/qsolve/MatrixRef.hpp -text
 src/qsolve/MatrixWrapper.h -text
 src/qsolve/MatrixWrapper.hpp -text
 src/qsolve/MultiTree.h -text

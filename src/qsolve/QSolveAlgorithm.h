@@ -41,11 +41,15 @@ public:
     virtual ~QSolveAlgorithm();
 
     void compute(   const ConeT<T>& cone,
+                    VectorArrayT<T>& gens,
+                    VectorArrayT<int32_t>& types);
+
+    void compute(   const ConeT<T>& cone,
                     VectorArrayT<T>& rays,
                     VectorArrayT<T>& circuits,
                     VectorArrayT<T>& subspace);
-
 protected:
+
     void compute(const ConeT<T>& cone, 
                 VectorArrayT<T>& rays, std::vector<Index>& ray_ineqs, 
                 VectorArrayT<T>& cirs, std::vector<Index>& cir_ineqs);

@@ -78,13 +78,11 @@ protected:
     void print_banner();
     void unrecognised_option_argument(const char* option);
 
-    _4ti2_matrix* mat;
+    ConeAPI* cone;
     _4ti2_matrix* sign;
     _4ti2_matrix* rel;
     _4ti2_matrix* ray;
-    _4ti2_matrix* cir;
-    _4ti2_matrix* qhom;
-    _4ti2_matrix* qfree;
+    _4ti2_matrix* typ;
 };
 
 } // namespace _4ti2_

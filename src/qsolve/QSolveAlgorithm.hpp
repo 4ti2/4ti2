@@ -59,6 +59,24 @@ template <class T>
 void
 QSolveAlgorithm<T>::compute(
                             const ConeT<T>& cone,
+                            VectorArrayT<T>& gens,
+                            VectorArrayT<int32_t>& types)
+{
+    VectorArrayT<T> cirs(0,gens.get_size());
+    VectorArrayT<T> subspace(0,gens.get_size());
+    compute(cone, gens, cirs, subspace);
+    types.init(1, gens.get_number() + cirs.get_number() + subspace.get_number());
+    for (Index i = 0; i < gens.get_number(); ++i) { types[0][i] = _4ti2_LB; }
+    for (Index i = gens.get_number(); i < cirs.get_number() + gens.get_number(); ++i) { types[0][i] = _4ti2_DB; }
+    gens.transfer(cirs, 0, cirs.get_number(), gens.get_number());
+    for (Index i = gens.get_number(); i < subspace.get_number() + gens.get_number(); ++i) { types[0][i] = _4ti2_FR; }
+    gens.transfer(subspace, 0, subspace.get_number(), gens.get_number());
+}
+
+template <class T>
+void
+QSolveAlgorithm<T>::compute(
+                            const ConeT<T>& cone,
                             VectorArrayT<T>& rays,
                             VectorArrayT<T>& cirs,
                             VectorArrayT<T>& subspace)
@@ -68,13 +86,13 @@ QSolveAlgorithm<T>::compute(
     Size full_num_cons = n+m;
 
     IndexSetD full_rs(full_num_cons,0);
-    cone.constraint_set(_4ti2_LB, full_rs);
+    cone.get_constraint_set(_4ti2_LB, full_rs);
     IndexSetD var_rs(full_rs);
     var_rs.resize(n);
     IndexSetD full_cir(full_num_cons,0);
-    cone.constraint_set(_4ti2_DB, full_cir);
+    cone.get_constraint_set(_4ti2_DB, full_cir);
     IndexSetD full_eq(full_num_cons,0);
-    cone.constraint_set(_4ti2_EQ, full_eq);
+    cone.get_constraint_set(_4ti2_EQ, full_eq);
 
     DEBUG_4ti2(*out << "RS:\n" << full_rs << "\n";)
     DEBUG_4ti2(*out << "CIR:\n" << full_cir << "\n";)
@@ -163,9 +181,9 @@ QSolveAlgorithm<T>::compute(const ConeT<T>& cone,
 {
     // The number of constraints added so far.
     IndexSetD lbs(cone.num_vars()+cone.num_cons());
-    cone.constraint_set(_4ti2_LB, lbs);
+    cone.get_constraint_set(_4ti2_LB, lbs);
     IndexSetD dbs(cone.num_vars()+cone.num_cons());
-    cone.constraint_set(_4ti2_DB, dbs);
+    cone.get_constraint_set(_4ti2_DB, dbs);
 
     if (lbs.count()+2*dbs.count() <= IndexSetDS::max_size) {
         RayState<T,IndexSetDS> state(cone, rays);

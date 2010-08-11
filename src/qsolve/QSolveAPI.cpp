@@ -74,16 +74,13 @@ template <class T>
 void
 QSolveAPI::initialise_dataT()
 {
-    delete mat; delete ray; delete cir; delete qhom; delete qfree;
-    mat = new MatrixWrapper<VectorArrayT<T> >();
+    delete ray; delete cone;
     ray = new MatrixAPI<VectorArrayT<T> >();
-    cir = new MatrixAPI<VectorArrayT<T> >();
-    qhom = new MatrixAPI<VectorArrayT<T> >();
-    qfree = new MatrixAPI<VectorArrayT<T> >();
+    cone = new ConeT<T>();
 }
 
 QSolveAPI::QSolveAPI()
-    : _4ti2_state(), prec(_4ti2_PREC_INT_64), algorithm(SUPPORT), input(DEFAULT), mat(0), ray(0), cir(0), qhom(0), qfree(0)
+    : _4ti2_state(), prec(_4ti2_PREC_INT_64), algorithm(SUPPORT), input(DEFAULT), cone(0), ray(0)
 {
     print_banner();
     sign_default = _4ti2_FR;
@@ -91,19 +88,21 @@ QSolveAPI::QSolveAPI()
 
     sign = new MatrixAPI<VectorArrayT<int32_t> >;
     rel = new MatrixAPI<VectorArrayT<int32_t> >;
+    typ = new MatrixAPI<VectorArrayT<int32_t> >;
+
     initialise_data();
     order = MAXCUTOFF;
 }
 
 QSolveAPI::~QSolveAPI()
 {
-    delete mat; delete sign; delete rel; delete ray; delete cir; delete qhom; delete qfree;
+    delete cone; delete sign; delete rel; delete ray; delete typ;
 }
 
 _4ti2_matrix*
 QSolveAPI::create_matrix(int m, int n, const char* name)
 {
-    if (!strcmp(name, "mat")) { mat->resize(m,n); return mat; }
+    if (!strcmp(name, "mat")) { cone->resize(m,n); return &cone->get_matrix(); }
     if (!strcmp(name, "sign")) { sign->resize(m,n); return sign; }
     if (!strcmp(name, "rel")) { rel->resize(m,n); return rel; }
     std::cerr << "ERROR: Unrecognised input matrix type " << name << ".\n";
@@ -139,13 +138,10 @@ QSolveAPI::create_matrix(std::istream&in, const char* name)
 _4ti2_matrix*
 QSolveAPI::get_matrix(const char* name)
 {
-    if (!strcmp(name, "mat")) { return mat; }
+    if (!strcmp(name, "mat")) { return &cone->get_matrix(); }
     if (!strcmp(name, "sign")) { return sign; }
     if (!strcmp(name, "rel")) { return rel; }
     if (!strcmp(name, "ray")) { return ray; }
-    if (!strcmp(name, "cir")) { return cir; }
-    if (!strcmp(name, "qhom")) { return qhom; }
-    if (!strcmp(name, "qfree")) { return qfree; }
     std::cerr << "ERROR: Unrecognised mat type " << name << ".\n";
     return 0;
 }
@@ -153,8 +149,8 @@ QSolveAPI::get_matrix(const char* name)
 void
 QSolveAPI::pre_compute()
 {
-    Size n = mat->get_num_cols();
-    Size m = mat->get_num_rows();
+    Size n = cone->num_vars();
+    Size m = cone->num_cons();
     if (sign->get_num_rows() != 0) {
         if (sign->get_num_rows() != 1 || sign->get_num_cols() != n) { // TODO: Use exceptions.
             std::cerr << "ERROR: Incorrect sizes for sign matrix.\n";
@@ -182,10 +178,7 @@ QSolveAPI::pre_compute()
     }
 
     // Delete previous computation.
-    ray->resize(0, mat->get_num_cols());
-    cir->resize(0, mat->get_num_cols());
-    qhom->resize(0, mat->get_num_cols());
-    qfree->resize(0, mat->get_num_cols());
+    ray->resize(0, cone->num_vars());
 }
 
 void
@@ -199,7 +192,7 @@ QSolveAPI::compute()
 #ifdef _4ti2_GMP_
         computeT<mpz_class>(); break;
 #else
-        std::cerr << "ERROR: Arbitrary precision not supported.\n";        
+        std::cerr << "ERROR: Arbitrary precision not supported. 4ti2 needs GMP.\n";        
         exit(1);
 #endif
     case _4ti2_PREC_INT_32:
@@ -217,39 +210,28 @@ template <class T>
 void
 QSolveAPI::computeT()
 {
-    Size n = mat->get_num_cols();
-    Size m = mat->get_num_rows();
-    ConeT<T> cone(dynamic_cast<MatrixWrapper<VectorArrayT<T> >&>(*mat));
+    Size n = cone->num_vars();
+    Size m = cone->num_cons();
     int32_t c;
     for (Index i = 0; i < n; ++i) { 
         sign->get_entry(0,i,c);
-        cone.set_constraint_type(i,(_4ti2_constraint) c);
+        cone->set_constraint_type(i,(_4ti2_constraint) c);
     }
     for (Index i = n; i < n+m; ++i) { 
         rel->get_entry(0,i-n,c);
-        cone.set_constraint_type(i,(_4ti2_constraint) c);
+        cone->set_constraint_type(i,(_4ti2_constraint) c);
     }
-    VectorArrayT<T>& ray_data = dynamic_cast<MatrixAPI<VectorArrayT<T> >&>(*ray).data;
-    VectorArrayT<T>& cir_data = dynamic_cast<MatrixAPI<VectorArrayT<T> >&>(*cir).data;
-    VectorArrayT<T>& qfree_data = dynamic_cast<MatrixAPI<VectorArrayT<T> >&>(*qfree).data;
+    ConeT<T>& cone_data = *(dynamic_cast<ConeT<T>*>(cone));
+    VectorArrayT<T>& ray_data = (dynamic_cast<MatrixAPI<VectorArrayT<T> >*>(ray))->data;
+    VectorArrayT<int32_t>& type_data = (dynamic_cast<MatrixAPI<VectorArrayT<int32_t> >*>(typ))->data;
 
     QSolveAlgorithm<T> alg(algorithm, order);
-    alg.compute(cone, ray_data, cir_data, qfree_data);
+    alg.compute(cone_data, ray_data, type_data);
 }
 
 void
 QSolveAPI::post_compute()
 {
-    //ray->data.sort();
-    //qfree->data.sort();
-    qhom->swap(*ray);
-#if 0
-    VectorArrayT<T> cir_data_neg(*cir);
-    cir_data_neg.mul(-1);
-    qhom->transfer(*cir, 0, cir->get_num_rows(), qhom->get_num_rows());
-    qhom->transfer(cir_data_neg, 0, cir_data_neg.get_number(), qhom->data.get_number());
-    qhom->data.sort();
-#endif
 }
 
 void
@@ -433,8 +415,8 @@ QSolveAPI::read(const char* basename_c_str)
             std::cerr << "Could not parse file " << basename << ".\n";
             return;
         }
-        int n = mat->get_num_cols();
-        int m = mat->get_num_rows();
+        int n = cone->num_vars();
+        int m = cone->num_cons();
         sign->resize(1,n);
         for (Index i = 0; i < n; ++i) { 
             sign->set_entry(0, i, (int32_t) _4ti2_FR);
@@ -455,8 +437,8 @@ QSolveAPI::read(const char* basename_c_str)
             std::cerr << "Could not parse file " << basename << ".\n";
             return;
         }
-        int n = mat->get_num_cols();
-        int m = mat->get_num_rows();
+        int n = cone->num_vars();
+        int m = cone->num_cons();
         sign->resize(1,n);
         for (Index i = 0; i < n; ++i) { 
             sign->set_entry(0, i, (int32_t) _4ti2_FR);
@@ -499,10 +481,10 @@ QSolveAPI::write(const char* basename_c_str)
     std::string basename(basename_c_str);
 
     std::string qhom_filename(basename + ".qhom");
-    qhom->write(qhom_filename.c_str());
+    //qhom->write(qhom_filename.c_str());
 
     std::string qfree_filename(basename + ".qfree");
-    qfree->write(qfree_filename.c_str());
+    //qfree->write(qfree_filename.c_str());
 }
 
 #if 0
@@ -565,7 +547,7 @@ QSolveAPI::parse_porta_ieq(std::istream& in)
     }
 
     int m = 0;
-    create_matrix(m, n, "mat");
+    _4ti2_matrix* mat = create_matrix(m, n, "mat");
     std::vector<_4ti2_constraint> cons;
     input.clear();
     while (!getline(in, input).eof()) {
@@ -573,7 +555,7 @@ QSolveAPI::parse_porta_ieq(std::istream& in)
         input.erase(std::remove_if(input.begin(), input.end(), isspace), input.end());
         if (input == "END") { break; }
         if (input.empty()) { continue; } // skip empty lines.
-        mat->resize(m+1,n); // Add an extra row.
+        cone->resize(m+1,n); // Add an extra row.
         for (int i = 0; i < n; ++i) { mat->set_entry(m, i, 0); } // Zero row.
         std::istringstream ss(input);
         char c;

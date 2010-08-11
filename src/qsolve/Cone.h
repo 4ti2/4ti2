@@ -11,12 +11,17 @@
 #include "qsolve/IndexSetR.h"
 #include "qsolve/IndexSetD.h"
 #include "qsolve/IndexSetDS.h"
+#include "qsolve/MatrixWrapper.h"
+#include "qsolve/MatrixRef.h"
 #include "4ti2/4ti2.h"
 
 namespace _4ti2_ {
 
 class ConeAPI {
 public:
+    virtual ~ConeAPI();
+    virtual void resize(Size m, Size n) = 0;
+
     // The number of variables.
     virtual Size num_vars() const = 0;
     // The number of constraints.
@@ -26,28 +31,35 @@ public:
     virtual Size is_d_dimensional_face(const IndexSetD& supp) const = 0;
     virtual Size is_d_dimensional_face(const IndexSetDS& supp) const = 0;
 
+    // The constraint matrix A.
+    const _4ti2_matrix& get_matrix() const;
+    _4ti2_matrix& get_matrix();
+
     // The set of constraints matching the given constraint type.
-    virtual void get_constraint_set(_4ti2_constraint t, IndexSetD& is) const = 0;
-    virtual void get_constraint_set(_4ti2_constraint t, IndexSetDS& is) const = 0;
+    template <class IndexSet>
+    void get_constraint_set(_4ti2_constraint t, IndexSet& is) const;
 
     // Get and set the type of constraint.
-    virtual _4ti2_constraint get_constraint_type(Index i) const = 0;
-    virtual void set_constraint_type(Index i, _4ti2_constraint t) = 0;
+    const std::vector<_4ti2_constraint>& get_constraint_types() const;
+    _4ti2_constraint get_constraint_type(Index i) const;
+    void set_constraint_type(Index i, _4ti2_constraint t);
 
 protected:
-    ConeAPI() {}
-    virtual ~ConeAPI() {}
+    ConeAPI();
+    ConeAPI(Size m, Size n);
+    ConeAPI(const std::vector<_4ti2_constraint>& cts);
+    _4ti2_matrix* matrix_api;
+    std::vector<_4ti2_constraint> types;
 };
 
 template <class T>
 class ConeT : public ConeAPI {
+    typedef VectorArrayT<T> MatrixT;
 public:
     ConeT();
     virtual ~ConeT();
     ConeT(Size m, Size n);
-    void resize(Size m, Size n);
-    ConeT(const VectorArrayT<T>&);
-    ConeT(const VectorArrayT<T>&, const std::vector<_4ti2_constraint>& cts);
+    virtual void resize(Size m, Size n);
 
     // The number of variables.
     virtual Size num_vars() const;
@@ -58,27 +70,11 @@ public:
     virtual Size is_d_dimensional_face(const IndexSetD& supp) const;
     virtual Size is_d_dimensional_face(const IndexSetDS& supp) const;
 
-    // The set of constraints matching the given constraint type.
-    virtual void get_constraint_set(_4ti2_constraint t, IndexSetD& is) const;
-    virtual void get_constraint_set(_4ti2_constraint t, IndexSetDS& is) const;
-
-    void canonize(ConeT<T>& cone, VectorArrayT<T>& subspace, VectorArrayT<T>& map) const;
+    void canonize(ConeT<T>& cone, MatrixT& subspace, MatrixT& map) const;
 
     // The constraint matrix A.
-    const VectorArrayT<T>& get_matrix() const;
-    VectorArrayT<T>& get_matrix();
-    // The types of constraints (vars then rows).
-    const std::vector<_4ti2_constraint>& get_constraint_types() const;
-
-    // Get the type of constraint.
-    virtual _4ti2_constraint get_constraint_type(Index i) const;
-    // Set the type of constraint.
-    virtual void set_constraint_type(Index i, _4ti2_constraint t);
-
-    // Adds the set of constraints matching the given constraint type to the
-    // index set is.
-    template <class IS>
-    void constraint_set(_4ti2_constraint t, IS& is) const;
+    virtual const MatrixT& get_matrix() const;
+    virtual MatrixT& get_matrix();
 
     // Returns the slacks of the ray r for the constraint i.
     void get_slack(const VectorR<T>& r, Index i, T& d) const;
@@ -88,19 +84,17 @@ public:
     template <class IS>
     void get_support(const VectorR<T>& r, IS& supp) const;
     // Returns a vector of slacks of the rays rs for the constraint i.
-    void get_slacks(const VectorArrayT<T>& rs, Index i, VectorR<T>& s) const;
+    void get_slacks(const MatrixT& rs, Index i, VectorR<T>& s) const;
 
     // Counts the polarity of the slacks for the constraint i and the given set of rays.
-    void slack_count(const VectorArrayT<T>& rs, Index i, Size& pos, Size& neg, Size& zero) const;
+    void slack_count(const MatrixT& rs, Index i, Size& pos, Size& neg, Size& zero) const;
 
     // Checks whether the given support determines a d dimensional face of the cone.
     template <class IS>
     Size is_d_dimensional_faceT(const IS& supp) const;
 
 private:
-    VectorArrayT<T> matrix; // Constraints.
-    VectorArrayT<T> generators; // Generators.
-    std::vector<_4ti2_constraint> types;
+    MatrixT matrix; // Constraints.
 };
 
 template <class T, class IndexSet>
@@ -121,23 +115,92 @@ private:
 };
 
 // Constructor.
-template <class T> inline
-ConeT<T>::ConeT() 
-    : matrix(), types()
+inline
+ConeAPI::ConeAPI()
+    : matrix_api(0)
 {
 }
 
 // Constructor.
-template <class T> inline
-ConeT<T>::~ConeT() 
+inline
+ConeAPI::~ConeAPI()
 {
+    delete matrix_api;
+}
+
+// Constructor.
+inline
+ConeAPI::ConeAPI(Size m, Size n) 
+    : matrix_api(0), types(n+m, _4ti2_LB)
+{
+}
+
+// Constructor.
+inline
+ConeAPI::ConeAPI(const std::vector<_4ti2_constraint>& cts)
+    : matrix_api(0), types(cts)
+{
+}
+
+inline
+const std::vector<_4ti2_constraint>&
+ConeAPI::get_constraint_types() const
+{
+    return types;
+}
+
+inline
+_4ti2_constraint
+ConeAPI::get_constraint_type(Index i) const
+{
+    return types[i];
+}
+
+inline
+void
+ConeAPI::set_constraint_type(Index i, _4ti2_constraint t)
+{
+    types[i] = t;
+}
+
+template <class IndexSet> inline
+void
+ConeAPI::get_constraint_set(_4ti2_constraint t, IndexSet& is) const
+{
+    assert(is.get_size() == (Size) types.size());
+    for (Index i = 0; i < (Index) types.size(); ++i) {
+        if (types[i] == t) { is.set(i); }
+    }
+}
+
+inline
+const _4ti2_matrix&
+ConeAPI::get_matrix() const
+{
+    return *matrix_api;
+}
+
+inline
+_4ti2_matrix&
+ConeAPI::get_matrix()
+{
+    return *matrix_api;
+}
+
+// Constructor.
+template <class T> inline
+ConeT<T>::ConeT() 
+    : ConeAPI(), matrix()
+{
+    ConeAPI::matrix_api = new MatrixRef<MatrixT>(matrix);
 }
 
 // Constructor.
 template <class T> inline
 ConeT<T>::ConeT(Size m, Size n) 
-    : matrix(m, n), types(n+m, _4ti2_LB)
+    : ConeAPI(m, n), matrix(m, n)
 {
+    ConeAPI::matrix_api = new MatrixRef<MatrixT>(matrix);
 }
 
 // Constructor.
@@ -146,82 +209,28 @@ void
 ConeT<T>::resize(Size m, Size n) 
 {
     matrix.init(m, n);
-    types.resize(n+m, _4ti2_LB);
+    ConeAPI::types.resize(n+m, _4ti2_LB);
+    ConeAPI::matrix_api = new MatrixRef<MatrixT>(matrix);
 }
 
-// Constructor.
+// Destructor.
 template <class T> inline
-ConeT<T>::ConeT(const VectorArrayT<T>& m) 
-    : matrix(m), types(m.get_number()+m.get_size(), _4ti2_LB)
-{
-}
-
-// Constructor.
-template <class T> inline
-ConeT<T>::ConeT(const VectorArrayT<T>& m, const std::vector<_4ti2_constraint>& cts)
-    : matrix(m), types(cts)
+ConeT<T>::~ConeT() 
 {
 }
 
 template <class T> inline
-const VectorArrayT<T>&
+const typename ConeT<T>::MatrixT&
 ConeT<T>::get_matrix() const
 {
     return matrix;
 }
 
 template <class T> inline
-VectorArrayT<T>&
+typename ConeT<T>::MatrixT&
 ConeT<T>::get_matrix()
 {
     return matrix;
-}
-
-template <class T> inline
-const std::vector<_4ti2_constraint>&
-ConeT<T>::get_constraint_types() const
-{
-    return types;
-}
-
-template <class T> inline
-_4ti2_constraint
-ConeT<T>::get_constraint_type(Index i) const
-{
-    return types[i];
-}
-
-template <class T> inline
-void
-ConeT<T>::set_constraint_type(Index i, _4ti2_constraint t)
-{
-    types[i] = t;
-}
-
-template <class T> inline
-void
-ConeT<T>::get_constraint_set(_4ti2_constraint t, IndexSetD& is) const
-{
-    constraint_set(t, is);
-}
-
-template <class T> inline
-void
-ConeT<T>::get_constraint_set(_4ti2_constraint t, IndexSetDS& is) const
-{
-    constraint_set(t, is);
-}
-
-template <class T>
-template <class IS>
-inline
-void
-ConeT<T>::constraint_set(_4ti2_constraint t, IS& is) const
-{
-    assert(is.get_size() == (Size) types.size());
-    for (Index i = 0; i < (Index) types.size(); ++i) {
-        if (types[i] == t) { is.set(i); }
-    }
 }
 
 template <class T> inline
@@ -273,7 +282,7 @@ ConeT<T>::get_support(const VectorR<T>& r, IS& supp) const
 
 template <class T> inline
 void
-ConeT<T>::get_slacks(const VectorArrayT<T>& rs, Index i, VectorR<T>& slacks) const
+ConeT<T>::get_slacks(const MatrixT& rs, Index i, VectorR<T>& slacks) const
 {
     assert(slacks.get_size() == rs.get_number());
     assert(rs.get_size() == matrix.get_size());
@@ -310,7 +319,7 @@ ConeT<T>::is_d_dimensional_face(const IndexSetDS& supp) const
 template <class T>
 void
 ConeT<T>::slack_count(
-        const VectorArrayT<T>& rays, Index next_con,
+        const MatrixT& rays, Index next_con,
         Size& pos_count, Size& neg_count, Size& zero_count) const
 {
     zero_count = 0; pos_count = 0; neg_count = 0;
@@ -323,19 +332,6 @@ ConeT<T>::slack_count(
     }
 }
 
-
-#if 0
-// Counts the polarity of the slacks for the ith constraint for the extreme rays of the cone.
-virtual void slack_count(Index i, Size& pos, Size& neg, Size& zero) const;
-
-// Count how many zero, positive and negative entries there are in a column.
-template <class T>
-void
-ConeT<T>::slack_count(Index next_con, Size& pos_count, Size& neg_count, Size& zero_count) const
-{
-    slack_count(rays, next_con, pos_count, neg_count, zero_count);
-}
-#endif
 
 // Checks whether the given support determines a two dimensional face of the cone.
 template <class T>
@@ -354,14 +350,14 @@ ConeT<T>::is_d_dimensional_faceT(const IndexSet& supp) const
     for (Index i = n; i < n+m; ++i) { if (!supp[i]) { con_supp.set(i-n); } }
 
 #if 1
-    VectorArrayT<T> temp(con_supp.count(), var_supp.count());
+    MatrixT temp(con_supp.count(), var_supp.count());
     temp.assign(matrix, con_supp, var_supp);
 
     // Compute the rank of the matrix.
     Index rank = upper_triangle(temp);
     return (temp.get_size()-rank);
 #else
-    VectorArrayT<T> temp(var_supp.count(), con_supp.count());
+    MatrixT temp(var_supp.count(), con_supp.count());
     temp.assign_trans(matrix, con_supp, var_supp);
 
     // Compute the rank of the matrix.
@@ -372,7 +368,7 @@ ConeT<T>::is_d_dimensional_faceT(const IndexSet& supp) const
 
 template <class T>
 void
-ConeT<T>::canonize(ConeT<T>& proj_cone, VectorArrayT<T>& subspace, VectorArrayT<T>& map) const
+ConeT<T>::canonize(ConeT<T>& proj_cone, MatrixT& subspace, MatrixT& map) const
 {
     DEBUG_4ti2(*out << "MATRIX:\n" << cone.get_matrix() << "\n";)
 
@@ -381,17 +377,17 @@ ConeT<T>::canonize(ConeT<T>& proj_cone, VectorArrayT<T>& subspace, VectorArrayT<
     Size num_cons = n+m;
 
     IndexSetD full_rs(num_cons,0);
-    constraint_set(_4ti2_LB, full_rs);
+    get_constraint_set(_4ti2_LB, full_rs);
     IndexSetD full_cir(num_cons,0);
-    constraint_set(_4ti2_DB, full_cir);
+    get_constraint_set(_4ti2_DB, full_cir);
     IndexSetD full_eq(num_cons,0);
-    constraint_set(_4ti2_EQ, full_eq);
+    get_constraint_set(_4ti2_EQ, full_eq);
 
     DEBUG_4ti2(*out << "RS:\n" << full_rs << "\n";)
     DEBUG_4ti2(*out << "CIR:\n" << full_cir << "\n";)
     DEBUG_4ti2(*out << "EQ:\n" << full_eq << "\n";)
 
-    VectorArrayT<T> trans(n, num_cons);
+    MatrixT trans(n, num_cons);
     // Add an identity matrix at the beginning of the transpose.
     trans.assignT(0, IndexSetR(0,n), IndexSetR(0,n));
     for (Index i = 0; i < n; ++i) { trans[i][i] = 1; }
@@ -426,7 +422,7 @@ ConeT<T>::canonize(ConeT<T>& proj_cone, VectorArrayT<T>& subspace, VectorArrayT<
     full_rs.set_difference(rs_pivots);
     full_cir.set_difference(cir_pivots);
     proj_cone.resize(full_rs.count()+full_cir.count(), cir_dim);
-    VectorArrayT<T>& proj_matrix = proj_cone.get_matrix();
+    MatrixT& proj_matrix = proj_cone.get_matrix();
     // First add rs constraints.
     proj_matrix.assign_trans(trans, IndexSetR(0,cir_dim), full_rs, 
                     IndexSetR(0,full_rs.count()), IndexSetR(0,cir_dim));
