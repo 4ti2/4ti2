@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(4ti2, 1.4-prerelease-2009-11-13)
+AC_INIT(4ti2, 1.4)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE(foreign)
 AM_MAINTAINER_MODE
@@ -55,7 +55,6 @@ AC_ARG_ENABLE(zsolve, AS_HELP_STRING([--disable-zsolve], [Disable building the z
 			[enable_zsolve=${enableval}], [enable_zsolve=yes])
 AC_ARG_ENABLE(fiber, AS_HELP_STRING([--enable-fiber], [Disable building the fiber components]),
 			[enable_fiber=${enableval}], [enable_fiber=no])
-AM_CONDITIONAL([ENABLE_GROEBNER], [ test x${enable_groebner} == xyes ])
 AM_CONDITIONAL([ENABLE_ZSOLVE], [ test x${enable_zsolve} == xyes ])
 AM_CONDITIONAL([ENABLE_FIBER], [ test x${enable_fiber} == xyes ])
 
@@ -74,6 +73,11 @@ AX_COMPILER_VENDOR
 AX_CXX_MAXOPT
 # Turn on most compiler warnings
 AX_CXXFLAGS_WARN_ALL
+# Try std=c++0x to enable int32_t and int64_t for C++; note some old
+# C++ compiler versions don't have this flag, but do support int32_t,
+# int64_t
+AX_CHECK_COMPILE_FLAG([-std=c++0x], [
+                        CXXFLAGS="$CXXFLAGS -std=c++0x"])
 # The flag -ftrapv means that arithmetic overflow checking is enabled.
 CHECK_TRAPV
 
@@ -109,7 +113,6 @@ AC_PROG_LIBTOOL
 # Checks for library functions.
 #AC_FUNC_MALLOC
 
-if test x${enable_groebner} == xyes ; then
 # Check for GNU MP.
 AC_LANG(C++)
 LB_CHECK_GMP(,,[AC_MSG_WARN([GNU MP not found.
@@ -120,12 +123,36 @@ Please make sure that GNU MP was configured with "--enable-cxx".
 4ti2 will be built without support for arbitrary-precision computations.])
 fi
 
+if test x${enable_groebner} == xyes ; then
 # Check for GLPK.
 LB_CHECK_GLPK(,,[
-  AC_MSG_ERROR([GNU Linear Programming Kit not found!
+  AC_MSG_WARN([GNU Linear Programming Kit not found!
 It is required for building the Groebner component of 4ti2.
-To just build the zsolve component use --disable-groebner.])])
+4ti2 will be built without the Groebner component.])
+  enable_groebner=no
+])
+fi
+AM_CONDITIONAL([ENABLE_GROEBNER], [ test x${enable_groebner} == xyes ])
 
+# Check whether the C99 and C++0xx int32_t and int64_t types work in C++.
+# This requires the option -std=c++0xx on some modern g++ versions,
+# but this option is unknown on some old g++ versions.
+AC_MSG_CHECKING(whether we can use the int32_t and in64_t types)
+AC_TRY_COMPILE(
+  [ #include <cstdint>
+  ], 
+  [ int32_t xyzzy = 47; int64_t zyxxy = 11; 
+  ],
+  [ have_int32_t_int_64_t=yes;
+#    AC_DEFINE(_4ti2_HAVE_INT32_T_INT64_T, 1, [Define if int32_t and int64_t are available])
+  ], 
+  [ have_int32_t_int_64_t=no;
+  ])
+AC_MSG_RESULT(${have_int32_t_int_64_t})
+if test x${have_int32_t_int_64_t} = xno; then
+    AC_MSG_ERROR([Unable to use the int32_t and int64_t types in C++.
+4ti2 cannot be built.  Consider upgrading the compiler or
+use the correct CXXFLAGS that enables these types.])
 fi
 
 AM_CONDITIONAL([HAVE_GMP_WITH_CXX], [test -n "${GMP_HAVE_CXX}"])
@@ -143,6 +170,7 @@ if test -n "${GMP_HAVE_CXX}" ; then
   AC_MSG_CHECKING(whether we can convert between int32_t and mpz_class)
   AC_TRY_LINK(
     [  #include <gmpxx.h>
+       #include <cstdint>
     ],
     [  int32_t x = 815;
        mpz_class y(x);
@@ -154,6 +182,7 @@ if test -n "${GMP_HAVE_CXX}" ; then
   AC_MSG_CHECKING(whether we can convert between int64_t and mpz_class)
   AC_TRY_LINK(
     [  #include <gmpxx.h>
+       #include <cstdint>
     ],
     [  int64_t x = 815;
        mpz_class y(x);

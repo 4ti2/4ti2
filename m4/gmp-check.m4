@@ -40,7 +40,9 @@ for GMP_HOME in ${GMP_HOME_PATH}
 
 		if test "x$GMP_HOME" != "xDEFAULT" ; then
 			GMP_CFLAGS="-I${GMP_HOME}/include"
-			GMP_LIBS="-L${GMP_HOME}/lib -R${GMP_HOME}/lib -lgmp"	
+			GMP_LIBS="-L${GMP_HOME}/lib -lgmp"	
+ 			# We used to use -R here, but it's not portable
+			##-R${GMP_HOME}/lib 
 		else
 			GMP_CFLAGS=
 			GMP_LIBS="-lgmp"		

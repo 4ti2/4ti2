@@ -39,7 +39,11 @@ for GLPK_HOME in ${GLPK_HOME_PATH}
 		if test "x$GLPK_HOME" != "xDEFAULT" ; then
 			GLPK_CFLAGS="-I${GLPK_HOME}/include"
 			# Use this version during actual build:
-			GLPK_LIBS="-L${GLPK_HOME}/lib -R${GLPK_HOME}/lib -lglpk"
+			GLPK_LIBS="-L${GLPK_HOME}/lib -lglpk"
+			### We used to use -R here: 
+			### but we don't use this anywhere else;
+			### it's probably obsolete
+			### -R${GLPK_HOME}/lib 
 			# During configure, we don't use libtool, 
 			# so cannot portably use the -R option. 
 			GLPK_LIBS_NOLIBTOOL="-L${GLPK_HOME}/lib -lglpk"
