@@ -1,3 +1,8 @@
+News in 4ti2 version 1.5.1, compared to 1.4:
+
+ * Fix a build problem with --enable-shared.
+
+
 News in 4ti2 version 1.5, compared to 1.4:
 
  * Latest version of new qsolve.

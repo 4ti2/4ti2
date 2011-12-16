@@ -37,6 +37,12 @@ AM_CXXFLAGS += $(GLPK_CFLAGS)
 # Add library include path for the library libglpk if necessary.
 LIBS += $(GLPK_LIBS)
 
+if HAVE_GMP_WITH_CXX
+# All of our libraries need this because of the common interface,
+# which allows conversion from GMP integers.
+LIBS += $(GMP_LIBS)
+endif
+
 # 4ti2 needs the next option to access maximum values of integer types.
 AM_CXXFLAGS += -D__STDC_LIMIT_MACROS
 # The optimisation flags.
@@ -294,7 +300,6 @@ if HAVE_GMP_WITH_CXX
 4ti2gmp_SOURCES = $(4ti2sources)
 lib4ti2gmp_la_CPPFLAGS = -D_4ti2_GMP_
 lib4ti2gmp_la_CPPFLAGS += $(GMP_CFLAGS)
-lib4ti2gmp_la_LIBADD = $(GMP_LIBS)
 lib4ti2gmp_la_SOURCES = $(lib4ti2sources)
 endif
 
