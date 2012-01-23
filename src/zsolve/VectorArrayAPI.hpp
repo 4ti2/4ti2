@@ -44,10 +44,12 @@ public:
     virtual void write(std::ostream& out) const; 
     virtual void read(std::istream& in);
 
+#ifdef _4ti2_HAVE_INT32_T_INT64_T
     virtual void set_entry_int32_t(int r, int c, const int32_t& value); 
     virtual void get_entry_int32_t(int r, int c, int32_t& value) const;
     virtual void set_entry_int64_t(int r, int c, const int64_t& value);
     virtual void get_entry_int64_t(int r, int c, int64_t& value) const;
+#endif
 
 #ifdef _4ti2_HAVE_GMP
     virtual void set_entry_mpz_class(int r, int c, const mpz_class& value);
@@ -70,6 +72,7 @@ convert(const T1& v1, T2& v2)
     v2 = v1;
 }
 
+#ifdef _4ti2_HAVE_INT32_T_INT64_T
 template <>
 inline
 void
@@ -81,6 +84,7 @@ convert(const int64_t& v1, int32_t& v2)
     }
     v2 = v1;
 }
+#endif
 
 #ifdef _4ti2_HAVE_GMP
 
@@ -109,6 +113,7 @@ convert(const mpz_class& v1, long int& v2)
 }
 
 #ifndef _4ti2_HAVE_MPZ_INT64_CONVERSION
+#ifdef _4ti2_HAVE_INT32_T_INT64_T
 template <>
 inline
 void
@@ -126,6 +131,7 @@ convert(const int64_t& v1, mpz_class &v2)
   std::cerr << "UNIMPLEMENTED: Need to convert from int64_t to mpz" << std::endl;
   std::exit(1);
 }
+#endif
 #endif
 
 #endif
@@ -179,6 +185,7 @@ VectorArrayAPI<T>::read(std::istream& in)
     data.read(in, false);
 }
 
+#ifdef _4ti2_HAVE_INT32_T_INT64_T
 template <class T>
 void
 VectorArrayAPI<T>::set_entry_int32_t(int r, int c, const int32_t& value)
@@ -206,6 +213,7 @@ VectorArrayAPI<T>::get_entry_int64_t(int r, int c, int64_t& value) const
 {
     convert(data[r][c], value);
 }
+#endif
 
 #ifdef _4ti2_HAVE_GMP
 template <class T>

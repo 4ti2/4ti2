@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(4ti2, 1.5.1)
+AC_INIT(4ti2, 1.5.2)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE(foreign)
 AM_MAINTAINER_MODE
@@ -13,6 +13,8 @@ AC_CONFIG_FILES([Makefile src/Makefile src/4ti2/Makefile
 		 m4/Makefile])
 
 AC_CONFIG_HEADERS([src/config.h src/4ti2/4ti2_config.h])
+
+AC_CONFIG_FILES([src/groebner/script.template])
 
 AC_CONFIG_FILES([test/Makefile])
 AC_CONFIG_FILES([test/circuits/Makefile])
@@ -144,16 +146,16 @@ AC_TRY_COMPILE(
   [ int32_t xyzzy = 47; int64_t zyxxy = 11; 
   ],
   [ have_int32_t_int_64_t=yes;
-#    AC_DEFINE(_4ti2_HAVE_INT32_T_INT64_T, 1, [Define if int32_t and int64_t are available])
   ], 
   [ have_int32_t_int_64_t=no;
   ])
 AC_MSG_RESULT(${have_int32_t_int_64_t})
-if test x${have_int32_t_int_64_t} = xno; then
-    AC_MSG_ERROR([Unable to use the int32_t and int64_t types in C++.
-4ti2 cannot be built.  Consider upgrading the compiler or
-use the correct CXXFLAGS that enables these types.])
+if test x${have_int32_t_int_64_t} = xyes; then
+    AC_DEFINE(_4ti2_HAVE_INT32_T_INT64_T, 1, [Define if int32_t and int64_t are available])
+else
+    AC_MSG_WARN([Unable to use the int32_t and int64_t types in C++.])
 fi
+AM_CONDITIONAL([HAVE_INT32_INT64], [test x${have_int32_t_int_64_t} = xyes])
 
 AM_CONDITIONAL([HAVE_GMP_WITH_CXX], [test -n "${GMP_HAVE_CXX}"])
 
@@ -194,6 +196,17 @@ if test -n "${GMP_HAVE_CXX}" ; then
   LIBS="${save_LIBS}"
   CXXFLAGS="${save_CXXFLAGS}"
 fi
+
+if test x${have_int32_t_int_64_t} = xyes; then 
+   GROEBNER_DEFAULT_EXECUTABLE=4ti2int64
+elif test -n "${GMP_HAVE_CXX}" ; then
+   GROEBNER_DEFAULT_EXECUTABLE=4ti2gmp
+else
+   AC_MSG_ERROR([Neither int32_t, int64_t, nor GMP integers are available.
+4ti2 cannot be built.  Consider upgrading the compiler or
+use the correct CXXFLAGS that enables these types.])
+fi
+AC_SUBST(GROEBNER_DEFAULT_EXECUTABLE)
 
 ## Check whether to build high-level-language interfaces using SWIG
 AC_ARG_ENABLE(swig, AS_HELP_STRING([--enable-swig], [Enable building high-level-language interfaces using SWIG]),

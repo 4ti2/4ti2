@@ -44,10 +44,12 @@ public:
     virtual void write(std::ostream& out) const = 0; 
     virtual void read(std::istream& in) = 0; 
 
+#ifdef _4ti2_HAVE_INT32_T_INT64_T
     virtual void set_entry_int32_t(int r, int c, const int32_t& value) = 0; 
     virtual void get_entry_int32_t(int r, int c, int32_t& value) const = 0;
     virtual void set_entry_int64_t(int r, int c, const int64_t& value) = 0;
     virtual void get_entry_int64_t(int r, int c, int64_t& value) const = 0;
+#endif
 
 #ifdef _4ti2_HAVE_GMP
     virtual void set_entry_mpz_class(int r, int c, const mpz_class& value) = 0;

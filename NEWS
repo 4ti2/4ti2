@@ -1,3 +1,8 @@
+News in 4ti2 version 1.5.2, compared to 1.5.1:
+
+ * Build a GMP-only 4ti2 if the C++ compiler does not have int32_t and int64_t.
+
+
 News in 4ti2 version 1.5.1, compared to 1.4:
 
  * Fix a build problem with --enable-shared.

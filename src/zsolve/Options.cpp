@@ -67,7 +67,11 @@ Options::set_defaults ()
     m_project = "zsolve";
     m_graver = false;
     m_hilbert = false;
+#if _4ti2_HAVE_INT32_T_INT64_T
     m_precision = _4ti2_PREC_INT_32;
+#else
+    m_precision = _4ti2_PREC_INT_ARB;
+#endif
     m_verbosity = -1;
     m_loglevel = 0;
     m_backup_frequency = 0;

@@ -6,6 +6,7 @@ doc/magicsqs_ray.pdf svneol=native#unset
 doc/solved_IP.pdf svneol=native#unset
 doc/solved_LP.pdf svneol=native#unset
 m4/ax_check_compile_flag.m4 -text
+src/groebner/script.template.in -text
 src/qsolve/CircuitsAPI.cpp -text
 src/qsolve/MatrixAPI.h -text
 src/qsolve/MatrixAPI.hpp -text

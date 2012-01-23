@@ -36,6 +36,7 @@ namespace _4ti2_zsolve_
 
 // sign 
 
+#ifdef _4ti2_HAVE_INT32_T_INT64_T
 inline int sgn (int64_t a)
 {
     if (a > 0)
@@ -55,6 +56,7 @@ inline int sgn (int32_t a)
     else
         return 0;
 }
+#endif
 
 // absolute value
 
@@ -91,6 +93,7 @@ inline mpz_class gcd (const mpz_class& a, const mpz_class& b)
 }
 #endif
 
+#ifdef _4ti2_HAVE_INT32_T_INT64_T
 inline int calcPrecision (int32_t n)
 {
     if (n < 0)
@@ -116,7 +119,8 @@ inline int calcPrecision (int64_t n)
 	}
     return result;
 }
-
+#endif
+ 
 #ifdef _4ti2_HAVE_GMP
 inline int calcPrecision (const mpz_class& n)
 {
@@ -124,6 +128,7 @@ inline int calcPrecision (const mpz_class& n)
 }
 #endif
 
+#ifdef _4ti2_HAVE_INT32_T_INT64_T
 inline int maxPrecision (int32_t n)
 {
     return 32;
@@ -133,6 +138,7 @@ inline int maxPrecision (int64_t n)
 {
     return 64;
 }
+#endif
 
 #ifdef _4ti2_HAVE_GMP
 inline int maxPrecision (const mpz_class& n)

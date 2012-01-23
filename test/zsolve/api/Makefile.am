@@ -1,4 +1,7 @@
-check_PROGRAMS = test_zsolve_api
+check_PROGRAMS = 
+if HAVE_INT32_INT64
+check_PROGRAMS += test_zsolve_api
+endif
 
 LIBS = $(top_builddir)/src/zsolve/libzsolve.la 
 
@@ -7,6 +10,9 @@ AM_CXXFLAGS = -I$(top_srcdir)/src/
 
 test_zsolve_api_SOURCES = test_zsolve_api.cpp
 
-TESTS = test_zsolve_api
+TESTS =
+if HAVE_INT32_INT64
+TESTS += test_zsolve_api
+endif
 
 $(TESTS): $(top_builddir)/src/zsolve/libzsolve.la

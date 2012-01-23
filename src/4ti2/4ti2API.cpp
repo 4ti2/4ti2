@@ -109,6 +109,7 @@ _4ti2_matrix_write_to_file(const _4ti2_matrix*  matrix, const char* filename)
     matrix->write(filename);
 }
 
+#ifdef _4ti2_HAVE_INT32_T_INT64_T
 _4ti2_status
 _4ti2_matrix_set_entry_int32_t(_4ti2_matrix*  matrix, int r, int c, int32_t value)
 {
@@ -136,6 +137,7 @@ _4ti2_matrix_get_entry_int64_t(const _4ti2_matrix*  matrix, int r, int c, int64_
     matrix->get_entry_int64_t(r, c, *value);
     return _4ti2_OK;
 }
+#endif
 
 #ifdef _4ti2_HAVE_GMP
 _4ti2_status

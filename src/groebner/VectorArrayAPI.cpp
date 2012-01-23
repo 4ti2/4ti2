@@ -68,6 +68,7 @@ VectorArrayAPI::read(std::istream& in)
     in >> data;
 }
 
+#ifdef _4ti2_HAVE_INT32_T_INT64_T
 void
 VectorArrayAPI::set_entry_int32_t(int r, int c, const int32_t& value)
 {
@@ -91,6 +92,7 @@ VectorArrayAPI::get_entry_int64_t(int r, int c, int64_t& value) const
 {
     convert(data[r][c], value);
 }
+#endif
 
 #ifdef _4ti2_HAVE_GMP
 void

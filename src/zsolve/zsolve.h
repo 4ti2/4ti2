@@ -59,12 +59,14 @@ extern "C"
     int zsolve_matrix_height (ZSolveMatrix matrix); // returns the height of a matrix.
     int zsolve_matrix_read_only (ZSolveMatrix matrix); // returns, whether the matrix is read-only.
     void zsolve_matrix_delete (ZSolveMatrix matrix); // deletes a matrix. should be called before zsolve_state_delete!
+#ifdef _4ti2_HAVE_INT32_T_INT64_T
     int zsolve_matrix_set_32 (ZSolveMatrix matrix, int r, int c, int32_t value); // sets the entry at r,c to the 32bit value.
     int zsolve_matrix_set_64 (ZSolveMatrix matrix, int r, int c, int64_t value); // sets the entry at r,c to the 64bit value.
     int32_t zsolve_matrix_get_32 (ZSolveMatrix matrix, int r, int c); // returns the 32bit entry at r,c.
     int64_t zsolve_matrix_get_64 (ZSolveMatrix matrix, int r, int c); // returns the 64bit entry at r,c.
     void zsolve_matrix_print_32 (ZSolveMatrix matrix); // prints the matrix with 32bit values.
     void zsolve_matrix_print_64 (ZSolveMatrix matrix); // prints the matrix with 64bit values.
+#endif
 
 #ifdef _4ti2_HAVE_GMP
     int zsolve_matrix_set_gmp (ZSolveMatrix matrix, int r, int c, mpz_srcptr value); // sets the entry at r,c to the mpz_t value.

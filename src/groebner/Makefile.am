@@ -18,12 +18,18 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 
-bin_PROGRAMS = 4ti2int32 4ti2int64 
+bin_PROGRAMS = 
+if HAVE_INT32_INT64
+bin_PROGRAMS += 4ti2int32 4ti2int64
+endif 
 if HAVE_GMP_WITH_CXX
 bin_PROGRAMS += 4ti2gmp
 endif
 
-lib_LTLIBRARIES = lib4ti2int32.la lib4ti2int64.la
+lib_LTLIBRARIES = 
+if HAVE_INT32_INT64
+lib_LTLIBRARIES += lib4ti2int32.la lib4ti2int64.la
+endif
 if HAVE_GMP_WITH_CXX
 lib_LTLIBRARIES += lib4ti2gmp.la
 endif
