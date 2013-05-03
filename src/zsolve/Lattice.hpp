@@ -96,6 +96,10 @@ public:
     {
         for (size_t column = 0; column < VectorArray <T> :: m_variables; column++)
         {
+            // Abort if there are not enough rows.
+            if (column < VectorArray<T>:: m_vectors)
+              break;
+
             int current_index;
             T current_value;
             int best_index = column;
