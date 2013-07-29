@@ -47,7 +47,7 @@ find glpk, then the compilation will fail saying that it cannot find the file
 "glpk.h".  If you have installed glpk but not in a location that 4ti2 finds by
 default, then you will need to invoke 
 
-	 ./configure --with-glpk=/ROOT/OF/GLPK/INSTALLATION/HIERARCHY
+     ./configure --with-glpk=/ROOT/OF/GLPK/INSTALLATION/HIERARCHY
 
 You will also need an installed version of gmp, The GNU MP
 Bignum Library, with c++ support enabled (see http://www.swox.com/gmp/ for more
@@ -61,6 +61,17 @@ will need to invoke
 
 If you have gmp but not with c++ support, then ./configure will
 fail with an error saying that the file "gmpxx.h" cannot be found.
+
+
+USING MACPORTS ON MAC OS X
+==========================
+
+Use the following commands.
+
+     sudo port install gmp glpk
+     ./configure --with-gmp=/opt/local --with-glpk=/opt/local
+     make
+     sudo make install 
 
 
 DOCUMENTATION

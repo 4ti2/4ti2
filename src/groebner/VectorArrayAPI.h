@@ -41,12 +41,10 @@ public:
     virtual void write(std::ostream& out) const; 
     virtual void read(std::istream& in);
 
-#ifdef _4ti2_HAVE_INT32_T_INT64_T
-    virtual void set_entry_int32_t(int r, int c, const int32_t& value); 
-    virtual void get_entry_int32_t(int r, int c, int32_t& value) const;
-    virtual void set_entry_int64_t(int r, int c, const int64_t& value);
-    virtual void get_entry_int64_t(int r, int c, int64_t& value) const;
-#endif
+    virtual void set_entry_int32_t(int r, int c, const _4ti2_int32_t& value); 
+    virtual void get_entry_int32_t(int r, int c, _4ti2_int32_t& value) const;
+    virtual void set_entry_int64_t(int r, int c, const _4ti2_int64_t& value);
+    virtual void get_entry_int64_t(int r, int c, _4ti2_int64_t& value) const;
 
 #ifdef _4ti2_HAVE_GMP
     virtual void set_entry_mpz_class(int r, int c, const mpz_class& value);
@@ -69,11 +67,10 @@ VectorArrayAPI::convert(const T1& v1, T2& v2)
     v2 = v1;
 }
 
-#ifdef _4ti2_HAVE_INT32_T_INT64_T
 template <>
 inline
 void
-VectorArrayAPI::convert(const int64_t& v1, int32_t& v2)
+VectorArrayAPI::convert(const _4ti2_int64_t& v1, _4ti2_int32_t& v2)
 {
     if (v1 < INT32_MIN || v1 > INT32_MAX) {
         std::cerr << "ERROR: number " << v1 << " out of range.\n";
@@ -86,19 +83,17 @@ VectorArrayAPI::convert(const int64_t& v1, int32_t& v2)
 template <>
 inline
 void
-VectorArrayAPI::convert(const int32_t& v1, int64_t& v2)
+VectorArrayAPI::convert(const _4ti2_int32_t& v1, _4ti2_int64_t& v2)
 {
     v2 = v1;
 }
-#endif
 
 #ifdef _4ti2_HAVE_GMP
 
-#ifdef _4ti2_HAVE_INT32_T_INT64_T
 template <>
 inline
 void
-VectorArrayAPI::convert(const int32_t& v1, mpz_class& v2)
+VectorArrayAPI::convert(const _4ti2_int32_t& v1, mpz_class& v2)
 {
     v2 = v1;
 }
@@ -106,18 +101,16 @@ VectorArrayAPI::convert(const int32_t& v1, mpz_class& v2)
 template <>
 inline
 void
-VectorArrayAPI::convert(const int64_t& v1, mpz_class& v2)
+VectorArrayAPI::convert(const _4ti2_int64_t& v1, mpz_class& v2)
 {
 #ifdef _4ti2_HAVE_MPZ_INT64_CONVERSION
     v2 = v1;
 #else
-    std::cerr << "UNIMPLEMENTED: Need to do int64_t -> mpz_class conversion" << std::endl;
+    std::cerr << "UNIMPLEMENTED: Need to do _4ti2_int64_t -> mpz_class conversion" << std::endl;
     exit(1);
 #endif
 }
-#endif
  
-#ifdef _4ti2_HAVE_INT32_T_INT64_T
 template <>
 inline
 void
@@ -143,19 +136,16 @@ VectorArrayAPI::convert(const mpz_class& v1, long int& v2)
     }
     v2 = v1.get_si();
 }
-#endif
  
 #ifndef _4ti2_HAVE_MPZ_INT64_CONVERSION
-#ifdef _4ti2_HAVE_INT32_T_INT64_T
 template <>
 inline
 void
-VectorArrayAPI::convert(const mpz_class& v1, int64_t& v2)
+VectorArrayAPI::convert(const mpz_class& v1, _4ti2_int64_t& v2)
 {
-  std::cerr << "UNIMPLEMENTED: Need to convert from mpz to int64_t" << std::endl;
+  std::cerr << "UNIMPLEMENTED: Need to convert from mpz to _4ti2_int64_t" << std::endl;
   exit(1);
 }
-#endif
 #endif
 
 #endif

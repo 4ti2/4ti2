@@ -1,10 +1,13 @@
 check_PROGRAMS = 
-if HAVE_INT32_INT64
 check_PROGRAMS += qsolve_main test_input_conversion_64_to_gmp test_input_conversion_gmp_to_64
-endif
 
 # Allow accessing groebner's header files as "groebner/HEADER.h"
 AM_CXXFLAGS = -I$(top_srcdir)/src/
+
+# 
+if HAVE_GMP_WITH_CXX
+AM_CXXFLAGS += $(GMP_CFLAGS)
+endif
 
 qsolve_main_SOURCES = qsolve_main.cpp
 qsolve_main_LDADD = $(top_builddir)/src/groebner/lib4ti2int64.la $(top_builddir)/src/4ti2/lib4ti2common.la 
@@ -16,9 +19,7 @@ test_input_conversion_gmp_to_64_SOURCES = test_input_conversion_gmp.cpp
 test_input_conversion_gmp_to_64_LDADD = $(top_builddir)/src/groebner/lib4ti2int64.la $(top_builddir)/src/4ti2/lib4ti2common.la
 
 TESTS = 
-if HAVE_INT32_INT64
 TESTS += qsolve_main 
-endif
 #test_input_conversion_64_to_gmp.sh test_input_conversion_gmp_to_64.sh
 
 EXTRA_DIST = test_input_conversion_64_to_gmp.sh test_input_conversion_gmp_to_64.sh

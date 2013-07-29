@@ -44,12 +44,10 @@ public:
     virtual void write(std::ostream& out) const; 
     virtual void read(std::istream& in);
 
-#ifdef _4ti2_HAVE_INT32_T_INT64_T
-    virtual void set_entry_int32_t(int r, int c, const int32_t& value); 
-    virtual void get_entry_int32_t(int r, int c, int32_t& value) const;
-    virtual void set_entry_int64_t(int r, int c, const int64_t& value);
-    virtual void get_entry_int64_t(int r, int c, int64_t& value) const;
-#endif
+    virtual void set_entry_int32_t(int r, int c, const _4ti2_int32_t& value); 
+    virtual void get_entry_int32_t(int r, int c, _4ti2_int32_t& value) const;
+    virtual void set_entry_int64_t(int r, int c, const _4ti2_int64_t& value);
+    virtual void get_entry_int64_t(int r, int c, _4ti2_int64_t& value) const;
 
 #ifdef _4ti2_HAVE_GMP
     virtual void set_entry_mpz_class(int r, int c, const mpz_class& value);
@@ -72,11 +70,10 @@ convert(const T1& v1, T2& v2)
     v2 = v1;
 }
 
-#ifdef _4ti2_HAVE_INT32_T_INT64_T
 template <>
 inline
 void
-convert(const int64_t& v1, int32_t& v2)
+convert(const _4ti2_int64_t& v1, _4ti2_int32_t& v2)
 {
     // TODO: Better precision exception information.
     if (v1 < INT32_MIN || v2 > INT32_MAX) {
@@ -84,7 +81,6 @@ convert(const int64_t& v1, int32_t& v2)
     }
     v2 = v1;
 }
-#endif
 
 #ifdef _4ti2_HAVE_GMP
 
@@ -113,25 +109,23 @@ convert(const mpz_class& v1, long int& v2)
 }
 
 #ifndef _4ti2_HAVE_MPZ_INT64_CONVERSION
-#ifdef _4ti2_HAVE_INT32_T_INT64_T
 template <>
 inline
 void
-convert(const mpz_class& v1, int64_t& v2)
+convert(const mpz_class& v1, _4ti2_int64_t& v2)
 {
-  std::cerr << "UNIMPLEMENTED: Need to convert from mpz to int64_t" << std::endl;
+  std::cerr << "UNIMPLEMENTED: Need to convert from mpz to _4ti2_int64_t" << std::endl;
   std::exit(1);
 }
 
 template <>
 inline
 void
-convert(const int64_t& v1, mpz_class &v2)
+convert(const _4ti2_int64_t& v1, mpz_class &v2)
 {
-  std::cerr << "UNIMPLEMENTED: Need to convert from int64_t to mpz" << std::endl;
+  std::cerr << "UNIMPLEMENTED: Need to convert from _4ti2_int64_t to mpz" << std::endl;
   std::exit(1);
 }
-#endif
 #endif
 
 #endif
@@ -185,35 +179,33 @@ VectorArrayAPI<T>::read(std::istream& in)
     data.read(in, false);
 }
 
-#ifdef _4ti2_HAVE_INT32_T_INT64_T
 template <class T>
 void
-VectorArrayAPI<T>::set_entry_int32_t(int r, int c, const int32_t& value)
+VectorArrayAPI<T>::set_entry_int32_t(int r, int c, const _4ti2_int32_t& value)
 {
     convert(value, data[r][c]);
 }
 
 template <class T>
 void
-VectorArrayAPI<T>::get_entry_int32_t(int r, int c, int32_t& value) const
+VectorArrayAPI<T>::get_entry_int32_t(int r, int c, _4ti2_int32_t& value) const
 {
     convert(data[r][c], value);
 }
 
 template <class T>
 void
-VectorArrayAPI<T>::set_entry_int64_t(int r, int c, const int64_t& value)
+VectorArrayAPI<T>::set_entry_int64_t(int r, int c, const _4ti2_int64_t& value)
 {
     convert(value, data[r][c]);
 }
 
 template <class T>
 void
-VectorArrayAPI<T>::get_entry_int64_t(int r, int c, int64_t& value) const
+VectorArrayAPI<T>::get_entry_int64_t(int r, int c, _4ti2_int64_t& value) const
 {
     convert(data[r][c], value);
 }
-#endif
 
 #ifdef _4ti2_HAVE_GMP
 template <class T>

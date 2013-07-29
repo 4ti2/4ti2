@@ -32,18 +32,18 @@ main()
     // Input data.
     const int m = 4;
     const int n = 3;
-    int64_t mat[m][n] = {
+    _4ti2_int64_t mat[m][n] = {
                 { 2,  3, -6 },
                 { 2, -1, -4 },
                 { 1,  2, -11 },
                 { 1, -1,  1 }
             };
-    int64_t rel[m] = { _4ti2_LB, _4ti2_UB, _4ti2_UB, _4ti2_LB };
-    int64_t sign[n] = { _4ti2_LB, _4ti2_LB, _4ti2_LB };
+    _4ti2_int64_t rel[m] = { _4ti2_LB, _4ti2_UB, _4ti2_UB, _4ti2_LB };
+    _4ti2_int64_t sign[n] = { _4ti2_LB, _4ti2_LB, _4ti2_LB };
 
     // Output data.
     const int k = 4;
-    int64_t qhom[k][n] = {
+    _4ti2_int64_t qhom[k][n] = {
                 { 3, 4, 1 },
                 { 3, 8, 5 },
                 { 9, 2, 4 },
@@ -89,7 +89,7 @@ main()
     if (_4ti2_matrix_get_num_cols(qhom_matrix) != n) { return 1; }
     for (int i = 0; i < k; ++i) {
         for (int j = 0; j < n; ++j) {
-            int64_t value;
+            _4ti2_int64_t value;
             _4ti2_matrix_get_entry_int64_t(qhom_matrix, i, j, &value);
             if (value != qhom[i][j]) { return 1; }
         }

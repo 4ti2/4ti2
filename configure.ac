@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(4ti2, 1.5.2)
+AC_INIT(4ti2, 1.5.3)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE(foreign)
 AM_MAINTAINER_MODE
@@ -139,7 +139,7 @@ AM_CONDITIONAL([ENABLE_GROEBNER], [ test x${enable_groebner} == xyes ])
 # Check whether the C99 and C++0xx int32_t and int64_t types work in C++.
 # This requires the option -std=c++0xx on some modern g++ versions,
 # but this option is unknown on some old g++ versions.
-AC_MSG_CHECKING(whether we can use the int32_t and in64_t types)
+AC_MSG_CHECKING(whether we can use the int32_t and int64_t types)
 AC_TRY_COMPILE(
   [ #include <cstdint>
   ], 
@@ -151,11 +151,17 @@ AC_TRY_COMPILE(
   ])
 AC_MSG_RESULT(${have_int32_t_int_64_t})
 if test x${have_int32_t_int_64_t} = xyes; then
-    AC_DEFINE(_4ti2_HAVE_INT32_T_INT64_T, 1, [Define if int32_t and int64_t are available])
+    int32_t_int_64_t_include="#include <cstdint>"
+    int32_t=int32_t
+    int64_t=int64_t
 else
-    AC_MSG_WARN([Unable to use the int32_t and int64_t types in C++.])
+    AC_MSG_WARN([Unable to use the int32_t and int64_t types in C++.  Using int and long int instead.])
+    int32_t=int
+    int64_t="long int"
 fi
-AM_CONDITIONAL([HAVE_INT32_INT64], [test x${have_int32_t_int_64_t} = xyes])
+AC_DEFINE_UNQUOTED(_4ti2_int32_t, ${int32_t}, [Define the 32-bit integer type to use])
+AC_DEFINE_UNQUOTED(_4ti2_int64_t, ${int64_t}, [Define the 64-bit integer type to use])
+dnl AM_CONDITIONAL([HAVE_INT32_INT64], [test x${have_int32_t_int_64_t} = xyes])
 
 AM_CONDITIONAL([HAVE_GMP_WITH_CXX], [test -n "${GMP_HAVE_CXX}"])
 
@@ -169,43 +175,42 @@ if test -n "${GMP_HAVE_CXX}" ; then
   CXXFLAGS="${CXXFLAGS} ${GMP_CFLAGS}"
   save_LIBS="${LIBS}"
   LIBS="${LIBS} ${GMP_LIBS}"
-  AC_MSG_CHECKING(whether we can convert between int32_t and mpz_class)
+  AC_MSG_CHECKING(whether we can convert between ${int32_t} and mpz_class)
   AC_TRY_LINK(
     [  #include <gmpxx.h>
-       #include <cstdint>
+       ${int32_t_int_64_t_include}
     ],
-    [  int32_t x = 815;
+    [  ${int32_t} x = 815;
        mpz_class y(x);
     ],
     [ HAVE_MPZ_INT32_CONVERSION=yes;
-      AC_DEFINE(_4ti2_HAVE_MPZ_INT32_CONVERSION, 1, [Define if we can convert between int32_t and mpz_class]) ],
+      AC_DEFINE(_4ti2_HAVE_MPZ_INT32_CONVERSION, 1, [Define if we can convert between _4ti2_int32_t and mpz_class]) ],
     [ HAVE_MPZ_INT32_CONVERSION=no ])
   AC_MSG_RESULT(${HAVE_MPZ_INT32_CONVERSION})
-  AC_MSG_CHECKING(whether we can convert between int64_t and mpz_class)
+  AC_MSG_CHECKING(whether we can convert between ${int64_t} and mpz_class)
   AC_TRY_LINK(
     [  #include <gmpxx.h>
-       #include <cstdint>
+       ${int32_t_int_64_t_include}
     ],
-    [  int64_t x = 815;
+    [  ${int64_t} x = 815;
        mpz_class y(x);
     ],
     [ HAVE_MPZ_INT64_CONVERSION=yes;
-      AC_DEFINE(_4ti2_HAVE_MPZ_INT64_CONVERSION, 1, [Define if we can convert between int64_t and mpz_class]) ],
+      AC_DEFINE(_4ti2_HAVE_MPZ_INT64_CONVERSION, 1, [Define if we can convert between _4ti2_int64_t and mpz_class]) ],
     [ HAVE_MPZ_INT64_CONVERSION=no ])
   AC_MSG_RESULT(${HAVE_MPZ_INT64_CONVERSION})
   LIBS="${save_LIBS}"
   CXXFLAGS="${save_CXXFLAGS}"
 fi
 
-if test x${have_int32_t_int_64_t} = xyes; then 
-   GROEBNER_DEFAULT_EXECUTABLE=4ti2int64
-elif test -n "${GMP_HAVE_CXX}" ; then
-   GROEBNER_DEFAULT_EXECUTABLE=4ti2gmp
-else
-   AC_MSG_ERROR([Neither int32_t, int64_t, nor GMP integers are available.
-4ti2 cannot be built.  Consider upgrading the compiler or
-use the correct CXXFLAGS that enables these types.])
-fi
+GROEBNER_DEFAULT_EXECUTABLE=4ti2int64
+dnl elif test -n "${GMP_HAVE_CXX}" ; then
+dnl    GROEBNER_DEFAULT_EXECUTABLE=4ti2gmp
+dnl else
+dnl    AC_MSG_ERROR([Neither int32_t, int64_t, nor GMP integers are available.
+dnl 4ti2 cannot be built.  Consider upgrading the compiler or
+dnl use the correct CXXFLAGS that enables these types.])
+dnl fi
 AC_SUBST(GROEBNER_DEFAULT_EXECUTABLE)
 
 ## Check whether to build high-level-language interfaces using SWIG

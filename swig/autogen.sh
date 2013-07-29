@@ -2,6 +2,6 @@
 aclocal -I ../m4
 #autoheader
 autoconf
-libtoolize --force
+libtoolize --force || glibtoolize --force
 automake --add-missing
 
