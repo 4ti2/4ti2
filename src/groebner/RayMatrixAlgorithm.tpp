@@ -648,7 +648,7 @@ RayMatrixAlgorithm<IndexSet>::compute3(
     {
         // Find the next column.
         int next_positive_count, next_negative_count, next_zero_count;
-        Index next_col = next_column(vs, remaining,
+        Index next_col = this->next_column(vs, remaining,
                                         next_positive_count,
                                         next_negative_count,
                                         next_zero_count);
@@ -663,7 +663,7 @@ RayMatrixAlgorithm<IndexSet>::compute3(
         )
 
         // We sort the vectors into zeros, positives, then negatives.
-        sort(vs, supports, next_col, next_zero_count, next_positive_count,
+        this->sort(vs, supports, next_col, next_zero_count, next_positive_count,
                         next_negative_count);
 
         DEBUG_4ti2(*out << "Rays:\n" << vs << "\n";)
@@ -729,7 +729,7 @@ RayMatrixAlgorithm<IndexSet>::compute3(
                     IndexSet::set_difference(supports[r2], r1_supp, temp_diff);
                     if (temp_diff.power_of_2())
                     {
-                        create_new_vector(vs, supports, r1, r2, next_col,
+                        this->create_new_vector(vs, supports, r1, r2, next_col,
                                             next_positive_count, next_negative_count,
                                             temp, temp_supp);
                         DEBUG_4ti2(++num_one_diff_added;)
@@ -744,7 +744,7 @@ RayMatrixAlgorithm<IndexSet>::compute3(
                     IndexSet::set_difference(r1_supp, supports[r2], temp_diff);
                     if (temp_diff.power_of_2())
                     {
-                        create_new_vector(vs, supports, r1, r2, next_col,
+                        this->create_new_vector(vs, supports, r1, r2, next_col,
                                             next_positive_count, next_negative_count,
                                             temp, temp_supp);
                         DEBUG_4ti2(++num_one_diff_added;)
@@ -769,7 +769,7 @@ RayMatrixAlgorithm<IndexSet>::compute3(
                             IndexSet::set_difference(r1_supp, supports[r2], temp_diff2);
                             if (temp_diff2.power_of_2())
                             {
-                                create_new_vector(vs, supports, r1, r2, next_col,
+                                this->create_new_vector(vs, supports, r1, r2, next_col,
                                     next_positive_count, next_negative_count,
                                     temp, temp_supp);
                                 DEBUG_4ti2(++num_one_diff_added;)
@@ -781,7 +781,7 @@ RayMatrixAlgorithm<IndexSet>::compute3(
                             DEBUG_4ti2(++num_checks;)
                             if (rank_check(matrix, temp_matrix, temp_diff, r1_rows))
                             {
-                                create_new_vector(vs, supports, r1, r2, next_col,
+                                this->create_new_vector(vs, supports, r1, r2, next_col,
                                                 next_positive_count, next_negative_count,
                                                 temp, temp_supp);
                                 DEBUG_4ti2(++num_added;)
@@ -797,7 +797,7 @@ RayMatrixAlgorithm<IndexSet>::compute3(
                         IndexSet::set_difference(supports[r2], r1_supp, temp_diff);
                         if (temp_diff.power_of_2())
                         {
-                            create_new_vector(vs, supports, r1, r2, next_col,
+                            this->create_new_vector(vs, supports, r1, r2, next_col,
                                 next_positive_count, next_negative_count,
                                 temp, temp_supp);
                             DEBUG_4ti2(++num_one_diff_added;)

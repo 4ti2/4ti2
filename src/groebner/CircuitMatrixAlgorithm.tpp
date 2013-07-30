@@ -164,24 +164,24 @@ CircuitMatrixAlgorithm<IndexSet>::compute1(
         )
 
         // Find the next column.
-        Index next_col = next_column(vs, remaining);
+        Index next_col = this->next_column(vs, remaining);
         DEBUG_4ti2(*out << "\nNext column is " << next_col << "\n";)
 
         int start = 0; int end = vs.get_number(); int middle;
         // We sort the vectors into nonzeros and then zeros.
-        sort_nonzeros(vs, start, end, rays, supps, pos_supps, neg_supps, next_col, middle);
+        this->sort_nonzeros(vs, start, end, rays, supps, pos_supps, neg_supps, next_col, middle);
         int nonzero_start = start, nonzero_end = middle;
         //int zero_start = middle, zero_end = end;
         // We sort the nonzeros into rays and circuits.
-        sort_rays(vs, nonzero_start, nonzero_end, rays, supps, pos_supps, neg_supps, middle);
+        this->sort_rays(vs, nonzero_start, nonzero_end, rays, supps, pos_supps, neg_supps, middle);
         int ray_start = nonzero_start, ray_end = middle;
         int cir_start = middle, cir_end = nonzero_end;
         // We sort the rays into positives and then negatives.
-        sort_positives(vs, ray_start, ray_end, supps, pos_supps, neg_supps, next_col, middle);
+        this->sort_positives(vs, ray_start, ray_end, supps, pos_supps, neg_supps, next_col, middle);
         int pos_ray_start = ray_start, pos_ray_end = middle;
         int neg_ray_start = middle, neg_ray_end = ray_end;
         // We sort the circuits into positives and then negatives.
-        sort_positives(vs, cir_start, cir_end, supps, pos_supps, neg_supps, next_col, middle);
+        this->sort_positives(vs, cir_start, cir_end, supps, pos_supps, neg_supps, next_col, middle);
         int pos_cir_start = cir_start, pos_cir_end = middle;
         int neg_cir_start = middle, neg_cir_end = cir_end;
 
@@ -198,8 +198,8 @@ CircuitMatrixAlgorithm<IndexSet>::compute1(
 
         // Switch the positive and negative supports, so that it is as if all
         // vectors have a positive entry in the next column.
-        switch_supports(neg_ray_start, neg_ray_end, pos_supps, neg_supps);
-        switch_supports(neg_cir_start, neg_cir_end, pos_supps, neg_supps);
+        this->switch_supports(neg_ray_start, neg_ray_end, pos_supps, neg_supps);
+        this->switch_supports(neg_cir_start, neg_cir_end, pos_supps, neg_supps);
 
         matrix = orig_matrix;
         int relaxed_row = upper_triangle(matrix, relaxed, 0);
@@ -230,15 +230,15 @@ CircuitMatrixAlgorithm<IndexSet>::compute1(
         rays.insert(rays.end(), vs.get_number()-previous_size, false);
 
         // Switch back the positive and negative supports.
-        switch_supports(neg_ray_start, neg_ray_end, pos_supps, neg_supps);
-        switch_supports(neg_cir_start, neg_cir_end, pos_supps, neg_supps);
+        this->switch_supports(neg_ray_start, neg_ray_end, pos_supps, neg_supps);
+        this->switch_supports(neg_cir_start, neg_cir_end, pos_supps, neg_supps);
 
         // Update the supp vectors for the next_col.
-        update_supports(supps, next_col, nonzero_start, nonzero_end);
-        update_supports(pos_supps, next_col, pos_ray_start, pos_ray_end);
-        update_supports(pos_supps, next_col, pos_cir_start, pos_cir_end);
-        update_supports(neg_supps, next_col, neg_ray_start, neg_ray_end);
-        update_supports(neg_supps, next_col, neg_cir_start, neg_cir_end);
+        this->update_supports(supps, next_col, nonzero_start, nonzero_end);
+        this->update_supports(pos_supps, next_col, pos_ray_start, pos_ray_end);
+        this->update_supports(pos_supps, next_col, pos_cir_start, pos_cir_end);
+        this->update_supports(neg_supps, next_col, neg_ray_start, neg_ray_end);
+        this->update_supports(neg_supps, next_col, neg_cir_start, neg_cir_end);
 
         *out << "\r";
         *out << "  Left = " << std::setw(3) << num_remaining;
