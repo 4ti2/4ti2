@@ -1,20 +1,28 @@
 SUBDIRS =					\
-	normalform				\
-	qsolve					\
-	graver					\
 	gensymm					\
-	groebner				\
-	zsolve					\
-	walk					\
 	ppi					\
-	zbasis					\
 	output					\
-	markov					\
-	circuits				\
-	genmodel				\
-	minimize				\
-	rays					\
+	genmodel
+
+if ENABLE_GROEBNER
+SUBDIRS +=						\
+	circuits					\
+	groebner					\
+	markov						\
+	minimize					\
+	rays						\
+	walk						\
+	qsolve						\
+	zbasis						\
+	normalform				
+endif
+
+if ENABLE_ZSOLVE			
+SUBDIRS +=					\
+	graver					\
+	zsolve					\
 	hilbert
+endif
 
 # The check target runs automatic checks to verify that 4ti2 was compiled
 # correctly and is running correctly.
