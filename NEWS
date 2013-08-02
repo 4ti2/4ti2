@@ -4,6 +4,11 @@ News in 4ti2 version 1.5.3, compared to 1.5.2:
    long int instead.  
 
  * Fixed bug in lattice transformation with too few rows.  
+   (Reported by Jerry James for Fedora.)
+
+ * Fix a build failure with gcc 4.7.
+   (Patch by Jerry James for Fedora.)
+
 
 News in 4ti2 version 1.5.2, compared to 1.5.1:
 
