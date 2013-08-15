@@ -5,4 +5,29 @@ EXTRA_DIST=					\
 	ax_compiler_vendor.m4			\
 	ax_cxx_maxopt.m4			\
 	ax_gcc_archflag.m4			\
-	ax_gcc_x86_cpuid.m4
+	ax_gcc_x86_cpuid.m4			\
+	gnulib-cache.m4				\
+	00gnulib.m4				\
+	extensions.m4				\
+	extern-inline.m4			\
+	getopt.m4				\
+	glpk-check.m4				\
+	gnulib-common.m4			\
+	gnulib-comp.m4				\
+	gnulib-tool.m4				\
+	include_next.m4				\
+	libtool.m4				\
+	ltoptions.m4				\
+	ltsugar.m4				\
+	ltversion.m4				\
+	lt~obsolete.m4				\
+	nocrash.m4				\
+	off_t.m4				\
+	onceonly.m4				\
+	ssize_t.m4				\
+	stddef_h.m4				\
+	sys_types_h.m4				\
+	trapv-check.m4				\
+	unistd_h.m4				\
+	warn-on-use.m4				\
+	wchar_t.m4

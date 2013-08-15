@@ -25,9 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "../banner.h"
 #include "Options.h"
 
-#ifdef __GNU_LIBRARY__
-#	include <getopt.h>
-#endif
+#include <getopt.h>
 
 namespace _4ti2_zsolve_ {
 
@@ -83,7 +81,6 @@ Options::process_options (int argc, char** argv)
 
     int c;
 
-#ifdef __GNU_LIBRARY__
 	static struct option long_options[] =
 	{
 		{ "backup", optional_argument, NULL, 'b'},
@@ -99,9 +96,6 @@ Options::process_options (int argc, char** argv)
 		{ "precision", required_argument, NULL, 'p'}
 	};
 	while ((c = getopt_long(argc, argv, "b::hl::qru::v::HGmp:", long_options, NULL)) != -1)
-#else
-	while ((c = getopt(argc, argv, "b::hl::qru::v::HGmp:")) != -1)
-#endif
 	{
 		if (optarg != NULL && optarg[0] == '=')
 			optarg++;

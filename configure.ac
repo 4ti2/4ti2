@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(4ti2, 1.5.3-prerelease-2013-08-02)
+AC_INIT(4ti2, 1.5.3-prerelease-2013-08-14)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE(foreign)
 AM_MAINTAINER_MODE
@@ -10,6 +10,7 @@ AC_CONFIG_FILES([Makefile src/Makefile src/4ti2/Makefile
 		 src/groebner/Makefile src/util/Makefile 
 		 src/ppi/Makefile src/zsolve/Makefile
 		 src/fiber/Makefile
+		 lib/Makefile
 		 m4/Makefile])
 
 AC_CONFIG_HEADERS([src/config.h src/4ti2/4ti2_config.h])
@@ -62,6 +63,9 @@ AM_CONDITIONAL([ENABLE_FIBER], [ test x${enable_fiber} == xyes ])
 
 ## Using the C compiler
 AC_PROG_CC
+gl_EARLY
+gl_INIT
+
 AX_COMPILER_VENDOR
 AX_CC_MAXOPT
 AX_CFLAGS_WARN_ALL
