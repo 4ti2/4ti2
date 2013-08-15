@@ -85,8 +85,10 @@ libzsolve_la_CPPFLAGS += ${GMP_CFLAGS}
 zsolve_CPPFLAGS += ${GMP_CFLAGS}
 zsolve_LDADD += ${GMP_LIBS}
 endif
-# Link in the "common" 4ti2 functions
-libzsolve_la_LDFLAGS = -L../4ti2 -R$(libdir) -l4ti2common
+# Link in the "common" 4ti2 functions.
+# -no-undefined declares that no undefined symbols will remain after linking all these libraries.
+# (This is necessary to build shared libraries on Cygwin.)
+libzsolve_la_LDFLAGS = -L../4ti2 -R$(libdir) -l4ti2common -no-undefined
 
 bin_SCRIPTS = hilbert graver
 DISTCLEANFILES = hilbert graver

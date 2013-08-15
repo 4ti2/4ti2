@@ -35,3 +35,6 @@ if HAVE_GMP_WITH_CXX
 AM_CPPFLAGS = -D_4ti2_GMP_ ${GMP_CFLAGS}
 AM_LDFLAGS = ${GMP_LIBS}
 endif
+
+lib4ti2common_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined
+

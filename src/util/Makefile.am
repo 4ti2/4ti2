@@ -27,6 +27,8 @@ bin_PROGRAMS =					\
 
 lib_LTLIBRARIES = lib4ti2util.la
 
+AM_LDFLAGS = -no-undefined
+
 # The output.c file contains C++-isms (or C99-isms), 
 # so compile with the C++ compiler. --mkoeppe
 # CC = $(CXX)
