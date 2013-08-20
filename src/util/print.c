@@ -33,6 +33,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "orbit.h"
 #include "vector.h"
 #include <stdlib.h>
+#include <limits.h>
+
 /* ----------------------------------------------------------------- */
 void printVersionInfo() {
 
@@ -759,7 +761,7 @@ void printListVectorWithGivenNonzeroEntryToFile(char *outFileName,
 /* ----------------------------------------------------------------- */
 void writeResult(listVector *basis, int numOfVars, char *fileName, 
 		 char *basisType, int infoLevel) {
-  char outFileName[127];
+  char outFileName[PATH_MAX];
 
   /* Write result to screen and files. */
 

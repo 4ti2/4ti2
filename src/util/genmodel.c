@@ -31,6 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 /* ----------------------------------------------------------------- */
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 #include "myheader.h"
 #include "vector.h"
 #include "print.h"
@@ -98,7 +99,7 @@ int genmodel_main(int argc, char *argv[]) {
   int i,j,maxIndexFace,numOfNodes,numOfRows,numOfColumns,infoLevel;
   vector face, faceValues, column, levels, nodes;
   listVector *faces, *tmp;
-  char fileName[127],outFileName[127];
+  char fileName[PATH_MAX],outFileName[PATH_MAX];
   FILE *out;
 
   infoLevel=standardInfoLevel;

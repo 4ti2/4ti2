@@ -33,6 +33,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "print.h"
 #include "vector.h"
 #include <stdlib.h>
+#include <limits.h>
+
 /* ----------------------------------------------------------------- */
 listVector* readListVector(int *numOfVars, char *fileName) {
   int numOfVectors;
@@ -307,8 +309,8 @@ int output_main(int argc, char *argv[]) {
   int i,j,x,y,z,numOfVars,numOfRows,numOfFixPoints,numOfLabels,infoLevel,
     degree,lowdegree,highdegree,coord,sizeOfLayer,val;
   char *s;
-  char fileName[127],outFileName[127],domFileName[127],symFileName[127],
-    varFileName[127],groFileName[127],costFileName[127];
+  char fileName[PATH_MAX],outFileName[PATH_MAX],domFileName[PATH_MAX],symFileName[PATH_MAX],
+    varFileName[PATH_MAX],groFileName[PATH_MAX],costFileName[PATH_MAX];
   char **labels;
   vector v,w,fixpoints;
   listVector *A, *B, *C, *basis, *domBasis, *tmp, *tmpV, *symmGroup, *weights;

@@ -31,6 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 /* ----------------------------------------------------------------- */
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 #include "myheader.h"
 #include "print.h"
 #include "vector.h"
@@ -50,7 +51,7 @@ void printPermutationToFile(FILE *out, vector v, int numOfVars) {
 int gensymm_main(int argc, char *argv[]) {
   int a,i,j,k,l,x,y,z,w,numOfVars,numOfGenerators,infoLevel;
   vector v;
-  char fileName[127],outFileName[127];
+  char fileName[PATH_MAX],outFileName[PATH_MAX];
   FILE *out;
 
   setbuf(stdout,0);
