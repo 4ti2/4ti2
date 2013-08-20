@@ -1,5 +1,7 @@
 News in 4ti2 version 1.5.3, compared to 1.5.2:
 
+ * Accept longer filenames.
+
  * Enable shared library builds on the Cygwin platform (using the
    libtool -no-undefined flag).
 
