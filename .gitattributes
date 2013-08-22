@@ -52,3 +52,9 @@ src/qsolve/RayAlgorithmAPI.cpp -text
 src/qsolve/RayState.h -text
 src/qsolve/RayState.hpp -text
 src/qsolve/RaysAPI.cpp -text
+test/zsolve/dutour-testcase-2013-08-21.mat -text
+test/zsolve/dutour-testcase-2013-08-21.rel -text
+test/zsolve/dutour-testcase-2013-08-21.rhs -text
+test/zsolve/dutour-testcase-2013-08-21.sign -text
+test/zsolve/dutour-testcase-2013-08-21.zhom.chk -text
+test/zsolve/dutour-testcase-2013-08-21.zinhom.chk -text
