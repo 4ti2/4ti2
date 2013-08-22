@@ -52,6 +52,8 @@ src/qsolve/RayAlgorithmAPI.cpp -text
 src/qsolve/RayState.h -text
 src/qsolve/RayState.hpp -text
 src/qsolve/RaysAPI.cpp -text
+test/hilbert/reduce_gaussian-fedora-bug-911437.hil.chk -text
+test/hilbert/reduce_gaussian-fedora-bug-911437.lat -text
 test/zsolve/dutour-testcase-2013-08-21.mat -text
 test/zsolve/dutour-testcase-2013-08-21.rel -text
 test/zsolve/dutour-testcase-2013-08-21.rhs -text
