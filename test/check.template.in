@@ -96,8 +96,9 @@ for file in $FILES; do
 		NUM_FAILURES=$(($NUM_FAILURES+1))
 		break
 	    fi
-	    sort "${SRCDIR}"/${check_file}.chk > ${check_file}.sort.chk
-	    sort ${check_file} > ${check_file}.sort
+	    # Without LC_ALL=C, get crazy nondeterministic sort order on Cygwin?? --mkoeppe 
+	    LC_ALL=C sort "${SRCDIR}"/${check_file}.chk > ${check_file}.sort.chk
+	    LC_ALL=C sort ${check_file} > ${check_file}.sort
 	    if [ x$KEEP_FILES == x ]; then
 		diff -b -q ${check_file}.sort.chk ${check_file}.sort > /dev/null
 	    else
