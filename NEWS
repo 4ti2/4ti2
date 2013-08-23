@@ -1,5 +1,10 @@
 News in 4ti2 version 1.5.3, compared to 1.5.2:
 
+ * Fix a bug of zsolve and hilbert on 64-bit platforms (where
+   sizeof(unsigned long) > sizeof(int)), which affected problems with
+   more than 32 variables and could lead to wrong results. (Testcases
+   a1, dutour-testcase-2013-08-21).
+
  * Accept longer filenames.
 
  * Enable shared library builds on the Cygwin platform (using the
