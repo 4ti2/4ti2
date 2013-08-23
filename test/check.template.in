@@ -22,6 +22,7 @@ EXECPATH=`cd "@abs_top_builddir@" && pwd`
 
 ## Environment variables:
 # $CHECK_ENV  -- put in front of the call to the binary.  Useful for CHECK_ENV=valgrind.
+# $CHECK_VERBOSE -- if set, show output
 # $KEEP_FILES -- if set, do not delete `checkdir' with the result files and diffs.
 
 # The directory where the input data and the results reside.
@@ -64,7 +65,13 @@ for file in $FILES; do
 	fi
     done
     echo -n "$COMMAND ..."
-    TIME=`$CHECK_ENV "$EXECPATH"/$COMMAND | awk '/^4ti2 Total Time/ { print $4, $5 }'`
+    if test x$CHECK_VERBOSE == x ; then 
+	TIME=`$CHECK_ENV "$EXECPATH"/$COMMAND | awk '/^4ti2 Total Time/ { print $4, $5 }'`
+    else
+	echo
+	# display all output
+	$CHECK_ENV "$EXECPATH"/$COMMAND
+    fi
     STATUS="passed"
     for check_file in $CHECK_FILES; do
 	if test ! -r ${check_file} ; then
