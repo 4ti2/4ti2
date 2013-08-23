@@ -51,7 +51,7 @@ BlockType BitSet::last_block_mask () const
     else if (rest+1 == BITS_PER_BLOCK)
         return ALL_ONES_BLOCK;
     else
-        return (1 << (rest+1))-1;
+        return (1UL << (rest+1))-1;
 }
 
 size_t BitSet::size () const
@@ -73,21 +73,21 @@ void BitSet::set (size_t index)
 {
     size_t block = index / BITS_PER_BLOCK;
     size_t pos = index % BITS_PER_BLOCK;
-    m_data[block] |= (1 << pos);
+    m_data[block] |= (1UL << pos);
 }
 
 void BitSet::unset (size_t index)
 {
     size_t block = index / BITS_PER_BLOCK;
     size_t pos = index % BITS_PER_BLOCK;
-    m_data[block] &= ~(1 << pos);
+    m_data[block] &= ~(1UL << pos);
 }
 
 bool BitSet::get (size_t index) const
 {
     size_t block = index / BITS_PER_BLOCK;
     size_t pos = index % BITS_PER_BLOCK;
-    int result = m_data[block] & (1 << pos);
+    BlockType result = m_data[block] & (1UL << pos);
     return result != 0;
 }
 
