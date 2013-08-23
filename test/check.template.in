@@ -20,6 +20,10 @@
 
 EXECPATH=`cd "@abs_top_builddir@" && pwd`
 
+## Environment variables:
+# $CHECK_ENV  -- put in front of the call to the binary.  Useful for CHECK_ENV=valgrind.
+# $KEEP_FILES -- if set, do not delete `checkdir' with the result files and diffs.
+
 # The directory where the input data and the results reside.
 SRCDIR=`cd $1 && pwd`
 shift 1
@@ -41,16 +45,16 @@ NUM_FAILURES=0
 
 FILES=`cd "$SRCDIR" && ls -1 *.chk | sed 's/\.[a-z]*\.chk//g' | sort -u`
 echo "CHECKING: " $FILES
+
+if [ -d ${CHECKDIR} ] ; then
+    rm -rf ${CHECKDIR}
+fi
+mkdir ${CHECKDIR} 
 for file in $FILES; do
     CHECK_FILES=`cd "$SRCDIR" && ls -1 ${file}.*.chk | egrep "^${file}.[a-z]*.chk" | sed s/\.chk//g`
-    #echo rm -f $CHECK_FILES
     rm -f $CHECK_FILES
     COMMAND="$@ $file"
     # Copy the source files into a subdir of the build directory
-    if [ -d ${CHECKDIR} ] ; then
-	rm -rf ${CHECKDIR}
-    fi
-    mkdir ${CHECKDIR} 
     cd ${CHECKDIR}
     INPUT_FILES=`cd "$SRCDIR" && ls -1 ${file}* | egrep -v "[.]chk$" `
     #echo $INPUT_FILES
@@ -60,27 +64,57 @@ for file in $FILES; do
 	fi
     done
     echo -n "$COMMAND ..."
-    TIME=`"$EXECPATH"/$COMMAND | awk '/^4ti2 Total Time/ { print $4, $5 }'`
+    TIME=`$CHECK_ENV "$EXECPATH"/$COMMAND | awk '/^4ti2 Total Time/ { print $4, $5 }'`
     STATUS="passed"
     for check_file in $CHECK_FILES; do
-        diff -b -q "${SRCDIR}"/${check_file}.chk ${check_file} > /dev/null
+	if [ x$KEEP_FILES == x ]; then
+            diff -q -b "${SRCDIR}"/${check_file}.chk ${check_file} > /dev/null
+	else
+            diff -u "${SRCDIR}"/${check_file}.chk ${check_file} > ${check_file}.diff
+	fi
         if [ $? != 0 ]; then
-            STATUS="FAILED"
-            NUM_FAILURES=$(($NUM_FAILURES+1))
-            break
+	    # File are different.  Check if only the sort order has changed.
+	    head -n 1 "${SRCDIR}"/${check_file}.chk > ${check_file}.head.chk
+	    head -n 1 ${check_file} > ${check_file}.head
+	    diff -b -q ${check_file}.head.chk ${check_file}.head > /dev/null
+	    if [ $? != 0 ]; then
+		STATUS="FAILED"
+		NUM_FAILURES=$(($NUM_FAILURES+1))
+		break
+	    fi
+	    sort "${SRCDIR}"/${check_file}.chk > ${check_file}.sort.chk
+	    sort ${check_file} > ${check_file}.sort
+	    if [ x$KEEP_FILES == x ]; then
+		diff -b -q ${check_file}.sort.chk ${check_file}.sort > /dev/null
+	    else
+		diff -u ${check_file}.sort.chk ${check_file}.sort > ${check_file}.sort.diff
+	    fi
+	    if [ $? != 0 ]; then
+		STATUS="FAILED"
+		NUM_FAILURES=$(($NUM_FAILURES+1))
+		break
+	    else
+		STATUS="passed (sort order changed)"
+	    fi
         fi
     done
     echo -n " $STATUS "
     echo "$TIME"
     #echo rm -f $CHECK_FILES
     cd ..
-    rm -rf ${CHECKDIR}
 done
+if [ x$KEEP_FILES == x ]; then
+    rm -rf ${CHECKDIR}
+fi
 
 if [ $NUM_FAILURES == 0 ]; then
     echo "**** ALL TESTS PASSED! ****"
 else
-    echo "**** $NUM_FAILURES TEST(S) FAILED! ****"
+    if [ x$KEEP_FILES == x ]; then
+	echo "**** $NUM_FAILURES TEST(S) FAILED! Run \"KEEP_FILES=t make check\" to see details in checkdir. ****"
+    else
+	echo "**** $NUM_FAILURES TEST(S) FAILED! See checkdir for details. ****"
+    fi
 fi
 echo ""
 # Record the number of failures in a file.
