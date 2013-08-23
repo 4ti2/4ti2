@@ -26,11 +26,11 @@ EXECPATH=`cd "@abs_top_builddir@" && pwd`
 # $KEEP_FILES -- if set, do not delete `checkdir' with the result files and diffs.
 
 # The directory where the input data and the results reside.
-SRCDIR=`cd $1 && pwd`
+SRCDIR=`cd "$1" && pwd`
 shift 1
 ###cd $SRCDIR
-FLAVOR=$1
-CHECKDIR=checkdir$FLAVOR
+FLAVOR="$1"
+CHECKDIR=checkdir"$FLAVOR"
 shift 1
 
 # The executable we are using.
@@ -132,4 +132,4 @@ else
 fi
 echo ""
 # Record the number of failures in a file.
-echo $NUM_FAILURES > .num_failures${FLAVOR}
+echo $NUM_FAILURES > .num_failures"${FLAVOR}"
