@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(4ti2, 1.5.3-prerelease-2013-08-19)
+AC_INIT(4ti2, 1.5.3-prerelease-2013-08-22)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE(foreign)
 AM_MAINTAINER_MODE
