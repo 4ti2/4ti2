@@ -67,6 +67,13 @@ for file in $FILES; do
     TIME=`$CHECK_ENV "$EXECPATH"/$COMMAND | awk '/^4ti2 Total Time/ { print $4, $5 }'`
     STATUS="passed"
     for check_file in $CHECK_FILES; do
+	if test ! -r ${check_file} ; then
+	    # Output file not generated when it should have.
+	    STATUS="FAILED"
+	    NUM_FAILURES=$(($NUM_FAILURES+1))
+	    break
+	fi
+	# Output file generated, so compare.
 	if [ x$KEEP_FILES == x ]; then
             diff -q -b "${SRCDIR}"/${check_file}.chk ${check_file} > /dev/null
 	else
