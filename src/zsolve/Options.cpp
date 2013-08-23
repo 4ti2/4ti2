@@ -301,12 +301,24 @@ void Options::print_usage () const
     
 void Options::print_precision () const
 {
-    if (m_precision == _4ti2_PREC_INT_32)
-        std::cout << "Using 32 bit integers.\n" << std::endl;
-    else if (m_precision == _4ti2_PREC_INT_64)
-        std::cout << "Using 64 bit integers.\n" << std::endl;
-    else
+    int requested_precision, actual_precision; 
+    if (m_precision == _4ti2_PREC_INT_32) {
+	actual_precision = sizeof(_4ti2_int32_t) * 8;
+	requested_precision = 32;
+    }
+    else if (m_precision == _4ti2_PREC_INT_64) {
+	actual_precision = sizeof(_4ti2_int64_t) * 8;
+	requested_precision = 64;
+    }
+    else {
         std::cout << "Using arbitrary precision integers.\n" << std::endl;
+	return;
+    }
+    if (actual_precision != requested_precision)
+	std::cout << "Requested " << requested_precision << " bit integers, "
+		  << "actually using " << actual_precision << " bit integers.\n" << std::endl;
+    else
+        std::cout << "Using " << actual_precision << " bit integers.\n" << std::endl;
 }
 
 std::string Options::project () const
