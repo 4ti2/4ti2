@@ -35,6 +35,9 @@ shift 1
 
 # The executable we are using.
 echo "EXECUTABLE: \`$EXECPATH/$1'"
+if [ x$FLAVOR != x ] ; then
+    echo "FLAVOR: $FLAVOR"
+fi
 # Check that the executable exists.
 if [ ! -f "$EXECPATH/$1" ]
 then
