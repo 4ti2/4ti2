@@ -13,9 +13,14 @@
 /configure
 /depcomp
 doc/4ti2_manual.aux
+doc/4ti2_manual.bbl
+doc/4ti2_manual.blg
 doc/4ti2_manual.log
 doc/4ti2_manual.pdf
+doc/4ti2_manual.synctex.gz
 doc/4ti2_manual.toc
+doc/Makefile.in
+doc/auto
 /install-sh
 /libtool
 /ltmain.sh

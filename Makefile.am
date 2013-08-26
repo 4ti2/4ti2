@@ -21,7 +21,7 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = src m4 lib test
+SUBDIRS = src m4 lib doc test
 if ENABLE_SWIG
 SUBDIRS += swig
 endif
