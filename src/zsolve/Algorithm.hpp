@@ -969,24 +969,58 @@ public:
 	        m_controller->log_result (1, m_lattice->vectors (), 0);
     }
     
-    void extract_hilbert_results (VectorArray <T>& hilbert)
+    void extract_hilbert_results (VectorArray <T>& hilbert, VectorArray <T>& free)
     {
-        assert (m_lattice->get_splitter () == -1);
-        assert (m_lattice->get_result_variables () == m_variables);
+        int split = m_lattice->get_splitter ();
+	assert(split < 0);
+        int result_variables = m_lattice->get_result_variables ();
 
         hilbert.clear ();
+        free.clear ();
 
         for (size_t i = 0; i < m_lattice->vectors (); i++)
         {
             T* vector = (*m_lattice)[i];
-            T* result = copy_vector <T> (vector, m_variables);
-            hilbert.append_vector (result);
+            T* result = copy_vector <T> (vector, result_variables);
+
+            //std::cout << "looking at: ";
+            //print_vector (std::cout, result, result_variables);
+            //std::cout << std::endl;
+
+            bool is_hom = split < 0 || vector[split] == 0;
+
+            bool is_free = true;
+            for (size_t j = 0; j < m_variables; j++)
+                if (vector[j] != 0 && !m_lattice->get_variable (j).free ())
+                    is_free = false;
+
+            bool has_symmetric = true;
+            for (size_t j = 0; j < m_variables; j++)
+                if (!m_lattice->get_variable (j).check_bounds (-vector[j]))
+                    has_symmetric = false;
+
+            //std::cout << is_free << std::endl;
+            
+            assert (!is_free || has_symmetric);
+
+            //int lex_cmp = lex_compare_vector_with_negative (vector, result_variables);
+
+            if (is_free)
+            {
+                free.append_vector (result);
+            }
+            else
+            {
+		assert(is_hom);
+		hilbert.append_vector (result);
+            }
         }
 
-	    if (m_controller != NULL)
-	        m_controller->log_result (1, m_lattice->vectors (), 0);
+	if (m_controller != NULL)
+	    m_controller->log_result (1, hilbert.vectors (), free.vectors ());
     }
 
+  
     T extract_maxnorm_results (VectorArray <T> & maxnorm)
     {
         int result_variables = m_lattice->get_result_variables ();
