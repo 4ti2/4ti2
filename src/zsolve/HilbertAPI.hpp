@@ -61,9 +61,6 @@ HilbertAPI<T>::check_consistency()
     if (ZSolveAPI<T>::rhs) {
         throw IOException ("No `rhs' allowed for `hilbert' executable. Use `zsolve' instead!\n");
     }
-    if (ZSolveAPI<T>::rel) {
-        throw IOException ("No `rel' allowed for `hilbert' executable. Use `zsolve' instead.");
-    }
     if (ZSolveAPI<T>::lb) {
         throw IOException ("No `lb' allowed for `hilbert' executable. Use `zsolve' or `graver' instead.");
     }
@@ -102,7 +99,8 @@ HilbertAPI<T>::extract_results(Algorithm <T>* algorithm)
 {
     delete ZSolveAPI<T>::zhom;
     ZSolveAPI<T>::zhom = new VectorArrayAPI <T> (0, algorithm->get_result_variables ());
-    algorithm->extract_hilbert_results (ZSolveAPI<T>::zhom->data);
+    ZSolveAPI<T>::zfree = new VectorArrayAPI <T> (0, algorithm->get_result_variables ());
+    algorithm->extract_hilbert_results (ZSolveAPI<T>::zhom->data, ZSolveAPI<T>::zfree->data);
 }
 
 } // namespace _4ti2_zsolve_
