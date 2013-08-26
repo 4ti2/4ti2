@@ -27,7 +27,8 @@ News in 4ti2 version 1.6, compared to 1.5.2:
  * Accept longer filenames.
 
  * Enable shared library builds on the Cygwin platform (using the
-   libtool -no-undefined flag).
+   libtool -no-undefined flag).  (However, this requires that shared
+   libraries of GMP, GLPK are available.)
 
  * Use gnulib to provide getopt_long if not available in the
    system libraries.
