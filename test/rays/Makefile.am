@@ -15,4 +15,4 @@ check-local:
 	@../check.template $(srcdir) "-m" src/groebner/rays -q -m 
 	@../check.template $(srcdir) "-s" src/groebner/rays -q -s 
 
-CLEANFILES = .num_failures
+CLEANFILES = .num_failures-m .num_failures-s

@@ -6,7 +6,10 @@ EXTRA_DIST = \
 	m33.mat m33.rel m33.sign \
 	lattice_generation_bug.mat lattice_generation_bug.rel lattice_generation_bug.sign lattice_generation_bug.rhs lattice_generation_bug.zhom.chk lattice_generation_bug.zinhom.chk \
 	a1.mat a1.rel a1.rhs a1.sign a1.zhom.chk a1.zinhom.chk \
-	dutour-testcase-2013-08-21.mat dutour-testcase-2013-08-21.rel dutour-testcase-2013-08-21.rhs dutour-testcase-2013-08-21.sign dutour-testcase-2013-08-21.zhom.chk dutour-testcase-2013-08-21.zinhom.chk
+	dutour-testcase-2013-08-21.mat dutour-testcase-2013-08-21.rel dutour-testcase-2013-08-21.rhs dutour-testcase-2013-08-21.sign dutour-testcase-2013-08-21.zhom.chk dutour-testcase-2013-08-21.zinhom.chk \
+	non-pointed-2.mat non-pointed-2.sign non-pointed-2.zhom.chk																	       \
+	non-pointed.mat non-pointed.sign non-pointed.zfree.chk non-pointed.zhom.chk															       \
+	zero-rows.mat zero-rows.sign zero-rows.zfree.dont-chk zero-rows.zhom.dont-chk
 
 
 check-local:
