@@ -1,5 +1,6 @@
 * text=auto !eol
 /AUTHORS -text
+/THANKS -text
 doc/4ti2_manual.bib -text
 doc/Makefile.am -text
 doc/deloera-hemmecke-koeppe-book.tex -text
