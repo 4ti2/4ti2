@@ -34,4 +34,8 @@ EXTRA_DIST =					\
 	solved_LP.pdf				\
 	solved_LP.pdf_t
 
+EXTRA_DIST +=					\
+	deloera-hemmecke-koeppe-book.tex	\
+	deloera-hemmecke-koeppe-cover.jpg
+
 

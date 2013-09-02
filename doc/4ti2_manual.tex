@@ -17,8 +17,9 @@
 \usepackage{epic}
 \usepackage{enumerate}
 \usepackage{booktabs}
-%\usepackage{hyperref}
-\usepackage{graphics}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{url}
 
 \textwidth15cm
 \textheight21cm
@@ -109,7 +110,7 @@
 
 \author{A software package\\ for algebraic,
 geometric and combinatorial problems on linear spaces}
-\date{August 25, 2013}
+\date{September 2, 2013}
 %\date{\today}
 
 \maketitle
@@ -126,7 +127,30 @@ geometric and combinatorial problems on linear spaces}
 \input{4ti2_manual_beginner}
 \input{4ti2_manual_advanced}
 
+\chapter{README: Instructions on configuring and building 4ti2}
+
+{\small
+\verbatiminput{../README}
+}
+
+\chapter{NEWS: Changes to 4ti2 since version 1.2}
+
+{\small
+\verbatiminput{../NEWS}
+}
+
+\clearpage
+\addcontentsline{toc}{chapter}{The 4ti2 team}
+\chapter*{AUTHORS: The 4ti2 team}
+
+\verbatiminput{../AUTHORS}
+
+\clearpage
+\addcontentsline{toc}{chapter}{Bibliography}
 \bibliographystyle{plain}
 \bibliography{4ti2_manual}
+
+\clearpage
+\input{deloera-hemmecke-koeppe-book.tex}
 
 \end{document}
