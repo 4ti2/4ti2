@@ -112,8 +112,8 @@ void compute_ray(
                 const BitSet& unbounded,
                 const BitSet& urs);
 
-void load_matrix(LPX* lp, const VectorArray& matrix);
-void load_matrix_transpose(LPX* lp, const VectorArray& matrix);
+void load_matrix(glp_prob* lp, const VectorArray& matrix);
+void load_matrix_transpose(glp_prob* lp, const VectorArray& matrix);
 
 } // namespace _4ti2_;
 
@@ -361,35 +361,37 @@ _4ti2_::lp_feasible(
     DEBUG_4ti2(*out << "M = " << m << " N = " << n << "\n";)
     DEBUG_4ti2(*out << "lattice:\n" << lattice << "\n";)
 
-    LPX *lp = lpx_create_prob();
-    lpx_set_int_parm(lp,LPX_K_MSGLEV,0);
-    DEBUG_4ti2(lpx_set_int_parm(lp,LPX_K_MSGLEV,2);)
-    lpx_set_obj_dir(lp, LPX_MAX);
+    glp_prob *lp = glp_create_prob();
+    glp_smcp params;
+    glp_init_smcp(&params);
+    params.msg_lev = GLP_MSG_OFF;
+    DEBUG_4ti2(params.msg_lev = GLP_MSG_ON;)
+    glp_set_obj_dir(lp, GLP_MAX);
 
-    lpx_add_rows(lp, m);
+    glp_add_rows(lp, m);
     for (int i = 1; i <= m; ++i)
     {
-        lpx_set_row_bnds(lp, i, LPX_UP, 0.0, DOUBLE(rhs[i-1]));
+        glp_set_row_bnds(lp, i, GLP_UP, 0.0, DOUBLE(rhs[i-1]));
     }
 
-    lpx_add_cols(lp, n);
+    glp_add_cols(lp, n);
     for (int j = 1; j <= n; ++j)
     {
-        lpx_set_col_bnds(lp, j, LPX_FR, 0.0, 0.0);
-        lpx_set_obj_coef(lp, j, 0.0);
+        glp_set_col_bnds(lp, j, GLP_FR, 0.0, 0.0);
+        glp_set_obj_coef(lp, j, 0.0);
     }
 
     load_matrix_transpose(lp, lattice);
-    //lpx_print_prob(lp, "model");
+    //glp_write_lp(lp, NULL, "model");
 
-    lpx_simplex(lp);
+    glp_simplex(lp, &params);
 
     // TODO: Check for other exit statuses!
     bool feasible = true;
-    switch(lpx_get_status(lp))
+    switch(glp_get_status(lp))
     {
-        case LPX_NOFEAS:
-        case LPX_INFEAS:
+        case GLP_NOFEAS:
+        case GLP_INFEAS:
             feasible = false;
             break;
     };
@@ -403,14 +405,14 @@ _4ti2_::lp_feasible(
             double acc = 0;
             for (int i = 0; i < lattice.get_number(); ++i)
             {
-                acc += lpx_get_col_prim(lp, i+1)*DOUBLE(lattice[i][j]);
+                acc += glp_get_col_prim(lp, i+1)*DOUBLE(lattice[i][j]);
             }
             *out << " " << rhs[j] - acc;
         }
         *out << "\n";
     })
 
-    lpx_delete_prob(lp);
+    glp_delete_prob(lp);
     return feasible;
 }
 
@@ -427,35 +429,39 @@ _4ti2_::ip_feasible(
     DEBUG_4ti2(*out << "M = " << m << " N = " << n << "\n";)
     DEBUG_4ti2(*out << "lattice:\n" << lattice << "\n";)
 
-    LPX *lp = lpx_create_prob();
-    lpx_set_int_parm(lp,LPX_K_MSGLEV,0);
-    DEBUG_4ti2(lpx_set_int_parm(lp,LPX_K_MSGLEV,2);)
-    lpx_set_obj_dir(lp, LPX_MAX);
+    glp_prob *lp = glp_create_prob();
+    glp_smcp smcp_params;
+    glp_iocp iocp_params;
+    glp_init_smcp(&smcp_params);
+    glp_init_iocp(&iocp_params);
+    smcp_params.msg_lev = iocp_params.msg_lev = GLP_MSG_OFF;
+    DEBUG_4ti2(smcp_params.msg_lev = iocp_params.msg_lev = GLP_MSG_ON;)
+    glp_set_obj_dir(lp, GLP_MAX);
 
-    lpx_add_rows(lp, m);
+    glp_add_rows(lp, m);
     for (int i = 1; i <= m; ++i)
     {
-        lpx_set_row_bnds(lp, i, LPX_UP, 0.0, DOUBLE(rhs[i-1]));
+        glp_set_row_bnds(lp, i, GLP_UP, 0.0, DOUBLE(rhs[i-1]));
     }
 
-    lpx_add_cols(lp, n);
+    glp_add_cols(lp, n);
     for (int j = 1; j <= n; ++j)
     {
-        lpx_set_col_bnds(lp, j, LPX_FR, 0.0, 0.0);
-        lpx_set_obj_coef(lp, j, 0.0);
+        glp_set_col_bnds(lp, j, GLP_FR, 0.0, 0.0);
+        glp_set_obj_coef(lp, j, 0.0);
     }
 
     load_matrix_transpose(lp, lattice);
-    //lpx_print_prob(lp, "model");
+    //glp_write_lp(lp, NULL, "model");
 
-    lpx_simplex(lp);
+    glp_simplex(lp, &smcp_params);
 
     // TODO: Check for other exit statuses!
-    switch(lpx_get_status(lp))
+    switch(glp_get_status(lp))
     {
-        case LPX_NOFEAS:
-        case LPX_INFEAS:
-            lpx_delete_prob(lp);
+        case GLP_NOFEAS:
+        case GLP_INFEAS:
+            glp_delete_prob(lp);
             return false;
             break;
     };
@@ -467,26 +473,25 @@ _4ti2_::ip_feasible(
         double acc = 0;
         for (int i = 0; i < lattice.get_number(); ++i)
         {
-            acc += lpx_get_col_prim(lp, i+1)*DOUBLE(lattice[i][j]);
+            acc += glp_get_col_prim(lp, i+1)*DOUBLE(lattice[i][j]);
         }
         *out << " " << rhs[j] - acc;
     }
     *out << "\n";
     )
 
-    lpx_set_class(lp, LPX_MIP);
     for (int i = 1; i <= n; ++i)
     {
-        lpx_set_col_kind(lp, i, LPX_IV);
+        glp_set_col_kind(lp, i, GLP_IV);
     }
 
-    lpx_integer(lp);
+    glp_intopt(lp, &iocp_params);
 
     // TODO: Check for other exit statuses!
     bool feasible = true;
-    switch(lpx_mip_status(lp))
+    switch(glp_mip_status(lp))
     {
-        case LPX_I_NOFEAS:
+        case GLP_NOFEAS:
             feasible = false;
             break;
     };
@@ -500,7 +505,7 @@ _4ti2_::ip_feasible(
             double acc = 0;
             for (int i = 0; i < lattice.get_number(); ++i)
             {
-                acc += lpx_mip_col_val(lp, i+1)*DOUBLE(lattice[i][j]);
+                acc += glp_mip_col_val(lp, i+1)*DOUBLE(lattice[i][j]);
             }
             *out << " " << rhs[j] - acc;
         }
@@ -508,7 +513,7 @@ _4ti2_::ip_feasible(
         )
     }
 
-    lpx_delete_prob(lp);
+    glp_delete_prob(lp);
     return feasible;
 }
 
@@ -532,26 +537,28 @@ _4ti2_::lp_bounded(
     lattice.remove(rows, lattice.get_number());
     DEBUG_4ti2(*out << "Hermite Normal Form:\n" << lattice << "\n";)
 
-    LPX *lp = lpx_create_prob();
-    lpx_set_int_parm(lp,LPX_K_MSGLEV,0);
-    DEBUG_4ti2(lpx_set_int_parm(lp,LPX_K_MSGLEV,2);)
-    lpx_set_obj_dir(lp, LPX_MAX);
+    glp_prob *lp = glp_create_prob();
+    glp_smcp params;
+    glp_init_smcp(&params);
+    params.msg_lev = GLP_MSG_OFF;
+    DEBUG_4ti2(params.msg_lev = GLP_MSG_ON;)
+    glp_set_obj_dir(lp, GLP_MAX);
 
     // Set RHS = 0.
-    lpx_add_rows(lp, lattice.get_number());
+    glp_add_rows(lp, lattice.get_number());
     for (int i = 1; i <= lattice.get_number(); ++i)
     {
-        lpx_set_row_bnds(lp, i, LPX_FX, 0.0, 0.0);
+        glp_set_row_bnds(lp, i, GLP_FX, 0.0, 0.0);
     }
 
     // Set 0 <= x <= 1.
     // Set c = 0
-    lpx_add_cols(lp, lattice.get_size());
+    glp_add_cols(lp, lattice.get_size());
     for (int i = 1; i <= lattice.get_size(); ++i)
     {
-        if (!urs[i-1]) { lpx_set_col_bnds(lp, i, LPX_DB, 0.0, 1.0); }
-        else { lpx_set_col_bnds(lp, i, LPX_FX, 0.0, 0.0); }
-        lpx_set_obj_coef(lp, i, 0.0);
+        if (!urs[i-1]) { glp_set_col_bnds(lp, i, GLP_DB, 0.0, 1.0); }
+        else { glp_set_col_bnds(lp, i, GLP_FX, 0.0, 0.0); }
+        glp_set_obj_coef(lp, i, 0.0);
     }
 
     // Input the lattice.
@@ -572,7 +579,7 @@ _4ti2_::lp_bounded(
             }
         }
     }
-    lpx_load_matrix(lp, index-1, ai, aj, ar);
+    glp_load_matrix(lp, index-1, ai, aj, ar);
     delete [] ai; delete [] aj; delete [] ar;
 
     while (urs.count()+bounded.count()+unbounded.count() < matrix.get_size())
@@ -593,34 +600,33 @@ _4ti2_::lp_bounded(
         {
             if (unknown[i-1])
             {
-                lpx_set_obj_coef(lp, i, 1.0);
-                lpx_set_col_bnds(lp, i, LPX_DB, 0.0, 1.0);
+                glp_set_obj_coef(lp, i, 1.0);
+                glp_set_col_bnds(lp, i, GLP_DB, 0.0, 1.0);
             }
             else
             {
-                lpx_set_obj_coef(lp, i, 0.0);
-                lpx_set_col_bnds(lp, i, LPX_LO, 0.0, 0.0);
+                glp_set_obj_coef(lp, i, 0.0);
+                glp_set_col_bnds(lp, i, GLP_LO, 0.0, 0.0);
             }
         }
-        lpx_adv_basis(lp);
-        lpx_simplex(lp);
+        glp_adv_basis(lp, 0);
+        glp_simplex(lp, &params);
 
         DEBUG_4ti2(
-        *out << "Number of simplex iterations: " <<
-               lpx_get_int_parm(lp, LPX_K_ITCNT) << "\n";
+        *out << "Number of simplex iterations: " << lp->it_cnt << "\n";
         *out << "Primal Solution:\n";
         for (int j = 1; j <= lattice.get_size(); ++j)
         {
-            *out << " " << lpx_get_col_prim(lp, j);
+            *out << " " << glp_get_col_prim(lp, j);
         }
         *out << "\n";
         *out << "Dual Solution:\n";
         for (int i = 1; i <= lattice.get_number(); ++i)
         {
-            *out << " " << lpx_get_row_dual(lp, i);
+            *out << " " << glp_get_row_dual(lp, i);
         }
         *out << "\n";
-        *out << "Objective = " << lpx_get_obj_val(lp) << "\n";
+        *out << "Objective = " << glp_get_obj_val(lp) << "\n";
         )
 
         // If the solution is 0, then all the unknown variables are unbounded.
@@ -628,19 +634,19 @@ _4ti2_::lp_bounded(
         BitSet ones(lattice.get_size());
         for (int j = 1; j <= lattice.get_size(); ++j)
         {
-            switch(lpx_get_col_stat(lp, j))
+            switch(glp_get_col_stat(lp, j))
             {
-                case LPX_BS:
+                case GLP_BS:
                     basic.set(j-1);
                     break;
-                case LPX_NU:
+                case GLP_NU:
                     ones.set(j-1);
                     break;
-                case LPX_NL:
-                case LPX_NS:
+                case GLP_NL:
+                case GLP_NS:
                     break;
-                case LPX_NF:
-                    std::cerr<<"Received LPX_NF for component "<<j-1<<".\n";
+                case GLP_NF:
+                    std::cerr<<"Received GLP_NF for component "<<j-1<<".\n";
                 default:
                     std::cerr<<"LP solver unexpected output error.\n";
                     exit(1);
@@ -651,7 +657,7 @@ _4ti2_::lp_bounded(
         DEBUG_4ti2(*out << "Upper bound variables:\n" << ones << "\n";)
 
         Vector solution(lattice.get_size(),0);
-        if (lpx_get_obj_val(lp) < 0.5) // It should be at least 1 if not zero.
+        if (glp_get_obj_val(lp) < 0.5) // It should be at least 1 if not zero.
         {
             DEBUG_4ti2(*out << "Unknown are all unbounded.\n";)
             reconstruct_dual_integer_solution(matrix,lattice,basic,unknown,solution);
@@ -664,7 +670,7 @@ _4ti2_::lp_bounded(
             grading.normalise();
         }
     }
-    lpx_delete_prob(lp);
+    glp_delete_prob(lp);
 }
 
 // TODO: This function is quite ugly and should be rewritten.
@@ -884,26 +890,28 @@ _4ti2_::lp_weight_l1(
     //lattice.remove(rows, lattice.get_number());
     lattice.insert(Vector(lattice.get_size(), 1));
 
-    LPX *lp = lpx_create_prob();
-    lpx_set_int_parm(lp,LPX_K_MSGLEV,0);
-    DEBUG_4ti2(lpx_set_int_parm(lp,LPX_K_MSGLEV,2);)
-    lpx_set_obj_dir(lp, LPX_MIN);
+    glp_prob *lp = glp_create_prob();
+    glp_smcp params;
+    glp_init_smcp(&params);
+    params.msg_lev = GLP_MSG_OFF;
+    DEBUG_4ti2(params.msg_lev = GLP_MSG_ON;)
+    glp_set_obj_dir(lp, GLP_MIN);
 
     // Set RHS = 0 except for the last row which is 1 (the l1 norm).
-    lpx_add_rows(lp, lattice.get_number());
+    glp_add_rows(lp, lattice.get_number());
     for (int i = 1; i <= lattice.get_number()-1; ++i)
     {
-        lpx_set_row_bnds(lp, i, LPX_FX, 0.0, 0.0);
+        glp_set_row_bnds(lp, i, GLP_FX, 0.0, 0.0);
     }
-    lpx_set_row_bnds(lp, lattice.get_number(), LPX_FX, 1.0, 1.0);
+    glp_set_row_bnds(lp, lattice.get_number(), GLP_FX, 1.0, 1.0);
 
     // Set c = rhs
-    lpx_add_cols(lp, lattice.get_size());
+    glp_add_cols(lp, lattice.get_size());
     for (int i = 1; i <= lattice.get_size(); ++i)
     {
-        if (!urs[i-1]) { lpx_set_col_bnds(lp, i, LPX_LO, 0.0, 0.0); }
-        else { lpx_set_col_bnds(lp, i, LPX_FX, 0.0, 0.0); }
-        lpx_set_obj_coef(lp, i, DOUBLE(rhs[i-1]));
+        if (!urs[i-1]) { glp_set_col_bnds(lp, i, GLP_LO, 0.0, 0.0); }
+        else { glp_set_col_bnds(lp, i, GLP_FX, 0.0, 0.0); }
+        glp_set_obj_coef(lp, i, DOUBLE(rhs[i-1]));
     }
 
     // Input the lattice.
@@ -924,54 +932,53 @@ _4ti2_::lp_weight_l1(
             }
         }
     }
-    lpx_load_matrix(lp, index-1, ai, aj, ar);
+    glp_load_matrix(lp, index-1, ai, aj, ar);
     delete [] ai; delete [] aj; delete [] ar;
 
-    lpx_simplex(lp);
+    glp_simplex(lp, &params);
 
-    switch(lpx_get_status(lp))
+    switch(glp_get_status(lp))
     {
-        case LPX_NOFEAS:
-        case LPX_INFEAS:
+        case GLP_NOFEAS:
+        case GLP_INFEAS:
             return;
             break;
     };
     
     DEBUG_4ti2(
-    *out << "Number of simplex iterations: " <<
-               lpx_get_int_parm(lp, LPX_K_ITCNT) << "\n";
+    *out << "Number of simplex iterations: " << lp->it_cnt << "\n";
     *out << "Primal Solution:\n";
     for (int j = 1; j <= lattice.get_size(); ++j)
     {
-        *out << " " << lpx_get_col_prim(lp, j);
+        *out << " " << glp_get_col_prim(lp, j);
     }
     *out << "\n";
     *out << "Dual Solution:\n";
     for (int i = 1; i <= lattice.get_number(); ++i)
     {
-        *out << " " << lpx_get_row_dual(lp, i);
+        *out << " " << glp_get_row_dual(lp, i);
     }
     *out << "\n";
-    *out << "Objective = " << lpx_get_obj_val(lp) << "\n";
+    *out << "Objective = " << glp_get_obj_val(lp) << "\n";
     )
 
     BitSet basic(lattice.get_size());
     BitSet ones(lattice.get_size());
     for (int j = 1; j <= lattice.get_size(); ++j)
     {
-         switch(lpx_get_col_stat(lp, j))
+         switch(glp_get_col_stat(lp, j))
          {
-             case LPX_BS:
+             case GLP_BS:
                  basic.set(j-1);
                  break;
-             case LPX_NU:
+             case GLP_NU:
                  ones.set(j-1);
                  break;
-             case LPX_NL:
-             case LPX_NS:
+             case GLP_NL:
+             case GLP_NS:
                  break;
-             case LPX_NF:
-                 std::cerr<<"Received LPX_NF for component "<<j-1<<".\n";
+             case GLP_NF:
+                 std::cerr<<"Received GLP_NF for component "<<j-1<<".\n";
              default:
                  std::cerr<<"LP solver unexpected output error.\n";
                  exit(1);
@@ -988,7 +995,7 @@ _4ti2_::lp_weight_l1(
     reconstruct_primal_integer_solution(lattice,basic,sol,weight);
     DEBUG_4ti2(*out << "Weight:\n" << weight << "\n";)
 
-    lpx_delete_prob(lp);
+    glp_delete_prob(lp);
 }
 
 int
@@ -1005,88 +1012,89 @@ _4ti2_::lp_solve(
     assert(matrix.get_size() == urs.get_size());
     assert(matrix.get_size() == basic.get_size());
 
-    LPX *lp = lpx_create_prob();
-    lpx_set_int_parm(lp,LPX_K_MSGLEV,0);
-    DEBUG_4ti2(lpx_set_int_parm(lp,LPX_K_MSGLEV,2);)
-    lpx_set_obj_dir(lp, LPX_MIN);
+    glp_prob *lp = glp_create_prob();
+    glp_smcp params;
+    glp_init_smcp(&params);
+    params.msg_lev = GLP_MSG_OFF;
+    DEBUG_4ti2(params.msg_lev = GLP_MSG_ON;)
+    glp_set_obj_dir(lp, GLP_MIN);
 
     int m = matrix.get_number();
     int n = matrix.get_size();
 
     // Set rhs.
-    lpx_add_rows(lp, m);
+    glp_add_rows(lp, m);
     for (int i = 1; i <= m; ++i)
     {
-        lpx_set_row_bnds(lp, i, LPX_FX, DOUBLE(rhs[i-1]), 0.0);
+        glp_set_row_bnds(lp, i, GLP_FX, DOUBLE(rhs[i-1]), 0.0);
     }
 
     // Set cost.
-    lpx_add_cols(lp, n);
+    glp_add_cols(lp, n);
     for (int i = 1; i <= n; ++i)
     {
-        lpx_set_obj_coef(lp, i, DOUBLE(cost[i-1]));
-        if (urs[i-1]) { lpx_set_col_bnds(lp, i, LPX_FR, 0.0, 0.0); }
-        else { lpx_set_col_bnds(lp, i, LPX_LO, 0.0, 0.0); }
+        glp_set_obj_coef(lp, i, DOUBLE(cost[i-1]));
+        if (urs[i-1]) { glp_set_col_bnds(lp, i, GLP_FR, 0.0, 0.0); }
+        else { glp_set_col_bnds(lp, i, GLP_LO, 0.0, 0.0); }
     }
 
     // Input the matrix.
     load_matrix(lp, matrix);
 
-    lpx_simplex(lp);
+    glp_simplex(lp, &params);
 
-    switch(lpx_get_status(lp))
+    switch(glp_get_status(lp))
     {
-        case LPX_OPT:
+        case GLP_OPT:
              DEBUG_4ti2(*out << "Optimal solution found.\n";)
              break;
-        case LPX_NOFEAS:
-        case LPX_INFEAS:
+        case GLP_NOFEAS:
+        case GLP_INFEAS:
             DEBUG_4ti2(*out << "Problem is infeasible.\n";)
             return -1;
             break;
-        case LPX_UNBND:
+        case GLP_UNBND:
             DEBUG_4ti2(*out << "Problem is unbounded.\n";)
             return 1;
             break;
-        case LPX_UNDEF:
-        case LPX_FEAS:
+        case GLP_UNDEF:
+        case GLP_FEAS:
         default:
             std::cerr << "Software Error: Received unexpected lp solver output.\n";
             exit(1);
     };
 
     DEBUG_4ti2(
-    *out << "Number of simplex iterations: " <<
-               lpx_get_int_parm(lp, LPX_K_ITCNT) << "\n";
+    *out << "Number of simplex iterations: " << lp->it_cnt << "\n";
     *out << "Primal Solution:\n";
     for (int j = 1; j <= matrix.get_size(); ++j)
     {
-        *out << " " << lpx_get_col_prim(lp, j);
+        *out << " " << glp_get_col_prim(lp, j);
     }
     *out << "\n";
     *out << "Dual Solution:\n";
     for (int i = 1; i <= matrix.get_number(); ++i)
     {
-        *out << " " << lpx_get_row_dual(lp, i);
+        *out << " " << glp_get_row_dual(lp, i);
     }
     *out << "\n";
-    *out << "Objective = " << lpx_get_obj_val(lp) << "\n";
+    *out << "Objective = " << glp_get_obj_val(lp) << "\n";
     )
 
-    objective = lpx_get_obj_val(lp);
+    objective = glp_get_obj_val(lp);
 
     // Find the basic variables.
     for (int j = 1; j <= n; ++j)
     {
-         switch(lpx_get_col_stat(lp, j))
+         switch(glp_get_col_stat(lp, j))
          {
-             case LPX_BS:
+             case GLP_BS:
                  basic.set(j-1);
                  break;
-             case LPX_NU:
-             case LPX_NL:
-             case LPX_NS:
-             case LPX_NF:
+             case GLP_NU:
+             case GLP_NL:
+             case GLP_NS:
+             case GLP_NF:
                  break;
              default:
                  std::cerr<<"LP solver unexpected output error.\n";
@@ -1096,7 +1104,7 @@ _4ti2_::lp_solve(
     }
     DEBUG_4ti2(*out << "Basic variables:\n" << basic << "\n";)
 
-    lpx_delete_prob(lp);
+    glp_delete_prob(lp);
 
     return 0;
 }
@@ -1254,46 +1262,50 @@ _4ti2_::compute_ray(
     DEBUG_4ti2(*out << "M = " << m << " N = " << n << "\n";)
     DEBUG_4ti2(*out << "lattice:\n" << lattice << "\n";)
 
-    LPX *lp = lpx_create_prob();
-    lpx_set_int_parm(lp,LPX_K_MSGLEV,0);
-    DEBUG_4ti2(lpx_set_int_parm(lp,LPX_K_MSGLEV,2);)
-    lpx_set_obj_dir(lp, LPX_MAX);
+    glp_prob *lp = glp_create_prob();
+    glp_smcp smcp_params;
+    glp_iocp iocp_params;
+    glp_init_smcp(&smcp_params);
+    glp_init_iocp(&iocp_params);
+    smcp_params.msg_lev = iocp_params.msg_lev = GLP_MSG_OFF;
+    DEBUG_4ti2(smcp_params.msg_lev = iocp_params.msg_lev = GLP_MSG_ON;)
+    glp_set_obj_dir(lp, GLP_MAX);
 
-    lpx_add_rows(lp, m);
+    glp_add_rows(lp, m);
     for (int i = 1; i <= m; ++i)
     {
         if (unbounded[i-1])
         {
-           lpx_set_row_bnds(lp, i, LPX_LO, 1.0, 0.0);
+           glp_set_row_bnds(lp, i, GLP_LO, 1.0, 0.0);
         }
         else
         {
-           lpx_set_row_bnds(lp, i, LPX_FR, 0.0, 0.0);
+           glp_set_row_bnds(lp, i, GLP_FR, 0.0, 0.0);
         }
     }
 
-    lpx_add_cols(lp, n);
+    glp_add_cols(lp, n);
     for (int j = 1; j <= n; ++j)
     {
-        lpx_set_col_bnds(lp, j, LPX_FR, 0.0, 0.0);
-        lpx_set_obj_coef(lp, j, 0.0);
+        glp_set_col_bnds(lp, j, GLP_FR, 0.0, 0.0);
+        glp_set_obj_coef(lp, j, 0.0);
     }
 
     // Input the (transpose) lattice.
     load_matrix_transpose(lp, lattice);
 
-    //lpx_print_prob(lp, "model");
+    //glp_write_lp(lp, NULL, "model");
 
-    lpx_simplex(lp);
+    glp_simplex(lp, &smcp_params);
 
     // TODO: Check for other exit statuses!
     bool feasible = true;
-    switch(lpx_get_status(lp))
+    switch(glp_get_status(lp))
     {
-        case LPX_NOFEAS:
-        case LPX_INFEAS:
+        case GLP_NOFEAS:
+        case GLP_INFEAS:
             feasible = false;
-            lpx_delete_prob(lp);
+            glp_delete_prob(lp);
             *out << "Not feasible.\n";
             return;
             break;
@@ -1308,26 +1320,25 @@ _4ti2_::compute_ray(
             double acc = 0;
             for (int i = 0; i < lattice.get_number(); ++i)
             {
-                acc += lpx_get_col_prim(lp, i+1)*DOUBLE(lattice[i][j]);
+                acc += glp_get_col_prim(lp, i+1)*DOUBLE(lattice[i][j]);
             }
             *out << " " << acc;
         }
         *out << "\n";
     })
 
-    lpx_set_class(lp, LPX_MIP);
     for (int i = 1; i <= n; ++i)
     {
-        lpx_set_col_kind(lp, i, LPX_IV);
+        glp_set_col_kind(lp, i, GLP_IV);
     }
 
-    lpx_integer(lp);
+    glp_intopt(lp, &iocp_params);
 
     // TODO: Check for other exit statuses!
     feasible = true;
-    switch(lpx_mip_status(lp))
+    switch(glp_mip_status(lp))
     {
-        case LPX_I_NOFEAS:
+        case GLP_NOFEAS:
             feasible = false;
             break;
     };
@@ -1341,7 +1352,7 @@ _4ti2_::compute_ray(
             double acc = 0;
             for (int i = 0; i < lattice.get_number(); ++i)
             {
-                acc += lpx_mip_col_val(lp, i+1)*DOUBLE(lattice[i][j]);
+                acc += glp_mip_col_val(lp, i+1)*DOUBLE(lattice[i][j]);
             }
             *out << " " << acc;
         }
@@ -1349,12 +1360,12 @@ _4ti2_::compute_ray(
         )
     }
 
-    lpx_delete_prob(lp);
+    glp_delete_prob(lp);
     return;
 }
 
 void
-_4ti2_::load_matrix(LPX* lp, const VectorArray& matrix)
+_4ti2_::load_matrix(glp_prob* lp, const VectorArray& matrix)
 {
     // Input the matrix.
     int *ai = new int[matrix.get_size()*matrix.get_number()+1];
@@ -1374,12 +1385,12 @@ _4ti2_::load_matrix(LPX* lp, const VectorArray& matrix)
             }
         }
     }
-    lpx_load_matrix(lp, index-1, ai, aj, ar);
+    glp_load_matrix(lp, index-1, ai, aj, ar);
     delete [] ai; delete [] aj; delete [] ar;
 }
 
 void
-_4ti2_::load_matrix_transpose(LPX* lp, const VectorArray& matrix)
+_4ti2_::load_matrix_transpose(glp_prob* lp, const VectorArray& matrix)
 {
     int m = matrix.get_size();
     int n = matrix.get_number();
@@ -1402,6 +1413,6 @@ _4ti2_::load_matrix_transpose(LPX* lp, const VectorArray& matrix)
             }
         }
     }
-    lpx_load_matrix(lp, index-1, ai, aj, ar);
+    glp_load_matrix(lp, index-1, ai, aj, ar);
     delete [] ai; delete [] aj; delete [] ar;
 }

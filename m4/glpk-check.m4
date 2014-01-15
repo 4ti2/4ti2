@@ -30,7 +30,7 @@ BACKUP_CXX=${CXX}
 # Following does not work because libtool is only created when configure has completed.
 ##CXX="./libtool --mode=link --tag=CXX ${CXX}"
 
-AC_MSG_CHECKING(for GLPK)
+AC_MSG_CHECKING(for GLPK's glp_ API)
 
 for GLPK_HOME in ${GLPK_HOME_PATH} 
   do	
@@ -58,7 +58,7 @@ for GLPK_HOME in ${GLPK_HOME_PATH}
 
 		AC_LINK_IFELSE(AC_LANG_PROGRAM([extern "C" {
 #include <glpk.h>
-}], [LPX *lpx = lpx_create_prob(); lpx_delete_prob(lpx); ]),
+}], [glp_prob *lpx = glp_create_prob(); glp_delete_prob(lpx); ]),
 		[
 				AC_MSG_RESULT(found)
 				AC_SUBST(GLPK_CFLAGS)

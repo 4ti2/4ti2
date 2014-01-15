@@ -1,3 +1,9 @@
+News in 4ti2 version 1.6.2, compared to 1.6.1:
+
+ * Use GLPK's new glp_* API instead of the old lpx_* API (declared
+   obsolete in glpk 4.47 and removed in 4.52).  
+   (Patch by Jerry James for Fedora.)
+
 News in 4ti2 version 1.6.1, compared to 1.6:
 
  * Compile fix for XCode 5.0.2, Apple LLVM version 5.0 (clang-500.2.79).
