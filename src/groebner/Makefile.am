@@ -43,6 +43,7 @@ if HAVE_GMP_WITH_CXX
 # All of our libraries need this because of the common interface,
 # which allows conversion from GMP integers.
 LIBS += $(GMP_LIBS)
+AM_CXXFLAGS += $(GMP_CFLAGS)
 endif
 
 # 4ti2 needs the next option to access maximum values of integer types.
