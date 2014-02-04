@@ -1,5 +1,3 @@
-docdir = $(pkgdatadir)/doc
-
 doc_DATA = 4ti2_manual.pdf
 
 ## Manual sources.
