@@ -1091,7 +1091,7 @@ static void usage()
 int main(int argc, char *argv[])
 {
   // Command-line handling
-  int n;
+  int n = 0;
   bool binary = false;
   switch (argc) {
   case 3:
