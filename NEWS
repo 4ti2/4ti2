@@ -1,3 +1,9 @@
+News in 4ti2 version 1.6.3, compared to 1.6.2:
+
+ * The manual has been updated.
+
+ * Minor build fixes.
+
 News in 4ti2 version 1.6.2, compared to 1.6.1:
 
  * Use GLPK's new glp_* API instead of the old lpx_* API (declared
