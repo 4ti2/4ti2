@@ -103,7 +103,7 @@ First, we have to give our problem a project name, say
   the matrix dimensions. As the dimensions already specify how many symbols
   have to be read, the matrix could also be given in only one line or even
   in many lines of different lengths.
-\item In \FourTiTwo{} version 1.3.1, all appearing numbers have to be
+\item In \FourTiTwo{} version 1.3.1 and later, all appearing numbers have to be
   integers.
 \item Consequently, this implies that, at the moment, \File{qsolve}
   only supports homogeneous linear systems, that is systems with
@@ -168,12 +168,73 @@ deals with them more efficiently at the same time.
 
 \section{Brief tutorial}
 
-\subsection{Solving linear systems over $\R$ and over $\Z$}
+\subsection{Solving linear systems over $\Z$ with \File{zsolve}}
 
-In this example you learn about the functions \File{qsolve} and
+In this example you learn about the function % s \File{qsolve} and
 \File{zsolve}.
 
 Let us have a look at the linear system
+%%%% \[
+%%%%   \begin{array}{rcrcrlcl}
+%%%%     x & - & y & \leq & 2\\
+%%%%   -3x & + & y & \leq & 1\\
+%%%%     x & + & y & \geq & 1\\
+%%%%       &   & y & \geq & 0\\
+%%%%   \end{array}
+%%%% \]
+%%%% and let us solve it over $\R$, we have to create the files encoding
+%%%% the linear system. Let us call our project \File{system}. Then the
+%%%% input files look as follows:
+%%%% \begin{center}
+%%%%   \begin{tabular}{|l|l|l|l|}
+%%%% \hline
+%%%%     \text{ system.mat } & \text{ system.rel } & \text{ system.rhs } & \text{ system.sign }\\
+%%%% \hline
+%%%%   $\begin{array}{rrrr}& 3 & 2 & \\& 1 & -1\\& -3 & 1\\& 1 & 1 &\\ \end{array}$ &
+%%%%   $\begin{array}{rrrrr}& 1 & 3 & \\& < &  < & > & \\ \\ \\\end{array}$ &
+%%%%   $\begin{array}{rrrrr}& 1 & 3 & \\& 2 &  1 & 1 & \\ \\ \\\end{array}$ &
+%%%%   $\begin{array}{rrrr}& 1 & 2 & \\& 0 &  1 & \\ \\ \\\end{array}$\\
+%%%% \hline
+%%%%   \end{tabular}
+%%%% \end{center}
+%%%% and then call
+%%%% \begin{center}
+%%%% {\tt ./qsolve system}
+%%%% \end{center}
+%%%% This call creates three files
+%%%% \begin{center}
+%%%%   \begin{tabular}{|l|l|l|}
+%%%% \hline
+%%%%     \text{ system.qinhom } & \text{ system.qhom } & \text{ system.qfree }\\
+%%%% \hline
+%%%%   $\begin{array}{rrrr}& 3 & 2 &\\& 0 & 1 &\\& 0 & 2 &\\& 1 & 0 &\\\end{array}$ &
+%%%%   $\begin{array}{rrrr}& 2 & 2 &\\& 1 & 1 &\\& 1 & 3 & \\ \\\end{array}$ &
+%%%%   $\begin{array}{rrrr}& 0 & 2 & \\ \\ \\ \\ \end{array}$\\
+%%%% \hline
+%%%%   \end{tabular}
+%%%% \end{center}
+%%%% which correspond to the explicit description of all solutions:
+%%%% \begin{center}
+%%%%   \begin{tabular}{cc}
+%%%%     \emph{Feasible solutions} & \emph{Computed representation}\\
+%%%%        \input{feasible_LP.pdf_t} & \input{solved_LP.pdf_t}    \\
+%%%%   \end{tabular}
+%%%% \end{center}
+%%%% \[
+%%%% \conv\left({1\choose 0},{2\choose 0},{0\choose 1}\right) + \cone\left({1\choose 1},{1\choose 3}\right).
+%%%% \]
+%%%% Note that in the second picture above, the three colored cones are
+%%%% only a simplification and shall visualize the covering of the
+%%%% feasible region by infinitely many shifted copies of the cone
+%%%% \[
+%%%% \cone\left({1\choose 1},{1\choose 3}\right),
+%%%% \]
+%%%% one appended to each point in
+%%%% \[
+%%%% \conv\left({1\choose 0},{2\choose 0},{0\choose 1}\right).
+%%%% \]
+
+%%%% Let us now turn to the integer situation, that is, let us solve the system
 \[
   \begin{array}{rcrcrlcl}
     x & - & y & \leq & 2\\
@@ -182,69 +243,12 @@ Let us have a look at the linear system
       &   & y & \geq & 0\\
   \end{array}
 \]
-and let us solve it over $\R$, we have to create the files encoding
+over $\Z$. 
+%% As the linear system itself is unchanged, we can use the
+%% same input files as above in order to specify the linear system.
+We have to create the files encoding
 the linear system. Let us call our project \File{system}. Then the
 input files look as follows:
-\begin{center}
-  \begin{tabular}{|l|l|l|l|}
-\hline
-    \text{ system.mat } & \text{ system.rel } & \text{ system.rhs } & \text{ system.sign }\\
-\hline
-  $\begin{array}{rrrr}& 3 & 2 & \\& 1 & -1\\& -3 & 1\\& 1 & 1 &\\ \end{array}$ &
-  $\begin{array}{rrrrr}& 1 & 3 & \\& < &  < & > & \\ \\ \\\end{array}$ &
-  $\begin{array}{rrrrr}& 1 & 3 & \\& 2 &  1 & 1 & \\ \\ \\\end{array}$ &
-  $\begin{array}{rrrr}& 1 & 2 & \\& 0 &  1 & \\ \\ \\\end{array}$\\
-\hline
-  \end{tabular}
-\end{center}
-and then call
-\begin{center}
-{\tt ./qsolve system}
-\end{center}
-This call creates three files
-\begin{center}
-  \begin{tabular}{|l|l|l|}
-\hline
-    \text{ system.qinhom } & \text{ system.qhom } & \text{ system.qfree }\\
-\hline
-  $\begin{array}{rrrr}& 3 & 2 &\\& 0 & 1 &\\& 0 & 2 &\\& 1 & 0 &\\\end{array}$ &
-  $\begin{array}{rrrr}& 2 & 2 &\\& 1 & 1 &\\& 1 & 3 & \\ \\\end{array}$ &
-  $\begin{array}{rrrr}& 0 & 2 & \\ \\ \\ \\ \end{array}$\\
-\hline
-  \end{tabular}
-\end{center}
-which correspond to the explicit description of all solutions:
-\begin{center}
-  \begin{tabular}{cc}
-    \emph{Feasible solutions} & \emph{Computed representation}\\
-       \input{feasible_LP.pdf_t} & \input{solved_LP.pdf_t}    \\
-  \end{tabular}
-\end{center}
-\[
-\conv\left({1\choose 0},{2\choose 0},{0\choose 1}\right) + \cone\left({1\choose 1},{1\choose 3}\right).
-\]
-Note that in the second picture above, the three colored cones are
-only a simplification and shall visualize the covering of the
-feasible region by infinitely many shifted copies of the cone
-\[
-\cone\left({1\choose 1},{1\choose 3}\right),
-\]
-one appended to each point in
-\[
-\conv\left({1\choose 0},{2\choose 0},{0\choose 1}\right).
-\]
-
-Let us now turn to the integer situation, that is, let us solve the system
-\[
-  \begin{array}{rcrcrlcl}
-    x & - & y & \leq & 2\\
-  -3x & + & y & \leq & 1\\
-    x & + & y & \geq & 1\\
-      &   & y & \geq & 0\\
-  \end{array}
-\]
-over $\Z$. As the linear system itself is unchanged, we can use the
-same input files as above in order to specify the linear system.
 \begin{center}
   \begin{tabular}{|l|l|l|l|}
 \hline
@@ -257,7 +261,11 @@ same input files as above in order to specify the linear system.
 \hline
   \end{tabular}
 \end{center}
-Then, however, we call
+
+
+
+Then % , however,
+we call
 \begin{center}
 {\tt ./zsolve system}
 \end{center}
@@ -294,12 +302,46 @@ monoid
 \monoid\left({1\choose 1},{1\choose 2},{1\choose 3}\right).
 \]
 
+\subsection{Solving linear systems over $\Q$ with \File{qsolve}}
+
+\File{qsolve} solves linear systems over $\Q$; however, note that it only
+supports homogeneous linear systems, that is, systems with $b=0$.
+
+%%% We should have an example here.
+
+\begin{center}
+{\tt ./qsolve system}
+\end{center}
+This call creates files
+\begin{center}
+  \begin{tabular}{|l|l|}
+    \hline
+    \text{ system.qhom } & \text{ system.qfree }\\
+    \hline
+  \end{tabular}
+\end{center}
+
+To solve an inhomogeneous system $Ax=b$, $x\geq0$, you (still) need to do some work
+yourself:
+
+\begin{enumerate}
+\item Solve system $Ax-bu=0$, $x\geq 0$, $u\geq 0$ using \File{qsolve}.  
+\item Keep those solutions with
+  $u=0$. (These generate the recession cone (of unbounded directions).  
+\item Normalize those solutions with $u>0$ to have $u=1$ (by dividing the
+  vector by~$u$). Be aware that this could create rational numbers.  
+\item Drop the $u$-component.
+\end{enumerate}
+Any solution to $Ax=b$, $x\geq 0$ can then be obtained by adding one solution
+from 3.\ to a nonnegative linear combination of solutions from 2.
+
 
 
 \subsection{Computing extreme rays and Hilbert bases}
 
 In this example you learn about the functions \File{rays} and
-\File{hilbert}.
+\File{hilbert}.   (They are convenient versions of \File{qsolve} and
+\File{zsolve} for particular cases.)
 
 Let us consider the set of magic $3\times 3$ squares with
 non-negative real entries, that is, the set of all $3\times 3$
@@ -936,3 +978,8 @@ A binary model on the bipartite graph $K_{2,3}$ then reads as
   \end{tabular}
 \end{center}
 
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "4ti2_manual"
+%%% End:
