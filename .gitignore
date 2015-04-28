@@ -25,6 +25,7 @@ doc/Makefile.in
 doc/auto
 doc/deloera-hemmecke-koeppe-book.log
 /install-sh
+lib/Makefile.in
 /libtool
 /ltmain.sh
 m4/Makefile
