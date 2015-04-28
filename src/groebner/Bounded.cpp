@@ -1146,7 +1146,7 @@ _4ti2_::reconstruct_primal_integer_solution(
     VectorArray basic_matrix(matrix.get_number(), basic.count(), 0);
     VectorArray::project(matrix, basic, basic_matrix);
     Vector rhs(matrix.get_number(),0);
-    int index = 0;
+
     for (int j = 0; j < matrix.get_size(); ++j)
     {
         if (ones[j])
@@ -1172,7 +1172,7 @@ _4ti2_::reconstruct_primal_integer_solution(
     }
 
     Vector::lift(basic_solution, basic, solution);
-    index = 0;
+
     for (int j = 0; j < solution.get_size(); ++j)
     {
         if (ones[j])
