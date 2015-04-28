@@ -9,7 +9,9 @@ EXTRA_DIST = \
 	dutour-testcase-2013-08-21.mat dutour-testcase-2013-08-21.rel dutour-testcase-2013-08-21.rhs dutour-testcase-2013-08-21.sign dutour-testcase-2013-08-21.zhom.chk dutour-testcase-2013-08-21.zinhom.chk \
 	non-pointed-2.mat non-pointed-2.sign non-pointed-2.zhom.chk																	       \
 	non-pointed.mat non-pointed.sign non-pointed.zfree.chk non-pointed.zhom.chk															       \
-	zero-rows.mat zero-rows.sign zero-rows.zfree.dont-chk zero-rows.zhom.dont-chk
+	zero-rows.mat zero-rows.sign zero-rows.zfree.dont-chk zero-rows.zhom.dont-chk \
+	affine.lat affine.sign affine.zhom.chk affine.zinhom.chk \
+	system.mat system.rel system.sign system.zhom.chk system.zinhom.chk
 
 
 check-local:

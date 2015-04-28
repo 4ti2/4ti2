@@ -113,7 +113,7 @@ First, we have to give our problem a project name, say
 
 
 
-\subsection{How does an explicit solution to linear systems look like?}
+\subsection{What does an explicit solution to linear systems look like?}
 
 If the system is solved over $\R$ (using \File{qsolve}),
 \FourTiTwo{} returns two sets of integer vectors:
@@ -255,7 +255,7 @@ input files look as follows:
     \text{ system.mat } & \text{ system.rel } & \text{ system.rhs } & \text{ system.sign }\\
 \hline
   $\begin{array}{rrrr}& 3 & 2 & \\& 1 & -1\\& -3 & 1\\& 1 & 1 &\\ \end{array}$ &
-  $\begin{array}{rrrrr}& 1 & 3 & \\& < &  < & = & \\ \\ \\\end{array}$ &
+  $\begin{array}{rrrrr}& 1 & 3 & \\& < &  < & > & \\ \\ \\\end{array}$ &
   $\begin{array}{rrrrr}& 1 & 3 & \\& 2 &  1 & 1 & \\ \\ \\\end{array}$ &
   $\begin{array}{rrrr}& 1 & 2 & \\& 0 &  1 & \\ \\ \\\end{array}$\\
 \hline
@@ -269,15 +269,17 @@ we call
 \begin{center}
 {\tt ./zsolve system}
 \end{center}
-This call creates three files
+This call creates two files
 \begin{center}
-  \begin{tabular}{|l|l|l|}
+  \begin{tabular}{|l|l|}
 \hline
-    \text{ system.zinhom } & \text{ system.zhom } & \text{ system.zfree }\\
+    \text{ system.zinhom } & \text{ system.zhom } %%%% & \text{ system.zfree }
+    \\
 \hline
-  $\begin{array}{rrrr}& 4 & 2 &\\& 0 & 1 &\\& 0 & 2 &\\& 1 & 0 &\\ & 1 & 1 &\\\end{array}$ &
-  $\begin{array}{rrrr}& 3 & 2 &\\& 1 & 1 &\\& 1 & 2 &\\& 1 & 3 & \\ \\\end{array}$ &
-  $\begin{array}{rrrr}& 0 & 2 & \\ \\ \\ \\ \\ \end{array}$\\
+  $\begin{array}{rrrr}& 4 & 2 &\\& 0 & 1 &\\& 2 & 0 &\\& 1 & 0 &\\ & 1 & 1 &\\\end{array}$ &
+  $\begin{array}{rrrr}& 3 & 2 &\\& 1 & 1 &\\& 1 & 2 &\\& 1 & 3 & \\ \\\end{array}$
+  %% $\begin{array}{rrrr}& 0 & 2 & \\ \\ \\ \\ \\ \end{array}$
+    \\
 \hline
   \end{tabular}
 \end{center}
@@ -386,6 +388,7 @@ Below, we will deal with the more interesting case of \emph{integer} magic
 squares. For the moment, however, we wish to compute the extreme rays
 of the magic square cone $\{z:A_{3\times 3}z=0,z\geq 0\}$.
 
+%%%% In test-suite, this is test/rays/33}
 In order to call the function \File{rays}, we only have to create
 one file, say \File{magic3x3.mat}, in which we specify the problem
 matrix $A_{3\times 3}$. The remaining data is set by default to
@@ -440,6 +443,7 @@ If we turn now to \emph{integer} magic squares, we are looking for a
 Hilbert basis of the $3\times 3$ magic square cone. As the default
 settings for \File{hilbert} are the same as for \File{rays}, we can
 use the same input file
+%%%% In test-suite, this is test/hilbert/magic33
 \begin{center}
   \begin{tabular}{|l|}
 \hline
@@ -671,16 +675,17 @@ Let us set up the problem in \FourTiTwo{}.
 \begin{center}
   \begin{tabular}{|l|l|l|l|}
 \hline
-    \text{ 4coins.mat } & \text{ 4coins.rhs } & \text{ 4coins.sign } & \text{ 4coins.cost } \\
+    \text{ 4coins.mat } & \text{ 4coins.zsol } & \text{ 4coins.sign } & \text{ 4coins.cost } \\
 \hline
   $\begin{array}{rrrrrr}& 2 & 4 & & & \\& 1 & 1 & 1 & 1 &\\& 1 & 5 & 10 & 25 & \\ \end{array}$ &
-  $\begin{array}{rrrr}& 1 & 2 & \\& 11 & 99 & \\ \\\end{array}$ &
+  $\begin{array}{rrrrrr}& 1 & 4& \\& 4 & 4 & 0 & 3 & \\ \\\end{array}$ &
   $\begin{array}{rrrrrr}& 1 & 4 & \\& 1 &  1 & 1 & 1 &\\ \\\end{array}$ &
   $\begin{array}{rrrrrr}& 1 & 4 & & & \\& 0 & 1 & 0 & 1 &\\ \\
   \end{array}$\\
 \hline
   \end{tabular}
 \end{center}
+
 Note that we do not have to specify a relations file
 \File{4coins.rel}, since already by default all relations are
 assumed to be equations. Now we simply call
@@ -707,13 +712,17 @@ From this, we conclude that
 is an optimal choice, using only $3$ instead of $7$ nickels and
 quarters.
 
-{\bf Remark.} We could also specify a list of right-hand sides in
-\File{4coins.rhs}. The call
-\begin{center}
-{\tt ./minimize 4coins}
-\end{center}
-then creates a file \File{4coins.min} containing minima to the
-corresponding integer programs. \eoproof
+{\bf Remark.} %% We could also specify a list of right-hand sides in
+%% \File{4coins.rhs}. The call
+%% \begin{center}
+%% {\tt ./minimize 4coins}
+%% \end{center}
+%% then creates a file \File{4coins.min} containing minima to the
+%% corresponding integer programs.
+Earlier versions of 4ti2 allowed to specify the right-hand side vector in a
+file called \File{4coins.rhs}, instead
+of giving a solution in \File{4coins.zsol}.  This is no longer supported.
+\eoproof
 
 Since we already know a feasible solution, there is another way we
 might attack this problem, namely via toric Gr\"obner bases. For
@@ -745,19 +754,22 @@ and gives the output file
   \begin{tabular}{|l|}
 \hline
     \text{ 4coins.gro }\\
-\hline
-  $\begin{array}{rrrrrr}
-    & 1 & 4 &&&\\
-    & 4 & 4 & 0 & 3 & \\
-  \end{array}$\\
+%% \hline
+%%   $\begin{array}{rrrrrr}
+%%     & 1 & 4 &&&\\
+%%     & 4 & 4 & 0 & 3 & \\
+%%   \end{array}$\\
+%%%%%%%%%%%%% 4ti2 actually computes something else! See
+%%%%%%%%%%%%% test-suite. --mkoeppe, 2015-04-27
 \hline
   \end{tabular}
 \end{center}
+
 Then we specify our feasible solution in
 \begin{center}
   \begin{tabular}{|l|}
 \hline
-    \text{ 4coins.zfeas }\\
+    \text{ 4coins.feas }\\
 \hline
   $\begin{array}{rrrrrr}
     & 1 & 4 &&&\\
@@ -786,7 +798,7 @@ to produce the file
 that also contains the desired optimal solution.
 
 {\bf Remark.} We could also specify a list of feasible solutions in
-\File{4coins.zfeas}. Then the call
+\File{4coins.feas}. Then the call
 \begin{center}
 {\tt ./normalform 4coins}
 \end{center}
@@ -795,7 +807,7 @@ corresponding integer programs. (If $z_0$ is a feasible solution,
 the corresponding integer program is defined by putting the
 right-hand side to $Az_0$.) \eoproof
 
-{\bf Rename \File{4coins.zfeas} to \File{4coins.zfea}?!}
+%%%% {\bf Rename \File{4coins.zfeas} to \File{4coins.zfea}?!}
 
 \subsection{Markov Bases in Statistics}
 In this example you learn about the functions \File{markov} and
@@ -906,7 +918,7 @@ defined by a complex.
 
 The $m\times n$ tables problem above corresponds to the complex
 $\{\{1\},\{2\}\}$ on two nodes with levels $m$ and $n$,
-respectively. Let us encode the complex for $3x6$ tables with
+respectively. Let us encode the complex for $3\times 6$ tables with
 $1$-marginals (row and column sums) in \File{3x6.mod}.
 
 \begin{center}
@@ -935,7 +947,7 @@ we state the number of nodes and their levels, then we give the number
 of maximal faces. Finally, we list each maximal face by first
 specifying the number of nodes on it and then by listing these nodes.
 
-Thus, a $3x4x6$ table with $2$-marginals (that is, again only counts
+Thus, a $3\times4\times6$ table with $2$-marginals (that is, again only counts
 along coordinate axes) corresponds to the complex
 $\{\{(1,2)\},\{(2,3)\},\{(3,1)\}\}$ on $3$ nodes with levels $3$,
 $4$, and $6$, respectively. Thus, its encoding is in \FourTiTwo{} would
@@ -961,7 +973,7 @@ A binary model on the bipartite graph $K_{2,3}$ then reads as
 \begin{center}
   \begin{tabular}{|l|}
 \hline
-    \text{ 3x4x6.mod }\\
+    \text{ k2\_3.mod }\\
 \hline
   $\begin{array}{rrrrrrr}
     & 5 &&&&\\

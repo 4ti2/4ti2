@@ -3,7 +3,7 @@ if HAVE_GMP_WITH_CXX
 SUBDIRS += gmp
 endif
 
-EXTRA_DIST = 									\
+EXTRA_DIST =									\
 	333 333.mar.chk								\
 	334 334.mar.chk								\
 	335 335.lat 335.mar.chk							\
@@ -28,7 +28,8 @@ EXTRA_DIST = 									\
 	prob16 prob16.lat prob16.mar.chk					\
 	prob18 prob18.mar.chk							\
 	prob20 prob20.mar.chk							\
-	normalize-bug.lat normalize-bug.mar.chk
+	normalize-bug.lat normalize-bug.mar.chk					\
+	4x4.mat 4x4.mar.chk
 
 check-hybrid:
 	@../check.template $(srcdir) "-hybrid" src/groebner/markov -q -ghybrid

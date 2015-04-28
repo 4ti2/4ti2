@@ -22,8 +22,8 @@ EXTRA_DIST =																	\
 	grin10900.2 grin10900.2.cost grin10900.2.gro.chk grin10900.2.mar grin10900.2.zsol							\
 	grin10900.3 grin10900.3.cost grin10900.3.gro.chk grin10900.3.mar grin10900.3.zsol							\
 	grin10900.4 grin10900.4.cost grin10900.4.gro.chk grin10900.4.mar grin10900.4.zsol							\
-	grin10900.5 grin10900.5.cost grin10900.5.mar grin10900.5.zsol
-
+	grin10900.5 grin10900.5.cost grin10900.5.mar grin10900.5.zsol \
+	4coins.mat 4coins.sign 4coins.cost 4coins.gro.chk
 
 check-fifo: 
 	@../check.template $(srcdir) "-fifo" src/groebner/groebner -q -afifo
