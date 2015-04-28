@@ -18,9 +18,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 
+pkglibbindir = $(pkglibdir)/bin
+pkgliblibdir = $(pkglibdir)/lib
+
 bin_PROGRAMS = zsolve 
 
-lib_LTLIBRARIES = libzsolve.la
+pkgliblib_LTLIBRARIES = libzsolve.la
 
 # Allow accessing zsolve's header files as "zsolve/HEADER.h"
 AM_CXXFLAGS = -I$(srcdir)/..
@@ -88,7 +91,7 @@ endif
 # Link in the "common" 4ti2 functions.
 # -no-undefined declares that no undefined symbols will remain after linking all these libraries.
 # (This is necessary to build shared libraries on Cygwin.)
-libzsolve_la_LDFLAGS = -L../4ti2 -R$(libdir) -l4ti2common -no-undefined
+libzsolve_la_LDFLAGS = -L../4ti2 -R$(pkgliblibdir) -l4ti2common -no-undefined -avoid-version
 
 bin_SCRIPTS = hilbert graver
 DISTCLEANFILES = hilbert graver

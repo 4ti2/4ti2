@@ -19,15 +19,18 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 
+pkglibbindir = $(pkglibdir)/bin
+pkgliblibdir = $(pkglibdir)/lib
+
 bin_PROGRAMS =					\
 	genmodel				\
 	gensymm					\
 	output
 #	normaliz_wrapper
 
-lib_LTLIBRARIES = lib4ti2util.la
+pkgliblib_LTLIBRARIES = lib4ti2util.la
 
-AM_LDFLAGS = -no-undefined
+AM_LDFLAGS = -no-undefined -avoid-version
 
 # The output.c file contains C++-isms (or C99-isms), 
 # so compile with the C++ compiler. --mkoeppe

@@ -17,6 +17,8 @@ AC_CONFIG_FILES([Makefile src/Makefile src/4ti2/Makefile
 AC_CONFIG_HEADERS([src/config.h src/4ti2/4ti2_config.h])
 
 AC_CONFIG_FILES([src/groebner/script.template])
+AC_CONFIG_FILES([src/zsolve/graver.template])
+AC_CONFIG_FILES([src/zsolve/hilbert.template])
 
 AC_CONFIG_FILES([test/Makefile])
 AC_CONFIG_FILES([test/circuits/Makefile])

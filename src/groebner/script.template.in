@@ -20,9 +20,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 
+prefix=@prefix@
+PKGLIBDIR=@libdir@/@PACKAGE@
+
 # We locate where this script is so we can call the executables.
 SCRIPT=`which "$0"`
-DIR=`dirname "$SCRIPT"`
+SCRIPTDIR=`dirname "$SCRIPT"`
 FUNCTION=`basename "$SCRIPT"`
 
 # The default executable.
@@ -50,8 +53,12 @@ then
     EXECUTABLE=4ti2gmp
 fi
 
+for DIR in "$SCRIPTDIR" "$PKGLIBDIR/bin"; do
+	if [ -x "$DIR/@GROEBNER_DEFAULT_EXECUTABLE@" ]; then break; fi
+done
+
 # We check whether the 4ti2 executable exists.
-if [ ! -f "$DIR/$EXECUTABLE" ]
+if [ ! -x "$DIR/$EXECUTABLE" ]
 then
     echo "Error: Unable to find 4ti2 executable \`$EXECUTABLE'"
     exit 1

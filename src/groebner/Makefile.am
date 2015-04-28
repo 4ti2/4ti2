@@ -18,16 +18,18 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 
-bin_PROGRAMS = 
-bin_PROGRAMS += 4ti2int32 4ti2int64
+pkglibbindir = $(pkglibdir)/bin
+pkgliblibdir = $(pkglibdir)/lib
+
+pkglibbin_PROGRAMS =
+pkglibbin_PROGRAMS += 4ti2int32 4ti2int64
 if HAVE_GMP_WITH_CXX
-bin_PROGRAMS += 4ti2gmp
+pkglibbin_PROGRAMS += 4ti2gmp
 endif
 
-lib_LTLIBRARIES = 
-lib_LTLIBRARIES += lib4ti2int32.la lib4ti2int64.la
+pkgliblib_LTLIBRARIES = lib4ti2int32.la lib4ti2int64.la
 if HAVE_GMP_WITH_CXX
-lib_LTLIBRARIES += lib4ti2gmp.la
+pkgliblib_LTLIBRARIES += lib4ti2gmp.la
 endif
 
 # Allow accessing groebner's header files as "groebner/HEADER.h"
@@ -268,7 +270,7 @@ WRAPPERSCRIPTS =				\
 nodist_bin_SCRIPTS = $(WRAPPERSCRIPTS)
 DISTCLEANFILES = $(WRAPPERSCRIPTS)
 
-AM_LDFLAGS = -L../4ti2 -R$(libdir) -l4ti2common -no-undefined
+AM_LDFLAGS = -L../4ti2 -R$(pkgliblibdir) -l4ti2common -no-undefined -avoid-version
 
 # 16 bit precision flags.
 # 4ti2int16_LDADD = lib4ti2int16.la
