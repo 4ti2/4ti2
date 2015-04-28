@@ -34,8 +34,4 @@ AC_ARG_ENABLE(swig-allegrocommonlisp,
 AM_CONDITIONAL(ENABLE_SWIG_ALLEGROCOMMONLISP, test x$enable_swig_allegrocommonlisp = xyes)
 
 AC_CONFIG_FILES(allegrocommonlisp/4ti2.asd)
-
-PKGLIBDIR=$(eval echo ${libdir}/${PACKAGE%%-*})
-AC_SUBST([PKGLIBDIR])
-
 AC_OUTPUT

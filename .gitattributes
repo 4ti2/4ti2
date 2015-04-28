@@ -57,8 +57,6 @@ src/qsolve/RayAlgorithmAPI.cpp -text
 src/qsolve/RayState.h -text
 src/qsolve/RayState.hpp -text
 src/qsolve/RaysAPI.cpp -text
-src/zsolve/graver.template.in -text
-src/zsolve/hilbert.template.in -text
 test/hilbert/33.hil.chk -text
 test/hilbert/33.mat -text
 test/hilbert/33.rel -text

@@ -19,10 +19,7 @@
 
 # 4ti2 Makefile
 
-pkgliblibdir = $(libdir)/4ti2/lib
-pkglibswgdir = $(libdir)/4ti2/swig
-
-pkglibswg_LTLIBRARIES=
+lib_LTLIBRARIES=
 
 # Allegro Common Lisp interface
 LISPFILES = 4ti2-package.lisp common-wrapper-macros.lisp 4ti2-base.lisp 4ti2.cl 
@@ -35,11 +32,10 @@ EXTRA_DIST = $(SWIGFILES) \
 	4ti2.asd.in \
 	$(LISPFILES)
 
-pkglibswg_LTLIBRARIES += liballegrocl-4ti2.la
+lib_LTLIBRARIES += liballegrocl-4ti2.la
 liballegrocl_4ti2_la_SOURCES = allegrocl-4ti2.c
 #liballegrocl_4ti2_la_LIBADD =
-liballegrocl_4ti2_la_LDFLAGS = \
-	-L$(top_builddir)/../src/groebner -R$(pkgliblibdir) -l4ti2int64 -no-undefined -avoid-version \
+liballegrocl_4ti2_la_LDFLAGS = -L$(top_builddir)/../src/groebner -R$(libdir) -l4ti2int64 \
 	-L$(top_builddir)/../src/zsolve -lzsolve ${GMP_LIBS} \
 	-L$(top_builddir)/../src/4ti2 -l4ti2common
 

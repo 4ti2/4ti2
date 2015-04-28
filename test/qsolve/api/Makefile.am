@@ -15,16 +15,8 @@ qsolve_main_LDADD = $(top_builddir)/src/groebner/lib4ti2int64.la $(top_builddir)
 test_input_conversion_64_to_gmp_SOURCES = test_input_conversion_64.cpp
 test_input_conversion_64_to_gmp_LDADD = $(top_builddir)/src/groebner/lib4ti2gmp.la $(top_builddir)/src/4ti2/lib4ti2common.la
 
-if HAVE_GMP_WITH_CXX
-test_input_conversion_64_to_gmp_LDADD += $(GMP_LIBS)
-endif
-
 test_input_conversion_gmp_to_64_SOURCES = test_input_conversion_gmp.cpp
 test_input_conversion_gmp_to_64_LDADD = $(top_builddir)/src/groebner/lib4ti2int64.la $(top_builddir)/src/4ti2/lib4ti2common.la
-
-if HAVE_GMP_WITH_CXX
-test_input_conversion_gmp_to_64_LDADD += $(GMP_LIBS)
-endif
 
 TESTS = 
 TESTS += qsolve_main 
