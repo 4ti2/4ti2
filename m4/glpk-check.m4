@@ -56,9 +56,9 @@ for GLPK_HOME in ${GLPK_HOME_PATH}
 		CXXFLAGS="${CXXFLAGS} ${GLPK_CFLAGS}"
 		LIBS="${LIBS} ${GLPK_LIBS_NOLIBTOOL}"
 
-		AC_LINK_IFELSE(AC_LANG_PROGRAM([extern "C" {
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([extern "C" {
 #include <glpk.h>
-}], [glp_prob *lpx = glp_create_prob(); glp_delete_prob(lpx); ]),
+}], [glp_prob *lpx = glp_create_prob(); glp_delete_prob(lpx); ])],
 		[
 				AC_MSG_RESULT(found)
 				AC_SUBST(GLPK_CFLAGS)
