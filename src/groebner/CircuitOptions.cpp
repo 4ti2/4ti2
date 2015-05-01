@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "Globals.h"
 #include <cstdlib>
 
-#ifdef _GNU_SOURCE
+#if 1  /// we use gnulib, so don't need to test for _GNU_SOURCE
 #include <getopt.h>
 #endif
 
@@ -58,7 +58,7 @@ CircuitOptions::process_options(int argc, char** argv)
 {
     int c;
     while (1) {
-#ifdef _GNU_SOURCE
+#if 1  /// we use gnulib, so don't need to test for _GNU_SOURCE
         int option_index = 0;
         static struct option long_options[] = {
             {"matrix",       0, 0,'m'},
