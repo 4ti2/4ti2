@@ -35,6 +35,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "myheader.h"
 #include "print.h"
 #include "vector.h"
+
+#include <getopt.h>
+#include "banner.h"
+
 /* ----------------------------------------------------------------- */
 void printPermutationToFile(FILE *out, vector v, int numOfVars) {
   int i;
@@ -47,6 +51,51 @@ void printPermutationToFile(FILE *out, vector v, int numOfVars) {
   fprintf(out,"\n");
   return ;
 }
+
+
+static const struct option longopts[] = {
+  {"help", no_argument, NULL, 'h'},
+  {"version", no_argument, NULL, 'v'},
+  {"quiet", no_argument, NULL, 'q'},
+  {NULL, 0, NULL, 0}
+};
+
+static void print_version()
+{
+  printf("%s", FORTY_TWO_BANNER);
+}
+ 
+static void print_usage()
+{
+  printf("usage: gensymm [--options] A B C D FILENAME\n"
+	 "\n"
+	 "Computes the generators for the symmetry group acting on 4-way tables\n"
+	 "with 3-marginals. By putting one side length to 1, this includes\n"
+	 "3-way tables with 2-marginals.\n"
+	 "\n"
+	 "Options:\n"
+	 " -q, --quiet       No output is written to the screen\n"
+	 "\n"
+	 "Output file:\n"
+	 " FILENAME.sym      generators for the symmetry group\n"
+	 "\n"
+	 "Example:  Consider the problem of 3x3x3 tables with 2-marginals. Calling\n"
+	 "  gensymm 3 3 3 1 333\n"
+	 "produces the file '333.sym' containing the following lines.\n"
+	 "\n"
+	 "9 27\n"
+	 "10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 1 2 3 4 5 6 7 8 9 \n"
+	 "10 11 12 13 14 15 16 17 18 1 2 3 4 5 6 7 8 9 19 20 21 22 23 24 25 26 27 \n"
+	 "4 5 6 7 8 9 1 2 3 13 14 15 16 17 18 10 11 12 22 23 24 25 26 27 19 20 21 \n"
+	 "4 5 6 1 2 3 7 8 9 13 14 15 10 11 12 16 17 18 22 23 24 19 20 21 25 26 27 \n"
+	 "2 3 1 5 6 4 8 9 7 11 12 10 14 15 13 17 18 16 20 21 19 23 24 22 26 27 25 \n"
+	 "2 1 3 5 4 6 8 7 9 11 10 12 14 13 15 17 16 18 20 19 21 23 22 24 26 25 27 \n"
+	 "1 2 3 10 11 12 19 20 21 4 5 6 13 14 15 22 23 24 7 8 9 16 17 18 25 26 27 \n"
+	 "1 10 19 4 13 22 7 16 25 2 11 20 5 14 23 8 17 26 3 12 21 6 15 24 9 18 27 \n"
+	 "1 4 7 2 5 8 3 6 9 10 13 16 11 14 17 12 15 18 19 22 25 20 23 26 21 24 27 \n"
+	 "\n");
+}
+
 /* ----------------------------------------------------------------- */
 int gensymm_main(int argc, char *argv[]) {
   int a,i,j,k,l,x,y,z,w,numOfVars,numOfGenerators,infoLevel;
@@ -54,20 +103,39 @@ int gensymm_main(int argc, char *argv[]) {
   char fileName[PATH_MAX],outFileName[PATH_MAX];
   FILE *out;
 
+  int optc;
+
   setbuf(stdout,0);
 
   infoLevel=standardInfoLevel;
-  for (i=1; i<argc-1; i++) {
-    if (strncmp(argv[i],"--",2)==0) {
-      if (strncmp(argv[i],"--qui",5)==0) {
-	infoLevel=-1;
-      }
+
+  while ((optc = getopt_long (argc, argv, "hvq", longopts, NULL)) != -1)
+    switch (optc) {
+    case 'v':
+      print_version();
+      exit(0);
+      break;
+    case 'h':
+      print_usage();
+      exit(0);
+      break;
+    case 'q':
+      infoLevel=-1;
+      break;
+    default:
+      print_usage();
+      exit(1);
+      break;
     }
+
+  if (optind != argc - 5) {
+    print_usage();
+    exit(1);
   }
 
-if (infoLevel>-1) {
-  printVersionInfo();
-}
+  if (infoLevel>-1) {
+    printVersionInfo();
+  }
 
 /* We require that all 1's come last in the tuple (x,y,z,w). */
 
