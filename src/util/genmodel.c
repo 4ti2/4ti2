@@ -35,6 +35,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "myheader.h"
 #include "vector.h"
 #include "print.h"
+
+#include <getopt.h>
+#include "banner.h"
+
 /* ----------------------------------------------------------------- */
 listVector* readSimplicialComplex(char* fileName, int* numOfNodes) {
   int i,j,numOfFaces,sizeOfFace;
@@ -94,6 +98,80 @@ int isSubString(vector x, vector y, vector positions) {
   }
   return(1);
 }
+
+/* ----------------------------------------------------------------- */
+static const struct option longopts[] = {
+  {"help", no_argument, NULL, 'h'},
+  {"version", no_argument, NULL, 'v'},
+  {"quiet", no_argument, NULL, 'q'},
+  {NULL, 0, NULL, 0}
+};
+
+static void print_version()
+{
+  printf("%s", FORTY_TWO_BANNER);
+}
+ 
+static void print_usage()
+{
+  printf("usage: genmodel [--options] FILENAME\n"
+	 "\n"
+	 "Computes the problem matrix corresponding to graphical statistical models\n"
+	 "given by a simplicial complex and levels on the nodes.\n"
+	 "\n"
+	 "Options:\n"
+	 " -q, --quiet	No output is written to the screen\n"
+	 "\n"
+	 "Input file:\n"
+	 "FILENAME.mod    Simplicial complex and levels on the nodes\n"
+	 "\n"
+	 "Output file:\n"
+	 "FILENAME.mat    Matrix file\n"
+	 "\n"
+	 "Example: Consider the problem of 3x3x3 tables with 2-marginals. These\n"
+	 "are given by K_3 as the simplicial complex on 3 nodes and with levels\n"
+	 "of 3 on each node.  In '333.mod' write:\n"
+	 "3\n"
+	 "3 3 3\n"
+	 "3\n"
+	 "2 1 2\n"
+	 "2 2 3\n"
+	 "2 3 1\n"
+	 "Calling 'genmodel 333' produces the following file '333.mat':\n"
+	 "27 27\n"
+	 "1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0\n"
+	 "0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0\n"
+	 "[...]\n"
+	 /* "0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0\n" */
+	 /* "0 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0\n" */
+	 /* "0 0 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0\n" */
+	 /* "0 0 0 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0\n" */
+	 /* "0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 1 0 0\n" */
+	 /* "0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 1 0\n" */
+	 /* "0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 1\n" */
+	 "1 0 0 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n"
+	 "0 1 0 0 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n"
+	 "0 0 1 0 0 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n"
+	 "[...]\n"
+	 /* "0 0 0 0 0 0 0 0 0 1 0 0 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0\n" */
+	 /* "0 0 0 0 0 0 0 0 0 0 1 0 0 1 0 0 1 0 0 0 0 0 0 0 0 0 0\n" */
+	 /* "0 0 0 0 0 0 0 0 0 0 0 1 0 0 1 0 0 1 0 0 0 0 0 0 0 0 0\n" */
+	 /* "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 1 0 0 1 0 0\n" */
+	 /* "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 1 0 0 1 0\n" */
+	 /* "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 1 0 0 1\n" */
+	 "1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n"
+	 "0 0 0 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n"
+	 "[...]\n"
+	 /* "0 0 0 0 0 0 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n" */
+	 /* "0 0 0 0 0 0 0 0 0 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n" */
+	 /* "0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0\n" */
+	 /* "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 0 0 0 0 0 0 0 0 0\n" */
+	 /* "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 0 0 0 0 0 0\n" */
+	 /* "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 0 0 0\n" */
+	 /* "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1\n" */
+	 "\n");
+}
+
 /* ----------------------------------------------------------------- */
 int genmodel_main(int argc, char *argv[]) {
   int i,j,maxIndexFace,numOfNodes,numOfRows,numOfColumns,infoLevel;
@@ -102,27 +180,47 @@ int genmodel_main(int argc, char *argv[]) {
   char fileName[PATH_MAX],outFileName[PATH_MAX];
   FILE *out;
 
+  int optc;
+
   infoLevel=standardInfoLevel;
-  for (i=1; i<argc-1; i++) {
-    if (strncmp(argv[i],"--",2)==0) {
-      if (strncmp(argv[i],"--qui",5)==0) {
-	infoLevel=-1;
-      }
+
+
+  while ((optc = getopt_long (argc, argv, "hvq", longopts, NULL)) != -1)
+    switch (optc) {
+    case 'v':
+      print_version();
+      exit(0);
+      break;
+    case 'h':
+      print_usage();
+      exit(0);
+      break;
+    case 'q':
+      infoLevel=-1;
+      break;
+    default:
+      print_usage();
+      exit(1);
+      break;
     }
+
+  if (optind != argc - 1) {
+    print_usage();
+    exit(1);
   }
 
-if (infoLevel>-1) {
-  printVersionInfo();
-}
+  if (infoLevel>-1) {
+    printVersionInfo();
+  }
 
   strcpy(fileName,argv[argc-1]);
   strcat(fileName,".mod");
   strcpy(outFileName,argv[argc-1]);
   strcat(outFileName,".mat");
 
-if (infoLevel>-1) {
-  printf("Creating file %s.\n",outFileName);
-}
+  if (infoLevel>-1) {
+    printf("Creating file %s.\n",outFileName);
+  }
 
   numOfNodes=0;
   faces=readSimplicialComplex(fileName,&numOfNodes);
