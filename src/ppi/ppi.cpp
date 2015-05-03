@@ -63,6 +63,9 @@ double getCPUTime()
 #endif
 }
 
+#include <getopt.h>
+#include "banner.h"
+
 #define TALKATIVE 0
 #define OUR_OWN_HASH
 //#define HASH
@@ -1082,30 +1085,65 @@ VerySimpleVectorSet *ExtendPPI(VerySimpleVectorSet *Pn, int n)
   return Pn;
 }
 
+static void print_version()
+{
+  cout << FORTY_TWO_BANNER;
+}
+ 
+static void print_usage()
+{
+  cout << "usage: ppi [--binary-output] N" << endl;
+  cout << endl;
+  cout << "Computes the primitive partition identities, that is, the Graver basis of [1 2 3 ... N]." << endl;
+  cout << endl;
+  cout << "Options:" << endl;
+  cout << " -b, --binary-output       Create a binary file ppiN.dat instead of text file ppiN.gra" << endl;
+  cout << endl;
+}
+ 
 static void usage()
 {
-  cerr << "usage: ppi [--binary-output] N" << endl;
+  print_usage();
   exit(1);
 }
+ 
+static const struct option longopts[] = {
+  {"help", no_argument, NULL, 'h'},
+  {"version", no_argument, NULL, 'v'},
+  {"binary-output", no_argument, NULL, 'b'},
+  {NULL, 0, NULL, 0}
+};
  
 int main(int argc, char *argv[])
 {
   // Command-line handling
   int n = 0;
   bool binary = false;
-  switch (argc) {
-  case 3:
-    if (strcmp(argv[1], "--binary-output") != 0)
+
+  int optc;
+
+  while ((optc = getopt_long (argc, argv, "hvb", longopts, NULL)) != -1)
+    switch (optc) {
+    case 'v':
+      print_version();
+      exit(0);
+      break;
+    case 'h':
+      print_usage();
+      exit(0);
+      break;
+    case 'b':
+      binary = true;
+      break;
+    default:
       usage();
-    binary = true;
-    // FALLTHRU
-  case 2:
-    if (sscanf(argv[argc-1], "%d", &n) != 1)
-      usage();
-    break;
-  default:
+      break;
+    }
+
+  if (optind != argc - 1) usage();
+  
+  if (sscanf(argv[argc - 1], "%d", &n) != 1)
     usage();
-  }
 
   // Setup PPI set for n=2
   VerySimpleVectorSet *V;

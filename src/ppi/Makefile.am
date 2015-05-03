@@ -22,3 +22,5 @@ bin_PROGRAMS = ppi
 
 ppi_SOURCES = ppi.cpp
 
+# Allow accessing general 4ti2 headers
+AM_CXXFLAGS = -I$(srcdir)/..
