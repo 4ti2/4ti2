@@ -335,7 +335,7 @@ QSolveAPI::set_options(int argc, char** argv)
         case '?':
         case ':':
             write_usage();
-            exit(1);
+            exit(0);
             break;
 
         default:
@@ -409,8 +409,6 @@ Options:\n\
   -j, --threads=n            Set the maximum number of threads to n. Default is 1.\n\
   -q, --quiet                Do not output anything to the screen.\n\
   -h, --help                 Display this help and exit.\n\
-\n\
-Only short options are supported on sun machines.\n\
 \n";
 }
 
