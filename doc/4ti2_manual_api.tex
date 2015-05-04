@@ -1,0 +1,25 @@
+\chapter{4ti2 as a callable library}
+
+%% \section{The C API}
+
+Some portions of \FourTiTwo{} can be used as a callable library to avoid I/O
+and process overhead.  It has a simple C API that closely mirrors the 
+commands: \File{qsolve}, \File{rays}, \File{circuits}, \File{zsolve},
+\File{hilbert}, \File{graver}.
+
+Depending on its configuration, \FourTiTwo builds and installs several
+libraries, either as static or shared libraries.
+
+A single header file, \texttt{<4ti2/4ti2.h>}, provides the C API.
+
+{\scriptsize
+\verbatiminput{../src/4ti2/4ti2.h}
+}
+
+%% \section{The C++ API}
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "4ti2_manual"
+%%% End:

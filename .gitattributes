@@ -2,6 +2,8 @@
 /AUTHORS -text
 /THANKS -text
 doc/4ti2_manual.bib -text
+doc/4ti2_manual_api.tex -text
+doc/4ti2_manual_ref.tex -text
 doc/Makefile.am -text
 doc/deloera-hemmecke-koeppe-book.tex -text
 doc/deloera-hemmecke-koeppe-cover.jpg -text

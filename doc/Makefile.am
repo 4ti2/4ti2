@@ -2,17 +2,19 @@ docdir = $(pkgdatadir)/doc
 
 doc_DATA = 4ti2_manual.pdf
 
+## Manual sources.
+HELPFILES = output-help.txt gensymm-help.txt genmodel-help.txt ppi-help.txt
+
 EXTRA_DIST =					\
-	3by3magic.eps				\
-	4ti2_manual.aux				\
-	4ti2_manual.bbl				\
-	4ti2_manual.blg				\
-	4ti2_manual.log				\
 	4ti2_manual.pdf				\
+	3by3magic.eps				\
+	4ti2_manual.bib				\
 	4ti2_manual.tex				\
+	4ti2_manual_api.tex			\
 	4ti2_manual_advanced.tex		\
 	4ti2_manual_beginner.tex		\
-	Makefile.am				\
+	4ti2_manual_ref.tex			\
+	$(HELPFILES)				\
 	cubepicture.eps				\
 	feasible.pdf				\
 	feasible.pdf_t				\
@@ -38,4 +40,22 @@ EXTRA_DIST +=					\
 	deloera-hemmecke-koeppe-book.tex	\
 	deloera-hemmecke-koeppe-cover.jpg
 
+### We do not attempt to build the manual in Make targets.
+### Before making a release, pdflatex the manual; we distribute the PDF.
+
+.PHONY: update-help
+
+update-help: $(HELPFILES)
+
+$(srcdir)/gensymm-help.txt:
+	../src/util/gensymm --help > $@
+
+$(srcdir)/genmodel-help.txt:
+	../src/util/genmodel --help > $@
+
+$(srcdir)/output-help.txt:
+	../src/util/output --help > $@
+
+$(srcdir)/ppi-help.txt:
+	../src/ppi/ppi --help > $@
 
