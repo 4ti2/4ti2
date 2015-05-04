@@ -35,6 +35,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <stdlib.h>
 #include <limits.h>
 
+#include "banner.h"
+
 /* ----------------------------------------------------------------- */
 listVector* readListVector(int *numOfVars, char *fileName) {
   int numOfVectors;
@@ -305,6 +307,100 @@ listVector* extractMaximalNonDominatedVectors(listVector *basis,
   return(M->rest);
 }
 /* ----------------------------------------------------------------- */
+static void print_version()
+{
+  printf("%s", FORTY_TWO_BANNER);
+}
+ 
+static void print_usage()
+{
+  printf("usage: output [--options] FILENAME.EXT\n"
+         "\n"
+         "Transforms a 4ti2 matrix file to something else.\n"
+         "\n"
+         "General options:       \n"
+         " --quiet        No output is written to the screen.\n"
+         "\n"
+         "Options that control what to output:                 their output files:\n"
+         " --binomials    Write vectors as binomials.          FILENAME.EXT.bin\n"
+         "                Use an optional input file\n"
+         "                'FILENAME.EXT.vars'\n"
+         "                to specify variable names.\n"
+         "\n"
+         " --maple        Write vectors as Maple list.         FILENAME.EXT.maple\n"
+         "                This format is suitable also for\n"
+         "                CoCoA, Mathematica, Macaulay2.\n"
+         "\n"
+         " --0-1          Extract vectors with 0-1\n"
+         "                components only.                     FILENAME.EXT.0-1\n"
+         "\n"
+         " --transpose    Transpose matrix and write it        FILENAME.EXT.tra\n"
+         "                in 4ti2 format.\n"
+         "\n"
+         " --degree       Print 1-norms of all vectors.\n"
+         "\n"
+         " --degree N     Extract all vectors of 1-norm        FILENAME.EXT.deg.N\n"
+         "                equal to N.\n"
+         "\n"
+         " --degree N1 N2 Extract all vectors of 1-norm        FILENAME.EXT.deg.N1-N2\n"
+         "                between N1 and N2 (inclusive).\n"
+         "\n"
+         " --support      Print supports of all vectors.\n"
+         "\n"
+         " --support S    Extract all vectors of support       FILENAME.EXT.supp.S\n"
+	 "                size equal to S.\n"
+         "\n"
+         " --support S1 S2    Extract all vectors of support   FILENAME.EXT.supp.S1-S2\n"
+	 "                    size between S1 and S2 (incl.)\n"
+         "\n"
+         " --positive     Extract positive parts of vectors.   FILENAME.EXT.pos\n"
+         "                Corresponds to leading terms of\n"
+         "                binomials.\n"
+         "\n"
+         " --3way A B C   Write vectors as 3-way tables        FILENAME.EXT.3way\n"
+         "                of size A x B x C.\n"
+         "\n"
+         " --nonzero-at K Extract all vectors that have        FILENAME.EXT.nonzero.K\n"
+	 "                nonzero K-th coordinate.\n"
+         "\n"
+         "Undocumented or obscure options for experts:\n"
+         " --representatives\n"
+         " --dominated    Extract all non-dominated vectors    FILENAME.EXT.nondom\n"
+         " --maximal-non-dominated                             FILENAME.EXT.maxnondom\n"
+         " --expand-representatives-to-full-orbits\n"
+         " --type T\n"
+         " --AxB          Computes a matrix-vector product.\n"
+         " --macaulay2\n"
+         " --mathematica\n"
+         " --cocoa\n"
+         " --sum          Print the sum of the columns.\n"
+         " --submatrix LISTFILENAME                            FILENAME.EXT.submat\n"
+         " --remove-column I                                   FILENAME.EXT.remcol\n"
+         " --remcol I                                          FILENAME.EXT.remcol\n"
+         " --stabilizer SYMMFILENAME                           FILENAME.EXT.stab\n"
+         " --fill-column                                       FILENAME.EXT.fil\n"
+         " --add-column                                        FILENAME.EXT.addcol\n"
+         " --fix I1 ... IK    Extract fixed vectors,           FILENAME.EXT.fix\n"
+	 "                    that is, those vectors that\n"
+	 "                    have x[i]=i for the given i.\n"
+         " --fox I1 ... IK    Extract relaxed fixed vectors.   FILENAME.EXT.fox\n"
+         " --initial-forms    Extract initial forms.           FILENAME.ini\n"
+	 "                    (Call with FILENAME rather       FILENAME.ini.bin\n"
+         "                    than FILENAME.EXT.  Reads\n"
+         "                    FILENAME.gro and\n"
+         "                    optionally FILENAME.cost and\n"
+	 "                    FILENAME.vars.\n"
+         "\n"
+         "Examples:\n"
+         " 'output --binomials file.gra' writes the Graver basis elements as\n"
+         " binomials in 'file.gra.bin'.\n"
+         "\n"
+         " 'output --0-1 foo.gra' extracts the 0-1 elements from the Graver basis\n"
+	 " elements and writes them into 'foo.gra.0-1'.\n"
+         "\n");
+}
+  
+/* ----------------------------------------------------------------- */
 int output_main(int argc, char *argv[]) {
   int i,j,x,y,z,numOfVars,numOfRows,numOfFixPoints,numOfLabels,infoLevel,
     degree,lowdegree,highdegree,coord,sizeOfLayer,val;
@@ -315,7 +411,8 @@ int output_main(int argc, char *argv[]) {
   vector v,w,fixpoints;
   listVector *A, *B, *C, *basis, *domBasis, *tmp, *tmpV, *symmGroup, *weights;
   FILE *in;
-
+  int did_something = 0;
+  
   infoLevel=standardInfoLevel;
   for (i=1;i<argc-1;i++) {
     if (strncmp(argv[i],"--",2)==0) {
@@ -324,13 +421,21 @@ int output_main(int argc, char *argv[]) {
       }
     }
   }
-
-if (infoLevel>-1) {
-  printVersionInfo();
-}
+  
+  if (infoLevel>-1) {
+    printVersionInfo();
+  }
 
   for (i=1; i<argc; i++) {
-    if (strncmp(argv[i],"--pos",5)==0) {
+    if (strncmp(argv[i],"--version",9)==0) {
+      print_version();
+      exit(0);
+    }
+    else if (strncmp(argv[i],"--help", 6)==0) {
+      print_usage();
+      exit(0);
+    }
+    else if (strncmp(argv[i],"--pos",5)==0) {
       strcpy(fileName,argv[argc-1]);
       basis=readListVector(&numOfVars,fileName);
       basis=extractPositivePartsOfVectors(basis,numOfVars);
@@ -338,7 +443,7 @@ if (infoLevel>-1) {
       strcat(outFileName,".pos");
       printListVectorToFile(outFileName,basis,numOfVars);
     }
-    if (strncmp(argv[i],"--rep",5)==0) {
+    else if (strncmp(argv[i],"--rep",5)==0) {
       strcpy(fileName,argv[argc-1]);
       basis=readListVector(&numOfVars,fileName);
       strcpy(symFileName,fileName);
@@ -371,7 +476,7 @@ if (infoLevel>-1) {
       printListVectorToFile(outFileName,basis,numOfVars);
       printf("%d representatives found.\n",lengthListVector(basis));
     }
-    if (strncmp(argv[i],"--dom",5)==0) {
+    else if (strncmp(argv[i],"--dom",5)==0) {
       strcpy(fileName,argv[argc-1]);
       basis=readListVector(&numOfVars,fileName);
       strcpy(domFileName,argv[argc-2]);
@@ -384,7 +489,7 @@ if (infoLevel>-1) {
       printf("%d non-dominated vectors found.\n",
 	     lengthListVector(basis));
     }
-    if (strncmp(argv[i],"--max",5)==0) {
+    else if (strncmp(argv[i],"--max",5)==0) {
       strcpy(fileName,argv[argc-1]);
       basis=readListVector(&numOfVars,fileName);
       strcpy(symFileName,fileName);
@@ -417,7 +522,7 @@ if (infoLevel>-1) {
       printf("%d maximal non-dominated vectors found.\n",
 	     lengthListVector(basis));
     }
-    if (strncmp(argv[i],"--exp",5)==0) {
+    else if (strncmp(argv[i],"--exp",5)==0) {
       strcpy(fileName,argv[argc-1]);
       basis=readListVector(&numOfVars,fileName);
       strcpy(symFileName,fileName);
@@ -443,7 +548,7 @@ if (infoLevel>-1) {
       strcat(outFileName,".exp");
       printListVectorToFile(outFileName,basis,numOfVars);
     }
-    if (strncmp(argv[i],"--deg",5)==0) {
+    else if (strncmp(argv[i],"--deg",5)==0) {
       strcpy(fileName,argv[argc-1]);
       basis=readListVector(&numOfVars,fileName);
       if (argc==3) {
@@ -472,7 +577,7 @@ if (infoLevel>-1) {
       }
       return(0);
     }
-    if (strncmp(argv[i],"--sup",5)==0) {
+    else if (strncmp(argv[i],"--sup",5)==0) {
       strcpy(fileName,argv[argc-1]);
       basis=readListVector(&numOfVars,fileName);
       if (argc==3) {
@@ -501,19 +606,19 @@ if (infoLevel>-1) {
       }
       return(0);
     }
-    if (strncmp(argv[i],"--typ",5)==0) {
+    else if (strncmp(argv[i],"--typ",5)==0) {
       strcpy(fileName,argv[argc-1]);
       basis=readListVector(&numOfVars,fileName);
       sizeOfLayer=atoi(argv[i+1]);
       printTypesOfListVector(basis,sizeOfLayer,numOfVars);
       return(0);
     }
-    if (strncmp(argv[i],"--non",5)==0) {
+    else if (strncmp(argv[i],"--non",5)==0) {
       strcpy(fileName,argv[argc-1]);
       basis=readListVector(&numOfVars,fileName);
       if (argc==3) {
-	printf("You need to specify a coordinate!\n");
-	return(0);
+	printf("ERROR: You need to specify a coordinate!\n");
+	exit(1);
       } else {
 	coord=atoi(argv[i+1]);
 	strcpy(outFileName,fileName);
@@ -524,7 +629,7 @@ if (infoLevel>-1) {
       }
       return(0);
     }
-    if (strncmp(argv[i],"--AxB",5)==0) {
+    else if (strncmp(argv[i],"--AxB",5)==0) {
       strcpy(fileName,argv[argc-3]);
       A=readListVector(&numOfVars,fileName);
       strcpy(fileName,argv[argc-2]);
@@ -534,7 +639,7 @@ if (infoLevel>-1) {
       strcpy(fileName,argv[argc-1]);
       printListVectorToFile(fileName,C,lengthListVector(A));
     }
-    if (strncmp(argv[i],"--0-1",5)==0) {
+    else if (strncmp(argv[i],"--0-1",5)==0) {
       strcpy(fileName,argv[argc-1]);
       basis=readListVector(&numOfVars,fileName);
       basis=extractZeroOneVectors(basis,numOfVars);
@@ -542,7 +647,7 @@ if (infoLevel>-1) {
       strcat(outFileName,".0-1");
       printListVectorToFile(outFileName,basis,numOfVars);
     }
-    if (strncmp(argv[i],"--3wa",5)==0) {
+    else if (strncmp(argv[i],"--3wa",5)==0) {
       strcpy(fileName,argv[argc-1]);
       basis=readListVector(&numOfVars,fileName);
       x=atoi(argv[i+1]);
@@ -552,42 +657,42 @@ if (infoLevel>-1) {
       strcat(outFileName,".3way");
       print3wayTables(outFileName,basis,x,y,z,numOfVars);
     }
-    if (strncmp(argv[i],"--tra",5)==0) {
+    else if (strncmp(argv[i],"--tra",5)==0) {
       strcpy(fileName,argv[argc-1]);
       basis=readListVector(&numOfVars,fileName);
       strcpy(outFileName,fileName);
       strcat(outFileName,".tra");
       printTransposedListVectorToFile(outFileName,basis,numOfVars);
     }
-    if (strncmp(argv[i],"--map",5)==0) {
+    else if (strncmp(argv[i],"--map",5)==0) {
       strcpy(fileName,argv[argc-1]);
       basis=readListVector(&numOfVars,fileName);
       strcpy(outFileName,fileName);
       strcat(outFileName,".maple");
       printListVectorMaple(outFileName,basis,numOfVars);
     }
-    if (strncmp(argv[i],"--mac",5)==0) {
+    else if (strncmp(argv[i],"--mac",5)==0) {
       strcpy(fileName,argv[argc-1]);
       basis=readListVector(&numOfVars,fileName);
       strcpy(outFileName,fileName);
       strcat(outFileName,".macaulay2");
       printListVectorMacaulay2(outFileName,basis,numOfVars);
     }
-    if (strncmp(argv[i],"--mat",5)==0) {
+    else if (strncmp(argv[i],"--mat",5)==0) {
       strcpy(fileName,argv[argc-1]);
       basis=readListVector(&numOfVars,fileName);
       strcpy(outFileName,fileName);
       strcat(outFileName,".mathematica");
       printListVectorMaple(outFileName,basis,numOfVars);
     }
-    if (strncmp(argv[i],"--coc",5)==0) {
+    else if (strncmp(argv[i],"--coc",5)==0) {
       strcpy(fileName,argv[argc-1]);
       basis=readListVector(&numOfVars,fileName);
       strcpy(outFileName,fileName);
       strcat(outFileName,".cocoa");
       printListVectorMaple(outFileName,basis,numOfVars);
     }
-    if (strncmp(argv[i],"--bin",5)==0) {
+    else if (strncmp(argv[i],"--bin",5)==0) {
       strcpy(fileName,argv[argc-1]);
       basis=readListVector(&numOfVars,fileName);
       strcpy(outFileName,fileName);
@@ -622,7 +727,7 @@ if (infoLevel>-1) {
       }
       printListBinomialsToFile(outFileName,basis,numOfVars,labels);
     }
-    if (strncmp(argv[i],"--sum",5)==0) {
+    else if (strncmp(argv[i],"--sum",5)==0) {
       strcpy(fileName,argv[argc-1]);
       basis=readListVector(&numOfVars,fileName);
       v=createVector(numOfVars);
@@ -633,7 +738,7 @@ if (infoLevel>-1) {
       }
       printVector(v,numOfVars);
     }
-    if (strncmp(argv[i],"--sub",5)==0) {
+    else if (strncmp(argv[i],"--sub",5)==0) {
       strcpy(fileName,argv[argc-2]);
       basis=readListVector(&numOfVars,fileName);
       v=basis->first;
@@ -643,7 +748,7 @@ if (infoLevel>-1) {
       strcat(outFileName,".submat");
       printSubsetOfListVectorToFile(outFileName,basis,v,numOfVars);
     }
-    if (strncmp(argv[i],"--rem",5)==0) {
+    else if (strncmp(argv[i],"--rem",5)==0) {
       if (strncmp(argv[i],"--remcol",8)==0) {
 	/* Remove column. */
         strcpy(fileName,argv[argc-1]);
@@ -654,7 +759,7 @@ if (infoLevel>-1) {
         printListVectorWithoutColumnToFile(outFileName,basis,coord,numOfVars);
       }
     }
-    if (strncmp(argv[i],"--sta",5)==0) {
+    else if (strncmp(argv[i],"--sta",5)==0) {
       /* Extracting those symmetries from a list of given symmetries 
 	 that keep a given list of vectors fixed. */
       strcpy(fileName,argv[argc-1]);
@@ -666,7 +771,7 @@ if (infoLevel>-1) {
       strcat(outFileName,".stab");
       printListVectorToFile(outFileName,symmGroup,numOfVars);
     }
-    if (strncmp(argv[i],"--fil",5)==0) {
+    else if (strncmp(argv[i],"--fil",5)==0) {
       /* Fill specified column with specified value. */
 
       strcpy(fileName,argv[argc-1]);
@@ -682,7 +787,7 @@ if (infoLevel>-1) {
       strcat(outFileName,".fil");
       printListVectorToFile(outFileName,basis,numOfVars);
     }
-    if (strncmp(argv[i],"--add",5)==0) {
+    else if (strncmp(argv[i],"--add",5)==0) {
       /* Add column with specified value. */
         strcpy(fileName,argv[argc-1]);
         basis=readListVector(&numOfVars,fileName);
@@ -693,7 +798,7 @@ if (infoLevel>-1) {
         printListVectorWithAdditionalColumnToFile(outFileName,basis,
 						 coord,val,numOfVars);
     }
-    if (strncmp(argv[i],"--fix",5)==0) {
+    else if (strncmp(argv[i],"--fix",5)==0) {
       /* Extracting those vectors that have given coordinates x[i]=i. */
 
       numOfFixPoints=argc-3;
@@ -706,7 +811,7 @@ if (infoLevel>-1) {
       strcat(outFileName,".fix");
       printListVectorToFile(outFileName,basis,numOfVars);
     }
-    if (strncmp(argv[i],"--fox",5)==0) {
+    else if (strncmp(argv[i],"--fox",5)==0) {
       /* Extracting those vectors that have given coordinates x[i]=i. */
 
       numOfFixPoints=argc-3;
@@ -719,7 +824,7 @@ if (infoLevel>-1) {
       strcat(outFileName,".fox");
       printListVectorToFile(outFileName,basis,numOfVars);
     }
-    if (strncmp(argv[i],"--ini",5)==0) {
+    else if (strncmp(argv[i],"--ini",5)==0) {
       strcpy(fileName,argv[argc-1]);
       strcpy(groFileName,fileName);
       strcat(groFileName,".gro");
@@ -772,6 +877,30 @@ if (infoLevel>-1) {
       strcat(outFileName,".ini.bin");
       printListMonomialsAndBinomialsToFile(outFileName,basis,numOfVars,labels);
     }
+    else if (strncmp(argv[i],"--",2)==0) {
+      printf("ERROR: Unknown option: %s\n\n", argv[i]);
+      print_usage();
+      exit(1);
+    }
+    else {
+      /* All standard options take the FILENAME.EXT argument that
+	 appears last.  Others that take several arguments exit
+	 before we get here. So signal an error if there are too many
+	 arguments left. */
+      if (i == argc-1) {
+	if (!did_something) {
+	  printf("ERROR: At least one option that controls what to output needs to be given.\n\n");
+	  print_usage();
+	  exit(1);
+	}
+      }
+      else {
+	printf("ERROR: Unhandled command-line argument: %s\n\n", argv[i]);
+	print_usage();
+	exit(1);
+      }
+    }
+    did_something = 1;
   }
 
   return (0);
