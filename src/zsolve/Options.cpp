@@ -89,6 +89,7 @@ Options::process_options (int argc, char** argv)
 		{ "quiet", no_argument, NULL, 'q'},
 		{ "resume", no_argument, NULL, 'r'},
 		{ "update", optional_argument, NULL, 'u'},
+		{ "version", no_argument, NULL, 'V'},
 		{ "verbose", optional_argument, NULL, 'v'},
 		{ "hilbert", no_argument, NULL, 'H'},
 		{ "graver", no_argument, NULL, 'G'},
@@ -134,6 +135,9 @@ Options::process_options (int argc, char** argv)
             case 'h':
                 print_usage ();
                 exit (0);
+            case 'V':
+	        print_banner ();
+		exit (0);
             break;
 			case 'l':
 				if (optarg == NULL || !strcmp (optarg, "1"))
@@ -290,7 +294,8 @@ void Options::print_usage () const
     std::cout << "PROJECT.ub      Upper bounds of columns (optional)\n";
     std::cout << "\n";
     std::cout << "PROJECT.backup  Backup file\n";
-    std::cout << "PROJECT.backup~ Temporary backup file - if it exsts, it may be newer than PROJECT.backup!\n";
+    std::cout << "PROJECT.backup~ Temporary backup file\n";
+    std::cout << "                (if it exists, it may be newer than PROJECT.backup)\n";
     std::cout << "\n";
     std::cout << "PROJECT.zinhom  Inhomogeneous part of the solution\n";
     std::cout << "PROJECT.zhom    Homogeneous part of the solution\n";
