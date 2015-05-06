@@ -210,7 +210,7 @@ QSolveAPI::set_options(int argc, char** argv)
             break;
         case 'f':
             if (sscanf(optarg, "%d", &Globals::output_freq) != 1)
-            {  unrecognised_option_argument("-f, --output_freq"); }
+            {  unrecognised_option_argument("-f, --output-freq"); }
             break;
         case 'p': // The precision (i.e. 32, 64, or arbitrary)
             if (std::string("32").find(optarg) == 0) { }
@@ -293,7 +293,7 @@ Options:\n\
   -o, --order=ORDERING       Set ORDERING as the ordering in which the columns\n\
                              are chosen. The possible orderings are `maxinter',\n\
                              `minindex', `maxcutoff' (default), and `mincutoff'.\n\
-  -f, --output_freq=n        Set the frequency of output (default is 1000).\n\
+  -f, --output-freq=n        Set the frequency of output (default is 1000).\n\
   -q, --quiet                Do not output anything to the screen.\n\
   -h, --help                 Display this help and exit.\n\
 \n";
