@@ -3,7 +3,8 @@ docdir = $(pkgdatadir)/doc
 doc_DATA = 4ti2_manual.pdf
 
 ## Manual sources.
-HELPFILES = output-help.txt gensymm-help.txt genmodel-help.txt ppi-help.txt zsolve-help.txt
+HELPFILES = output-help.txt gensymm-help.txt genmodel-help.txt ppi-help.txt \
+	hilbert-help.txt graver-help.txt zsolve-help.txt
 
 EXTRA_DIST =					\
 	4ti2_manual.pdf				\
@@ -54,4 +55,6 @@ update-help:
 	../src/util/output --help > $(srcdir)/output-help.txt
 	../src/ppi/ppi --help > $(srcdir)/ppi-help.txt
 	../src/zsolve/zsolve --help > $(srcdir)/zsolve-help.txt
+	../src/zsolve/hilbert --help > $(srcdir)/hilbert-help.txt
+	../src/zsolve/graver --help > $(srcdir)/graver-help.txt
 

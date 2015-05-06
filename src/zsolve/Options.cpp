@@ -256,20 +256,28 @@ void Options::print_usage () const
         std::cout << "zsolve";
     std::cout << " [options] PROJECT\n\n";
 
-    std::cout << "[Basic options]\n\n";
+    if (m_graver)
+        std::cout << "Computes the Graver basis of a matrix or a given lattice.\n\n";
+    else if (m_hilbert)
+        std::cout << "Computes the Hilbert basis of a matrix or a given lattice.\n\n";
+    else
+        std::cout << "Solves linear inequality and equation systems over the integers.\n\n";
+    
+    std::cout << "Basic options:\n";
 
 #ifdef _4ti2_HAVE_GMP
-    std::cout << " -p=PREC, --precision=PREC  Use precision (32, 64, gmp). Default is 32 bit\n";
+    std::cout << " -p PREC, --precision=PREC  Use precision (32, 64, gmp). Default is 32 bit\n";
 #else
-    std::cout << " -p=PREC, --precision=PREC  Use precision (32, 64). Default is 32 bit\n";
+    std::cout << " -p PREC, --precision=PREC  Use precision (32, 64). Default is 32 bit\n";
 #endif
     std::cout << " -m, --maxnorm              Write vectors with maximum norm to PROJECT.maxnorm\n";
-    std::cout << " -b[FREQ], --backup[=FREQ]  Frequently backup status to PROJECT.backup\n";
+    std::cout << " -b [FREQ], --backup[=FREQ] Frequently backup status to PROJECT.backup\n";
     std::cout << " -r, --resume               Resume from backup file PROJECT.backup\n";
     std::cout << " -h, --help                 Display this help\n";
+    std::cout << " --version                  Display version information\n";
     std::cout << "\n";
 
-    std::cout << "[Output options]\n\n";
+    std::cout << "Output options:\n";
     std::cout << " -q, --quiet        Quit mode\n";
     std::cout << " -u, --update[=1]   Updated output on console (default)\n";
     std::cout << " -uu, --update=2    More verbose updated output on console\n";
@@ -278,29 +286,41 @@ void Options::print_usage () const
     std::cout << " -vvv, --verbose=3  Output once every norm computation\n";
     std::cout << "\n";
 
-    std::cout << "[Logging options]\n\n";
+    std::cout << "Logging options:\n";
     std::cout << " -n, --log=0    Disable logging (default)\n";
     std::cout << " -l, --log[=1]  Log once every variable computation to PROJECT.log\n";
     std::cout << " -ll, --log=2   Log once every norm sum computation to PROJECT.log\n";
     std::cout << " -lll, --log=3  Log once every norm computation to PROJECT.log\n";
     std::cout << "\n";
 
-    std::cout << "[Used files]\n\n";
+    std::cout << "Input files:\n";
     std::cout << "PROJECT.mat     Matrix\n";
-    std::cout << "PROJECT.rhs     Right hand side\n";
-    std::cout << "PROJECT.rel     Relations (<, >, =)\n";
+    std::cout << "PROJECT.lat     Lattice basis (can be provided instead of matrix)\n";
+    if (!m_hilbert && !m_graver)
+        std::cout << "PROJECT.rhs     Right hand side\n";
+    if (!m_graver)
+	std::cout << "PROJECT.rel     Relations (<, >, =)\n";
     std::cout << "PROJECT.sign    Sign of columns (optional)\n";
-    std::cout << "PROJECT.lb      Lower bounds of columns (optional)\n";
+    if (!m_hilbert)
+        std::cout << "PROJECT.lb      Lower bounds of columns (optional)\n";
     std::cout << "PROJECT.ub      Upper bounds of columns (optional)\n";
     std::cout << "\n";
+    std::cout << "Backup files:\n";
     std::cout << "PROJECT.backup  Backup file\n";
     std::cout << "PROJECT.backup~ Temporary backup file\n";
     std::cout << "                (if it exists, it may be newer than PROJECT.backup)\n";
     std::cout << "\n";
-    std::cout << "PROJECT.zinhom  Inhomogeneous part of the solution\n";
-    std::cout << "PROJECT.zhom    Homogeneous part of the solution\n";
+    std::cout << "Output files:\n";
+    if (m_hilbert)
+	std::cout << "PROJECT.hil     Hilbert basis\n";
+    else if (m_graver)
+	std::cout << "PROJECT.gra     Graver basis\n";
+    else {   
+	std::cout << "PROJECT.zinhom  Inhomogeneous part of the solution\n";
+	std::cout << "PROJECT.zhom    Homogeneous part of the solution\n";
+    }
     std::cout << "PROJECT.zfree   Free part of the solution\n";
-    std::cout << "PROJECT.maxnorm Vectors with maximum norm\n";
+    std::cout << "PROJECT.maxnorm Vectors with maximum norm (if -m, --maxnorm is in use)\n";
     std::cout << std::endl;
 }
     
