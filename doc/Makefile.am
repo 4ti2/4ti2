@@ -3,7 +3,7 @@ docdir = $(pkgdatadir)/doc
 doc_DATA = 4ti2_manual.pdf
 
 ## Manual sources.
-HELPFILES = output-help.txt gensymm-help.txt genmodel-help.txt ppi-help.txt
+HELPFILES = output-help.txt gensymm-help.txt genmodel-help.txt ppi-help.txt zsolve-help.txt
 
 EXTRA_DIST =					\
 	4ti2_manual.pdf				\
@@ -43,19 +43,15 @@ EXTRA_DIST +=					\
 ### We do not attempt to build the manual in Make targets.
 ### Before making a release, pdflatex the manual; we distribute the PDF.
 
-.PHONY: update-help
+.PHONY: update-help update-manual 
 
-update-help: $(HELPFILES)
+update-manual: update-help
+	-(cd $(srcdir) && pdflatex 4ti2_manual; pdflatex 4ti2_manual)
 
-$(srcdir)/gensymm-help.txt:
-	../src/util/gensymm --help > $@
-
-$(srcdir)/genmodel-help.txt:
-	../src/util/genmodel --help > $@
-
-$(srcdir)/output-help.txt:
-	../src/util/output --help > $@
-
-$(srcdir)/ppi-help.txt:
-	../src/ppi/ppi --help > $@
+update-help:
+	../src/util/gensymm --help > $(srcdir)/gensymm-help.txt
+	../src/util/genmodel --help > $(srcdir)/genmodel-help.txt
+	../src/util/output --help > $(srcdir)/output-help.txt
+	../src/ppi/ppi --help > $(srcdir)/ppi-help.txt
+	../src/zsolve/zsolve --help > $(srcdir)/zsolve-help.txt
 
