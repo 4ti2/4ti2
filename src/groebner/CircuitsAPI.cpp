@@ -126,6 +126,14 @@ Output Files:\n\
 void
 CircuitsAPI::write(const char* basename_c_str)
 {
+    if (!basename_c_str) {
+	if (filename != "")
+	    basename_c_str = filename.c_str();
+	else {
+	    std::cerr << "ERROR: No constraint matrix specified on the command line.\n";
+	    exit(1);
+	}
+    }
     std::string basename(basename_c_str);
 
     std::string cir_filename(basename + ".cir");
