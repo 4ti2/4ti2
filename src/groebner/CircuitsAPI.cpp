@@ -90,8 +90,8 @@ CircuitsAPI::compute()
 void
 CircuitsAPI::write_usage()
 {
-    std::cerr << "Usage: circuits [options] <PROJECT>\n\n";
-    std::cerr << "Computes the circuits of a cone.\n";
+    std::cout << "Usage: circuits [options] PROJECT\n\n";
+    std::cout << "Computes the circuits of a cone.\n\n";
     write_input_files();
     write_output_files();
     write_options();
@@ -100,7 +100,7 @@ CircuitsAPI::write_usage()
 void
 CircuitsAPI::write_input_files()
 {
-    std::cerr << "\
+    std::cout << "\
 Input Files:\n\
   PROJECT.mat         A matrix (compulsory).\n\
   PROJECT.sign        The sign constraints of the variables ('1' means\n\
@@ -115,7 +115,7 @@ Input Files:\n\
 void
 CircuitsAPI::write_output_files()
 {
-    std::cerr << "\
+    std::cout << "\
 Output Files:\n\
   PROJECT.cir         The circuits of the cone.\n\
   PROJECT.qfree       A basis for the linear subspace of the cone.\n\

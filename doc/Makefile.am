@@ -57,4 +57,6 @@ update-help:
 	../src/zsolve/zsolve --help > $(srcdir)/zsolve-help.txt
 	../src/zsolve/hilbert --help > $(srcdir)/hilbert-help.txt
 	../src/zsolve/graver --help > $(srcdir)/graver-help.txt
-
+	../src/groebner/qsolve --help > $(srcdir)/qsolve-help.txt
+	../src/groebner/rays --help > $(srcdir)/rays-help.txt
+	../src/groebner/circuits --help > $(srcdir)/circuits-help.txt

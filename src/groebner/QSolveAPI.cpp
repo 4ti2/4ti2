@@ -174,6 +174,7 @@ QSolveAPI::set_options(int argc, char** argv)
             {"output-freq",  1, 0,'f'},
             {"precision",    1, 0,'p'},
             {"quiet",        0, 0,'q'},
+	    {"version",      0, 0,'V'},
             {"help",         0, 0,'h'},
             {0, 0, 0, 0}
         };
@@ -218,6 +219,10 @@ QSolveAPI::set_options(int argc, char** argv)
             else if (std::string("arbitrary").find(optarg) == 0) { }
             else { unrecognised_option_argument("-p, --precision"); }
             break;
+	case 'V':
+	    print_banner();
+	    exit(0);
+	    break;
         case 'h':
         case '?':
         case ':':
@@ -233,7 +238,10 @@ QSolveAPI::set_options(int argc, char** argv)
         }
     }
 
-    if (optind != argc) {
+    if (optind == argc - 1) {
+	filename = argv[optind];
+    }
+    else if (optind != argc) {
         std::cerr << "ERROR: unrecognised options ... ";
         for (; optind < argc; ++optind) {
             std::cerr << " " << argv[optind];
@@ -247,8 +255,8 @@ QSolveAPI::set_options(int argc, char** argv)
 void
 QSolveAPI::write_usage()
 {
-    std::cerr << "Usage: qsolve [options] <PROJECT>\n\n";
-    std::cerr << "Computes a generator description of a cone.\n";
+    std::cout << "Usage: qsolve [options] PROJECT\n\n";
+    std::cout << "Computes a generator description of a cone.\n\n";
     write_input_files();
     write_output_files();
     write_options();
@@ -257,7 +265,7 @@ QSolveAPI::write_usage()
 void
 QSolveAPI::write_input_files()
 {
-    std::cerr << "\
+    std::cout << "\
 Input Files:\n\
   PROJECT.mat         A matrix (compulsory).\n\
   PROJECT.sign        The sign constraints of the variables ('1' means\n\
@@ -272,7 +280,7 @@ Input Files:\n\
 void
 QSolveAPI::write_output_files()
 {
-    std::cerr << "\
+    std::cout << "\
 Output Files:\n\
   PROJECT.qhom        The homogeneous generators of the linear system.\n\
   PROJECT.qfree       A basis for the linear subspace of the cone.\n\
@@ -283,12 +291,12 @@ Output Files:\n\
 void
 QSolveAPI::write_options()
 {
-    std::cerr << "\
+    std::cout << "\
 Options:\n\
   -p, --precision=PREC       Select PREC as the integer arithmetic precision.\n\
                              PREC is one of the following: `64' (default),\n\
                              `32', and `arbitrary' (only `arb` is needed).\n\
-  -m, --mat               Use the Matrix algorithm (default for 32 and 64).\n\
+  -m, --mat                  Use the Matrix algorithm (default for 32 and 64).\n\
   -s, --support              Use the Support algorithm (default for arbitrary).\n\
   -o, --order=ORDERING       Set ORDERING as the ordering in which the columns\n\
                              are chosen. The possible orderings are `maxinter',\n\
@@ -316,6 +324,15 @@ QSolveAPI::read(const char* basename_c_str)
     delete mat; delete sign; delete rel;
     mat = 0; sign = 0; rel = 0;
 
+    if (!basename_c_str) {
+	if (filename != "")
+	    basename_c_str = filename.c_str();
+	else {
+	    std::cerr << "ERROR: No constraint matrix specified on the command line.\n";
+	    exit(1);
+	}
+    }
+    
     std::string basename(basename_c_str);   
 
     // Read in the file with the mat.
@@ -346,6 +363,15 @@ QSolveAPI::read(const char* basename_c_str)
 void
 QSolveAPI::write(const char* basename_c_str)
 {
+    if (!basename_c_str) {
+	if (filename != "")
+	    basename_c_str = filename.c_str();
+	else {
+	    std::cerr << "ERROR: No constraint matrix specified on the command line.\n";
+	    exit(1);
+	}
+    }
+    
     std::string basename(basename_c_str);
 
     std::string qhom_filename(basename + ".qhom");

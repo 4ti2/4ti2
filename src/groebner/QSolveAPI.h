@@ -40,6 +40,7 @@ public:
 
     virtual void set_options(int argc, char** argv);
 
+    // If basename is 0, it must have been set using set_options().
     virtual void read(const char* basename);
     virtual void write(const char* basename);
 
@@ -52,6 +53,8 @@ public:
 protected:
     QSolveVariant algorithm;
     QSolveConsOrder order;
+
+    std::string filename;
 
     virtual void write_usage();
     virtual void write_options();

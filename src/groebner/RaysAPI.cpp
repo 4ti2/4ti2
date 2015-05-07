@@ -87,8 +87,8 @@ RaysAPI::compute()
 void
 RaysAPI::write_usage()
 {
-    std::cerr << "Usage: rays [options] <PROJECT>\n\n";
-    std::cerr << "Computes the extreme rays of a cone.\n";
+    std::cout << "Usage: rays [options] PROJECT\n\n";
+    std::cout << "Computes the extreme rays of a cone.\n\n";
     write_input_files();
     write_output_files();
     write_options();
@@ -97,7 +97,7 @@ RaysAPI::write_usage()
 void
 RaysAPI::write_input_files()
 {
-    std::cerr << "\
+    std::cout << "\
 Input Files:\n\
   PROJECT.mat         A matrix (compulsory).\n\
   PROJECT.sign        The sign constraints of the variables ('1' means\n\
@@ -112,7 +112,7 @@ Input Files:\n\
 void
 RaysAPI::write_output_files()
 {
-    std::cerr << "\
+    std::cout << "\
 Output Files:\n\
   PROJECT.ray         The extreme rays of the cone.\n\
   PROJECT.qfree       A basis for the linear subspace of the cone.\n\

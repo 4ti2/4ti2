@@ -57,10 +57,10 @@ _4ti2_::qsolve_main(int argc, char **argv)
         std::cerr << "ERROR: Unrecognized executable name " << argv[0] << ".\n";
         exit(1);
     }
-    qsolve_api->set_options(argc-1, argv);
-    qsolve_api->read(argv[argc-1]);
+    qsolve_api->set_options(argc, argv);
+    qsolve_api->read(0);
     qsolve_api->compute();
-    qsolve_api->write(argv[argc-1]);
+    qsolve_api->write(0);
 
     delete qsolve_api;
     return 0;
