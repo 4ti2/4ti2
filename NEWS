@@ -1,3 +1,13 @@
+News since 4ti2 version 1.6.3:
+
+ * The manual has been updated to include a reference to commands and
+   their options and a reference to the API.
+
+ * Better option handling.  Make long options available in non-GNU
+   platforms such as Mac OS X.  All commands now support the
+   standard --help and --version options.
+
+
 News in 4ti2 version 1.6.3, compared to 1.6.2:
 
  * The manual has been updated.
