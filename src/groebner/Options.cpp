@@ -63,6 +63,7 @@ Options::process_options(int argc, char** argv)
             {"truncation",       1, 0,'t'},
             {"precision",        1, 0,'p'},
             {"quiet",            0, 0,'q'},
+	    {"version",          0, 0,'V'},
             {"help",             0, 0,'h'},
             {0, 0, 0, 0}
         };
@@ -133,6 +134,10 @@ Options::process_options(int argc, char** argv)
             else if (std::string("arbitrary").find(optarg) == 0) { }
             else { unrecognised_option_argument("-p, --precision"); }
             break;
+	case 'V':
+	    print_banner(false);
+	    exit(0);
+	    break;
         case 'h': case '?': case ':':
             print_usage();
             exit(0);
@@ -162,9 +167,9 @@ Options::print_usage()
 {
     if (Globals::exec == "groebner")
     {
-        std::cerr << "Usage: groebner [options] <PROJECT>\n\n";
-        std::cerr << "Computes the Groebner basis of a lattice.\n";
-        std::cerr << "\
+        std::cout << "Usage: groebner [options] PROJECT\n\n";
+        std::cout << "Computes the Groebner basis of a lattice.\n\n";
+        std::cout << "\
 Input Files:\n\
   PROJECT.mat         A matrix (optional if lattice basis is given).\n\
   PROJECT.lat         A lattice basis (optional if matrix is given).\n\
@@ -184,9 +189,9 @@ Output Files:\n\
     }
     else if (Globals::exec == "markov")
     {
-        std::cerr << "Computes the markov basis/generating set of a lattice.\n";
-        std::cerr << "Usage: markov [options] <PROJECT>\n\n";
-        std::cerr << "\
+        std::cout << "Computes the Markov basis/generating set of a lattice.\n\n";
+        std::cout << "Usage: markov [options] PROJECT\n\n";
+        std::cout << "\
 Input Files:\n\
   PROJECT             A matrix (optional only if lattice basis is given).\n\
   PROJECT.lat         A lattice basis (optional only if matrix is given).\n\
@@ -203,9 +208,9 @@ Output Files:\n\
     }
     else
     {
-        std::cerr << "Usage: " << Globals::exec << " [options] <filename>\n\n";
+        std::cout << "Usage: " << Globals::exec << " [options] <filename>\n\n";
     }
-    std::cerr << "\
+    std::cout << "\
 Options:\n\
   -p, --precision=PREC       Select PREC as the integer arithmetic precision.\n\
                              PREC is one of the following: `64' (default),\n\

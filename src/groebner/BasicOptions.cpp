@@ -57,6 +57,7 @@ BasicOptions::process_options(int argc, char** argv)
         static struct option long_options[] = {
             {"precision",        1, 0,'p'},
             {"quiet",            0, 0,'q'},
+	    {"version",          0, 0,'V'},
             {"help",             0, 0,'h'},
             {0, 0, 0, 0}
         };
@@ -80,9 +81,13 @@ BasicOptions::process_options(int argc, char** argv)
             out = new std::ofstream;
             err = new std::ofstream;
             break;
+	case 'V':
+	    print_banner(false);
+	    exit(0);
+	    break;
         case 'h': case '?': case ':':
             print_usage();
-            exit(1);
+            exit(0);
             break;
 
         default:
@@ -109,9 +114,9 @@ BasicOptions::print_usage()
 {
     if (Globals::exec == "zbasis")
     {
-        std::cerr << "Usage: zbasis [options] <PROJECT>\n\n";
-        std::cerr << "Computes an integer lattice basis.\n";
-        std::cerr << "\
+        std::cout << "Usage: zbasis [options] PROJECT\n\n";
+        std::cout << "Computes an integer lattice basis.\n\n";
+        std::cout << "\
 Input Files:\n\
   PROJECT             A matrix (needed).\n\
 Output Files:\n\
@@ -119,9 +124,9 @@ Output Files:\n\
     }
     else if (Globals::exec == "normalform")
     {
-        std::cerr << "Computes the normal form of a list of feasible points.\n";
-        std::cerr << "Usage: normalform [options] <PROJECT>\n\n";
-        std::cerr << "\
+        std::cout << "Computes the normal form of a list of feasible points.\n\n";
+        std::cout << "Usage: normalform [options] PROJECT\n\n";
+        std::cout << "\
 Input Files:\n\
   PROJECT.mat         A matrix (optional if lattice basis is given).\n\
   PROJECT.lat         A lattice basis (optional if matrix is given).\n\
@@ -137,9 +142,9 @@ Output Files:\n\
     }
     else
     {
-        std::cerr << "Usage: " << Globals::exec << " [options] <filename>\n\n";
+        std::cout << "Usage: " << Globals::exec << " [options] FILENAME\n\n";
     }
-    std::cerr << "\
+    std::cout << "\
 Options:\n\
   -p, --precision=PREC       Select PREC as the integer arithmetic precision.\n\
                              PREC is one of the following: `64' (default),\n\

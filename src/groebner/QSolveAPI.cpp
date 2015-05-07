@@ -220,7 +220,7 @@ QSolveAPI::set_options(int argc, char** argv)
             else { unrecognised_option_argument("-p, --precision"); }
             break;
 	case 'V':
-	    print_banner();
+	    print_banner(false);
 	    exit(0);
 	    break;
         case 'h':

@@ -42,16 +42,18 @@ bool Globals::criteria = false;
 int Globals::norm = 1;
 
 void
-_4ti2_::print_banner()
+_4ti2_::print_banner(bool warn)
 {
     *out << FORTY_TWO_BANNER;
 
 #if defined(_4ti2_INT32_) || defined(_4ti2_INT64_)
     *out << "Using " << sizeof(IntegerType)*CHAR_BIT << " bit integers.\n";
 # if !defined(HAVE_TRAPV_LONG_LONG)
-    *err << "WARNING: Overflow detection is not available on this architecture/compiler.\n"
-	      << "WARNING: To guarantee correct results, run 4ti2 with arbitrary precision\n"
-	      << "WARNING: by using the option `-parb'\n";
+    if (warn) {
+	*err << "WARNING: Overflow detection is not available on this architecture/compiler.\n"
+	     << "WARNING: To guarantee correct results, run 4ti2 with arbitrary precision\n"
+	     << "WARNING: by using the option `-parb'\n";
+    }
 # endif
 #elif defined(_4ti2_GMP_)
     *out << "Using arbitrary precision integers.\n";

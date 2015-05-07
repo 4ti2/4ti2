@@ -60,3 +60,9 @@ update-help:
 	../src/groebner/qsolve --help > $(srcdir)/qsolve-help.txt
 	../src/groebner/rays --help > $(srcdir)/rays-help.txt
 	../src/groebner/circuits --help > $(srcdir)/circuits-help.txt
+	../src/groebner/groebner --help > $(srcdir)/groebner-help.txt
+	../src/groebner/markov --help > $(srcdir)/markov-help.txt
+	../src/groebner/minimize --help > $(srcdir)/minimize-help.txt
+	../src/groebner/normalform --help > $(srcdir)/normalform-help.txt
+	../src/groebner/walk --help > $(srcdir)/walk-help.txt
+	../src/groebner/zbasis --help > $(srcdir)/zbasis-help.txt

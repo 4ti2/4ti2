@@ -59,6 +59,7 @@ WalkOptions::process_options(int argc, char** argv)
             {"truncation",       1, 0,'t'},
             {"output-freq",      1, 0,'f'},
             {"quiet",            0, 0,'q'},
+	    {"version",          0, 0,'V'},
             {"help",             0, 0,'h'},
             {0, 0, 0, 0}
         };
@@ -98,11 +99,15 @@ WalkOptions::process_options(int argc, char** argv)
             else if (std::string("arbitrary").find(optarg) == 0) { }
             else { unrecognised_option_argument("-p, --precision"); }
             break;
+	case 'V':
+	    print_banner(false);
+	    exit(0);
+	    break;
         case 'h':
         case '?':
         case ':':
             print_usage();
-            exit(1);
+            exit(0);
             break;
 
         default:
@@ -127,9 +132,9 @@ WalkOptions::process_options(int argc, char** argv)
 void
 WalkOptions::print_usage()
 {
-    std::cerr << "Usage: walk [options] <PROJECT>\n\n";
-    std::cerr << "Computes the minimal solution of an integer lattice program.\n";
-    std::cerr << "\
+    std::cout << "Usage: walk [options] <PROJECT>\n\n";
+    std::cout << "Computes the minimal solution of an integer lattice program.\n\n";
+    std::cout << "\
 Input Files:\n\
   PROJECT.mat         A matrix (optional only if lattice basis is given).\n\
   PROJECT.lat         A lattice basis (optional only if matrix is given).\n\
@@ -144,7 +149,7 @@ Input Files:\n\
                       It is optional, and the default is all non-negative.\n\
 Output Files:\n\
   PROJECT.gro         The Groebner basis of the lattice.\n\n";
-    std::cerr << "\
+    std::cout << "\
 Options:\n\
   -p, --precision=PREC       Select PREC as the integer arithmetic precision.\n\
                              PREC is one of the following: `64' (default),\n\

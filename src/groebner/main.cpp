@@ -69,10 +69,21 @@ try
 #endif
 
     if (argc == 1) {
-        std::cerr << "Usage: 4ti2 <exec> ...\n";
+        std::cerr << "Usage: 4ti2 COMMAND ...\n";
         exit(1);
     }
-
+    else if (argc == 2 && (strcmp(argv[1], "--help") == 0
+			   || strcmp(argv[1], "-h") == 0)) {
+	std::cout << "Usage: 4ti2 COMMAND ...\n\n";
+	std::cout << "COMMAND is one of: groebner, markov, rays, circuits, \n";
+	std::cout << "                   qsolve, zbasis, minimize, normalform, walk\n\n";
+	exit(0);
+    }
+    else if (argc == 2 && strcmp(argv[1], "--version") == 0) {
+	print_banner(false);
+	exit(0);
+    }
+    
     // We associate executable names with their corresponding main functions.
     ExecutableMap executables;
     executables.insert(ExecutableMap::value_type("groebner", &groebner_main));
@@ -89,7 +100,7 @@ try
     ExecutableMap::iterator i = executables.find(Globals::exec);
     if (i == executables.end())
     {
-        std::cerr << "Error: Unrecognized executable: " << argv[1] << "\n";
+        std::cerr << "Error: Unrecognized command: " << argv[1] << "\n";
         exit(1);
     }
     int status = (*i->second)(argc-1, argv+1);

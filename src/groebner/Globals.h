@@ -49,7 +49,7 @@ public:
     static int norm;
 };
 
-void print_banner();
+void print_banner(bool warn = true);
 
 extern std::ostream* out;
 extern std::ostream* err;
