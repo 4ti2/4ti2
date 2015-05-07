@@ -2,9 +2,9 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(4ti2, 1.6.3)
+AC_INIT(4ti2, 1.6.3+svn)
 AC_CONFIG_MACRO_DIR([m4])
-AM_INIT_AUTOMAKE(foreign)
+AM_INIT_AUTOMAKE([foreign std-options])
 AM_MAINTAINER_MODE
 AC_CONFIG_FILES([Makefile src/Makefile src/4ti2/Makefile
 		 src/groebner/Makefile src/util/Makefile 
