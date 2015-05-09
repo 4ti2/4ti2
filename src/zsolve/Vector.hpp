@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <iostream>
 
 #include "zsolve/Integer.h"
+#include "zsolve/Exception.h"
 
 namespace _4ti2_zsolve_
 {
@@ -95,6 +96,7 @@ template <typename T> T* read_vector (std::istream& in, size_t size)
     for (size_t i = 0; i < size; i++)
     {
         in >> result [i];
+	if (!in) throw IOException("Parse error while reading vector; could be overflow");
     }
     return result;
 }
