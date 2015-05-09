@@ -20,11 +20,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
-#include <iostream>
-#include <fstream>
-
 #include "4ti2/4ti2.h"
-#include "4ti2/4ti2xx.h"
 
 int
 main()
@@ -52,7 +48,7 @@ main()
 
     _4ti2_state* zsolve_api = _4ti2_zsolve_create_state(_4ti2_PREC_INT_64);
     const int argc = 2;
-    char*argv[2] = { "zsolve", "-q" };
+    char*argv[2] = { (char*)"zsolve", (char*)"-q" };
     _4ti2_state_set_options(zsolve_api, argc, argv);
 
     _4ti2_matrix* cons_matrix;
