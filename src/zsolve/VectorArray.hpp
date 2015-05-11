@@ -265,6 +265,7 @@ public:
         if (with_dims) {
             clear ();
             in >> m_vectors >> m_variables;
+	    if (!in) throw IOException("Parse error while reading matrix dimensions");
             m_data.resize (m_vectors);
         }
         for (size_t i = 0; i < m_vectors; ++i) {
