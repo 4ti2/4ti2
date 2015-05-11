@@ -7,13 +7,43 @@ and process overhead.  It has a simple C API that closely mirrors the
 commands: \File{qsolve}, \File{rays}, \File{circuits}, \File{zsolve},
 \File{hilbert}, \File{graver}.
 
-Depending on its configuration, \FourTiTwo builds and installs several
-libraries, either as static or shared libraries.
+Depending on its configuration, \FourTiTwo{} builds and installs several
+libraries, either as static or shared libraries, using \File{libtool}.
 
-A single header file, \texttt{<4ti2/4ti2.h>}, provides the C API.
+The functions equivalent to \File{zsolve}, \File{hilbert}, \File{graver}
+require the use of \File{libzsolve}.
+The functions equivalent to \File{qsolve}, \File{rays}, \File{circuits}
+require the use of \File{lib4ti2common} and, depending on the arithmetic
+precision requested, the use of \File{lib4ti2int32},
+\File{lib4ti2int64}, or \File{lib4ti2gmp}.
+
+\section{C API header file: 4ti2/4ti2.h}
+
+A single header file, \texttt{<4ti2/4ti2.h>}, provides the C API.  It is
+reproduced below for reference.
 
 {\scriptsize
 \verbatiminput{../src/4ti2/4ti2.h}
+}
+
+\section{Example program: zsolve}
+
+Example programs using the C API can be found in the source tree of
+\FourTiTwo{}, in the directories \File{test/qsolve/api} and
+\File{test/zsolve/api}. 
+
+Below we reproduce the example program \File{test/zsolve/api/test\_zsolve\_api.cpp}. 
+
+{\scriptsize
+\verbatiminput{../test/zsolve/api/test_zsolve_api.cpp}
+}
+
+\section{Example program: qsolve}
+
+Below we reproduce the example program \File{test/qsolve/api/qsolve\_main.cpp}. 
+
+{\scriptsize
+\verbatiminput{../test/qsolve/api/qsolve_main.cpp}
 }
 
 %% \section{The C++ API}
