@@ -652,7 +652,9 @@ Note that support-minimal partition identities are primitive, since
 the circuits of a matrix are contained in the Graver basis of this
 matrix.
 
-See \cite[section 3.8]{deloera-hemmecke-koeppe:book} for details on the algorithm implemented.
+See the book \cite[section 3.8]{deloera-hemmecke-koeppe:book}, or Hemmecke
+\cite{Hemmecke:2003b}  for details on the algorithm implemented. 
+\nocite{Hemmecke:Graver-symmetries}
 
 \subsection{Integer programming and toric Gr\"obner bases}
 In this example you learn about the functions \File{minimize},
@@ -726,7 +728,11 @@ of giving a solution in \File{4coins.zsol}.  This is no longer supported.
 \eoproof
 
 Since we already know a feasible solution, there is another way we
-might attack this problem, namely via toric Gr\"obner bases. For
+might attack this problem, namely via toric Gr\"obner bases. 
+(See \cite[Chapter 11]{deloera-hemmecke-koeppe:book} for an introduction to
+toric ideals and their Gr\"obner bases, and also their generalizations,
+lattice ideals.)
+For
 this, we first need to specify the matrix $A$ and the cost vector
 $c$ in the two files \File{4coins.mat} and \File{4coins.cost}:
 \begin{center}
@@ -765,6 +771,17 @@ and gives the output file
 \hline
   \end{tabular}
 \end{center}
+\boremark
+  Many algorithm options are available and can be selected by command-line
+  options of \File{groebner}, see section~\ref{s:ref:groebner}.  As reference to the algorithms
+  we recommend the book \cite[section 11.4]{deloera-hemmecke-koeppe:book} or Hemmecke and Malkin \cite{HemmeckeMalkin2009}, as well as 
+  Bigatti, LaScala, and Robbiano \cite{BigattiLascalaRobbiano99}, Gebauer and M\"oller
+  \cite{Gebauer+Moeller:88}, and Ho{\c{s}}ten and Sturmfels
+  \cite{HostenSturmfels:GRIN}.
+  Since runnning times of the various algorithms are hard to predict, it may
+  for some hard problems make sense to start several computations in parallel,
+  each with different algorithms. 
+\eoproof
 
 Then we specify our feasible solution in
 \begin{center}
@@ -809,6 +826,8 @@ the corresponding integer program is defined by putting the
 right-hand side to $Az_0$.) \eoproof
 
 %%%% {\bf Rename \File{4coins.zfeas} to \File{4coins.zfea}?!}
+
+\nocite{Malkin:truncated}
 
 \subsection{Markov Bases in Statistics}
 In this example you learn about the functions \File{markov} and

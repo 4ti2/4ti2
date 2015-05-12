@@ -162,7 +162,8 @@ void
 MinimizeOptions::print_usage()
 {
     std::cout << "Usage: minimize [options] PROJECT\n\n";
-    std::cout << "Computes the minimal solution of an integer lattice program.\n\n";
+    std::cout << "Computes the minimal solution of an integer linear program\n";
+    std::cout << "or, more general, a lattice program, using a Groebner basis.\n\n";
     std::cout << "\
 Input Files:\n\
   PROJECT.mat         A matrix (optional only if lattice basis is given).\n\

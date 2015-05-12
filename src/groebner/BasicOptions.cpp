@@ -124,8 +124,8 @@ Output Files:\n\
     }
     else if (Globals::exec == "normalform")
     {
-        std::cout << "Computes the normal form of a list of feasible points.\n\n";
         std::cout << "Usage: normalform [options] PROJECT\n\n";
+        std::cout << "Computes the normal form of a list of feasible points.\n\n";
         std::cout << "\
 Input Files:\n\
   PROJECT.mat         A matrix (optional if lattice basis is given).\n\

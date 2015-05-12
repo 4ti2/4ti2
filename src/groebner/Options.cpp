@@ -168,12 +168,14 @@ Options::print_usage()
     if (Globals::exec == "groebner")
     {
         std::cout << "Usage: groebner [options] PROJECT\n\n";
-        std::cout << "Computes the Groebner basis of a lattice.\n\n";
+        std::cout << "Computes a Groebner basis of the toric ideal of a matrix,\n";
+	std::cout << "or, more general, of the lattice ideal of a lattice.\n\n";
         std::cout << "\
 Input Files:\n\
   PROJECT.mat         A matrix (optional if lattice basis is given).\n\
   PROJECT.lat         A lattice basis (optional if matrix is given).\n\
-  PROJECT.cost        The cost matrix (optional, default is degrevlex).\n\
+  PROJECT.cost        The cost matrix, which determines the term ordering\n\
+                      (optional, default is degrevlex).\n					\
                       Ties are broken with degrevlex.\n\
   PROJECT.sign        The sign constraints of the variables ('1' means\n\
                       non-negative and '0' means a free variable).\n\
@@ -189,8 +191,9 @@ Output Files:\n\
     }
     else if (Globals::exec == "markov")
     {
-        std::cout << "Computes the Markov basis/generating set of a lattice.\n\n";
         std::cout << "Usage: markov [options] PROJECT\n\n";
+        std::cout << "Computes a Markov basis (generating set) of the toric ideal\n";
+	std::cout << "of a matrix or, more general, of the lattice ideal of a lattice.\n\n";
         std::cout << "\
 Input Files:\n\
   PROJECT             A matrix (optional only if lattice basis is given).\n\
