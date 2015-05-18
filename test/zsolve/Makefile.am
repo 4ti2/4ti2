@@ -11,7 +11,7 @@ EXTRA_DIST = \
 	non-pointed.mat non-pointed.sign non-pointed.zfree.chk non-pointed.zhom.chk															       \
 	zero-rows.mat zero-rows.sign zero-rows.zfree.dont-chk zero-rows.zhom.dont-chk \
 	affine.lat affine.sign affine.zhom.chk affine.zinhom.chk \
-	system.mat system.rel system.sign system.zhom.chk system.zinhom.chk
+	system.mat system.rel system.rhs system.sign system.zhom.chk system.zinhom.chk
 
 
 check-local:
