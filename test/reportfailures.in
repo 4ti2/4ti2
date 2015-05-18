@@ -24,7 +24,9 @@ echo ""
 echo "***************************"
 if [ $NUM_FAILURES == 0 ]; then
     echo "**** ALL TESTS PASSED! ****"
+    echo "***************************"
 else
     echo "**** $NUM_FAILURES TEST(S) FAILED! ****"
+    echo "***************************"
+    exit 1
 fi
-echo "***************************"
