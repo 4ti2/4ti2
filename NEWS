@@ -1,15 +1,18 @@
-News since 4ti2 version 1.6.3:
+News in 4ti2 version 1.6.4, compared to 1.6.3:
 
  * Improved error checking while reading zsolve input files.
    Reported by Sebastian Gutsche.
 
- * The manual has been updated to include a reference to commands and
-   their options and a reference to the API.
+ * The PDF manual has been updated to include a reference to commands
+   and their options and a reference to the API.  The command
+   reference on www.4ti2.de has also been updated.
 
  * Better option handling.  Make long options available in non-GNU
    platforms such as Mac OS X.  All commands now support the
    standard --help and --version options.
 
+ * Minor fix to the test suite.
+   Reported by Luis David Garcia-Puente.
 
 News in 4ti2 version 1.6.3, compared to 1.6.2:
 
