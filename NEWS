@@ -1,5 +1,8 @@
 News since 4ti2 version 1.6.3:
 
+ * Improved error checking while reading zsolve input files.
+   Reported by Sebastian Gutsche.
+
  * The manual has been updated to include a reference to commands and
    their options and a reference to the API.
 
