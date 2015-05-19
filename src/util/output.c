@@ -414,10 +414,18 @@ int output_main(int argc, char *argv[]) {
   int did_something = 0;
   
   infoLevel=standardInfoLevel;
-  for (i=1;i<argc-1;i++) {
+  for (i=1;i<argc;i++) {
     if (strncmp(argv[i],"--",2)==0) {
       if (strncmp(argv[i],"--qui",5)==0) {
 	infoLevel=-1;
+      }
+      else if (strncmp(argv[i],"--version",9)==0) {
+	print_version();
+	exit(0);
+      }
+      else if (strncmp(argv[i],"--help", 6)==0) {
+	print_usage();
+	exit(0);
       }
     }
   }
@@ -427,15 +435,7 @@ int output_main(int argc, char *argv[]) {
   }
 
   for (i=1; i<argc; i++) {
-    if (strncmp(argv[i],"--version",9)==0) {
-      print_version();
-      exit(0);
-    }
-    else if (strncmp(argv[i],"--help", 6)==0) {
-      print_usage();
-      exit(0);
-    }
-    else if (strncmp(argv[i],"--pos",5)==0) {
+    if (strncmp(argv[i],"--pos",5)==0) {
       strcpy(fileName,argv[argc-1]);
       basis=readListVector(&numOfVars,fileName);
       basis=extractPositivePartsOfVectors(basis,numOfVars);
