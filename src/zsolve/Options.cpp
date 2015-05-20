@@ -278,7 +278,7 @@ void Options::print_usage () const
     std::cout << "\n";
 
     std::cout << "Output options:\n";
-    std::cout << " -q, --quiet        Quit mode\n";
+    std::cout << " -q, --quiet        Quiet mode\n";
     std::cout << " -u, --update[=1]   Updated output on console (default)\n";
     std::cout << " -uu, --update=2    More verbose updated output on console\n";
     std::cout << " -v, --verbose[=1]  Output once every variable computation\n";
