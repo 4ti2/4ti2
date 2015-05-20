@@ -1,3 +1,7 @@
+News in 4ti2 version 1.6.5, compared to 1.6.4:
+
+ * Fix build failure with gcc 4.9.2.
+
 News in 4ti2 version 1.6.4, compared to 1.6.3:
 
  * Improved error checking while reading zsolve input files.
