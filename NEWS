@@ -1,3 +1,9 @@
+News in 4ti2 version 1.6.6, compared to 1.6.5:
+
+ * Fix segfault in graver when a matrix with trivial kernel is input
+   (testcase graver/trivial-kernel).
+   Reported by Alfredo Sanchez.
+
 News in 4ti2 version 1.6.5, compared to 1.6.4:
 
  * Fix build failure with gcc 4.9.2.
