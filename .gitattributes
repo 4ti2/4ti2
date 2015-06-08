@@ -57,6 +57,8 @@ test/genmodel/k2_3.mat.chk -text
 test/genmodel/k2_3.mod -text
 test/graver/ppi3.gra.chk -text
 test/graver/ppi3.mat -text
+test/graver/trivial-kernel.gra.chk -text
+test/graver/trivial-kernel.mat -text
 test/groebner/4coins.cost -text
 test/groebner/4coins.gro.chk -text
 test/groebner/4coins.mat -text

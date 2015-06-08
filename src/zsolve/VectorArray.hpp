@@ -187,6 +187,7 @@ public:
 
     T gcd_row (size_t index, size_t start, size_t end)
     {
+        if (start >= end) return 1;
         T result = m_data[index][start++];
         while (start < end)
             result = gcd (result, m_data[index][start++]);
@@ -195,6 +196,7 @@ public:
     
     T gcd_column (size_t index, size_t start, size_t end)
     {
+        if (start >= end) return 1;
         T result = m_data[start++][index];
         while (start < end)
             result = gcd (result, m_data[start++][index]);
