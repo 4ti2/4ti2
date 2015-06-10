@@ -1,7 +1,7 @@
 4ti2 -- A software package for algebraic, geometric and combinatorial
 problems on linear spaces.
 
-Copyright (C) 2006 4ti2 team.
+Copyright (C) 1998, 2002, 2006, 2015 4ti2 team.
  
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -74,8 +74,34 @@ Use the following commands.
      sudo make install 
 
 
+INSTALLATION ON WINDOWS USING CYGWIN
+====================================
+
+1. Install Cygwin from https://www.cygwin.com/
+
+   In the installer, select the following packages:
+
+   Devel: gcc-core gcc-g++ make
+   Math: glpk gmp libglpk-devel libgmp-devel
+
+2. Make sure you unpack the 4ti2 sources into a
+   C:\DIRECTORY\WITHOUT\SPACES\IN\IT
+   (for example, C:\4ti2)
+
+3. Open the Cygwin terminal
+
+4. Type:
+
+      cd /cygdrive/c/DIRECTORY/WITHOUT/SPACES/IN/IT
+      ./configure
+      make
+      make install
+
+5. Now you can run 4ti2's commands from the Cygwin terminal.
+
+
 DOCUMENTATION
 =============
 
-See the website http://www.4ti2.de for information on using 4ti2.
+See the manual or the website http://www.4ti2.de for information on using 4ti2.
 
