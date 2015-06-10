@@ -13,6 +13,7 @@ doc/magicsqs.pdf svneol=native#unset
 doc/magicsqs_ray.pdf svneol=native#unset
 doc/solved_IP.pdf svneol=native#unset
 doc/solved_LP.pdf svneol=native#unset
+doc/version.tex.in -text
 lib/Makefile.am -text
 lib/getopt.c -text
 lib/getopt.in.h -text

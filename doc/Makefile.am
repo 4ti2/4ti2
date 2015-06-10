@@ -38,6 +38,9 @@ EXTRA_DIST =					\
 	solved_LP.pdf_t
 
 EXTRA_DIST +=					\
+	version.tex version.tex.in
+
+EXTRA_DIST +=					\
 	deloera-hemmecke-koeppe-book.tex	\
 	deloera-hemmecke-koeppe-cover.jpg
 
@@ -47,6 +50,7 @@ EXTRA_DIST +=					\
 .PHONY: update-help update-manual 
 
 update-manual: update-help
+	$(SED) 's/@[V]ERSION@/$(VERSION)/;' $(srcdir)/version.tex.in > $(srcdir)/version.tex
 	-(cd $(srcdir) && pdflatex 4ti2_manual; pdflatex 4ti2_manual)
 
 PROGRAMS_WITH_HELP =				\
