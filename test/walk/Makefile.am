@@ -4,7 +4,13 @@ EXTRA_DIST = 												\
 	grin grin.cost grin.cost.start grin.gro.chk grin.gro.start grin.mar				\
 	prob20 prob20.cost prob20.cost.start prob20.gro.chk prob20.gro.start prob20.lat prob20.sign
 
-check-local:
-	@../check.template $(srcdir) "" src/groebner/walk -q 
+check-32:
+	@../check.template $(srcdir) "-32" src/groebner/walk -q 
 
-CLEANFILES = .num_failures
+check-arb:
+	@../check.template $(srcdir) "-arb" src/groebner/walk -p arb -q 
+
+check-local: check-32 check-arb
+	@../flavorsum "-32" "-arb"
+
+CLEANFILES = .num_failures .num_failures-32 .num_failures-arb
