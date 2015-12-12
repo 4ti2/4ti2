@@ -170,7 +170,10 @@ WalkAlgorithm::compare(const Binomial& b1, const Binomial& b2)
 RationalType
 WalkAlgorithm::tvalue(const Binomial& b)
 {
-    return (RationalType)b[costold_start]/(b[costold_start]-b[costnew_start]);
+    if (b[costold_start]-b[costnew_start] == 0)
+	return 0;		// Avoid division by zero
+    else 
+	return (RationalType)b[costold_start]/(b[costold_start]-b[costnew_start]);
 }
 
 void
