@@ -1,3 +1,16 @@
+News in 4ti2 version 1.6.7, compared to 1.6.6:
+
+ * Add missing amsabbrvurl.bst file required for rebuilding the documentation.
+   Reported by Jerome Benoit for Debian.
+
+ * Add tests for "walk -p arb" to testsuite
+
+ * Build fix for Debian bug 801117 (underlinked library).
+   Patch from Jerome Benoit.
+
+ * Fix division-by-zero in "walk -p arb" for testcase 344.
+   Reported by Jerome Benoit for Debian.
+
 News in 4ti2 version 1.6.6, compared to 1.6.5:
 
  * Fix segfault in graver when a matrix with trivial kernel is input
