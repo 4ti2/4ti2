@@ -15,6 +15,7 @@ EXTRA_DIST =					\
 	4ti2_manual_advanced.tex		\
 	4ti2_manual_beginner.tex		\
 	4ti2_manual_ref.tex			\
+	amsabbrvurl.bst				\
 	$(HELPFILES)				\
 	cubepicture.eps				\
 	feasible.pdf				\
