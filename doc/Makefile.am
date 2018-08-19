@@ -40,7 +40,7 @@ EXTRA_DIST =					\
 # EXTRA_DIST += $(HELPFILES)
 
 EXTRA_DIST +=					\
-	version.tex version.tex.in
+	version.tex.in
 
 EXTRA_DIST +=					\
 	deloera-hemmecke-koeppe-book.tex	\
