@@ -1,0 +1,20 @@
+language: cpp
+
+services:
+ - docker
+
+sudo: false
+
+env:
+ - DOCKER=i386/ubuntu
+ - 
+
+addons:
+  apt_packages:
+      - libgmp-dev
+      - autoconf
+      - automake
+      - libtool
+      - libglpk-dev
+
+script: ./.travis-build.sh
