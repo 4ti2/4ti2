@@ -5,7 +5,7 @@ case x$DOCKER in
     x)
 	mkdir -p build
 	cd build
-	../configure --srcdir=.. && make -j2 && make -j2 check
+	../configure --srcdir=.. && make -j2 distcheck
 	;;
     *i386*)
 	docker run -i -v "${PWD}:/src" $DOCKER /bin/bash -c "linux32 --32bit i386 /src/.docker-build.sh"
