@@ -16,7 +16,6 @@ EXTRA_DIST =					\
 	4ti2_manual_beginner.tex		\
 	4ti2_manual_ref.tex			\
 	amsabbrvurl.bst				\
-	$(HELPFILES)				\
 	cubepicture.eps				\
 	feasible.pdf				\
 	feasible.pdf_t				\
@@ -37,6 +36,8 @@ EXTRA_DIST =					\
 	solved_IP.pdf_t				\
 	solved_LP.pdf				\
 	solved_LP.pdf_t
+
+# EXTRA_DIST += $(HELPFILES)
 
 EXTRA_DIST +=					\
 	version.tex version.tex.in
