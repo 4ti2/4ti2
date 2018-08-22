@@ -9,6 +9,15 @@ env:
  - DOCKER=i386/ubuntu
  - 
 
+matrix:
+  include:
+    - os: osx
+      env:
+       -
+      before_script:
+       - brew update
+       - brew install glpk
+
 addons:
   apt_packages:
       - libgmp-dev
