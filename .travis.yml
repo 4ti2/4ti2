@@ -7,6 +7,9 @@ matrix:
     - os: linux
       env:
        -
+    - os: linux
+      env:
+      compiler: clang
     - os: osx
       env:
        -
@@ -16,7 +19,7 @@ matrix:
     - services:
       - docker
       env:
-      - DOCKER=i386/ubuntu
+       - DOCKER=i386/ubuntu
 
 addons:
   apt_packages:
