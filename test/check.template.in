@@ -24,6 +24,7 @@ EXECPATH=`cd "@abs_top_builddir@" && pwd`
 # $CHECK_ENV  -- put in front of the call to the binary.  Useful for CHECK_ENV=valgrind.
 # $CHECK_VERBOSE -- if set, show output
 # $KEEP_FILES -- if set, do not delete `checkdir' with the result files and diffs.
+# $CAT_CHECKDIR_ON_ERROR -- if set, print all files from `checkdir' with the result files and diffs.
 
 # The directory where the input data and the results reside.
 SRCDIR=`cd "$1" && pwd`
@@ -130,6 +131,14 @@ for file in $FILES; do
     done
     echo -n " $STATUS "
     echo "$TIME"
+    if [ $STATUS == FAILED -a x$CAT_CHECKDIR_ON_ERROR != x ]; then
+	echo "---- checkdir contents ----------------------------------------"
+	for f in ${file}.*; do
+	    echo -- $f:
+	    cat $f
+	done
+	echo "---- end checkdir contents ------------------------------------"
+    fi
     #echo rm -f $CHECK_FILES
     cd ..
 done
