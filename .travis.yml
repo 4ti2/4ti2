@@ -8,11 +8,9 @@ matrix:
       - docker
       env:
       - DOCKER=i386/ubuntu
-  include:
     - os: linux
       env:
        -
-  include:
     - os: osx
       env:
        -
