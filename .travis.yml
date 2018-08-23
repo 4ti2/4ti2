@@ -4,10 +4,6 @@ sudo: false
 
 matrix:
   include:
-    - services:
-      - docker
-      env:
-      - DOCKER=i386/ubuntu
     - os: linux
       env:
        -
@@ -17,6 +13,10 @@ matrix:
       before_script:
        - brew update
        - brew install glpk
+    - services:
+      - docker
+      env:
+      - DOCKER=i386/ubuntu
 
 addons:
   apt_packages:
