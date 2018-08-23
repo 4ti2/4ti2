@@ -56,6 +56,10 @@ fi
 mkdir ${CHECKDIR} 
 for file in $FILES; do
     CHECK_FILES=`cd "$SRCDIR" && ls -1 ${file}.*.chk | egrep "^${file}.[a-z]*.chk" | sed s/\.chk//g`
+    if test ! -r "${SRCDIR}"/${file}.Exit.chk ; then
+	echo "0" > ${CHECKDIR}/${file}.exit.chk
+	CHECK_FILES="${file}.exit ${CHECK_FILES}"
+    fi
     rm -f $CHECK_FILES
     COMMAND="$@ $file"
     # Copy the source files into a subdir of the build directory
@@ -75,8 +79,16 @@ for file in $FILES; do
 	# display all output
 	$CHECK_ENV "$EXECPATH"/$COMMAND
     fi
+    # Save exit code
+    echo "$?" > ${file}.exit
     STATUS="passed"
     for check_file in $CHECK_FILES; do
+	if test -r "${SRCDIR}"/${check_file}.chk ; then
+	    check_file_chk="${SRCDIR}"/${check_file}.chk
+	else
+	    # Really only for ${file}.exit.chk
+	    check_file_chk=${check_file}.chk
+	fi
 	if test ! -r ${check_file} ; then
 	    # Output file not generated when it should have.
 	    STATUS="FAILED"
@@ -85,13 +97,13 @@ for file in $FILES; do
 	fi
 	# Output file generated, so compare.
 	if [ x$KEEP_FILES == x ]; then
-            diff -q -b "${SRCDIR}"/${check_file}.chk ${check_file} > /dev/null
+            diff -q -b ${check_file_chk} ${check_file} > /dev/null
 	else
-            diff -u "${SRCDIR}"/${check_file}.chk ${check_file} > ${check_file}.diff
+            diff -u ${check_file_chk} ${check_file} > ${check_file}.diff
 	fi
         if [ $? != 0 ]; then
 	    # File are different.  Check if only the sort order has changed.
-	    head -n 1 "${SRCDIR}"/${check_file}.chk > ${check_file}.head.chk
+	    head -n 1 ${check_file_chk} > ${check_file}.head.chk
 	    head -n 1 ${check_file} > ${check_file}.head
 	    diff -b -q ${check_file}.head.chk ${check_file}.head > /dev/null
 	    if [ $? != 0 ]; then
@@ -100,7 +112,7 @@ for file in $FILES; do
 		break
 	    fi
 	    # Without LC_ALL=C, get crazy nondeterministic sort order on Cygwin?? --mkoeppe 
-	    LC_ALL=C sort "${SRCDIR}"/${check_file}.chk > ${check_file}.sort.chk
+	    LC_ALL=C sort ${check_file_chk} > ${check_file}.sort.chk
 	    LC_ALL=C sort ${check_file} > ${check_file}.sort
 	    if [ x$KEEP_FILES == x ]; then
 		diff -b -q ${check_file}.sort.chk ${check_file}.sort > /dev/null
