@@ -1,15 +1,17 @@
 language: cpp
 
-services:
- - docker
-
 sudo: false
 
-env:
- - DOCKER=i386/ubuntu
- - 
-
 matrix:
+  include:
+    - services:
+      - docker
+      env:
+      - DOCKER=i386/ubuntu
+  include:
+    - os: linux
+      env:
+       -
   include:
     - os: osx
       env:
