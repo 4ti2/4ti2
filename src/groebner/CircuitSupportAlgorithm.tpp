@@ -296,7 +296,7 @@ CircuitSupportAlgorithm<IndexSet>::compute1(
     Vector zero(vs.get_size(), 0);
     for (int i = 0; i < circuits.get_number(); ++i)
     {
-        if (circuits[i] <= zero) { vs[i].mul(-1); }
+        if (circuits[i] <= zero) { circuits[i].mul(-1); }
     }
 }
 
