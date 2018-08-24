@@ -35,6 +35,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <stdlib.h>
 #include <limits.h>
 
+#ifndef PATH_MAX
+#define PATH_MAX FILENAME_MAX
+#endif
+
 /* ----------------------------------------------------------------- */
 void printVersionInfo() {
 

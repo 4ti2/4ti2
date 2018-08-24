@@ -39,6 +39,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <getopt.h>
 #include "banner.h"
 
+#ifndef PATH_MAX
+#define PATH_MAX FILENAME_MAX
+#endif
+
 /* ----------------------------------------------------------------- */
 listVector* readSimplicialComplex(char* fileName, int* numOfNodes) {
   int i,j,numOfFaces,sizeOfFace;

@@ -37,6 +37,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #include "banner.h"
 
+#ifndef PATH_MAX
+#define PATH_MAX FILENAME_MAX
+#endif
+
 /* ----------------------------------------------------------------- */
 listVector* readListVector(int *numOfVars, char *fileName) {
   int numOfVectors;
