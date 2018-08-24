@@ -43,13 +43,13 @@ _4ti2_qsolve_create_state(_4ti2_precision prec)
 _4ti2_state*
 _4ti2_rays_create_state(_4ti2_precision prec)
 {
-    return new _4ti2_::QSolveAPI();
+    return new _4ti2_::RaysAPI();
 }
 
 _4ti2_state*
 _4ti2_circuits_create_state(_4ti2_precision prec)
 {
-    return new _4ti2_::QSolveAPI();
+    return new _4ti2_::CircuitsAPI();
 }
 
 }
