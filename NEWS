@@ -1,3 +1,13 @@
+News in 4ti2 version 1.6.8, compared to 1.6.7:
+
+ * Updates to test suite and build.
+
+ * Fix _4ti2_rays_create_state, _4ti2_circuits_create_state.
+   Reported by Alfredo Sánchez-R. Navarro.
+
+ * Merge Debian patch for PATH_MAX on Hurd.
+   Patch from Jerome Benoit.
+
 News in 4ti2 version 1.6.7, compared to 1.6.6:
 
  * Add missing amsabbrvurl.bst file required for rebuilding the documentation.
