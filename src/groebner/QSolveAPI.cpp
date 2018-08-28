@@ -341,14 +341,35 @@ QSolveAPI::read(const char* basename_c_str)
     if (mat == 0) {
         create_matrix(basename.c_str(), "mat");
         if (mat != 0) {
-            *err << "WARNING: Please specify the matrix in '" << mat_filename;
-            *err << "' instead of '" << basename << "'.\n";
+	    if (basename.size() > 4 && basename.compare(basename.size() - 4, 4, ".mat") == 0) {
+		*err << "WARNING: Project/matrix file backward-compatibility mode.\n";
+		*err << "WARNING: The matrix was read from '" << basename << "',\n";
+		*err << "WARNING: other data will be read from and output written to files\n";
+		*err << "WARNING: named '" << basename << ".EXT',\n";
+		*err << "WARNING: which is probably NOT what was intended.\n";
+		*err << "WARNING: Please pass the project name '" << basename.substr(0, basename.size() - 4) << "'\n";
+		*err << "WARNING: on the command line instead of the matrix file name '" << basename << "'.\n";
+	    }
+	    else {
+		*err << "WARNING: Project/matrix file backward-compatibility mode.\n";
+		*err << "WARNING: The matrix was read from '" << basename << "',\n";
+		*err << "WARNING: other data will be read from '" << basename << ".EXT';\n";
+		*err << "WARNING: to remove this warning, specify the matrix in '" << mat_filename << "'.\n";
+	    }
         }
         else {
             std::cerr << "ERROR: No constraint matrix specified.\n";
             std::cerr << "ERROR: Expected matrix in '" << mat_filename << "'\n";
             exit(1);
         }
+    }
+    else {
+	std::ifstream file(basename.c_str());
+	if (file.good()) {
+	    *err << "WARNING: The matrix was read from '" << mat_filename << "',\n";
+	    *err << "WARNING: but there also exists a file named '" << basename << "';\n";
+	    *err << "WARNING: to remove this warning, delete '" << basename << "'.\n";
+	}
     }
 
     // Read in the file with the sign constraints.
