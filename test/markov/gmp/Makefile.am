@@ -1,9 +1,9 @@
-EXTRA_DIST = 									\
-	335 335.mar.chk								\
-	cuww3 cuww3.A cuww3.mar.chk						\
+EXTRA_DIST =									\
+	335.mat 335.mar.chk							\
+	cuww3.mat cuww3.A cuww3.mar.chk						\
 	grin10900.3.cost grin10900.3.lat grin10900.3.mar.chk grin10900.3.zsol	\
-	grin1412 grin1412.mar.chk						\
-	prob06 prob06.lat prob06.mar.chk
+	grin1412.mat grin1412.mar.chk						\
+	prob06.mat prob06.lat prob06.mar.chk
 
 check-hybrid:
 	@../../check.template $(srcdir) "-hybrid" src/groebner/markov -q -p arb -ghybrid
