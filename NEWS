@@ -1,3 +1,13 @@
+News in 4ti2 version 1.6.9, compared to 1.6.8:
+
+ * Updates to test suite.
+
+ * qsolve/groebner code: More detailed warnings for PROJECT
+   vs. PROJECT.mat
+
+ * Fix out of bounds vector access in circuits.
+   Reported by Jerry James for Fedora.
+
 News in 4ti2 version 1.6.8, compared to 1.6.7:
 
  * Updates to test suite and build.

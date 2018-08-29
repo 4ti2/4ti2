@@ -20,6 +20,8 @@ doc/4ti2_manual.log
 doc/4ti2_manual.out
 doc/4ti2_manual.synctex.gz
 doc/4ti2_manual.toc
+doc/*-help.txt
+doc/version.tex
 doc/Makefile.in
 doc/auto
 doc/deloera-hemmecke-koeppe-book.log
