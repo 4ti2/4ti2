@@ -57,7 +57,7 @@ fi
 mkdir ${CHECKDIR} 
 for file in $FILES; do
     CHECK_FILES=`cd "$SRCDIR" && ls -1 ${file}.*.chk | egrep "^${file}.[a-z]*.chk" | sed s/\.chk//g`
-    if test ! -r "${SRCDIR}"/${file}.Exit.chk ; then
+    if test ! -r "${SRCDIR}"/${file}.exit.chk ; then
 	echo "0" > ${CHECKDIR}/${file}.exit.chk
 	CHECK_FILES="${file}.exit ${CHECK_FILES}"
     fi
