@@ -126,7 +126,7 @@ if test "$ac_test_CXXFLAGS" != "set"; then
      # note that we enable "unsafe" fp optimization with other compilers, too
      AX_CHECK_COMPILER_FLAGS(-ffast-math, CXXFLAGS="$CXXFLAGS -ffast-math")
 
-     AX_GCC_ARCHFLAG($acx_maxopt_portable)
+     AX_GCC_ARCHFLAG($acx_maxopt_portable, CXXFLAGS="$CXXFLAGS $ax_cv_gcc_archflag")
      ;;
      esac
      ;;
