@@ -2,7 +2,7 @@
 
 # We locate where this script is so we can call the executable zsolve which
 # should be in the same directory as this script.
-SCRIPT=`which "$0"`
+SCRIPT=$(realpath $(which "$0"))
 SCRIPTDIR=`dirname "$SCRIPT"`
 EXECUTABLE=zsolve
 
