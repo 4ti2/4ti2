@@ -21,7 +21,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 
 # We locate where this script is so we can call the executables.
-SCRIPT=`which "$0"`
+SCRIPT=$(realpath $(which "$0"))
 DIR=`dirname "$SCRIPT"`
 FUNCTION=`basename "$SCRIPT"`
 
