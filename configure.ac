@@ -58,8 +58,8 @@ AC_ARG_ENABLE(zsolve, AS_HELP_STRING([--disable-zsolve], [Disable building the z
 			[enable_zsolve=${enableval}], [enable_zsolve=yes])
 AC_ARG_ENABLE(fiber, AS_HELP_STRING([--enable-fiber], [Disable building the fiber components]),
 			[enable_fiber=${enableval}], [enable_fiber=no])
-AM_CONDITIONAL([ENABLE_ZSOLVE], [ test x${enable_zsolve} == xyes ])
-AM_CONDITIONAL([ENABLE_FIBER], [ test x${enable_fiber} == xyes ])
+AM_CONDITIONAL([ENABLE_ZSOLVE], [ test x${enable_zsolve} = xyes ])
+AM_CONDITIONAL([ENABLE_FIBER], [ test x${enable_fiber} = xyes ])
 
 ## Using the C compiler
 AC_PROG_CC
@@ -129,7 +129,7 @@ Please make sure that GNU MP was configured with "--enable-cxx".
 4ti2 will be built without support for arbitrary-precision computations.])
 fi
 
-if test x${enable_groebner} == xyes ; then
+if test x${enable_groebner} = xyes ; then
 # Check for GLPK.
 LB_CHECK_GLPK(,,[
   AC_MSG_WARN([GNU Linear Programming Kit not found!
@@ -138,7 +138,7 @@ It is required for building the Groebner component of 4ti2.
   enable_groebner=no
 ])
 fi
-AM_CONDITIONAL([ENABLE_GROEBNER], [ test x${enable_groebner} == xyes ])
+AM_CONDITIONAL([ENABLE_GROEBNER], [ test x${enable_groebner} = xyes ])
 
 # Check whether the C99 and C++0xx int32_t and int64_t types work in C++.
 # This requires the option -std=c++0xx on some modern g++ versions,
@@ -226,6 +226,6 @@ if test "$enable_swig" = yes; then
   # If we use SWIG, we definitely want shared libraries.
   AC_ENABLE_SHARED
 fi
-AM_CONDITIONAL([ENABLE_SWIG], [ test x${enable_swig} == xyes ])
+AM_CONDITIONAL([ENABLE_SWIG], [ test x${enable_swig} = xyes ])
 
 AC_OUTPUT
