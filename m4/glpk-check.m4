@@ -34,7 +34,7 @@ AC_MSG_CHECKING(for GLPK's glp_ API)
 
 for GLPK_HOME in ${GLPK_HOME_PATH} 
   do	
-	if test "x$GLPK_HOME" == "xDEFAULT" -o -r "$GLPK_HOME/include/glpk.h"; then
+	if test "x$GLPK_HOME" = "xDEFAULT" -o -r "$GLPK_HOME/include/glpk.h"; then
 
 		if test "x$GLPK_HOME" != "xDEFAULT" ; then
 			GLPK_CFLAGS="-I${GLPK_HOME}/include"
