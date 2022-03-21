@@ -525,7 +525,7 @@ listVector* permuteListVector(listVector* LIST, vector p, int numOfVars) {
   listVector *tmp2;
 
   tmp2=LIST;
-  v=createVector(numOfVars);
+  v=0;
   while (LIST) {
     tmp=LIST->first;
     v=permuteVector(LIST->first,p,numOfVars);
