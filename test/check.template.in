@@ -56,7 +56,7 @@ if [ -d ${CHECKDIR} ] ; then
 fi
 mkdir ${CHECKDIR} 
 for file in $FILES; do
-    CHECK_FILES=`cd "$SRCDIR" && ls -1 ${file}.*.chk | egrep "^${file}.[a-z]*.chk" | sed s/\.chk//g`
+    CHECK_FILES=`cd "$SRCDIR" && ls -1 ${file}.*.chk | grep -E "^${file}.[a-z]*.chk" | sed s/\.chk//g`
     if test ! -r "${SRCDIR}"/${file}.exit.chk ; then
 	echo "0" > ${CHECKDIR}/${file}.exit.chk
 	CHECK_FILES="${file}.exit ${CHECK_FILES}"
@@ -65,7 +65,7 @@ for file in $FILES; do
     COMMAND="$@ $file"
     # Copy the source files into a subdir of the build directory
     cd ${CHECKDIR}
-    INPUT_FILES=`cd "$SRCDIR" && ls -1 ${file}* | egrep -v "[.]chk$" `
+    INPUT_FILES=`cd "$SRCDIR" && ls -1 ${file}* | grep -E -v "[.]chk$" `
     #echo $INPUT_FILES
     for input_file in $INPUT_FILES; do
 	if test ! -r ${input_file} ; then 
