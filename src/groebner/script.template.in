@@ -36,16 +36,16 @@ EXECUTABLE=@GROEBNER_DEFAULT_EXECUTABLE@
 # they allow misspellings of precision. However, they will match correctly
 # formatted input and if the option is incorrectly formatted, the actual
 # executable will pick up any errors.
-if  echo $@ | egrep -q -e '-p *32 ' ||
-    echo $@ | egrep -q -e '--p[recision]* *=? *32 '
+if  echo $@ | grep -E -q -e '-p *32 ' ||
+    echo $@ | grep -E -q -e '--p[recision]* *=? *32 '
 then
     EXECUTABLE=4ti2int32
-elif echo $@ | egrep -q -e '-p *64 ' ||
-     echo $@ | egrep -q -e '--p[recision]* *=? *64 '
+elif echo $@ | grep -E -q -e '-p *64 ' ||
+     echo $@ | grep -E -q -e '--p[recision]* *=? *64 '
 then
     EXECUTABLE=4ti2int64
-elif echo $@ | egrep -q -e '-p *a[rbitrary]* ' ||
-     echo $@ | egrep -q -e '--p[recision]* *=? *a[rbitrary]* '
+elif echo $@ | grep -E -q -e '-p *a[rbitrary]* ' ||
+     echo $@ | grep -E -q -e '--p[recision]* *=? *a[rbitrary]* '
 then
     EXECUTABLE=4ti2gmp
 fi
