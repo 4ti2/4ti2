@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "zsolve/VectorArray.hpp"
 #include "zsolve/Exception.h"
 #include <fstream>
+#include <cstdint>
 #include <cstdlib>
 
 namespace _4ti2_zsolve_ {
