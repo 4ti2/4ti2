@@ -34,10 +34,10 @@ EXTRA_DIST = $(SWIGFILES) \
 
 lib_LTLIBRARIES += liballegrocl-4ti2.la
 liballegrocl_4ti2_la_SOURCES = allegrocl-4ti2.c
-#liballegrocl_4ti2_la_LIBADD =
-liballegrocl_4ti2_la_LDFLAGS = -L$(top_builddir)/../src/groebner -R$(libdir) -l4ti2int64 \
-	-L$(top_builddir)/../src/zsolve -lzsolve ${GMP_LIBS} \
-	-L$(top_builddir)/../src/4ti2 -l4ti2common
+liballegrocl_4ti2_la_LIBADD = $(top_builddir)/src/4ti2/lib4ti2common.la \
+	$(top_builddir)/src/groebner/lib4ti2int64.la \
+	$(top_builddir)/src/zsolve/libzsolve.la
+liballegrocl_4ti2_la_LDFLAGS = -R$(libdir) ${GMP_LIBS}
 
 AM_CFLAGS = -I$(top_srcdir)/../src -I$(top_builddir)/../src
 

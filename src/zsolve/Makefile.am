@@ -88,7 +88,8 @@ endif
 # Link in the "common" 4ti2 functions.
 # -no-undefined declares that no undefined symbols will remain after linking all these libraries.
 # (This is necessary to build shared libraries on Cygwin.)
-libzsolve_la_LDFLAGS = -L../4ti2 -R$(libdir) -l4ti2common ${GMP_LIBS} -no-undefined
+libzsolve_la_LDFLAGS = -R$(libdir) ${GMP_LIBS} -no-undefined
+libzsolve_la_LIBADD = $(top_builddir)/src/4ti2/lib4ti2common.la
 
 bin_SCRIPTS = hilbert graver
 DISTCLEANFILES = hilbert graver
