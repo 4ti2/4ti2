@@ -66,17 +66,10 @@ AC_PROG_CC
 gl_EARLY
 gl_INIT
 
-AX_COMPILER_VENDOR
-AX_CC_MAXOPT
 AX_CFLAGS_WARN_ALL
 
 ## Using the C++ compiler
 AC_PROG_CXX
-# Check for specific compiler flags
-AC_LANG(C++)
-# Pick good default optimization flags
-AX_COMPILER_VENDOR
-AX_CXX_MAXOPT
 # Turn on most compiler warnings
 AX_CXXFLAGS_WARN_ALL
 # The flag -ftrapv means that arithmetic overflow checking is enabled.
