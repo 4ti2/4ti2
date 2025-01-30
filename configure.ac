@@ -79,11 +79,6 @@ AX_COMPILER_VENDOR
 AX_CXX_MAXOPT
 # Turn on most compiler warnings
 AX_CXXFLAGS_WARN_ALL
-# Try std=c++0x to enable int32_t and int64_t for C++; note some old
-# C++ compiler versions don't have this flag, but do support int32_t,
-# int64_t
-AX_CHECK_COMPILE_FLAG([-std=c++0x], [
-                        CXXFLAGS="$CXXFLAGS -std=c++0x"])
 # The flag -ftrapv means that arithmetic overflow checking is enabled.
 CHECK_TRAPV
 
@@ -136,29 +131,6 @@ It is required for building the Groebner component of 4ti2.
 fi
 AM_CONDITIONAL([ENABLE_GROEBNER], [ test x${enable_groebner} = xyes ])
 
-# Check whether the C99 and C++0xx int32_t and int64_t types work in C++.
-# This requires the option -std=c++0xx on some modern g++ versions,
-# but this option is unknown on some old g++ versions.
-AC_MSG_CHECKING(whether we can use the int32_t and int64_t types)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ #include <cstdint>
-  ]], [[ int32_t xyzzy = 47; int64_t zyxxy = 11; 
-  ]])],[ have_int32_t_int_64_t=yes;
-  ],[ have_int32_t_int_64_t=no;
-  ])
-AC_MSG_RESULT(${have_int32_t_int_64_t})
-if test x${have_int32_t_int_64_t} = xyes; then
-    int32_t_int_64_t_include="#include <cstdint>"
-    int32_t=int32_t
-    int64_t=int64_t
-else
-    AC_MSG_WARN([Unable to use the int32_t and int64_t types in C++.  Using int and long int instead.])
-    int32_t=int
-    int64_t="long int"
-fi
-AC_DEFINE_UNQUOTED(_4ti2_int32_t, ${int32_t}, [Define the 32-bit integer type to use])
-AC_DEFINE_UNQUOTED(_4ti2_int64_t, ${int64_t}, [Define the 64-bit integer type to use])
-dnl AM_CONDITIONAL([HAVE_INT32_INT64], [test x${have_int32_t_int_64_t} = xyes])
-
 AM_CONDITIONAL([HAVE_GMP_WITH_CXX], [test -n "${GMP_HAVE_CXX}"])
 
 if test -n "${GMP_HAVE_CXX}" ; then 
@@ -171,21 +143,21 @@ if test -n "${GMP_HAVE_CXX}" ; then
   CXXFLAGS="${CXXFLAGS} ${GMP_CFLAGS}"
   save_LIBS="${LIBS}"
   LIBS="${LIBS} ${GMP_LIBS}"
-  AC_MSG_CHECKING(whether we can convert between ${int32_t} and mpz_class)
+  AC_MSG_CHECKING(whether we can convert between int32_t and mpz_class)
   AC_LINK_IFELSE([AC_LANG_PROGRAM([[  #include <gmpxx.h>
-       ${int32_t_int_64_t_include}
-    ]], [[  ${int32_t} x = 815;
+       #include <cstdint>
+    ]], [[  int32_t x = 815;
        mpz_class y(x);
     ]])],[ HAVE_MPZ_INT32_CONVERSION=yes;
-      AC_DEFINE(_4ti2_HAVE_MPZ_INT32_CONVERSION, 1, [Define if we can convert between _4ti2_int32_t and mpz_class]) ],[ HAVE_MPZ_INT32_CONVERSION=no ])
+      AC_DEFINE(_4ti2_HAVE_MPZ_INT32_CONVERSION, 1, [Define if we can convert between int32_t and mpz_class]) ],[ HAVE_MPZ_INT32_CONVERSION=no ])
   AC_MSG_RESULT(${HAVE_MPZ_INT32_CONVERSION})
-  AC_MSG_CHECKING(whether we can convert between ${int64_t} and mpz_class)
+  AC_MSG_CHECKING(whether we can convert between int64_t and mpz_class)
   AC_LINK_IFELSE([AC_LANG_PROGRAM([[  #include <gmpxx.h>
-       ${int32_t_int_64_t_include}
-    ]], [[  ${int64_t} x = 815;
+       #include <cstdint>
+    ]], [[  int64_t x = 815;
        mpz_class y(x);
     ]])],[ HAVE_MPZ_INT64_CONVERSION=yes;
-      AC_DEFINE(_4ti2_HAVE_MPZ_INT64_CONVERSION, 1, [Define if we can convert between _4ti2_int64_t and mpz_class]) ],[ HAVE_MPZ_INT64_CONVERSION=no ])
+      AC_DEFINE(_4ti2_HAVE_MPZ_INT64_CONVERSION, 1, [Define if we can convert between int64_t and mpz_class]) ],[ HAVE_MPZ_INT64_CONVERSION=no ])
   AC_MSG_RESULT(${HAVE_MPZ_INT64_CONVERSION})
   LIBS="${save_LIBS}"
   CXXFLAGS="${save_CXXFLAGS}"
