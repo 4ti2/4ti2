@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #define _4ti2API_
 
 #include <iostream>
+#include <cstdint>
 
 #include "4ti2/4ti2_config.h"
 
