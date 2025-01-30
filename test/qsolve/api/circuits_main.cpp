@@ -28,13 +28,13 @@ main()
     // Input data, like test/circuits/ppi3
     const int m = 1;
     const int n = 3;
-    _4ti2_int64_t mat[m][n] = {
+    int64_t mat[m][n] = {
                 { 1,  2, 3 }
             };
 
     // Output data.
     const int k = 3;
-    _4ti2_int64_t cir[k][n] = {
+    int64_t cir[k][n] = {
                 { 0, 3, -2 },
                 { 2, -1, 0 },
                 { 3, 0, -1 }
@@ -65,7 +65,7 @@ main()
     if (_4ti2_matrix_get_num_cols(cir_matrix) != n) { return 1; }
     for (int i = 0; i < k; ++i) {
         for (int j = 0; j < n; ++j) {
-            _4ti2_int64_t value;
+            int64_t value;
             _4ti2_matrix_get_entry_int64_t(cir_matrix, i, j, &value);
             if (value != cir[i][j]) { return 1; }
         }

@@ -112,13 +112,13 @@ void _4ti2_matrix_write_to_stderr(const _4ti2_matrix*  matrix);
 void _4ti2_matrix_write_to_file(const _4ti2_matrix*  matrix, const char* filename);
 
 // Operations on the matrix.
-_4ti2_status _4ti2_matrix_set_entry_int32_t(_4ti2_matrix*  matrix, int r, int c, _4ti2_int32_t value);
+_4ti2_status _4ti2_matrix_set_entry_int32_t(_4ti2_matrix*  matrix, int r, int c, int32_t value);
 
-_4ti2_status _4ti2_matrix_get_entry_int32_t(const _4ti2_matrix*  matrix, int r, int c, _4ti2_int32_t* value);
+_4ti2_status _4ti2_matrix_get_entry_int32_t(const _4ti2_matrix*  matrix, int r, int c, int32_t* value);
 
-_4ti2_status _4ti2_matrix_set_entry_int64_t(_4ti2_matrix*  matrix, int r, int c, _4ti2_int64_t value);
+_4ti2_status _4ti2_matrix_set_entry_int64_t(_4ti2_matrix*  matrix, int r, int c, int64_t value);
 
-_4ti2_status _4ti2_matrix_get_entry_int64_t(const _4ti2_matrix*  matrix, int r, int c, _4ti2_int64_t* value);
+_4ti2_status _4ti2_matrix_get_entry_int64_t(const _4ti2_matrix*  matrix, int r, int c, int64_t* value);
 
 #ifdef _4ti2_HAVE_GMP
 _4ti2_status _4ti2_matrix_set_entry_mpz_ptr(_4ti2_matrix*  matrix, int r, int c, mpz_ptr value);

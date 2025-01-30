@@ -35,12 +35,12 @@ typedef mpq_class RationalType;
 
 #elif defined(_4ti2_INT64_)
 
-typedef _4ti2_int64_t IntegerType;
+typedef int64_t IntegerType;
 typedef double RationalType;
 
 #elif defined(_4ti2_INT32_)
 
-typedef _4ti2_int32_t IntegerType;
+typedef int32_t IntegerType;
 typedef float RationalType;
 
 #elif defined(_4ti2_INT16_)

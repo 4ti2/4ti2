@@ -26,8 +26,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <inttypes.h>
 
 #if 0
-typedef int _4ti2_int32_t;
-typedef long long _4ti2_int64_t;
+typedef int int32_t;
+typedef long long int64_t;
 #endif
 
 #include "4ti2/4ti2_config.h"
@@ -59,10 +59,10 @@ extern "C"
     int zsolve_matrix_height (ZSolveMatrix matrix); // returns the height of a matrix.
     int zsolve_matrix_read_only (ZSolveMatrix matrix); // returns, whether the matrix is read-only.
     void zsolve_matrix_delete (ZSolveMatrix matrix); // deletes a matrix. should be called before zsolve_state_delete!
-    int zsolve_matrix_set_32 (ZSolveMatrix matrix, int r, int c, _4ti2_int32_t value); // sets the entry at r,c to the 32bit value.
-    int zsolve_matrix_set_64 (ZSolveMatrix matrix, int r, int c, _4ti2_int64_t value); // sets the entry at r,c to the 64bit value.
-    _4ti2_int32_t zsolve_matrix_get_32 (ZSolveMatrix matrix, int r, int c); // returns the 32bit entry at r,c.
-    _4ti2_int64_t zsolve_matrix_get_64 (ZSolveMatrix matrix, int r, int c); // returns the 64bit entry at r,c.
+    int zsolve_matrix_set_32 (ZSolveMatrix matrix, int r, int c, int32_t value); // sets the entry at r,c to the 32bit value.
+    int zsolve_matrix_set_64 (ZSolveMatrix matrix, int r, int c, int64_t value); // sets the entry at r,c to the 64bit value.
+    int32_t zsolve_matrix_get_32 (ZSolveMatrix matrix, int r, int c); // returns the 32bit entry at r,c.
+    int64_t zsolve_matrix_get_64 (ZSolveMatrix matrix, int r, int c); // returns the 64bit entry at r,c.
     void zsolve_matrix_print_32 (ZSolveMatrix matrix); // prints the matrix with 32bit values.
     void zsolve_matrix_print_64 (ZSolveMatrix matrix); // prints the matrix with 64bit values.
 

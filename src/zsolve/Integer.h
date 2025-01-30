@@ -36,7 +36,7 @@ namespace _4ti2_zsolve_
 
 // sign 
 
-inline int sgn (_4ti2_int64_t a)
+inline int sgn (int64_t a)
 {
     if (a > 0)
         return 1;
@@ -46,7 +46,7 @@ inline int sgn (_4ti2_int64_t a)
         return 0;
 }
 
-inline int sgn (_4ti2_int32_t a)
+inline int sgn (int32_t a)
 {
     if (a > 0)
         return 1;
@@ -91,7 +91,7 @@ inline mpz_class gcd (const mpz_class& a, const mpz_class& b)
 }
 #endif
 
-inline int calcPrecision (_4ti2_int32_t n)
+inline int calcPrecision (int32_t n)
 {
     if (n < 0)
 	n = -n;
@@ -104,7 +104,7 @@ inline int calcPrecision (_4ti2_int32_t n)
     return result;
 }
 
-inline int calcPrecision (_4ti2_int64_t n)
+inline int calcPrecision (int64_t n)
 {
     if (n < 0)
         n = -n;
@@ -124,12 +124,12 @@ inline int calcPrecision (const mpz_class& n)
 }
 #endif
 
-inline int maxPrecision (_4ti2_int32_t n)
+inline int maxPrecision (int32_t n)
 {
     return 32;
 }
 
-inline int maxPrecision (_4ti2_int64_t n)
+inline int maxPrecision (int64_t n)
 {
     return 64;
 }
