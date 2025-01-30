@@ -1,8 +1,8 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.59)
-AC_INIT(4ti2, 1.6.10)
+AC_PREREQ([2.72])
+AC_INIT([4ti2],[1.6.10])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign std-options])
 AC_CONFIG_FILES([Makefile src/Makefile src/4ti2/Makefile
@@ -88,7 +88,7 @@ AX_CHECK_COMPILE_FLAG([-std=c++0x], [
 CHECK_TRAPV
 
 ### Taken from GMP's configure.in:
-# The dead hand of AC_REQUIRE makes AC_PROG_LIBTOOL expand and execute
+# The dead hand of AC_REQUIRE makes LT_INIT expand and execute
 # AC_PROG_F77, even when F77 is not in the selected with_tags.  This is
 # probably harmless, but it's unsightly and bloats our configure, so pretend
 # AC_PROG_F77 has been expanded already.
@@ -106,11 +106,7 @@ AC_PROVIDE([AC_PROG_F77])
 AC_DISABLE_SHARED
 # This triggers selection of some optimization flags (-g -O2), 
 # so it should appear _after_ the AX_CXX_MAXOPT, AX_CC_MAXOPT calls.
-AC_PROG_LIBTOOL
-
-# Checks for header files.
-#AC_HEADER_STDC
-#AC_CHECK_HEADERS([malloc.h stdlib.h string.h sys/param.h])
+LT_INIT
 
 # Checks for typedefs, structures, and compiler characteristics.
 #AC_HEADER_STDBOOL
@@ -144,14 +140,10 @@ AM_CONDITIONAL([ENABLE_GROEBNER], [ test x${enable_groebner} = xyes ])
 # This requires the option -std=c++0xx on some modern g++ versions,
 # but this option is unknown on some old g++ versions.
 AC_MSG_CHECKING(whether we can use the int32_t and int64_t types)
-AC_TRY_COMPILE(
-  [ #include <cstdint>
-  ], 
-  [ int32_t xyzzy = 47; int64_t zyxxy = 11; 
-  ],
-  [ have_int32_t_int_64_t=yes;
-  ], 
-  [ have_int32_t_int_64_t=no;
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ #include <cstdint>
+  ]], [[ int32_t xyzzy = 47; int64_t zyxxy = 11; 
+  ]])],[ have_int32_t_int_64_t=yes;
+  ],[ have_int32_t_int_64_t=no;
   ])
 AC_MSG_RESULT(${have_int32_t_int_64_t})
 if test x${have_int32_t_int_64_t} = xyes; then
@@ -180,28 +172,20 @@ if test -n "${GMP_HAVE_CXX}" ; then
   save_LIBS="${LIBS}"
   LIBS="${LIBS} ${GMP_LIBS}"
   AC_MSG_CHECKING(whether we can convert between ${int32_t} and mpz_class)
-  AC_TRY_LINK(
-    [  #include <gmpxx.h>
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[  #include <gmpxx.h>
        ${int32_t_int_64_t_include}
-    ],
-    [  ${int32_t} x = 815;
+    ]], [[  ${int32_t} x = 815;
        mpz_class y(x);
-    ],
-    [ HAVE_MPZ_INT32_CONVERSION=yes;
-      AC_DEFINE(_4ti2_HAVE_MPZ_INT32_CONVERSION, 1, [Define if we can convert between _4ti2_int32_t and mpz_class]) ],
-    [ HAVE_MPZ_INT32_CONVERSION=no ])
+    ]])],[ HAVE_MPZ_INT32_CONVERSION=yes;
+      AC_DEFINE(_4ti2_HAVE_MPZ_INT32_CONVERSION, 1, [Define if we can convert between _4ti2_int32_t and mpz_class]) ],[ HAVE_MPZ_INT32_CONVERSION=no ])
   AC_MSG_RESULT(${HAVE_MPZ_INT32_CONVERSION})
   AC_MSG_CHECKING(whether we can convert between ${int64_t} and mpz_class)
-  AC_TRY_LINK(
-    [  #include <gmpxx.h>
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[  #include <gmpxx.h>
        ${int32_t_int_64_t_include}
-    ],
-    [  ${int64_t} x = 815;
+    ]], [[  ${int64_t} x = 815;
        mpz_class y(x);
-    ],
-    [ HAVE_MPZ_INT64_CONVERSION=yes;
-      AC_DEFINE(_4ti2_HAVE_MPZ_INT64_CONVERSION, 1, [Define if we can convert between _4ti2_int64_t and mpz_class]) ],
-    [ HAVE_MPZ_INT64_CONVERSION=no ])
+    ]])],[ HAVE_MPZ_INT64_CONVERSION=yes;
+      AC_DEFINE(_4ti2_HAVE_MPZ_INT64_CONVERSION, 1, [Define if we can convert between _4ti2_int64_t and mpz_class]) ],[ HAVE_MPZ_INT64_CONVERSION=no ])
   AC_MSG_RESULT(${HAVE_MPZ_INT64_CONVERSION})
   LIBS="${save_LIBS}"
   CXXFLAGS="${save_CXXFLAGS}"
