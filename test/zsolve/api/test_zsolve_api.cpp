@@ -28,14 +28,14 @@ main()
     // Input data.
     const int m = 4;
     const int n = 3;
-    _4ti2_int64_t mat[m][n] = {
+    int64_t mat[m][n] = {
                 { 2,  3, -6 },
                 { 2, -1, -4 },
                 { 1,  2, -11 },
                 { 1, -1,  1 }
             };
-    _4ti2_int64_t rel[m] = { _4ti2_LB, _4ti2_UB, _4ti2_UB, _4ti2_LB };
-    _4ti2_int64_t sign[n] = { _4ti2_LB, _4ti2_LB, _4ti2_LB };
+    int64_t rel[m] = { _4ti2_LB, _4ti2_UB, _4ti2_UB, _4ti2_LB };
+    int64_t sign[n] = { _4ti2_LB, _4ti2_LB, _4ti2_LB };
 
 ///     // Output data.
 ///     const int k = 4;

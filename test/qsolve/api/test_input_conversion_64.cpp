@@ -30,7 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 using namespace std;
 
-#define APITYPE _4ti2_int64_t
+#define APITYPE int64_t
 
 static void
 usage()

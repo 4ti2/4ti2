@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #define _4ti2API_
 
 #include <iostream>
+#include <cstdint>
 
 #include "4ti2/4ti2_config.h"
 
@@ -44,10 +45,10 @@ public:
     virtual void write(std::ostream& out) const = 0; 
     virtual void read(std::istream& in) = 0; 
 
-    virtual void set_entry_int32_t(int r, int c, const _4ti2_int32_t& value) = 0; 
-    virtual void get_entry_int32_t(int r, int c, _4ti2_int32_t& value) const = 0;
-    virtual void set_entry_int64_t(int r, int c, const _4ti2_int64_t& value) = 0;
-    virtual void get_entry_int64_t(int r, int c, _4ti2_int64_t& value) const = 0;
+    virtual void set_entry_int32_t(int r, int c, const int32_t& value) = 0; 
+    virtual void get_entry_int32_t(int r, int c, int32_t& value) const = 0;
+    virtual void set_entry_int64_t(int r, int c, const int64_t& value) = 0;
+    virtual void get_entry_int64_t(int r, int c, int64_t& value) const = 0;
 
 #ifdef _4ti2_HAVE_GMP
     virtual void set_entry_mpz_class(int r, int c, const mpz_class& value) = 0;

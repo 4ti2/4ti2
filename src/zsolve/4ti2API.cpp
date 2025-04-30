@@ -38,9 +38,9 @@ _4ti2_zsolve_create_state(_4ti2_precision prec)
 {
     switch (prec) {
     case _4ti2_PREC_INT_32:
-        return new ZSolveAPI<_4ti2_int32_t>();
+        return new ZSolveAPI<int32_t>();
     case _4ti2_PREC_INT_64:
-        return new ZSolveAPI<_4ti2_int64_t>();
+        return new ZSolveAPI<int64_t>();
 #ifdef _4ti2_HAVE_GMP
     case _4ti2_PREC_INT_ARB:
         return new ZSolveAPI<mpz_class>();
@@ -56,9 +56,9 @@ _4ti2_hilbert_create_state(_4ti2_precision prec)
 {
     switch (prec) {
     case _4ti2_PREC_INT_32:
-        return new HilbertAPI<_4ti2_int32_t>();
+        return new HilbertAPI<int32_t>();
     case _4ti2_PREC_INT_64:
-        return new HilbertAPI<_4ti2_int64_t>();
+        return new HilbertAPI<int64_t>();
 #ifdef _4ti2_HAVE_GMP
     case _4ti2_PREC_INT_ARB:
         return new HilbertAPI<mpz_class>();
@@ -74,9 +74,9 @@ _4ti2_graver_create_state(_4ti2_precision prec)
 {
     switch (prec) {
     case _4ti2_PREC_INT_32:
-        return new GraverAPI<_4ti2_int32_t>();
+        return new GraverAPI<int32_t>();
     case _4ti2_PREC_INT_64:
-        return new GraverAPI<_4ti2_int64_t>();
+        return new GraverAPI<int64_t>();
 #ifdef _4ti2_HAVE_GMP
     case _4ti2_PREC_INT_ARB:
         return new GraverAPI<mpz_class>();

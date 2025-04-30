@@ -328,11 +328,11 @@ void Options::print_precision () const
 {
     int requested_precision, actual_precision; 
     if (m_precision == _4ti2_PREC_INT_32) {
-	actual_precision = sizeof(_4ti2_int32_t) * 8;
+	actual_precision = sizeof(int32_t) * 8;
 	requested_precision = 32;
     }
     else if (m_precision == _4ti2_PREC_INT_64) {
-	actual_precision = sizeof(_4ti2_int64_t) * 8;
+	actual_precision = sizeof(int64_t) * 8;
 	requested_precision = 64;
     }
     else {

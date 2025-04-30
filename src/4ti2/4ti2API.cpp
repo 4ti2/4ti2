@@ -110,28 +110,28 @@ _4ti2_matrix_write_to_file(const _4ti2_matrix*  matrix, const char* filename)
 }
 
 _4ti2_status
-_4ti2_matrix_set_entry_int32_t(_4ti2_matrix*  matrix, int r, int c, _4ti2_int32_t value)
+_4ti2_matrix_set_entry_int32_t(_4ti2_matrix*  matrix, int r, int c, int32_t value)
 {
     matrix->set_entry_int32_t(r, c, value);
     return _4ti2_OK;
 }
 
 _4ti2_status
-_4ti2_matrix_get_entry_int32_t(const _4ti2_matrix*  matrix, int r, int c, _4ti2_int32_t* value)
+_4ti2_matrix_get_entry_int32_t(const _4ti2_matrix*  matrix, int r, int c, int32_t* value)
 {
     matrix->get_entry_int32_t(r, c, *value);
     return _4ti2_OK;
 }
 
 _4ti2_status
-_4ti2_matrix_set_entry_int64_t(_4ti2_matrix*  matrix, int r, int c, _4ti2_int64_t value)
+_4ti2_matrix_set_entry_int64_t(_4ti2_matrix*  matrix, int r, int c, int64_t value)
 {
     matrix->set_entry_int64_t(r, c, value);
     return _4ti2_OK;
 }
 
 _4ti2_status
-_4ti2_matrix_get_entry_int64_t(const _4ti2_matrix*  matrix, int r, int c, _4ti2_int64_t* value)
+_4ti2_matrix_get_entry_int64_t(const _4ti2_matrix*  matrix, int r, int c, int64_t* value)
 {
     matrix->get_entry_int64_t(r, c, *value);
     return _4ti2_OK;
