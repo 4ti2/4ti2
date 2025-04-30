@@ -36,4 +36,4 @@ dist-hook:
 	@echo "**************************************************************"
 endif
 
-EXTRA_DIST = autogen.sh TODO NEWS README README.cvs
+EXTRA_DIST = autogen.sh TODO NEWS README
