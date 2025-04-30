@@ -135,4 +135,6 @@ jobs:
         ["ubuntu-jammy"]
       tox_packages_factors: >-
         ["standard"]
+      # avoid clash with linux job for the same platform
+      logs_artifact: false
     needs: [dist]
