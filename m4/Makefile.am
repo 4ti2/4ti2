@@ -1,11 +1,9 @@
 EXTRA_DIST=					\
 	gmp-check.m4				\
-	ax_cc_maxopt.m4				\
 	ax_check_compiler_flags.m4		\
 	ax_compiler_vendor.m4			\
-	ax_cxx_maxopt.m4			\
-	ax_gcc_archflag.m4			\
-	ax_gcc_x86_cpuid.m4			\
+	ax_prepend_flag.m4			\
+	ax_require_defined.m4			\
 	gnulib-cache.m4				\
 	00gnulib.m4				\
 	extensions.m4				\
