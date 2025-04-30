@@ -1,7 +1,7 @@
 4ti2 -- A software package for algebraic, geometric and combinatorial
 problems on linear spaces.
 
-Copyright (C) 1998, 2002, 2006, 2015 4ti2 team.
+Copyright (C) 1998, 2002, 2006, 2015, 2025 4ti2 team.
  
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -19,6 +19,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 COMPILING 4ti2
 ==============
+
+If you checked out the sources using git, first, to generate the build system,
+you need Automake, Autoconf, and Libtool. Run the following command:
+
+        ./autogen.sh
 
 Run the following commands with the 4ti2 directory:
 
