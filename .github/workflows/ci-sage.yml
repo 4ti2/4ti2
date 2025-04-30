@@ -40,6 +40,8 @@ on:
   pull_request:
     types: [opened, synchronize]
   push:
+    branches:
+      - master
     tags:
       - '*'
   workflow_dispatch:
