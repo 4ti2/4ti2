@@ -268,17 +268,17 @@ WRAPPERSCRIPTS =				\
 nodist_bin_SCRIPTS = $(WRAPPERSCRIPTS)
 DISTCLEANFILES = $(WRAPPERSCRIPTS)
 
-AM_LDFLAGS = -L../4ti2 -R$(libdir) -l4ti2common -no-undefined
+AM_LDFLAGS = -R$(libdir) -no-undefined
 
 # 16 bit precision flags.
-# 4ti2int16_LDADD = lib4ti2int16.la
+# 4ti2int16_LDADD = lib4ti2int16.la $(top_builddir)/src/4ti2/lib4ti2common.la
 # 4ti2int16_CPPFLAGS = -D_4ti2_INT16_
 # 4ti2int16_SOURCES = $(4ti2sources)
 # lib4ti2int16_la_CPPFLAGS = -D_4ti2_INT16_
 # lib4ti2int16_la_SOURCES = $(lib4ti2sources)
 
 # 32 bit precision flags.
-4ti2int32_LDADD = lib4ti2int32.la
+4ti2int32_LDADD = lib4ti2int32.la $(top_builddir)/src/4ti2/lib4ti2common.la
 4ti2int32_CPPFLAGS = -D_4ti2_INT32_
 4ti2int32_CXXFLAGS = $(TRAPV) $(AM_CXXFLAGS)
 4ti2int32_SOURCES = $(4ti2sources)
@@ -287,7 +287,7 @@ lib4ti2int32_la_CXXFLAGS = $(TRAPV) $(AM_CXXFLAGS)
 lib4ti2int32_la_SOURCES = $(lib4ti2sources)
 
 # 64 bit precision flags.
-4ti2int64_LDADD = lib4ti2int64.la
+4ti2int64_LDADD = lib4ti2int64.la $(top_builddir)/src/4ti2/lib4ti2common.la
 4ti2int64_CPPFLAGS = -D_4ti2_INT64_
 4ti2int64_CXXFLAGS = $(TRAPV) $(AM_CXXFLAGS)
 4ti2int64_SOURCES = $(4ti2sources)
@@ -298,7 +298,7 @@ lib4ti2int64_la_SOURCES = $(lib4ti2sources)
 # Arbitrary precision flags.
 # 4ti2 uses GMP (GLPL), an arbitrary precision arithmetic library.
 if HAVE_GMP_WITH_CXX
-4ti2gmp_LDADD = lib4ti2gmp.la
+4ti2gmp_LDADD = lib4ti2gmp.la $(top_builddir)/src/4ti2/lib4ti2common.la
 4ti2gmp_CPPFLAGS = -D_4ti2_GMP_ $(GMP_CFLAGS)
 4ti2gmp_SOURCES = $(4ti2sources)
 lib4ti2gmp_la_CPPFLAGS = -D_4ti2_GMP_
