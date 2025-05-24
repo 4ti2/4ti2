@@ -29,19 +29,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 /* Created    : 26-AUG-02                                            */
 /*                                                                   */
 /* ----------------------------------------------------------------- */
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
-#include <limits.h>
 #include "myheader.h"
 #include "print.h"
 #include "vector.h"
 
 #include <getopt.h>
 #include "banner.h"
-
-#ifndef PATH_MAX
-#define PATH_MAX FILENAME_MAX
-#endif
 
 /* ----------------------------------------------------------------- */
 void printPermutationToFile(FILE *out, vector v, int numOfVars) {
@@ -104,7 +100,8 @@ static void print_usage()
 int gensymm_main(int argc, char *argv[]) {
   int a,i,j,k,l,x,y,z,w,numOfVars,numOfGenerators,infoLevel;
   vector v;
-  char fileName[PATH_MAX],outFileName[PATH_MAX];
+  const char *fileName=NULL;
+	char *outFileName=NULL;
   FILE *out;
 
   int optc;
@@ -143,7 +140,7 @@ int gensymm_main(int argc, char *argv[]) {
 
 /* We require that all 1's come last in the tuple (x,y,z,w). */
 
-  strcpy(fileName,argv[argc-1]);
+  fileName=argv[argc-1];
   x=atoi(argv[argc-5]);
   y=atoi(argv[argc-4]);
   z=atoi(argv[argc-3]);
@@ -169,11 +166,11 @@ int gensymm_main(int argc, char *argv[]) {
 
 /* Now we are back in business. */
 
-  strcpy(outFileName,fileName);
-  strcat(outFileName,".sym");
+  myxasprintf(&outFileName,"%s.sym",fileName);
 
+  errno=0;
   if (!(out = fopen(outFileName,"w"))) {
-    printf("Error opening generator file for output.");
+    printf("Error opening generator file for output (%s).\n",strerror(errno));
     exit (0);
   }
 
@@ -395,6 +392,9 @@ int gensymm_main(int argc, char *argv[]) {
     printPermutationToFile(out, v, numOfVars);
   }
 
+  fclose(out);
+
+  free(outFileName);
 
   return(0);
 }

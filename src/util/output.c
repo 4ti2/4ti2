@@ -33,13 +33,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "print.h"
 #include "vector.h"
 #include <stdlib.h>
-#include <limits.h>
 
 #include "banner.h"
-
-#ifndef PATH_MAX
-#define PATH_MAX FILENAME_MAX
-#endif
 
 /* ----------------------------------------------------------------- */
 listVector* readListVector(int *numOfVars, char *fileName) {
@@ -409,14 +404,15 @@ int output_main(int argc, char *argv[]) {
   int i,j,x,y,z,numOfVars,numOfRows,numOfFixPoints,numOfLabels,infoLevel,
     degree,lowdegree,highdegree,coord,sizeOfLayer,val;
   char *s;
-  char fileName[PATH_MAX],outFileName[PATH_MAX],domFileName[PATH_MAX],symFileName[PATH_MAX],
-    varFileName[PATH_MAX],groFileName[PATH_MAX],costFileName[PATH_MAX];
+  const char *fileName=NULL, *domFileName=NULL;
+  char *outFileName=NULL, *symFileName=NULL, *varFileName=NULL,
+       *groFileName=NULL, *costFileName=NULL;
   char **labels;
   vector v,w,fixpoints;
   listVector *A, *B, *C, *basis, *domBasis, *tmp, *tmpV, *symmGroup, *weights;
   FILE *in;
   int did_something = 0;
-  
+
   infoLevel=standardInfoLevel;
   for (i=1;i<argc;i++) {
     if (strncmp(argv[i],"--",2)==0) {
@@ -433,452 +429,391 @@ int output_main(int argc, char *argv[]) {
       }
     }
   }
-  
+
   if (infoLevel>-1) {
     printVersionInfo();
   }
 
   for (i=1; i<argc; i++) {
     if (strncmp(argv[i],"--pos",5)==0) {
-      strcpy(fileName,argv[argc-1]);
+      fileName=argv[argc-1];
       basis=readListVector(&numOfVars,fileName);
       basis=extractPositivePartsOfVectors(basis,numOfVars);
-      strcpy(outFileName,fileName);
-      strcat(outFileName,".pos");
+      myxasprintf(&outFileName,"%s.pos",fileName);
       printListVectorToFile(outFileName,basis,numOfVars);
     }
     else if (strncmp(argv[i],"--rep",5)==0) {
-      strcpy(fileName,argv[argc-1]);
+      fileName=argv[argc-1];
       basis=readListVector(&numOfVars,fileName);
-      strcpy(symFileName,fileName);
-      strcat(symFileName,".sym.full");
+      myxasprintf(&symFileName,"%s.sym.full",fileName);
       symmGroup=readListVector(&numOfVars,symFileName);
 
-      if (symmGroup==0) { 
-        strcpy(fileName,argv[argc-1]);
+      if (symmGroup==0) {
+        fileName=argv[argc-1];
         basis=readListVector(&numOfVars,fileName);
-	strcpy(symFileName,fileName);
-	strcat(symFileName,".sym");
-	symmGroup=readListVector(&numOfVars,symFileName);
+        myxasprintf(&symFileName,"%s.sym",fileName);
+	      symmGroup=readListVector(&numOfVars,symFileName);
 
-	tmpV=symmGroup;
-	while (tmpV) {
-	  int i;
-	  v=tmpV->first;
-	  for (i=0; i<numOfVars; i++) v[i]=v[i]-1;
-	  tmpV->first=v;
-	  tmpV=tmpV->rest;
-	}
-	symmGroup=generateSymmetryGroup(symmGroup,numOfVars);
-	strcat(symFileName,".full");
-	printListVectorToFile(symFileName, symmGroup, numOfVars);
+        tmpV=symmGroup;
+        while (tmpV) {
+          int i;
+          v=tmpV->first;
+          for (i=0; i<numOfVars; i++) v[i]=v[i]-1;
+          tmpV->first=v;
+					tmpV=tmpV->rest;
+	      }
+      symmGroup=generateSymmetryGroup(symmGroup,numOfVars);
+      myxasprintf(&symFileName,"%s.sym.full",fileName);
+      printListVectorToFile(symFileName, symmGroup, numOfVars);
       }
 
       basis=extractSymmetryRepresentatives(basis,symmGroup,numOfVars);
-      strcpy(outFileName,fileName);
-      strcat(outFileName,".rep");
+      myxasprintf(&outFileName,"%s.rep",fileName);
       printListVectorToFile(outFileName,basis,numOfVars);
       printf("%d representatives found.\n",lengthListVector(basis));
     }
     else if (strncmp(argv[i],"--dom",5)==0) {
-      strcpy(fileName,argv[argc-1]);
+      fileName=argv[argc-1];
       basis=readListVector(&numOfVars,fileName);
-      strcpy(domFileName,argv[argc-2]);
+      domFileName=argv[argc-2];
       domBasis=readListVector(&numOfVars,domFileName);
 
-      basis=extractNonDominatedVectors(basis,domBasis,numOfVars); 
-      strcpy(outFileName,fileName);
-      strcat(outFileName,".nondom");
+      basis=extractNonDominatedVectors(basis,domBasis,numOfVars);
+      myxasprintf(&outFileName,"%s.nondom",fileName);
       printListVectorToFile(outFileName,basis,numOfVars);
-      printf("%d non-dominated vectors found.\n",
-	     lengthListVector(basis));
+      printf("%d non-dominated vectors found.\n",lengthListVector(basis));
     }
     else if (strncmp(argv[i],"--max",5)==0) {
-      strcpy(fileName,argv[argc-1]);
+      fileName=argv[argc-1];
       basis=readListVector(&numOfVars,fileName);
-      strcpy(symFileName,fileName);
-      strcat(symFileName,".sym.full");
+      myxasprintf(&symFileName,"%s.sym.full",fileName);
       symmGroup=readListVector(&numOfVars,symFileName);
 
-      if (symmGroup==0) { 
-        strcpy(fileName,argv[argc-1]);
+      if (symmGroup==0) {
+        fileName=argv[argc-1];
         basis=readListVector(&numOfVars,fileName);
-	strcpy(symFileName,fileName);
-	strcat(symFileName,".sym");
-	symmGroup=readListVector(&numOfVars,symFileName);
+        myxasprintf(&symFileName,"%s.sym",fileName);
+        symmGroup=readListVector(&numOfVars,symFileName);
 
-	tmpV=symmGroup;
-	while (tmpV) {
-	  int i;
-	  v=tmpV->first;
-	  for (i=0; i<numOfVars; i++) v[i]=v[i]-1;
-	  tmpV->first=v;
-	  tmpV=tmpV->rest;
-	}
-	symmGroup=generateSymmetryGroup(symmGroup,numOfVars);
-	strcat(symFileName,".full");
-	printListVectorToFile(symFileName, symmGroup, numOfVars);
+        tmpV=symmGroup;
+        while (tmpV) {
+          int i;
+          v=tmpV->first;
+          for (i=0; i<numOfVars; i++) v[i]=v[i]-1;
+          tmpV->first=v;
+          tmpV=tmpV->rest;
+        }
+        symmGroup=generateSymmetryGroup(symmGroup,numOfVars);
+        myxasprintf(&symFileName,"%s.sym.full",fileName);
+        printListVectorToFile(symFileName, symmGroup, numOfVars);
       }
-      basis=extractMaximalNonDominatedVectors(basis,symmGroup,numOfVars); 
-      strcpy(outFileName,fileName);
-      strcat(outFileName,".maxnondom");
+      basis=extractMaximalNonDominatedVectors(basis,symmGroup,numOfVars);
+      myxasprintf(&outFileName,"%s.maxnondom",fileName);
       printListVectorToFile(outFileName,basis,numOfVars);
-      printf("%d maximal non-dominated vectors found.\n",
-	     lengthListVector(basis));
+      printf("%d maximal non-dominated vectors found.\n",lengthListVector(basis));
     }
     else if (strncmp(argv[i],"--exp",5)==0) {
-      strcpy(fileName,argv[argc-1]);
+      fileName=argv[argc-1];
       basis=readListVector(&numOfVars,fileName);
-      strcpy(symFileName,fileName);
-      strcat(symFileName,".sym.full");
+      myxasprintf(&symFileName,"%s.sym.full",fileName);
       symmGroup=readListVector(&numOfVars,symFileName);
 
-      if (symmGroup==0) { 
-	strcpy(symFileName,fileName);
-	strcat(symFileName,".sym");
-	symmGroup=readListVector(&numOfVars,symFileName);
-	tmpV=symmGroup;
-	while (tmpV) {
-	  int i;
-	  v=tmpV->first;
-	  for (i=0; i<numOfVars; i++) v[i]=v[i]-1;
-	  tmpV->first=v;
-	  tmpV=tmpV->rest;
-	}
-	symmGroup=generateSymmetryGroup(symmGroup,numOfVars);
+      if (symmGroup==0) {
+        myxasprintf(&symFileName,"%s.sym",fileName);
+        symmGroup=readListVector(&numOfVars,symFileName);
+        tmpV=symmGroup;
+        while (tmpV) {
+          int i;
+          v=tmpV->first;
+          for (i=0; i<numOfVars; i++) v[i]=v[i]-1;
+          tmpV->first=v;
+          tmpV=tmpV->rest;
+			  }
+      symmGroup=generateSymmetryGroup(symmGroup,numOfVars);
       }
       basis=expandRepresentativeIntoFullOrbits(basis,symmGroup,numOfVars,10);
-      strcpy(outFileName,fileName);
-      strcat(outFileName,".exp");
+      myxasprintf(&outFileName,"%s.exp",fileName);
       printListVectorToFile(outFileName,basis,numOfVars);
     }
     else if (strncmp(argv[i],"--deg",5)==0) {
-      strcpy(fileName,argv[argc-1]);
+      fileName=argv[argc-1];
       basis=readListVector(&numOfVars,fileName);
       if (argc==3) {
-	printL1NormOfListVector(basis,numOfVars);
+			  printL1NormOfListVector(basis,numOfVars);
       } else {
-	if (argc==4) {
-	  degree=atoi(argv[i+1]);
-	  printf("degree = %d\n",degree);
-	  strcpy(outFileName,fileName);
-	  strcat(outFileName,".deg.");
-	  strcat(outFileName,argv[i+1]);
-	  printListVectorWithGivenDegreesToFile(outFileName,basis,numOfVars,
-						degree,degree);
-	} else {
-	  lowdegree=atoi(argv[i+1]);
-	  highdegree=atoi(argv[i+2]);
-	  printf("degrees %d..%d\n",lowdegree,highdegree);
-	  strcpy(outFileName,fileName);
-	  strcat(outFileName,".deg.");
-	  strcat(outFileName,argv[i+1]);
-	  strcat(outFileName,"-");
-	  strcat(outFileName,argv[i+2]);
-	  printListVectorWithGivenDegreesToFile(outFileName,basis,numOfVars,
-						lowdegree,highdegree);
-	}
+        if (argc==4) {
+          degree=atoi(argv[i+1]);
+          printf("degree = %d\n",degree);
+          myxasprintf(&outFileName,"%s.deg.%s",fileName,argv[i+1]);
+	        printListVectorWithGivenDegreesToFile(outFileName,basis,numOfVars,degree,degree);
+        } else {
+	        lowdegree=atoi(argv[i+1]);
+	        highdegree=atoi(argv[i+2]);
+	        printf("degrees %d..%d\n",lowdegree,highdegree);
+	        myxasprintf(&outFileName,"%s.deg.%s-%s",fileName,argv[i+1],argv[i+2]);
+	        printListVectorWithGivenDegreesToFile(outFileName,basis,numOfVars,lowdegree,highdegree);
+	      }
       }
-      return(0);
+      break;
     }
     else if (strncmp(argv[i],"--sup",5)==0) {
-      strcpy(fileName,argv[argc-1]);
+      fileName=argv[argc-1];
       basis=readListVector(&numOfVars,fileName);
       if (argc==3) {
-	printSupportsOfListVector(basis,numOfVars);
+	      printSupportsOfListVector(basis,numOfVars);
       } else {
-	if (argc==4) {
-	  degree=atoi(argv[i+1]);
-	  printf("size of support = %d\n",degree);
-	  strcpy(outFileName,fileName);
-	  strcat(outFileName,".supp.");
-	  strcat(outFileName,argv[i+1]);
-	  printListVectorWithGivenSupportsToFile(outFileName,basis,numOfVars,
-						 degree,degree);
-	} else {
-	  lowdegree=atoi(argv[i+1]);
-	  highdegree=atoi(argv[i+2]);
-	  printf("sizes of support %d..%d\n",lowdegree,highdegree);
-	  strcpy(outFileName,fileName);
-	  strcat(outFileName,".supp.");
-	  strcat(outFileName,argv[i+1]);
-	  strcat(outFileName,"-");
-	  strcat(outFileName,argv[i+2]);
-	  printListVectorWithGivenSupportsToFile(outFileName,basis,numOfVars,
-						 lowdegree,highdegree);
-	}
+        if (argc==4) {
+	        degree=atoi(argv[i+1]);
+	        printf("size of support = %d\n",degree);
+          myxasprintf(&outFileName,"%s.supp.%s",fileName,argv[i+1]);
+	        printListVectorWithGivenSupportsToFile(outFileName,basis,numOfVars,degree,degree);
+	      } else {
+	        lowdegree=atoi(argv[i+1]);
+	        highdegree=atoi(argv[i+2]);
+	        printf("sizes of support %d..%d\n",lowdegree,highdegree);
+          myxasprintf(&outFileName,"%s.supp.%s-%s",fileName,argv[i+1],argv[i+2]);
+          printListVectorWithGivenSupportsToFile(outFileName,basis,numOfVars,lowdegree,highdegree);
+        }
       }
-      return(0);
+      break;
     }
     else if (strncmp(argv[i],"--typ",5)==0) {
-      strcpy(fileName,argv[argc-1]);
+      fileName=argv[argc-1];
       basis=readListVector(&numOfVars,fileName);
       sizeOfLayer=atoi(argv[i+1]);
       printTypesOfListVector(basis,sizeOfLayer,numOfVars);
-      return(0);
+      break;
     }
     else if (strncmp(argv[i],"--non",5)==0) {
-      strcpy(fileName,argv[argc-1]);
+      fileName=argv[argc-1];
       basis=readListVector(&numOfVars,fileName);
       if (argc==3) {
-	printf("ERROR: You need to specify a coordinate!\n");
-	exit(1);
+        printf("ERROR: You need to specify a coordinate!\n");
+        exit(1);
       } else {
-	coord=atoi(argv[i+1]);
-	strcpy(outFileName,fileName);
-	strcat(outFileName,".nonzero.");
-	strcat(outFileName,argv[i+1]);
-	printListVectorWithGivenNonzeroEntryToFile(outFileName,basis,
-						   numOfVars,coord);
+        coord=atoi(argv[i+1]);
+        myxasprintf(&outFileName,"%s.nonzero.%s",fileName,argv[i+1]);
+        printListVectorWithGivenNonzeroEntryToFile(outFileName,basis,numOfVars,coord);
       }
-      return(0);
+      break;
     }
     else if (strncmp(argv[i],"--AxB",5)==0) {
-      strcpy(fileName,argv[argc-3]);
+      fileName=argv[argc-3];
       A=readListVector(&numOfVars,fileName);
-      strcpy(fileName,argv[argc-2]);
+      fileName=argv[argc-2];
       B=readListVector(&numOfVars,fileName);
       v=matrixTimesVector(A,B->first,lengthListVector(A),numOfVars);
       C=createListVector(v);
-      strcpy(fileName,argv[argc-1]);
+      fileName=argv[argc-1];
       printListVectorToFile(fileName,C,lengthListVector(A));
     }
     else if (strncmp(argv[i],"--0-1",5)==0) {
-      strcpy(fileName,argv[argc-1]);
+      fileName=argv[argc-1];
       basis=readListVector(&numOfVars,fileName);
       basis=extractZeroOneVectors(basis,numOfVars);
-      strcpy(outFileName,fileName);
-      strcat(outFileName,".0-1");
+      myxasprintf(&outFileName,"%s.0-1",fileName);
       printListVectorToFile(outFileName,basis,numOfVars);
     }
     else if (strncmp(argv[i],"--3wa",5)==0) {
-      strcpy(fileName,argv[argc-1]);
+      fileName=argv[argc-1];
       basis=readListVector(&numOfVars,fileName);
       x=atoi(argv[i+1]);
       y=atoi(argv[i+2]);
       z=atoi(argv[i+3]);
-      strcpy(outFileName,fileName);
-      strcat(outFileName,".3way");
+      myxasprintf(&outFileName,"%s.3way",fileName);
       print3wayTables(outFileName,basis,x,y,z,numOfVars);
     }
     else if (strncmp(argv[i],"--tra",5)==0) {
-      strcpy(fileName,argv[argc-1]);
+      fileName=argv[argc-1];
       basis=readListVector(&numOfVars,fileName);
-      strcpy(outFileName,fileName);
-      strcat(outFileName,".tra");
+      myxasprintf(&outFileName,"%s.tra",fileName);
       printTransposedListVectorToFile(outFileName,basis,numOfVars);
     }
     else if (strncmp(argv[i],"--map",5)==0) {
-      strcpy(fileName,argv[argc-1]);
+      fileName=argv[argc-1];
       basis=readListVector(&numOfVars,fileName);
-      strcpy(outFileName,fileName);
-      strcat(outFileName,".maple");
+      myxasprintf(&outFileName,"%s.maple",fileName);
       printListVectorMaple(outFileName,basis,numOfVars);
     }
     else if (strncmp(argv[i],"--mac",5)==0) {
-      strcpy(fileName,argv[argc-1]);
+      fileName=argv[argc-1];
       basis=readListVector(&numOfVars,fileName);
-      strcpy(outFileName,fileName);
-      strcat(outFileName,".macaulay2");
+      myxasprintf(&outFileName,"%s.macaulay2",fileName);
       printListVectorMacaulay2(outFileName,basis,numOfVars);
     }
     else if (strncmp(argv[i],"--mat",5)==0) {
-      strcpy(fileName,argv[argc-1]);
+      fileName=argv[argc-1];
       basis=readListVector(&numOfVars,fileName);
-      strcpy(outFileName,fileName);
-      strcat(outFileName,".mathematica");
+      myxasprintf(&outFileName,"%s.mathematica",fileName);
       printListVectorMaple(outFileName,basis,numOfVars);
     }
     else if (strncmp(argv[i],"--coc",5)==0) {
-      strcpy(fileName,argv[argc-1]);
+      fileName=argv[argc-1];
       basis=readListVector(&numOfVars,fileName);
-      strcpy(outFileName,fileName);
-      strcat(outFileName,".cocoa");
+      myxasprintf(&outFileName,"%s.cocoa",fileName);
       printListVectorMaple(outFileName,basis,numOfVars);
     }
     else if (strncmp(argv[i],"--bin",5)==0) {
-      strcpy(fileName,argv[argc-1]);
+      fileName=argv[argc-1];
       basis=readListVector(&numOfVars,fileName);
-      strcpy(outFileName,fileName);
-      strcat(outFileName,".bin");
+      myxasprintf(&outFileName,"%s.bin",fileName);
 
       labels=0;
-      strcpy(varFileName,fileName);
-      strcat(varFileName,".vars");
+      myxasprintf(&varFileName,"%s.vars",fileName);
       if ((in = fopen(varFileName,"r"))) {
-	int i;
-	printf("File \"%s\" found. 4ti2 will use it.\n\n",varFileName);
-	if (fscanf(in,"%d %d",&numOfRows, &numOfLabels)!=2 || numOfRows!=1) {
+	      int i;
+	      printf("File \"%s\" found. 4ti2 will use it.\n\n",varFileName);
+	      if (fscanf(in,"%d %d",&numOfRows, &numOfLabels)!=2 || numOfRows!=1) {
           printf("ERROR: Unrecognised file format for \"%s\".\n", varFileName);
           exit(1);
         }
-	if (numOfLabels != numOfVars) {
-	  printf("ERROR: Incorrect number of variable names in \"%s\".\n",
-                          varFileName);
+	      if (numOfLabels != numOfVars) {
+	        printf("ERROR: Incorrect number of variable names in \"%s\".\n", varFileName);
           exit(1);
-	}
-	labels = (char **)malloc(sizeof(char*)*(numOfVars));
-	for (i=0; i<numOfVars; i++) {
-	  s=(char *)malloc(sizeof(char)*127);
-	  if (fscanf(in,"%s",s) != 1) {
-            printf("ERROR: Unrecognised file format for \"%s\".\n",
-                            varFileName);
+        }
+        labels = (char **)malloc(sizeof(char*)*(numOfVars));
+        for (i=0; i<numOfVars; i++) {
+          s=(char *)malloc(sizeof(char)*127);
+          if (fscanf(in,"%s",s) != 1) {
+            printf("ERROR: Unrecognised file format for \"%s\".\n", varFileName);
             exit(1);
           }
-	  labels[i]=s;
-	}
-	fclose(in);
+          labels[i]=s;
+        }
+      fclose(in);
       }
       printListBinomialsToFile(outFileName,basis,numOfVars,labels);
     }
     else if (strncmp(argv[i],"--sum",5)==0) {
-      strcpy(fileName,argv[argc-1]);
+      fileName=argv[argc-1];
       basis=readListVector(&numOfVars,fileName);
       v=createVector(numOfVars);
       for (i=0; i<numOfVars; i++) v[i]=0;
       while (basis) {
-	for (i=0; i<numOfVars; i++) v[i]=v[i]+(basis->first)[i];
-	basis=basis->rest;
+        for (i=0; i<numOfVars; i++) v[i]=v[i]+(basis->first)[i];
+        basis=basis->rest;
       }
       printVector(v,numOfVars);
     }
     else if (strncmp(argv[i],"--sub",5)==0) {
-      strcpy(fileName,argv[argc-2]);
+      fileName=argv[argc-2];
       basis=readListVector(&numOfVars,fileName);
       v=basis->first;
-      strcpy(fileName,argv[argc-1]);
+      fileName=argv[argc-1];
       basis=readListVector(&numOfVars,fileName);
-      strcpy(outFileName,fileName);
-      strcat(outFileName,".submat");
+      myxasprintf(&outFileName,"%s.submat",fileName);
       printSubsetOfListVectorToFile(outFileName,basis,v,numOfVars);
     }
     else if (strncmp(argv[i],"--rem",5)==0) {
       if (strncmp(argv[i],"--remcol",8)==0) {
-	/* Remove column. */
-        strcpy(fileName,argv[argc-1]);
+        /* Remove column. */
+        fileName=argv[argc-1];
         basis=readListVector(&numOfVars,fileName);
-	coord=atoi(argv[argc-2]);
-        strcpy(outFileName,fileName);
-        strcat(outFileName,".remcol");
+        coord=atoi(argv[argc-2]);
+        myxasprintf(&outFileName,"%s.remcol",fileName);
         printListVectorWithoutColumnToFile(outFileName,basis,coord,numOfVars);
       }
     }
     else if (strncmp(argv[i],"--sta",5)==0) {
-      /* Extracting those symmetries from a list of given symmetries 
-	 that keep a given list of vectors fixed. */
-      strcpy(fileName,argv[argc-1]);
+      /* Extracting those symmetries from a list of given symmetries
+         that keep a given list of vectors fixed. */
+      fileName=argv[argc-1];
       basis=readListVector(&numOfVars,fileName);
-      strcpy(symFileName,argv[argc-2]);
-      symmGroup=readListVector(&numOfVars,symFileName);
+      fileName=argv[argc-2];
+      symmGroup=readListVector(&numOfVars,fileName);
       symmGroup=extractStabilizer(basis,symmGroup,numOfVars);
-      strcpy(outFileName,symFileName);
-      strcat(outFileName,".stab");
+      myxasprintf(&outFileName,"%s.stab",fileName);
       printListVectorToFile(outFileName,symmGroup,numOfVars);
     }
     else if (strncmp(argv[i],"--fil",5)==0) {
       /* Fill specified column with specified value. */
-
-      strcpy(fileName,argv[argc-1]);
+      fileName=argv[argc-1];
       basis=readListVector(&numOfVars,fileName);
       coord=atoi(argv[argc-3]);
       val=atoi(argv[argc-2]);
       tmp=basis;
       while (tmp) {
-	(tmp->first)[coord-1]=val;
-	tmp=tmp->rest;
+        (tmp->first)[coord-1]=val;
+        tmp=tmp->rest;
       }
-      strcpy(outFileName,fileName);
-      strcat(outFileName,".fil");
+      myxasprintf(&outFileName,"%s.fil",fileName);
       printListVectorToFile(outFileName,basis,numOfVars);
     }
     else if (strncmp(argv[i],"--add",5)==0) {
       /* Add column with specified value. */
-        strcpy(fileName,argv[argc-1]);
+        fileName=argv[argc-1];
         basis=readListVector(&numOfVars,fileName);
-	coord=atoi(argv[argc-3]);
-	val=atoi(argv[argc-2]);
-        strcpy(outFileName,fileName);
-        strcat(outFileName,".addcol");
-        printListVectorWithAdditionalColumnToFile(outFileName,basis,
-						 coord,val,numOfVars);
+        coord=atoi(argv[argc-3]);
+        val=atoi(argv[argc-2]);
+        myxasprintf(&outFileName,"%s.addcol",fileName);
+        printListVectorWithAdditionalColumnToFile(outFileName,basis,coord,val,numOfVars);
     }
     else if (strncmp(argv[i],"--fix",5)==0) {
       /* Extracting those vectors that have given coordinates x[i]=i. */
-
       numOfFixPoints=argc-3;
       fixpoints=createVector(numOfFixPoints);
       for (j=2;j<argc-1;j++) fixpoints[j-2]=atoi(argv[j]);
-      strcpy(fileName,argv[argc-1]);
+      fileName=argv[argc-1];
       basis=readListVector(&numOfVars,fileName);
       basis=extractFixedVectors(basis,fixpoints,numOfFixPoints);
-      strcpy(outFileName,fileName);
-      strcat(outFileName,".fix");
+      myxasprintf(&outFileName,"%s.fix",fileName);
       printListVectorToFile(outFileName,basis,numOfVars);
     }
     else if (strncmp(argv[i],"--fox",5)==0) {
       /* Extracting those vectors that have given coordinates x[i]=i. */
-
       numOfFixPoints=argc-3;
       fixpoints=createVector(numOfFixPoints);
       for (j=2;j<argc-1;j++) fixpoints[j-2]=atoi(argv[j]);
-      strcpy(fileName,argv[argc-1]);
+      fileName=argv[argc-1];
       basis=readListVector(&numOfVars,fileName);
       basis=extractRelaxedFixedVectors(basis,fixpoints,numOfFixPoints);
-      strcpy(outFileName,fileName);
-      strcat(outFileName,".fox");
+      myxasprintf(&outFileName,"%s.fox",fileName);
       printListVectorToFile(outFileName,basis,numOfVars);
     }
     else if (strncmp(argv[i],"--ini",5)==0) {
-      strcpy(fileName,argv[argc-1]);
-      strcpy(groFileName,fileName);
-      strcat(groFileName,".gro");
+      fileName=argv[argc-1];
+      myxasprintf(&groFileName,"%s.gro",fileName);
       basis=readListVector(&numOfVars,groFileName);
-      strcpy(costFileName,argv[argc-1]);
-      strcat(costFileName,".cost");
+      myxasprintf(&costFileName,"%s.cost",fileName);
       weights=readListVector(&numOfVars,costFileName);
       if (weights!=0) {
         w=weights->first;
       } else {
-	int i;
-	w=createVector(numOfVars);
-	for (i=0;i<numOfVars;i++) w[i]=1;
+        int i;
+        w=createVector(numOfVars);
+        for (i=0;i<numOfVars;i++) w[i]=1;
       }
       basis=extractInitialForms(basis,w,numOfVars);
 
-      strcpy(outFileName,fileName);
-      strcat(outFileName,".ini");
+      myxasprintf(&outFileName,"%s.ini",fileName);
       printListVectorToFile(outFileName,basis,numOfVars);
 
       labels=0;
-      strcpy(varFileName,fileName);
-      strcat(varFileName,".vars");
+      myxasprintf(&varFileName,"%s.vars",fileName);
       if ((in = fopen(varFileName,"r"))) {
-	int i;
-	printf("File \"%s\" found. 4ti2 will use it.\n\n",varFileName);
-	fscanf(in,"%d %d",&numOfRows, &numOfLabels);
-	labels = (char **)malloc(sizeof(char*)*(numOfVars));
-	if (fscanf(in,"%d %d",&numOfRows, &numOfLabels)!=2 || numOfRows!=1) {
+        int i;
+        printf("File \"%s\" found. 4ti2 will use it.\n\n",varFileName);
+        fscanf(in,"%d %d",&numOfRows, &numOfLabels);
+        labels = (char **)malloc(sizeof(char*)*(numOfVars));
+        if (fscanf(in,"%d %d",&numOfRows, &numOfLabels)!=2 || numOfRows!=1) {
           printf("ERROR: Unrecognised file format for \"%s\".\n", varFileName);
           exit(1);
         }
-	if (numOfLabels != numOfVars) {
-	  printf("ERROR: Incorrect number of variable names in \"%s\".\n",
-                          varFileName);
+        if (numOfLabels != numOfVars) {
+          printf("ERROR: Incorrect number of variable names in \"%s\".\n", varFileName);
           exit(1);
-	}
-	for (i=0; i<numOfVars; i++) {
-	  s=(char *)malloc(sizeof(char)*127);
-	  if (fscanf(in,"%s",s) != 1) {
-            printf("ERROR: Unrecognised file format for \"%s\".\n",
-                            varFileName);
+        }
+        for (i=0; i<numOfVars; i++) {
+          s=(char *)malloc(sizeof(char)*127);
+          if (fscanf(in,"%s",s) != 1) {
+            printf("ERROR: Unrecognised file format for \"%s\".\n", varFileName);
             exit(1);
           }
-	  labels[i]=s;
-	}
-	fclose(in);
+          labels[i]=s;
+        }
+      fclose(in);
       }
-      strcpy(outFileName,fileName);
-      strcat(outFileName,".ini.bin");
+      myxasprintf(&outFileName,"%s.ini.bin",fileName);
       printListMonomialsAndBinomialsToFile(outFileName,basis,numOfVars,labels);
     }
     else if (strncmp(argv[i],"--",2)==0) {
@@ -888,24 +823,30 @@ int output_main(int argc, char *argv[]) {
     }
     else {
       /* All standard options take the FILENAME.EXT argument that
-	 appears last.  Others that take several arguments exit
-	 before we get here. So signal an error if there are too many
-	 arguments left. */
+         appears last.  Others that take several arguments exit
+         before we get here. So signal an error if there are too many
+         arguments left. */
       if (i == argc-1) {
-	if (!did_something) {
-	  printf("ERROR: At least one option that controls what to output needs to be given.\n\n");
-	  print_usage();
-	  exit(1);
-	}
+        if (!did_something) {
+          printf("ERROR: At least one option that controls what to output needs to be given.\n\n");
+          print_usage();
+          exit(1);
+        }
       }
       else {
-	printf("ERROR: Unhandled command-line argument: %s\n\n", argv[i]);
-	print_usage();
-	exit(1);
+        printf("ERROR: Unhandled command-line argument: %s\n\n", argv[i]);
+        print_usage();
+        exit(1);
       }
     }
     did_something = 1;
   }
+
+  free(costFileName);
+  free(groFileName);
+  free(varFileName);
+  free(symFileName);
+  free(outFileName);
 
   return (0);
 }
