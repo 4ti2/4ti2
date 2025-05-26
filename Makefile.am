@@ -22,18 +22,5 @@
 ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = src m4 lib doc test
-if ENABLE_SWIG
-SUBDIRS += swig
-endif
-## We cannot expect "make dist" to create a distribution including the swig
-## directory if that directory (containing an independent tree) is not configured!
-DIST_SUBDIRS = $(SUBDIRS)
-if !ENABLE_SWIG
-dist-hook:
-	@echo "**************************************************************"
-	@echo "WARNING: Distribution will not contain the swig/ subdirectory"
-	@echo "since this build of 4ti2 was configured without --enable-swig."
-	@echo "**************************************************************"
-endif
 
 EXTRA_DIST = autogen.sh TODO NEWS README

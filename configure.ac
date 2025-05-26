@@ -166,15 +166,4 @@ dnl use the correct CXXFLAGS that enables these types.])
 dnl fi
 AC_SUBST(GROEBNER_DEFAULT_EXECUTABLE)
 
-## Check whether to build high-level-language interfaces using SWIG
-AC_ARG_ENABLE(swig, AS_HELP_STRING([--enable-swig], [Enable building high-level-language interfaces using SWIG]),
-		    [enable_swig=${enableval}], [enable_swig=no])
-if test "$enable_swig" = yes; then
-  # Call configure separately in this subdirectory.
-  AC_CONFIG_SUBDIRS(swig)
-  # If we use SWIG, we definitely want shared libraries.
-  AC_ENABLE_SHARED
-fi
-AM_CONDITIONAL([ENABLE_SWIG], [ test x${enable_swig} = xyes ])
-
 AC_OUTPUT

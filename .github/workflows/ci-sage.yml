@@ -53,7 +53,7 @@ concurrency:
 
 env:
   # Ubuntu packages to install so that the project's "make dist" can succeed
-  DIST_PREREQ: libgmp-dev autoconf automake libtool libglpk-dev swig
+  DIST_PREREQ: libgmp-dev autoconf automake libtool libglpk-dev
   # Name of this project in the Sage distribution
   SPKG:        4ti2
   REMOVE_PATCHES:   "*"
@@ -73,7 +73,7 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt-get install $DIST_PREREQ
       - name: Run make dist, prepare upstream artifact
         run: |
-          (cd build/pkgs/${{ env.SPKG }}/src && autoreconf -fi && ./configure --enable-swig --with-swig=swig && make dist) \
+          (cd build/pkgs/${{ env.SPKG }}/src && autoreconf -fi && ./configure && make dist) \
           && mkdir -p upstream && cp build/pkgs/${{ env.SPKG }}/src/*.tar.gz upstream/${{ env.SPKG }}-git.tar.gz \
           && echo "sage-package create ${{ env.SPKG }} --version git --tarball ${{ env.SPKG }}-git.tar.gz --type=optional" > upstream/update-pkgs.sh \
           && if [ -n "${{ env.REMOVE_PATCHES }}" ]; then echo "(cd ../build/pkgs/${{ env.SPKG }}/patches && rm -f ${{ env.REMOVE_PATCHES }}; :)" >> upstream/update-pkgs.sh; fi \
