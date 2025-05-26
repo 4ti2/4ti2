@@ -53,7 +53,7 @@ concurrency:
 
 env:
   # Ubuntu packages to install so that the project's "make dist" can succeed
-  DIST_PREREQ: libgmp-dev autoconf automake libtool libglpk-dev
+  DIST_PREREQ: libgmp-dev autoconf automake libtool libglpk-dev swig
   # Name of this project in the Sage distribution
   SPKG:        4ti2
   REMOVE_PATCHES:   "*"
