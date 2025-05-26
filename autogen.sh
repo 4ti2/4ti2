@@ -3,5 +3,6 @@ aclocal -I m4
 autoheader
 autoconf
 libtoolize --force || glibtoolize --force
+mkdir -p swig
 automake --add-missing
-(cd swig && sh ./autogen.sh)
+(test -e swig/autogen.sh && cd swig && sh ./autogen.sh)
