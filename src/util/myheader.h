@@ -20,6 +20,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
+#include <errno.h>
 #include <stdio.h>
 #include <math.h>
 //#include <malloc.h>
@@ -160,3 +161,12 @@ typedef struct listSignPatternPair {
   struct listSignPatternPair* rest;
 }
 listSignPatternPair;
+
+
+#define myxasprintf(fILEnANEpTR,fORMAT,...) { \
+    errno=0; \
+    if (asprintf(fILEnANEpTR,fORMAT,__VA_ARGS__) < 0) { \
+      printf("Error allocating file name (%s).\n",strerror(errno)); \
+      exit(0); \
+    } \
+  }

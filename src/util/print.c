@@ -28,16 +28,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 /* Co-Author: Ralf Hemmecke      (data structure, code optimization) */
 /*                                                                   */
 /*------------------------------------------------------------------ */
-#include "../banner.h"
+#include <stdlib.h>
+#include <errno.h>
+#include <stdio.h>
+#include "banner.h"
 #include "myheader.h"
 #include "orbit.h"
 #include "vector.h"
-#include <stdlib.h>
-#include <limits.h>
-
-#ifndef PATH_MAX
-#define PATH_MAX FILENAME_MAX
-#endif
 
 /* ----------------------------------------------------------------- */
 void printVersionInfo() {
@@ -765,51 +762,42 @@ void printListVectorWithGivenNonzeroEntryToFile(char *outFileName,
 /* ----------------------------------------------------------------- */
 void writeResult(listVector *basis, int numOfVars, char *fileName, 
 		 char *basisType, int infoLevel) {
-  char outFileName[PATH_MAX];
+  const char *infoMessage="undefined";
+  const char *outExtension="";
+  char *outFileName=NULL;
+  int noskip=1;
 
   /* Write result to screen and files. */
 
-if (infoLevel>0) {
-  printf("Writing result to files: ");
-}
-  /* Write Graver basis file. */
-  if (basisType[0]=='g') {
-if (infoLevel>0) {
-    printf("Graver basis elements: %d\n\n",lengthListVector(basis));
-}
-    strcpy(outFileName,fileName);
-    printListVectorToFile(outFileName,basis,numOfVars);
-  } 
-
-  /* Write Hilbert basis file. */
-  if (basisType[0]=='h') {
-if (infoLevel>0) {
-    printf("Hilbert basis elements: %d\n\n",lengthListVector(basis));
-}
-
-    strcpy(outFileName,fileName);
-    printListVectorToFile(outFileName,basis,numOfVars);
+  switch (basisType[0]) {
+  case 'g': /* Write Graver basis file. */
+	  infoMessage="Graver basis elements";
+    /* outExtension=""; */
+    break;
+  case 'h': /* Write Hilbert basis file. */
+	  infoMessage="Hilbert basis elements";
+    /* outExtension=""; */
+    break;
+  case 'd': /* Write Hilbert basis file of dual cone. */
+	  infoMessage="Hilbert basis elements";
+    outExtension=".dual.hil";
+    break;
+  case 'r': /* Write extreme rays file. */
+	  infoMessage="Extreme rays";
+    outExtension=".ray";
+    break;
+  default:
+    noskip=0;
+    break;
   }
 
-  /* Write Hilbert basis file of dual cone. */
-  if (basisType[0]=='d') {
-if (infoLevel>0) {
-    printf("Hilbert basis elements: %d\n\n",lengthListVector(basis));
-}
-
-    strcpy(outFileName,fileName);
-    strcat(outFileName,".dual.hil");
+  if (noskip) {
+    if (infoLevel>0) {
+      printf("Writing result to files: %s: %d\n\n",infoMessage,lengthListVector(basis));
+    }
+    myxasprintf(&outFileName,"%s%s",fileName,outExtension);
     printListVectorToFile(outFileName,basis,numOfVars);
-  }
-
-  /* Write extreme rays file. */
-  if (basisType[0]=='r') {
-if (infoLevel>0) {
-    printf("Extreme rays: %d\n\n",lengthListVector(basis));
-}
-    strcpy(outFileName,fileName);
-    strcat(outFileName,".ray");
-    printListVectorToFile(outFileName,basis,numOfVars);
+    free(outFileName);
   }
 
   return;

@@ -29,9 +29,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 /* Created    : 01-JUL-03                                            */
 /*                                                                   */
 /* ----------------------------------------------------------------- */
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
-#include <limits.h>
 #include "myheader.h"
 #include "vector.h"
 #include "print.h"
@@ -39,21 +39,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <getopt.h>
 #include "banner.h"
 
-#ifndef PATH_MAX
-#define PATH_MAX FILENAME_MAX
-#endif
-
 /* ----------------------------------------------------------------- */
-listVector* readSimplicialComplex(char* fileName, int* numOfNodes) {
+listVector* readSimplicialComplex(char* inpFileName, int* numOfNodes) {
   int i,j,numOfFaces,sizeOfFace;
   listVector *basis, *endBasis;
   vector b;
   FILE *in;
 
   setbuf(stdout,0);
-  if (!(in = fopen(fileName,"r"))) {
+  if (!(in = fopen(inpFileName,"r"))) {
     printf("Error opening file %s containing the simplicial complex.\n",
-	   fileName);
+	   inpFileName);
     exit(0);
   }
 
@@ -181,7 +177,8 @@ int genmodel_main(int argc, char *argv[]) {
   int i,j,maxIndexFace,numOfNodes,numOfRows,numOfColumns,infoLevel;
   vector face, faceValues, column, levels, nodes;
   listVector *faces, *tmp;
-  char fileName[PATH_MAX],outFileName[PATH_MAX];
+  const char *fileName=NULL;
+  char *inpFileName=NULL, *outFileName=NULL;
   FILE *out;
 
   int optc;
@@ -217,22 +214,22 @@ int genmodel_main(int argc, char *argv[]) {
     printVersionInfo();
   }
 
-  strcpy(fileName,argv[argc-1]);
-  strcat(fileName,".mod");
-  strcpy(outFileName,argv[argc-1]);
-  strcat(outFileName,".mat");
+  fileName=argv[argc-1];
+  myxasprintf(&inpFileName,"%s.mod",fileName);
+  myxasprintf(&outFileName,"%s.mat",fileName);
 
   if (infoLevel>-1) {
     printf("Creating file %s.\n",outFileName);
   }
 
   numOfNodes=0;
-  faces=readSimplicialComplex(fileName,&numOfNodes);
+  faces=readSimplicialComplex(inpFileName,&numOfNodes);
   levels=faces->first;
   faces=faces->rest;
 
+  errno=0;
   if (!(out = fopen(outFileName,"w"))) {
-    printf("Error opening file for output.");
+    printf("Error opening file for output (%s).",strerror(errno));
     exit (0);
   }
 
@@ -271,6 +268,9 @@ int genmodel_main(int argc, char *argv[]) {
   }
 
   fclose(out);
+
+  free(outFileName);
+  free(inpFileName);
 
   return(0);
 }
