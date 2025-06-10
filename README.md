@@ -2,7 +2,7 @@
 problems on linear spaces.
 
 Copyright (C) 1998, 2002, 2006, 2015, 2025 4ti2 team.
- 
+
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either version 2
@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 COMPILING 4ti2
 ==============
@@ -23,14 +23,14 @@ COMPILING 4ti2
 If you checked out the sources using git, first, to generate the build system,
 you need Automake, Autoconf, and Libtool. Run the following command:
 
-        ./autogen.sh
+	./autogen.sh
 
 Run the following commands with the 4ti2 directory:
 
-    	./configure --prefix=INSTALLATION-DIRECTORY
-        make
-        make check
-	make install-exec
+	./configure --prefix=INSTALLATION-DIRECTORY
+	make
+	make check
+    make install-exec
 
 The final command will install 4ti2 in a directory tree below the
 INSTALLATION-DIRECTORY that you gave with the first command.  If you
@@ -61,7 +61,7 @@ version of gmp from the source, make sure that you enable c++ support
 (--enable-cxx configure option).  If you have
 installed gmp but not in a location that 4ti2 finds by default, then you
 will need to invoke
-     
+
      ./configure --with-gmp=/ROOT/OF/GMP/INSTALLATION/HIERARCHY
 
 If you have gmp but not with c++ support, then ./configure will
@@ -97,10 +97,10 @@ INSTALLATION ON WINDOWS USING CYGWIN
 
 4. Type:
 
-      cd /cygdrive/c/DIRECTORY/WITHOUT/SPACES/IN/IT
-      ./configure
-      make
-      make install
+		cd /cygdrive/c/DIRECTORY/WITHOUT/SPACES/IN/IT
+		./configure
+		make
+		make install
 
 5. Now you can run 4ti2's commands from the Cygwin terminal.
 
@@ -110,3 +110,10 @@ DOCUMENTATION
 
 See the manual or the website https://4ti2.github.io/ for information on using 4ti2.
 
+
+PYTHON INTERFACES
+=================
+
+- https://github.com/alfsan/Py4ti2
+
+- https://pypi.org/project/passagemath-latte-4ti2/

@@ -1,8 +1,8 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.71])
-AC_INIT([4ti2],[1.6.11])
+AC_PREREQ([2.69])
+AC_INIT([4ti2],[1.6.12])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign std-options])
 AC_CONFIG_FILES([Makefile src/Makefile src/4ti2/Makefile
@@ -165,16 +165,5 @@ dnl 4ti2 cannot be built.  Consider upgrading the compiler or
 dnl use the correct CXXFLAGS that enables these types.])
 dnl fi
 AC_SUBST(GROEBNER_DEFAULT_EXECUTABLE)
-
-## Check whether to build high-level-language interfaces using SWIG
-AC_ARG_ENABLE(swig, AS_HELP_STRING([--enable-swig], [Enable building high-level-language interfaces using SWIG]),
-		    [enable_swig=${enableval}], [enable_swig=no])
-if test "$enable_swig" = yes; then
-  # Call configure separately in this subdirectory.
-  AC_CONFIG_SUBDIRS(swig)
-  # If we use SWIG, we definitely want shared libraries.
-  AC_ENABLE_SHARED
-fi
-AM_CONDITIONAL([ENABLE_SWIG], [ test x${enable_swig} = xyes ])
 
 AC_OUTPUT
