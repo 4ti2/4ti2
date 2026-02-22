@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <fstream>
 #include <map>
 #include <cstdlib>
+#include <ctime>
 
 #include "zsolve/BitSet.h"
 #include "zsolve/LinearSystem.hpp"

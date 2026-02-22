@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #include "4ti2/4ti2.h"
 #include "4ti2/4ti2xx.h"
-#include <gmpxx.h>
+#include <gmp.h>
 
 using namespace std;
 
@@ -44,17 +44,23 @@ if ((expr) != _4ti2_OK ) {			\
   exit (1);					\
 }
 
-static void check_matrix(_4ti2_state* qsolve_api, const char *name, mpz_class &x)
+static void check_matrix(_4ti2_state* qsolve_api, const char *name, mpz_t x)
 {
   _4ti2_matrix* matrix;
-  mpz_class y;
+  mpz_t y;
+  mpz_init(y);
   CHECK_STATUS(_4ti2_state_create_matrix(qsolve_api, 1, 1, name, &matrix));
-  CHECK_STATUS(_4ti2_matrix_set_entry_mpz_ptr(matrix, 0, 0, x.get_mpz_t()));
-  CHECK_STATUS(_4ti2_matrix_get_entry_mpz_ptr(matrix, 0, 0, y.get_mpz_t()));
-  if (x != y) {
-    cerr << "Data conversion failed: " << name << ": " << x << " != " << y << endl;
+  CHECK_STATUS(_4ti2_matrix_set_entry_mpz_ptr(matrix, 0, 0, x));
+  CHECK_STATUS(_4ti2_matrix_get_entry_mpz_ptr(matrix, 0, 0, y));
+  if (mpz_cmp(x, y) != 0) {
+    cerr << "Data conversion failed: " << name << endl;
+    mpz_out_str(stderr, 10, x);
+    cerr << " != ";
+    mpz_out_str(stderr, 10, y);
+    cerr << endl;
     exit(1);
   }
+  mpz_clear(y);
 }
 
 // usage: test_input_conversion_APIPRECISION INTERNAL-PRECISION MATRIX-NAME DATA
@@ -84,14 +90,17 @@ main(int argc, char **argv)
     char *qsolve_argv[2] = { "qsolve", "-q" };
     _4ti2_state_set_options(qsolve_api, qsolve_argc, qsolve_argv);
 
-    mpz_class x;
+    mpz_t x;
+    mpz_init(x);
     stringstream datastream(argv[3]);
-    datastream >> x;
-    if (datastream.bad()) {
+    string x_str;
+    datastream >> x_str;
+    if (datastream.bad() || mpz_set_str(x, x_str.c_str(), 10) != 0) {
       cerr << "Error reading data" << endl;
       exit(1);
     }
     check_matrix(qsolve_api, argv[2], x);
+    mpz_clear(x);
     
     _4ti2_state_delete(qsolve_api);
     return 0;

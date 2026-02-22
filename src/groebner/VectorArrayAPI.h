@@ -27,6 +27,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "groebner/VectorArray.h"
 #include <cstdlib>
 
+#ifdef _4ti2_HAVE_GMP
+#include "4ti2/gmp_integer.h"
+#endif
+
 namespace _4ti2_ {
 
 class VectorArrayAPI : public _4ti2_matrix {
@@ -47,8 +51,8 @@ public:
     virtual void get_entry_int64_t(int r, int c, int64_t& value) const;
 
 #ifdef _4ti2_HAVE_GMP
-    virtual void set_entry_mpz_class(int r, int c, const mpz_class& value);
-    virtual void get_entry_mpz_class(int r, int c, mpz_class& value) const;
+    virtual void set_entry_mpz_ptr(int r, int c, mpz_srcptr value);
+    virtual void get_entry_mpz_ptr(int r, int c, mpz_ptr value) const;
 #endif
 
 protected:
@@ -93,60 +97,88 @@ VectorArrayAPI::convert(const int32_t& v1, int64_t& v2)
 template <>
 inline
 void
-VectorArrayAPI::convert(const int32_t& v1, mpz_class& v2)
+VectorArrayAPI::convert(const int32_t& v1, mpz_ptr& v2)
 {
-    v2 = v1;
+    mpz_set_si(v2, static_cast<long>(v1));
 }
 
 template <>
 inline
 void
-VectorArrayAPI::convert(const int64_t& v1, mpz_class& v2)
+VectorArrayAPI::convert(const int64_t& v1, mpz_ptr& v2)
 {
-#ifdef _4ti2_HAVE_MPZ_INT64_CONVERSION
-    v2 = v1;
-#else
-    std::cerr << "UNIMPLEMENTED: Need to do int64_t -> mpz_class conversion" << std::endl;
-    exit(1);
-#endif
+    mpz_set_int64(v2, v1);
 }
- 
+
+#ifdef _4ti2_GMP_
+
 template <>
 inline
 void
-VectorArrayAPI::convert(const mpz_class& v1, int& v2)
+VectorArrayAPI::convert(const IntegerType& v1, int64_t& v2)
 {
-    if (!v1.fits_sint_p()) {
-        std::cerr << "ERROR: number " << v1 << " out of range.\n";
-        std::cerr << "ERROR: range is (" << INT_MIN << "," << INT_MAX << ").\n";
-        exit(1);    
+    if (!mpz_fits_int64_p(v1.get_mpz_t())) {
+        std::cerr << "ERROR: number out of range.\n";
+        exit(1);
     }
-    v2 = v1.get_si();
+    v2 = mpz_get_int64(v1.get_mpz_t());
 }
 
 template <>
 inline
 void
-VectorArrayAPI::convert(const mpz_class& v1, long int& v2)
+VectorArrayAPI::convert(const IntegerType& v1, int32_t& v2)
 {
-    if (!v1.fits_slong_p()) {
-        std::cerr << "ERROR: number " << v1 << " out of range.\n";
-        std::cerr << "ERROR: range is (" << LONG_MIN << "," << LONG_MAX << ").\n";
-        exit(1);    
+    if (!mpz_fits_sint_p(v1.get_mpz_t())) {
+        std::cerr << "ERROR: number out of range.\n";
+        std::cerr << "ERROR: range is (" << INT32_MIN << "," << INT32_MAX << ").\n";
+        exit(1);
     }
-    v2 = v1.get_si();
+    v2 = static_cast<int32_t>(mpz_get_si(v1.get_mpz_t()));
 }
- 
-#ifndef _4ti2_HAVE_MPZ_INT64_CONVERSION
+
 template <>
 inline
 void
-VectorArrayAPI::convert(const mpz_class& v1, int64_t& v2)
+VectorArrayAPI::convert(const mpz_srcptr& v1, IntegerType& v2)
 {
-  std::cerr << "UNIMPLEMENTED: Need to convert from mpz to int64_t" << std::endl;
-  exit(1);
+    v2.set_mpz(v1);
 }
+
+template <>
+inline
+void
+VectorArrayAPI::convert(const IntegerType& v1, mpz_ptr& v2)
+{
+    mpz_set(v2, v1.get_mpz_t());
+}
+
 #endif
+
+template <>
+inline
+void
+VectorArrayAPI::convert(const mpz_srcptr& v1, int64_t& v2)
+{
+    if (!mpz_fits_int64_p(v1)) {
+        std::cerr << "ERROR: number out of range.\n";
+        exit(1);
+    }
+    v2 = mpz_get_int64(v1);
+}
+
+template <>
+inline
+void
+VectorArrayAPI::convert(const mpz_srcptr& v1, int32_t& v2)
+{
+    if (!mpz_fits_sint_p(v1)) {
+        std::cerr << "ERROR: number out of range.\n";
+        std::cerr << "ERROR: range is (" << INT32_MIN << "," << INT32_MAX << ").\n";
+        exit(1);
+    }
+    v2 = static_cast<int32_t>(mpz_get_si(v1));
+}
 
 #endif
 

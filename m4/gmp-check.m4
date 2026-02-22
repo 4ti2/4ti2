@@ -71,26 +71,8 @@ for GMP_HOME in ${GMP_HOME_PATH}
 	   			],[
 					gmp_found="yes"
 					AC_MSG_RESULT(yes)
-					# See if GMP was compiled with --enable-cxx
-					AC_MSG_CHECKING(whether GMP was compiled with --enable-cxx)
-					AC_TRY_RUN(
-					[#include <gmpxx.h>
-					int main () { mpz_class a(2),b(3),c(5); if ( a+b == c ) return 0; else return -1; }
-					],[
-						AC_MSG_RESULT(yes)
-						GMP_VERSION=""
-						GMP_LIBS="$GMP_LIBS -lgmpxx -lgmp"
-						GMP_HAVE_CXX=yes
-						AC_SUBST(GMP_VERSION)
-					],[
-						AC_MSG_RESULT(no)
-						AC_DEFINE(GMP_NO_CXX,1,[Define if GMP has no <gmpxx.h>])
-						GMP_VERSION="-DGMP_NO_CXX"
-						AC_SUBST(GMP_VERSION)
-					],[
-						dnl This should never happen
-						AC_MSG_RESULT(no)
-					])				
+					GMP_VERSION=""
+					AC_SUBST(GMP_VERSION)
 				],[
 					AC_MSG_RESULT(no)
 					AC_DEFINE(GMP_VERSION_3,1,[Define if GMP is version 3.xxx])

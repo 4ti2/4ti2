@@ -20,7 +20,7 @@
 
 fortytwoincludedir = $(includedir)/4ti2
 
-fortytwoinclude_HEADERS = 4ti2.h 4ti2xx.h 4ti2_config.h
+fortytwoinclude_HEADERS = 4ti2.h 4ti2xx.h 4ti2_config.h gmp_integer.h gmp_rational.h
 
 BUILT_SOURCES = 4ti2_config.h
 
@@ -31,7 +31,7 @@ AM_CXXFLAGS = -I$(srcdir)/..
 
 lib4ti2common_la_SOURCES = 4ti2API.cpp
 
-if HAVE_GMP_WITH_CXX
+if HAVE_GMP
 AM_CPPFLAGS = -D_4ti2_GMP_ ${GMP_CFLAGS}
 AM_LDFLAGS = ${GMP_LIBS}
 endif

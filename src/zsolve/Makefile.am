@@ -80,7 +80,7 @@ zsolve_SOURCES = $(zsolvesources)
 zsolve_LDADD = libzsolve.la
 libzsolve_la_CPPFLAGS =
 zsolve_CPPFLAGS = 
-if HAVE_GMP_WITH_CXX
+if HAVE_GMP
 libzsolve_la_CPPFLAGS += ${GMP_CFLAGS}
 zsolve_CPPFLAGS += ${GMP_CFLAGS}
 zsolve_LDADD += ${GMP_LIBS}

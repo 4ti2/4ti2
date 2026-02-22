@@ -24,14 +24,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #define _4ti2_groebner__DataType_
 #include <inttypes.h>
 
-#include "4ti2/4ti2_config.h"
-
 #ifdef _4ti2_GMP_
 
-#include <gmp.h>
-#include <gmpxx.h>
-typedef mpz_class IntegerType;
-typedef mpq_class RationalType;
+#include "4ti2/gmp_integer.h"
+#include "4ti2/gmp_rational.h"
+typedef _4ti2_GMP_INTEGER::Integer IntegerType;
+typedef _4ti2_GMP_RATIONAL::Rational RationalType;
 
 #elif defined(_4ti2_INT64_)
 

@@ -97,3 +97,11 @@ test/ppi/ppi5.gra.srt.chk
 test/ppi/ppi5.mat
 test/reportfailures
 test/subdirsum
+/lib/alloca.h
+/lib/inttypes.h
+/lib/limits.h
+/lib/stdio.h
+/lib/stdlib.h
+/lib/string.h
+/lib/wchar.h
+/lib/*.a

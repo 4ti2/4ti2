@@ -94,13 +94,13 @@ VectorArrayAPI::get_entry_int64_t(int r, int c, int64_t& value) const
 
 #ifdef _4ti2_HAVE_GMP
 void
-VectorArrayAPI::set_entry_mpz_class(int r, int c, const mpz_class& value)
+VectorArrayAPI::set_entry_mpz_ptr(int r, int c, mpz_srcptr value)
 {
     convert(value, data[r][c]);
 }
 
 void
-VectorArrayAPI::get_entry_mpz_class(int r, int c, mpz_class& value) const
+VectorArrayAPI::get_entry_mpz_ptr(int r, int c, mpz_ptr value) const
 {
     convert(data[r][c], value);
 }

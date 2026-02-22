@@ -42,8 +42,10 @@ extern "C" {
 // TODO: Fix this up.
 #ifdef _4ti2_GMP_
   #define DOUBLE(X) X.get_d()
+  #define TO_RATIONAL(X) RationalType(X)
 #else
   #define DOUBLE(X) X
+  #define TO_RATIONAL(X) static_cast<RationalType>(X)
 #endif
 
 namespace _4ti2_ {
@@ -850,20 +852,20 @@ _4ti2_::lp_weight_l2(
 
     if (basis.get_number() == 0) { return; }
     int index = 0;
-    RationalType dot = Vector::dot(rhs, basis[0]);
+    RationalType dot = TO_RATIONAL(Vector::dot(rhs, basis[0]));
     RationalType ratio = 0;
     for (int j = 0; j < basis.get_size(); ++j)
     {
-        ratio += basis[0][j]*(basis[0][j]/dot);
+        ratio += TO_RATIONAL(basis[0][j])*(TO_RATIONAL(basis[0][j])/dot);
     }
     RationalType min = ratio;
     for (int i = 1; i < basis.get_number(); ++i)
     {
         ratio = 0;
-        dot = Vector::dot(rhs, basis[i]);
+        dot = TO_RATIONAL(Vector::dot(rhs, basis[i]));
         for (int j = 0; j < basis.get_size(); ++j)
         {
-            ratio += basis[i][j]*(basis[i][j]/dot);
+            ratio += TO_RATIONAL(basis[i][j])*(TO_RATIONAL(basis[i][j])/dot);
         }
         if (ratio > min) { index = i; min = ratio; }
     }

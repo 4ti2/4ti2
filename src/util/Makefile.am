@@ -29,8 +29,8 @@ lib_LTLIBRARIES = lib4ti2util.la
 
 AM_LDFLAGS = -no-undefined
 
-# Allow accessing general 4ti2 headers
-AM_CFLAGS = -I$(srcdir)/..
+# Allow accessing general 4ti2 headers and gnulib replacements
+AM_CFLAGS = -D_GNU_SOURCE -I$(srcdir)/.. -I$(top_builddir)/lib -I$(top_srcdir)/lib
 
 # The output.c file contains C++-isms (or C99-isms), 
 # so compile with the C++ compiler. --mkoeppe
@@ -57,13 +57,13 @@ utilinclude_HEADERS = 				\
 	vector.h
 
 genmodel_SOURCES = genmodel_main.c
-genmodel_LDADD = lib4ti2util.la
+genmodel_LDADD = lib4ti2util.la $(top_builddir)/lib/libgnu.a
 
 gensymm_SOURCES = gensymm_main.c
-gensymm_LDADD = lib4ti2util.la
+gensymm_LDADD = lib4ti2util.la $(top_builddir)/lib/libgnu.a
 
 output_SOURCES = output_main.c
-output_LDADD = lib4ti2util.la
+output_LDADD = lib4ti2util.la $(top_builddir)/lib/libgnu.a
 
 # normaliz_wrapper_SOURCES = normaliz_wrapper.c
 # normaliz_wrapper_LDADD = lib4ti2util.la

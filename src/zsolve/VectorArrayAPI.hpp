@@ -26,9 +26,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "4ti2/4ti2xx.h"
 #include "zsolve/VectorArray.hpp"
 #include "zsolve/Exception.h"
+#ifdef _4ti2_HAVE_GMP
+#include "4ti2/gmp_integer.h"
+#endif
 #include <fstream>
 #include <cstdint>
 #include <cstdlib>
+#include <climits>
 
 namespace _4ti2_zsolve_ {
 
@@ -51,8 +55,8 @@ public:
     virtual void get_entry_int64_t(int r, int c, int64_t& value) const;
 
 #ifdef _4ti2_HAVE_GMP
-    virtual void set_entry_mpz_class(int r, int c, const mpz_class& value);
-    virtual void get_entry_mpz_class(int r, int c, mpz_class& value) const;
+    virtual void set_entry_mpz_ptr(int r, int c, mpz_srcptr value);
+    virtual void get_entry_mpz_ptr(int r, int c, mpz_ptr value) const;
 #endif
 
 protected:
@@ -76,9 +80,22 @@ inline
 void
 convert(const int64_t& v1, int32_t& v2)
 {
-    // TODO: Better precision exception information.
-    if (v1 < INT32_MIN || v2 > INT32_MAX) {
-        throw PrecisionException(32);
+    if (v1 < INT32_MIN || v1 > INT32_MAX) {
+        uint64_t magnitude;
+        if (v1 < 0) {
+            magnitude = static_cast<uint64_t>(-(v1 + 1)) + 1;
+        }
+        else {
+            magnitude = static_cast<uint64_t>(v1);
+        }
+
+        int required_precision = 0;
+        do {
+            ++required_precision;
+            magnitude >>= 1;
+        } while (magnitude != 0);
+
+        throw PrecisionException(required_precision);
     }
     v2 = v1;
 }
@@ -88,46 +105,79 @@ convert(const int64_t& v1, int32_t& v2)
 template <>
 inline
 void
-convert(const mpz_class& v1, int& v2)
+convert(const mpz_srcptr& v1, int64_t& v2)
 {
     // TODO: Better precision exception information.
-    if (!v1.fits_sint_p()) {
+    if (!mpz_fits_int64_p(v1)) {
         throw PrecisionException(0);
     }
-    v2 = v1.get_si();
+    v2 = mpz_get_int64(v1);
 }
 
 template <>
 inline
 void
-convert(const mpz_class& v1, long int& v2)
+convert(const mpz_srcptr& v1, int32_t& v2)
 {
-    // TODO: Better precision exception information.
-    if (!v1.fits_slong_p()) {
+    if (!mpz_fits_sint_p(v1)) {
         throw PrecisionException(0);
     }
-    v2 = v1.get_si();
-}
-
-#ifndef _4ti2_HAVE_MPZ_INT64_CONVERSION
-template <>
-inline
-void
-convert(const mpz_class& v1, int64_t& v2)
-{
-  std::cerr << "UNIMPLEMENTED: Need to convert from mpz to int64_t" << std::endl;
-  std::exit(1);
+    v2 = static_cast<int32_t>(mpz_get_si(v1));
 }
 
 template <>
 inline
 void
-convert(const int64_t& v1, mpz_class &v2)
+convert(const int64_t& v1, mpz_ptr& v2)
 {
-  std::cerr << "UNIMPLEMENTED: Need to convert from int64_t to mpz" << std::endl;
-  std::exit(1);
+    mpz_set_int64(v2, v1);
 }
-#endif
+
+template <>
+inline
+void
+convert(const int32_t& v1, mpz_ptr& v2)
+{
+    mpz_set_si(v2, static_cast<long>(v1));
+}
+
+template <>
+inline
+void
+convert(const mpz_srcptr& v1, _4ti2_GMP_INTEGER::Integer& v2)
+{
+    v2.set_mpz(v1);
+}
+
+template <>
+inline
+void
+convert(const _4ti2_GMP_INTEGER::Integer& v1, mpz_ptr& v2)
+{
+    mpz_set(v2, v1.get_mpz_t());
+}
+
+template <>
+inline
+void
+convert(const _4ti2_GMP_INTEGER::Integer& v1, int64_t& v2)
+{
+    if (!mpz_fits_int64_p(v1.get_mpz_t())) {
+        throw PrecisionException(0);
+    }
+    v2 = mpz_get_int64(v1.get_mpz_t());
+}
+
+template <>
+inline
+void
+convert(const _4ti2_GMP_INTEGER::Integer& v1, int32_t& v2)
+{
+    if (!mpz_fits_sint_p(v1.get_mpz_t())) {
+        throw PrecisionException(0);
+    }
+    v2 = static_cast<int32_t>(mpz_get_si(v1.get_mpz_t()));
+}
 
 #endif
 
@@ -211,14 +261,14 @@ VectorArrayAPI<T>::get_entry_int64_t(int r, int c, int64_t& value) const
 #ifdef _4ti2_HAVE_GMP
 template <class T>
 void
-VectorArrayAPI<T>::set_entry_mpz_class(int r, int c, const mpz_class& value)
+VectorArrayAPI<T>::set_entry_mpz_ptr(int r, int c, mpz_srcptr value)
 {
     convert(value, data[r][c]);
 }
 
 template <class T>
 void
-VectorArrayAPI<T>::get_entry_mpz_class(int r, int c, mpz_class& value) const
+VectorArrayAPI<T>::get_entry_mpz_ptr(int r, int c, mpz_ptr value) const
 {
     convert(data[r][c], value);
 }

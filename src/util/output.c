@@ -50,19 +50,38 @@ listVector* readListVector(int *numOfVars, const char *fileName) {
     return(0);
   }
 
-  fscanf(in,"%d",&numOfVectors);
-  fscanf(in,"%d",numOfVars);
+  if (fscanf(in,"%d",&numOfVectors) != 1 ||
+      fscanf(in,"%d",numOfVars) != 1) {
+    printf("ERROR: Unrecognised file format for \"%s\".\n", fileName);
+    fclose(in);
+    return(0);
+  }
 
-  if (numOfVectors==0) return (0);
+  if (numOfVectors==0) {
+    fclose(in);
+    return (0);
+  }
 
   b=createVector(*numOfVars);
-  for (j=0; j<(*numOfVars); j++) fscanf(in,"%d",&b[j]);
+  for (j=0; j<(*numOfVars); j++) {
+    if (fscanf(in,"%d",&b[j]) != 1) {
+      printf("ERROR: Unrecognised file format for \"%s\".\n", fileName);
+      fclose(in);
+      return(0);
+    }
+  }
   basis = createListVector(b);
   endBasis = basis;
 
   for (i=1; i<numOfVectors; i++) {
     b=createVector(*numOfVars);
-    for (j=0; j<(*numOfVars); j++) fscanf(in,"%d",&b[j]);
+    for (j=0; j<(*numOfVars); j++) {
+      if (fscanf(in,"%d",&b[j]) != 1) {
+        printf("ERROR: Unrecognised file format for \"%s\".\n", fileName);
+        fclose(in);
+        return(0);
+      }
+    }
     endBasis = updateBasis(createListVector(b), endBasis);
   }
   fclose(in);
@@ -793,7 +812,6 @@ int output_main(int argc, char *argv[]) {
       if ((in = fopen(varFileName,"r"))) {
         int i;
         printf("File \"%s\" found. 4ti2 will use it.\n\n",varFileName);
-        fscanf(in,"%d %d",&numOfRows, &numOfLabels);
         labels = (char **)malloc(sizeof(char*)*(numOfVars));
         if (fscanf(in,"%d %d",&numOfRows, &numOfLabels)!=2 || numOfRows!=1) {
           printf("ERROR: Unrecognised file format for \"%s\".\n", varFileName);

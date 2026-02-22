@@ -30,6 +30,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #ifdef _4ti2_HAVE_GMP
 #include <gmp.h>
+#endif
+
+#ifdef _4ti2_HAVE_GMPXX
 #include <gmpxx.h>
 #endif
 
@@ -51,8 +54,29 @@ public:
     virtual void get_entry_int64_t(int r, int c, int64_t& value) const = 0;
 
 #ifdef _4ti2_HAVE_GMP
-    virtual void set_entry_mpz_class(int r, int c, const mpz_class& value) = 0;
-    virtual void get_entry_mpz_class(int r, int c, mpz_class& value) const = 0;
+    virtual void set_entry_mpz_ptr(int r, int c, mpz_srcptr value) = 0;
+    virtual void get_entry_mpz_ptr(int r, int c, mpz_ptr value) const = 0;
+#endif
+
+    // -----------------------------------------------------------------------
+    // mpz_class forwarding adapters (backward-compatibility shims).
+    //
+    // Available when configure detected gmpxx.h (_4ti2_HAVE_GMPXX).
+    //
+    // Semantic contract:
+    //   - The library never takes ownership of mpz_class objects.
+    //   - No aliasing between internal storage and mpz_class arguments.
+    //   - All transfers across the API boundary are deep copies of values.
+    //   - mpz_class is treated as an opaque value carrier; only
+    //     get_mpz_t() is used to extract the underlying mpz_t.
+    // -----------------------------------------------------------------------
+#ifdef _4ti2_HAVE_GMPXX
+    void set_entry_mpz_class(int r, int c, const mpz_class& value) {
+        set_entry_mpz_ptr(r, c, value.get_mpz_t());
+    }
+    void get_entry_mpz_class(int r, int c, mpz_class& value) const {
+        get_entry_mpz_ptr(r, c, value.get_mpz_t());
+    }
 #endif
 };
 

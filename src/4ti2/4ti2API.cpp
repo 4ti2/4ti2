@@ -141,17 +141,14 @@ _4ti2_matrix_get_entry_int64_t(const _4ti2_matrix*  matrix, int r, int c, int64_
 _4ti2_status
 _4ti2_matrix_set_entry_mpz_ptr(_4ti2_matrix*  matrix, int r, int c, mpz_ptr value)
 {
-    mpz_class z(value);
-    matrix->set_entry_mpz_class(r, c, z);
+    matrix->set_entry_mpz_ptr(r, c, value);
     return _4ti2_OK;
 }
 
 _4ti2_status
 _4ti2_matrix_get_entry_mpz_ptr(const _4ti2_matrix*  matrix, int r, int c, mpz_ptr value)
 {
-    mpz_class z;
-    matrix->get_entry_mpz_class(r, c, z);
-    mpz_set(value, z.get_mpz_t());
+    matrix->get_entry_mpz_ptr(r, c, value);
     return _4ti2_OK;
 }
 #endif

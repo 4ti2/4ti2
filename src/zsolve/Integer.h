@@ -32,10 +32,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include "4ti2/4ti2_config.h"
 
 #ifdef _4ti2_HAVE_GMP
-#include <gmpxx.h>
+#include "4ti2/gmp_integer.h"
 #endif
 
 #include <sstream>
+#include <stdexcept>
 
 namespace _4ti2_zsolve_
 {
@@ -87,13 +88,10 @@ inline T gcd (T a, T b)
 }
 
 #ifdef _4ti2_HAVE_GMP
-inline mpz_class gcd (const mpz_class& a, const mpz_class& b)
+template <>
+inline _4ti2_GMP_INTEGER::Integer gcd (_4ti2_GMP_INTEGER::Integer a, _4ti2_GMP_INTEGER::Integer b)
 {
-    mpz_class result;
-
-    mpz_gcd (result.get_mpz_t (), a.get_mpz_t (), b.get_mpz_t ());
-
-    return result;
+    return _4ti2_GMP_INTEGER::gcd(a, b);
 }
 #endif
 
@@ -124,9 +122,9 @@ inline int calcPrecision (int64_t n)
 }
  
 #ifdef _4ti2_HAVE_GMP
-inline int calcPrecision (const mpz_class& n)
+inline int calcPrecision (const _4ti2_GMP_INTEGER::Integer& n)
 {
-    return mpz_sizeinbase (n.get_mpz_t (), 2);
+    return _4ti2_GMP_INTEGER::calc_precision(n);
 }
 #endif
 
@@ -141,8 +139,9 @@ inline int maxPrecision (int64_t n)
 }
 
 #ifdef _4ti2_HAVE_GMP
-inline int maxPrecision (const mpz_class& n)
+inline int maxPrecision (const _4ti2_GMP_INTEGER::Integer& n)
 {
+    (void)n;
     return -1;
 }
 #endif
@@ -170,15 +169,6 @@ template <typename T> void parse_integer (const std::string& string, T& result)
     std::istringstream iss (string);
     iss >> result;
 }
-
-#ifdef _4ti2_HAVE_GMP
-
-template <typename T> void parse_integer (const std::string& string, mpz_class& result)
-{
-    result = string.c_str();
-}
-
-#endif
 
 // integer space
 
