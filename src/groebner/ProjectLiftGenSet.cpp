@@ -132,7 +132,7 @@ ProjectLiftGenSet::compute_bounded(
     VectorArray cost(1,dim,0);
     cost[0][index] = -1;
     char buffer[250];
-    sprintf(buffer, "  Lift %3d: Col: %3d ", fin.count()+1, index); 
+    snprintf(buffer, sizeof(buffer), "  Lift %3d: Col: %3d ", fin.count()+1, index); 
     Globals::context = buffer;
     Completion algorithm;
     DEBUG_4ti2(*out << "Column:" << index << "\n";)
@@ -147,7 +147,7 @@ ProjectLiftGenSet::compute_bounded(
         column = next_support(gens, fin);
         VectorArray cost(1,dim,0);
         cost[0][column] = -1;
-        sprintf(buffer, "  Lift %3d: Col: %3d ", fin.count(), column); 
+        snprintf(buffer, sizeof(buffer), "  Lift %3d: Col: %3d ", fin.count(), column); 
         Globals::context = buffer;
         BitSet fin_union_urs(fin.get_size());
         BitSet::set_union(fin, urs, fin_union_urs);
