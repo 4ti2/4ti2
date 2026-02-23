@@ -45,7 +45,7 @@ lib4ti2util_la_SOURCES =			\
 	print.c					\
 	vector.c
 
-lib4ti2util_la_LIBADD = $(top_builddir)/lib/libgnu.a
+lib4ti2util_la_LIBADD = $(top_builddir)/lib/libgnu.la
 
 utilincludedir=$(includedir)/util
 
@@ -59,13 +59,13 @@ utilinclude_HEADERS = 				\
 	vector.h
 
 genmodel_SOURCES = genmodel_main.c
-genmodel_LDADD = lib4ti2util.la $(top_builddir)/lib/libgnu.a
+genmodel_LDADD = lib4ti2util.la $(top_builddir)/lib/libgnu.la
 
 gensymm_SOURCES = gensymm_main.c
-gensymm_LDADD = lib4ti2util.la $(top_builddir)/lib/libgnu.a
+gensymm_LDADD = lib4ti2util.la $(top_builddir)/lib/libgnu.la
 
 output_SOURCES = output_main.c
-output_LDADD = lib4ti2util.la $(top_builddir)/lib/libgnu.a
+output_LDADD = lib4ti2util.la $(top_builddir)/lib/libgnu.la
 
 # normaliz_wrapper_SOURCES = normaliz_wrapper.c
 # normaliz_wrapper_LDADD = lib4ti2util.la

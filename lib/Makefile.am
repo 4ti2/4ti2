@@ -54,13 +54,13 @@ MAINTAINERCLEANFILES =
 AM_CPPFLAGS =
 AM_CFLAGS =
 
-noinst_LIBRARIES += libgnu.a
+noinst_LTLIBRARIES += libgnu.la
 
-libgnu_a_SOURCES =
-libgnu_a_CFLAGS = $(AM_CFLAGS) $(GL_CFLAG_GNULIB_WARNINGS)
-libgnu_a_LIBADD = $(gl_LIBOBJS)
-libgnu_a_DEPENDENCIES = $(gl_LIBOBJS)
-EXTRA_libgnu_a_SOURCES =
+libgnu_la_SOURCES =
+libgnu_la_CFLAGS = $(AM_CFLAGS) $(GL_CFLAG_GNULIB_WARNINGS)
+libgnu_la_LIBADD = $(gl_LIBOBJS)
+libgnu_la_DEPENDENCIES = $(gl_LIBOBJS)
+EXTRA_libgnu_la_SOURCES =
 
 ## begin gnulib module absolute-header
 
@@ -187,10 +187,10 @@ endif
 MOSTLYCLEANFILES += float.h float.h-t
 
 if GL_COND_OBJ_FLOAT
-libgnu_a_SOURCES += float.c
+libgnu_la_SOURCES += float.c
 endif
 if GL_COND_OBJ_ITOLD
-libgnu_a_SOURCES += itold.c
+libgnu_la_SOURCES += itold.c
 endif
 
 EXTRA_DIST += float.in.h
@@ -200,7 +200,7 @@ EXTRA_DIST += float.in.h
 ## begin gnulib module free-posix
 
 if GL_COND_OBJ_FREE
-libgnu_a_SOURCES += free.c
+libgnu_la_SOURCES += free.c
 endif
 
 ## end   gnulib module free-posix
@@ -261,7 +261,7 @@ endif
 MOSTLYCLEANFILES += getopt.h getopt.h-t getopt-cdefs.h getopt-cdefs.h-t
 
 if GL_COND_OBJ_GETOPT
-libgnu_a_SOURCES += getopt.c getopt1.c
+libgnu_la_SOURCES += getopt.c getopt1.c
 endif
 
 EXTRA_DIST += getopt-cdefs.in.h getopt-core.h getopt-ext.h getopt-pfx-core.h getopt-pfx-ext.h getopt.in.h getopt_int.h
@@ -270,7 +270,7 @@ EXTRA_DIST += getopt-cdefs.in.h getopt-core.h getopt-ext.h getopt-pfx-core.h get
 
 ## begin gnulib module gettext-h
 
-libgnu_a_SOURCES += gettext.h
+libgnu_la_SOURCES += gettext.h
 
 ## end   gnulib module gettext-h
 
@@ -344,7 +344,7 @@ EXTRA_DIST += limits.in.h
 ## begin gnulib module memchr
 
 if GL_COND_OBJ_MEMCHR
-libgnu_a_SOURCES += memchr.c
+libgnu_la_SOURCES += memchr.c
 endif
 
 EXTRA_DIST += memchr.valgrind
@@ -353,7 +353,7 @@ EXTRA_DIST += memchr.valgrind
 
 ## begin gnulib module size_max
 
-libgnu_a_SOURCES += size_max.h
+libgnu_la_SOURCES += size_max.h
 
 ## end   gnulib module size_max
 
@@ -615,10 +615,10 @@ stdio.h: stdio.in.h $(top_builddir)/config.status $(CXXDEFS_H) $(ARG_NONNULL_H) 
 MOSTLYCLEANFILES += stdio.h stdio.h-t
 
 if GL_COND_OBJ_STDIO_READ
-libgnu_a_SOURCES += stdio-read.c
+libgnu_la_SOURCES += stdio-read.c
 endif
 if GL_COND_OBJ_STDIO_WRITE
-libgnu_a_SOURCES += stdio-write.c
+libgnu_la_SOURCES += stdio-write.c
 endif
 
 EXTRA_DIST += stdio.in.h
@@ -914,7 +914,7 @@ EXTRA_DIST += sys_types.in.h
 ## begin gnulib module unistd
 
 BUILT_SOURCES += unistd.h
-libgnu_a_SOURCES += unistd.c
+libgnu_la_SOURCES += unistd.c
 
 # We need the following in order to create an empty placeholder for
 # <unistd.h> when the system doesn't have one.
@@ -1123,7 +1123,7 @@ EXTRA_DIST += unistd.in.h
 
 EXTRA_DIST += asnprintf.c float+.h printf-args.c printf-args.h printf-parse.c printf-parse.h vasnprintf.c vasnprintf.h
 
-EXTRA_libgnu_a_SOURCES += asnprintf.c printf-args.c printf-parse.c vasnprintf.c
+EXTRA_libgnu_la_SOURCES += asnprintf.c printf-args.c printf-parse.c vasnprintf.c
 
 ## end   gnulib module vasnprintf
 
@@ -1132,7 +1132,7 @@ EXTRA_libgnu_a_SOURCES += asnprintf.c printf-args.c printf-parse.c vasnprintf.c
 
 EXTRA_DIST += asprintf.c vasprintf.c
 
-EXTRA_libgnu_a_SOURCES += asprintf.c vasprintf.c
+EXTRA_libgnu_la_SOURCES += asprintf.c vasprintf.c
 
 ## end   gnulib module vasprintf
 
@@ -1270,7 +1270,7 @@ EXTRA_DIST += wchar.in.h
 
 ## begin gnulib module xsize
 
-libgnu_a_SOURCES += xsize.h xsize.c
+libgnu_la_SOURCES += xsize.h xsize.c
 
 ## end   gnulib module xsize
 
