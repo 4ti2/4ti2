@@ -52,7 +52,7 @@ listVector* readListVector(int *numOfVars, const char *fileName) {
 
   if (fscanf(in,"%d",&numOfVectors) != 1 ||
       fscanf(in,"%d",numOfVars) != 1) {
-    printf("ERROR: Unrecognised file format for \"%s\".\n", fileName);
+    fprintf(stderr, "ERROR: Unrecognised file format for \"%s\".\n", fileName);
     fclose(in);
     return(0);
   }
@@ -65,7 +65,7 @@ listVector* readListVector(int *numOfVars, const char *fileName) {
   b=createVector(*numOfVars);
   for (j=0; j<(*numOfVars); j++) {
     if (fscanf(in,"%d",&b[j]) != 1) {
-      printf("ERROR: Unrecognised file format for \"%s\".\n", fileName);
+      fprintf(stderr, "ERROR: Unrecognised file format for \"%s\".\n", fileName);
       fclose(in);
       return(0);
     }
@@ -77,7 +77,7 @@ listVector* readListVector(int *numOfVars, const char *fileName) {
     b=createVector(*numOfVars);
     for (j=0; j<(*numOfVars); j++) {
       if (fscanf(in,"%d",&b[j]) != 1) {
-        printf("ERROR: Unrecognised file format for \"%s\".\n", fileName);
+        fprintf(stderr, "ERROR: Unrecognised file format for \"%s\".\n", fileName);
         fclose(in);
         return(0);
       }
