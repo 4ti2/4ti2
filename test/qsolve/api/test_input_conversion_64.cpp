@@ -82,8 +82,8 @@ main(int argc, char **argv)
     
     _4ti2_state* qsolve_api = _4ti2_qsolve_create_state(prec);
     const int qsolve_argc = 2;
-    char *qsolve_argv[2] = { "qsolve", "-q" };
-    _4ti2_state_set_options(qsolve_api, qsolve_argc, qsolve_argv);
+    const char *qsolve_argv[2] = { "qsolve", "-q" };
+    _4ti2_state_set_options(qsolve_api, qsolve_argc, const_cast<char**>(qsolve_argv));
 
     APITYPE x;
     stringstream datastream(argv[3]);
