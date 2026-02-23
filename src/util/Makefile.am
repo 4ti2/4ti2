@@ -45,6 +45,8 @@ lib4ti2util_la_SOURCES =			\
 	print.c					\
 	vector.c
 
+lib4ti2util_la_LIBADD = $(top_builddir)/lib/libgnu.a
+
 utilincludedir=$(includedir)/util
 
 utilinclude_HEADERS = 				\
