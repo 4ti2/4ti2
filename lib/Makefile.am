@@ -58,8 +58,8 @@ noinst_LTLIBRARIES += libgnu.la
 
 libgnu_la_SOURCES =
 libgnu_la_CFLAGS = $(AM_CFLAGS) $(GL_CFLAG_GNULIB_WARNINGS)
-libgnu_la_LIBADD = $(gl_LIBOBJS)
-libgnu_la_DEPENDENCIES = $(gl_LIBOBJS)
+libgnu_la_LIBADD = $(gl_LTLIBOBJS)
+libgnu_la_DEPENDENCIES = $(gl_LTLIBOBJS)
 EXTRA_libgnu_la_SOURCES =
 
 ## begin gnulib module absolute-header
