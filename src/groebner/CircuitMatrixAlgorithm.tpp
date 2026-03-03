@@ -282,7 +282,7 @@ CircuitMatrixAlgorithm<IndexSet>::compute(
     VectorArray matrix(orig_matrix.get_number(), orig_matrix.get_size());
 
     char buffer[256];
-    sprintf(buffer, "  Left = %3d  Col = %3d", num_remaining, next_col);
+    snprintf(buffer, sizeof(buffer), "  Left = %3d  Col = %3d", num_remaining, next_col);
 
     DEBUG_4ti2(*out << "R1 [" << r1_start << "..." << r1_end << "]\n";)
     DEBUG_4ti2(*out << "R2 [" << r2_start << "..." << r2_end << "]\n";)
@@ -387,7 +387,7 @@ CircuitMatrixAlgorithm<IndexSet>::compute(
     VectorArray matrix(orig_matrix);
 
     char buffer[256];
-    sprintf(buffer, "  Left = %3d  Col = %3d", num_remaining, next_col);
+    snprintf(buffer, sizeof(buffer), "  Left = %3d  Col = %3d", num_remaining, next_col);
 
     DEBUG_4ti2(*out << "R1 [" << r1_start << "..." << r1_end << "]\n";)
     DEBUG_4ti2(*out << "R2 [" << r2_start << "..." << r2_end << "]\n";)

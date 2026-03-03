@@ -323,7 +323,7 @@ CircuitSupportAlgorithm<IndexSet>::compute(
     int num_cols = vs.get_size();
 
     char buffer[256];
-    sprintf(buffer, "  Left = %3d,  Col = %3d,", num_remaining, next_col);
+    snprintf(buffer, sizeof(buffer), "  Left = %3d,  Col = %3d,", num_remaining, next_col);
 
     IndexSet temp_supp(num_cols);
     IndexSet full_temp_supp(full_num_cols);
@@ -405,7 +405,7 @@ CircuitSupportAlgorithm<IndexSet>::compute(
     int num_cols = vs.get_size();
 
     char buffer[256];
-    sprintf(buffer, "  Left = %3d  Col = %3d", num_remaining, next_col);
+    snprintf(buffer, sizeof(buffer), "  Left = %3d  Col = %3d", num_remaining, next_col);
 
     IndexSet temp_supp(num_cols);
     IndexSet zero_supp(full_num_cols);

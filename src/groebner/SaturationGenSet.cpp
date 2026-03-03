@@ -116,7 +116,7 @@ SaturationGenSet::compute_bounded(
         index = next_saturation(gens, sat, urs);
         VectorArray cost(1,dim,0);
         cost[0][index] = 0;
-        sprintf(buffer, "  Sat %3d: Col: %3d ",
+        snprintf(buffer, sizeof(buffer), "  Sat %3d: Col: %3d ",
                         urs.get_size()-urs.count()-sat.count(), index);
         Globals::context = buffer;
         cost[0][index] = -1;
@@ -147,7 +147,7 @@ SaturationGenSet::compute_bounded(
         index = next_saturation(useful_gens, sat, urs);
         VectorArray cost(1,dim,0);
         cost[0][index] = 0;
-        sprintf(buffer, "  Sat %3d: Col: %3d ",
+        snprintf(buffer, sizeof(buffer), "  Sat %3d: Col: %3d ",
                         urs.get_size()-urs.count()-sat.count(), index);
         Globals::context = buffer;
         cost[0][index] = -1;
