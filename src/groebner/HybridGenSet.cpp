@@ -124,7 +124,7 @@ HybridGenSet::compute_bounded(
         column = next_support(gens, fin);
         VectorArray cost(1,dim,0);
         cost[0][column] = -1;
-        sprintf(buffer, "  Lift %3d: Col: %3d ", fin.count(), column); 
+        snprintf(buffer, sizeof(buffer), "  Lift %3d: Col: %3d ", fin.count(), column); 
         Globals::context = buffer;
         BitSet::set_union(fin, urs, fin_union_urs);
         Feasible projection(feasible, fin_union_urs);

@@ -53,20 +53,39 @@ listVector* readSimplicialComplex(char* inpFileName, int* numOfNodes) {
     exit(0);
   }
 
-  fscanf(in,"%d",numOfNodes);
+  if (fscanf(in,"%d",numOfNodes) != 1) {
+    fprintf(stderr, "Error reading number of nodes from %s.\n", inpFileName);
+    exit(1);
+  }
 
   b=createVector(*numOfNodes);
-  for (j=0; j<(*numOfNodes); j++) fscanf(in,"%d",&b[j]);
+  for (j=0; j<(*numOfNodes); j++) {
+    if (fscanf(in,"%d",&b[j]) != 1) {
+      fprintf(stderr, "Error reading node %d from %s.\n", j, inpFileName);
+      exit(1);
+    }
+  }
   basis = createListVector(b);
   endBasis = basis;
 
-  fscanf(in,"%d",&numOfFaces);
+  if (fscanf(in,"%d",&numOfFaces) != 1) {
+    fprintf(stderr, "Error reading number of faces from %s.\n", inpFileName);
+    exit(1);
+  }
 
   for (i=0; i<numOfFaces; i++) {
-    fscanf(in,"%d",&sizeOfFace);
+    if (fscanf(in,"%d",&sizeOfFace) != 1) {
+      fprintf(stderr, "Error reading size of face %d from %s.\n", i, inpFileName);
+      exit(1);
+    }
     b=createVector(sizeOfFace);
     b[0]=sizeOfFace;
-    for (j=0; j<sizeOfFace; j++) fscanf(in,"%d",&b[j+1]);
+    for (j=0; j<sizeOfFace; j++) {
+      if (fscanf(in,"%d",&b[j+1]) != 1) {
+        fprintf(stderr, "Error reading face %d element %d from %s.\n", i, j, inpFileName);
+        exit(1);
+      }
+    }
     endBasis = updateBasis(createListVector(b), endBasis);
   }
   fclose(in);

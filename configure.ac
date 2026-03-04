@@ -67,6 +67,7 @@ gl_EARLY
 gl_INIT
 
 AX_CFLAGS_WARN_ALL
+CFLAGS="${CFLAGS} -D_GNU_SOURCE"
 
 ## Using the C++ compiler
 AC_PROG_CXX

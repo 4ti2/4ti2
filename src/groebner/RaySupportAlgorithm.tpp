@@ -151,7 +151,7 @@ RaySupportAlgorithm<IndexSet>::compute0(
                                         next_zero_count);
 
         char buffer[256];
-        sprintf(buffer, "  Left = %3d,  Col = %3d,", num_remaining, next_col);
+        snprintf(buffer, sizeof(buffer), "  Left = %3d,  Col = %3d,", num_remaining, next_col);
         *out << "\r" << buffer;
         *out << "  Size = " << std::setw(8) << vs.get_number() << "  Time: " << t;
         DEBUG_4ti2(
@@ -353,7 +353,7 @@ RaySupportAlgorithm<IndexSet>::compute1(
                                         next_zero_count);
 
         char buffer[256];
-        sprintf(buffer, "  Left = %3d,  Col = %3d,", num_remaining, next_col);
+        snprintf(buffer, sizeof(buffer), "  Left = %3d,  Col = %3d,", num_remaining, next_col);
         *out << "\r" << buffer;
         *out << "  Size = " << std::setw(8) << vs.get_number() << "  Time: " << t;
         DEBUG_4ti2(
@@ -569,7 +569,7 @@ RaySupportAlgorithm<IndexSet>::compute2(
                                         next_zero_count);
 
         char buffer[256];
-        sprintf(buffer, "  Left = %3d,  Col = %3d,", num_remaining, next_col);
+        snprintf(buffer, sizeof(buffer), "  Left = %3d,  Col = %3d,", num_remaining, next_col);
         *out << "\r" << buffer;
         *out << "  Size = " << std::setw(8) << vs.get_number() << "  Time: " << t;
         DEBUG_4ti2(
@@ -796,7 +796,7 @@ RaySupportAlgorithm<IndexSet>::compute3(
                                         next_zero_count);
 
         char buffer[256];
-        sprintf(buffer, "  Left = %3d,  Col = %3d,", num_remaining, next_col);
+        snprintf(buffer, sizeof(buffer), "  Left = %3d,  Col = %3d,", num_remaining, next_col);
         *out << "\r" << buffer;
         *out << "  Size = " << std::setw(8) << vs.get_number() << "  Time: " << t;
         DEBUG_4ti2(
@@ -1054,7 +1054,7 @@ RaySupportAlgorithm<IndexSet>::compute4(
                                         next_zero_count);
 
         char buffer[256];
-        sprintf(buffer, "  Left = %3d  Col = %3d", num_remaining, next_col);
+        snprintf(buffer, sizeof(buffer), "  Left = %3d  Col = %3d", num_remaining, next_col);
         *out << "\r" << buffer;
         *out << "  Size = " << std::setw(8) << vs.get_number() << "  Time: " << t;
         DEBUG_4ti2(

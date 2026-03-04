@@ -1175,7 +1175,7 @@ int main(int argc, char *argv[])
       if (binary) {
 	// Output binary format.
 	char fname[20];
-	sprintf(fname, "ppi%d.dat", n);
+	snprintf(fname, sizeof(fname), "ppi%d.dat", n);
 	cerr << fname << flush;
 	FILE *f = fopen(fname, "wb");
 	char cn = n;
@@ -1191,7 +1191,7 @@ int main(int argc, char *argv[])
 	{
 	  // The .gra (Graver) file:
 	  char fname[20];
-	  sprintf(fname, "ppi%d.gra", n);
+	  snprintf(fname, sizeof(fname), "ppi%d.gra", n);
 	  cerr << fname << flush;
 	  ofstream f(fname);
 	  // #Vectors, Dimension.
@@ -1208,7 +1208,7 @@ int main(int argc, char *argv[])
 	{
 	  // Also output a matrix file.
 	  char fname[20];
-	  sprintf(fname, "ppi%d.mat", n);
+	  snprintf(fname, sizeof(fname), "ppi%d.mat", n);
 	  cerr << " and matrix file " << fname << flush;
 	  ofstream f(fname);
 	  // #Rows, Dimension.

@@ -306,7 +306,5 @@ lib4ti2gmp_la_CPPFLAGS += $(GMP_CFLAGS)
 lib4ti2gmp_la_SOURCES = $(lib4ti2sources)
 endif
 
-EXTRA_DIST = script.template
-
 $(WRAPPERSCRIPTS): script.template
 	$(install_sh_SCRIPT) $< $@

@@ -1,0 +1,160 @@
+name: Build and Test
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: "GMP + GLPK"
+            extra-packages: "libgmp-dev libglpk-dev"
+            configure-flags: ""
+          - name: "GMP only (no GLPK)"
+            extra-packages: "libgmp-dev"
+            configure-flags: "--disable-groebner"
+          - name: "Minimal (no GMP, no GLPK)"
+            extra-packages: ""
+            configure-flags: "--without-gmp --disable-groebner"
+    name: Linux - ${{ matrix.name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y autoconf automake libtool ${{ matrix.extra-packages }}
+
+      - name: Bootstrap (autoreconf)
+        run: autoreconf -fi
+
+      - name: Configure
+        run: ./configure ${{ matrix.configure-flags }}
+
+      - name: Build
+        run: make -j$(nproc)
+
+      - name: Test
+        run: make -j$(nproc) check
+
+      - name: Upload test logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs-linux-${{ strategy.job-index }}
+          path: |
+            test/**/*.log
+            config.log
+
+  macos:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: "GMP + GLPK"
+            configure-flags: ""
+          - name: "GMP only (no GLPK)"
+            configure-flags: "--disable-groebner"
+    name: macOS - ${{ matrix.name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          brew install autoconf automake libtool gmp glpk
+
+      - name: Bootstrap (autoreconf)
+        run: autoreconf -fi
+
+      - name: Configure
+        run: |
+          ./configure ${{ matrix.configure-flags }} \
+            --with-gmp=$(brew --prefix gmp) \
+            CPPFLAGS="-I$(brew --prefix)/include" \
+            LDFLAGS="-L$(brew --prefix)/lib"
+
+      - name: Build
+        run: make -j$(sysctl -n hw.logicalcpu)
+
+      - name: Test
+        run: make -j$(sysctl -n hw.logicalcpu) check
+
+      - name: Upload test logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs-macos-${{ strategy.job-index }}
+          path: |
+            test/**/*.log
+            config.log
+
+  windows:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: "UCRT64 - GMP + GLPK"
+            sys: ucrt64
+            packages: >-
+              mingw-w64-ucrt-x86_64-gcc
+              mingw-w64-ucrt-x86_64-autotools
+              mingw-w64-ucrt-x86_64-gmp
+              mingw-w64-ucrt-x86_64-glpk
+            configure-flags: ""
+          - name: "UCRT64 - GMP only"
+            sys: ucrt64
+            packages: >-
+              mingw-w64-ucrt-x86_64-gcc
+              mingw-w64-ucrt-x86_64-autotools
+              mingw-w64-ucrt-x86_64-gmp
+            configure-flags: "--disable-groebner"
+    name: Windows - ${{ matrix.name }}
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.sys }}
+          update: true
+          install: >-
+            base-devel
+            ${{ matrix.packages }}
+
+      - name: Bootstrap (autoreconf)
+        run: autoreconf -fi
+
+      - name: Configure
+        run: ./configure ${{ matrix.configure-flags }}
+
+      - name: Build
+        run: make -j$(nproc)
+
+      - name: Test
+        run: make -j$(nproc) check
+
+      - name: Upload test logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs-windows-${{ strategy.job-index }}
+          path: |
+            test/**/*.log
+            config.log
