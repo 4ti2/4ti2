@@ -82,21 +82,21 @@ typedef unsigned int attr_type; /* 32 bits are enough */
 struct VectorAux {
   /* order important */
   attr_type Attribute;
-  signed char Stuff[4];
+  unsigned char len_;
+  signed char data_[];
   void *operator new(size_t s, int length) {
-    if (length < 3) length=3;
-    return malloc(s - 3 +length);
+    return malloc(s + length);
   }
   void operator delete(void *v) {
     free(v);
   }
   VectorAux(int length) { Length() = length; }
   VectorAux(const VectorAux &aux) {
-    memcpy(this, &aux, sizeof(VectorAux) -4 + 1 + aux.Length());
+    memcpy(this, &aux, sizeof(VectorAux) + aux.Length());
   }
-  inline unsigned char &Length() { return (unsigned char &) Stuff[0]; }
-  inline int Length() const { return (unsigned char) Stuff[0]; }
-  inline signed char *Data() { return Stuff+1; }
+  inline unsigned char &Length() { return len_; }
+  inline int Length() const { return len_; }
+  inline signed char *Data() { return data_; }
 };
 
 class Vector {
@@ -118,7 +118,7 @@ public:
       if (aux == NULL) 
 	aux = new(v.aux->Length()) VectorAux(*v.aux);
       else if (aux->Length() == v.aux->Length())
-	memcpy(aux, v.aux, sizeof(VectorAux) -4 + 1 + v.aux->Length());
+	memcpy(aux, v.aux, sizeof(VectorAux) + v.aux->Length());
       else {
 	delete aux;
 	aux = new(v.aux->Length()) VectorAux(*v.aux);
